@@ -1,0 +1,1 @@
+var jEliDB = function(){ errorLog('This package doesn\'t support JDB');}
