@@ -1,6 +1,6 @@
     //juser
 	jEliDB.plugins.jQl('select',{
-		help : '',
+		help : ['select -[fields] -[table] -Clause[ -[on] -[join] -[where] -[like] ] -limit'],
 		fn : selectPluginFn
 	});
 	
@@ -47,9 +47,12 @@
 
                   if(expect(query).contains('where'))
                   {
-                    var whereTask = spltQuery.slice( parseInt(query.indexOf("where") + 1) );
+                    var whereTask = spltQuery.slice( parseInt(query.indexOf("where") + 1) ),
+                        whereString = whereTask.join(''),
+                        checkTask = ($isJsonString(whereString)?maskedEval(whereString) : whereString);
+
                       qTask
-                      .where(whereTask.join(''));
+                      .where(checkTask);
                   }
 
                   if(expect(query).contains('limit'))

@@ -825,10 +825,11 @@ function jTblQuery(tableInfo,mode,isMultipleTable){
     }
 
     //columnTypeChecker
-    function columnTypeChecker(data,requiredType)
+    function columnTypeChecker(data,requiredType,mtype)
     {
           var type = typeof data,
               retType = false;
+
           switch(requiredType)
           {
             case('varchar'):
@@ -876,7 +877,14 @@ function jTblQuery(tableInfo,mode,isMultipleTable){
                 retType = requiredType;
               }
             break;
+            case('object'):
+            case('array'):
+              if($isObject(data) || $isArray(data)){
+                retType = requiredType;
+              }
+            break;
           }
+
 
 
         return retType;
@@ -902,8 +910,7 @@ function jTblQuery(tableInfo,mode,isMultipleTable){
                 }
 
                 var type = typeof cData[idx],
-                    cType = columnTypeChecker( cData[idx], (columns[idx].type || 'STRING').toLowerCase() );
-                
+                    cType = columnTypeChecker( cData[idx], (columns[idx].type || 'STRING').toLowerCase(), type );
                 if(!cType)
                 {
                   setDBError(idx +" Field requires "+cType+", but got "+type + "- ref #"+dataRef);

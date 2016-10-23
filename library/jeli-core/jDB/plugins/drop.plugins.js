@@ -52,7 +52,8 @@
               .onError(handler.onError)
             break;
             default:
-
+              var state = {state:"drop",message:query[1] + " command was not found, please type help for JDB command"};
+              handler.onError(state);
             break;
           }
       }

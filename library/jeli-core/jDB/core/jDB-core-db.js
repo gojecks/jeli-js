@@ -247,30 +247,32 @@
 	            //@Fn insertData
 	            function insertData(data)
 	            {
+                //DB Transaction
+                //Write Data to TABLE
 	              db.transaction(table,'writeonly')
-	                .onSuccess(function(res)
-	                {
+                .onSuccess(function(res)
+                {
 
-	                  res
-	                  .result
-	                  .insert.apply(res.result,data)
-	                  .execute()
-	                  .onSuccess(function(ins)
-	                  {
-	                    handler.logService(ins.result.message);
-	                  })
-	                  .onError(function(ins)
-	                  {
-	                    handler.logService(ins.message);
-	                  });
-	                })
-	                .onError(function(ins)
-	                {
-	                  hanler.logService(ins.message);
-	                });
+                  res
+                  .result
+                  .insert.apply(res.result,data)
+                  .execute()
+                  .onSuccess(function(ins)
+                  {
+                    handler.logService(ins.result.message);
+                  })
+                  .onError(function(ins)
+                  {
+                    handler.logService(ins.message);
+                  });
+                })
+                .onError(function(ins)
+                {
+                  hanler.logService(ins.message);
+                });
 	            }
 
-	            function checkColumns(col)
+	            function checkColumns(col,cData)
 	            {
 	                //column checker
 	                if(col.length)
@@ -285,7 +287,7 @@
 	                      {
 	                        if(!cols[col[c]])
 	                        {
-	                          tblFn.Alter.add('new').column(col[c],{type:'varchar'});
+	                          tblFn.Alter.add('new').column(col[c],{type:typeof cData[col[c]]});
 	                        }
 	                      }
 	                  });
@@ -308,7 +310,7 @@
 
 	                  for(var col in tblColumns)
 	                  {
-	                    config[tblColumns[col]] = {type:"VARCHAR"};
+	                    config[tblColumns[col]] = {type:(typeof data.data[0][tblColumns[col]])};
 	                  }
 
 	                  //create the table
@@ -326,7 +328,7 @@
 	                }else
 	                {
 	                  //insert the data into the data
-	                  checkColumns(data.columns);
+	                  checkColumns(data.columns,data.data[0]);
 	                  insertData(data.data);
 	                }
 

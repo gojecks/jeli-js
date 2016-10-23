@@ -4,7 +4,7 @@
 	//-env -import -tableName
 
 	jEliDB.plugins.jQl('import',{
-		help : '',
+		help : 'import -[table name] -[insert]',
 		fn : jImportPluginFn
 	});
 
@@ -13,12 +13,12 @@
 		var result = {state:query[0],result:{message:null}};
 	    return function(db)
 	    {
-	      var file = db
-	                .import(query[1],extend({
-	                  logService : $queryDB.getNetworkResolver('logService',db.name),
+	    	var logService = $queryDB.getNetworkResolver('logService',db.name);
+	      db.import(query[1],extend({
+	                  logService : logService,
 	                  onselect : function(fileName,file)
 	                  {
-	                    this.logService("Processing selected file :" + fileName);
+	                    logService("Processing selected file :" + fileName);
 	                  }
 	                },handler));
 
