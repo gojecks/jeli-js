@@ -229,6 +229,22 @@
 				return;
 			}
 
+			//check if validationObj exists in PostBody
+			var validationModel = Object.keys(obj),
+				err = 0;
+
+			validationModel.filter(function(key){
+				if(!privateApis[type].postBody[key]){
+					err++;
+					pushErrorMessage(key,type,"Field is required");
+				}
+			});
+
+			if(err){
+				return;
+			}
+
+
 			//set the validation flag to false
 			privateApis[type].validationFailed = false;
 
@@ -240,12 +256,19 @@
 				}
 
 				if(_failedValidation.length){
-					privateApis[type].failedValidation[name] = _failedValidation;
-					//set validation flag to true
-					privateApis[type].validationFailed = true;
+					
+					pushErrorMessage(name,type,_failedValidation);
 				}
 			});
 		};
+
+		//Push the Error Message 
+		//Set the Error Flag to true
+		function pushErrorMessage(name,type,error){
+			privateApis[type].failedValidation[name] = error;
+					//set validation flag to true
+			privateApis[type].validationFailed = true;
+		}
 
 
 		function validate(value,criteria){

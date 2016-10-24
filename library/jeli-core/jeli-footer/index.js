@@ -231,10 +231,10 @@ element(document).ready(function()
 {
 
     $isDomLoaded = true;
-      var elementToBootStrap = element('[j-Module]');
+      var elementToBootStrap = element('[j-module]');
         if(!$isUndefined( elementToBootStrap) && elementToBootStrap.length)
         {
-          var moduleName = [elementToBootStrap.attr('j-Module')];
+          var moduleName = [elementToBootStrap.attr('j-module')];
           $eliInitializer( elementToBootStrap , moduleName );
         }
 });

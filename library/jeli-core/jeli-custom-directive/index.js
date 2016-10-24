@@ -313,7 +313,7 @@
      
      defaultElementInitializer.prototype['if'] =  function()
      {
-        if(!$logicChecker(this.checker,this.$model) || !this.checker)
+        if(!maskedEval(this.checker,this.$model) || !this.checker)
         {    
             if(this.isProcessed)
             {
