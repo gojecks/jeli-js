@@ -5,6 +5,9 @@
 	//jEli Login Service
 	//Powered by jEli
 
+	//Update Service
+	//Version 1.2.0 Wed 26.10.16
+
 	jEli
 	.jModule('jeli.auth.service',[])
 	.jProvider('jAuthProvider',jAuthProviderFN)
@@ -25,7 +28,39 @@
 		loginType = false,
 		loginServiceConfiguration = {},
 		registerServiceConfiguration = {},
-		loginTrailCount = 3;
+		loginTrailCount = 3,
+		validationConfigurationStack = {}; //Default Validation Object
+		//ValidationFn currently supports minLength,maxLength and emailValidation
+
+		//validate length of a string or obj
+		validationConfigurationStack['minlength'] = function(value,requiredLength){
+			if(jEli.$isObject(value) || !value){
+				return false;
+			}
+
+			return String(value).length >= requiredLength;
+		};
+
+		validationConfigurationStack['maxlength'] = function(value,requiredLength){
+			if(jEli.$isObject(value) || !value){
+				return false;
+			}
+			
+			return String(value).length <= requiredLength;
+		};
+
+		// validate Email Address
+		validationConfigurationStack.emailvalidation = function(val){
+			var regExp = /^\w+([\.-]?\w+)*@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+			return regExp.test( val );
+		};
+
+		//validate Domain Address
+		validationConfigurationStack.domainvalidation = function(domain){
+
+			return /[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+/.test(domain);
+		};
 
 		this.setLoginType  = function( type ){
 			if(type && config[type] && !loginType){
@@ -70,6 +105,23 @@
 			loginTrailCount = num;
 		};
 
+
+		/*
+			@MMethodName : setValidationConfiguration
+			@Params : Configuration Name (STRING)
+			@Params : Configuration Function (OBJECT)
+			@return : Context (this)
+		*/
+
+		this.setValidationConfiguration = function(name, stack){
+			if(name && stack){
+				validationConfigurationStack[name] = stack;
+			}
+
+			return this;
+		};
+
+
 		this.$get = function(){
 			var publicApis = {};
 
@@ -89,6 +141,11 @@
 				return loginTrailCount;
 			};
 
+			//get validationConfigurationStack
+			publicApis.getValidationConfiguration = function(){
+				return validationConfigurationStack;
+			};
+
 			return publicApis;
 		};
 	}
@@ -99,7 +156,7 @@
 
 		var publicApis = {},
 			privateApis = {register:{},login:{},authManager:{}},
-			validationFn = {},
+			validationFn = jAuthProvider.getValidationConfiguration(),
 			loginAccountTrial = jAuthProvider.getLoginAttempt();
 
 			//register JDB
@@ -128,6 +185,7 @@
 					$http({
 						url : postObj.url,
 						dataType:'json',
+						contentType : 'application/json',
 						data : privateApis.register.postBody
 					}).then(done,fail);
 				}
@@ -137,7 +195,7 @@
 			//Login Private Api
 			privateApis.login.getHeader = function(){
 				return ({
-					'Content-Type': 'application/x-www-form-urlencoded',
+					'Content-Type': 'application/json',
 			    	'Accept': 'application/json'
 				});
 			};
@@ -188,49 +246,18 @@
 				.onError(fail);
 			};
 
-			//ValidationFn currently supports minLength,maxLength and emailValidation
-
-			//validate length of a string or obj
-			validationFn['minlength'] = function(value,requiredLength){
-				if(jEli.$isObject(value) || !value){
-					return false;
-				}
-
-				return String(value).length >= requiredLength;
-			};
-
-			validationFn['maxlength'] = function(value,requiredLength){
-				if(jEli.$isObject(value) || !value){
-					return false;
-				}
-				
-				return String(value).length <= requiredLength;
-			};
-
-			// validate Email Address
-			validationFn.emailvalidation = function(val){
-				var regExp = /^\w+([\.-]?\w+)*@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-
-				return regExp.test( val );
-			};
-
-			//validate Domain Address
-			validationFn.domainvalidation = function(domain){
-
-				return /[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+/.test(domain);
-			};
 
 		//Private Api for form validation
 		//Iterate through the required validation	
 
-		privateApis.validate = function(type,obj){
+		privateApis.validate = function(type,requiredFields){
 			if(!Object.keys(privateApis[type].postBody).length){
 				this[type].requiresValidation = true;
 				return;
 			}
 
 			//check if validationObj exists in PostBody
-			var validationModel = Object.keys(obj),
+			var validationModel = Object.keys(requiredFields),
 				err = 0;
 
 			validationModel.filter(function(key){
@@ -251,8 +278,8 @@
 			var self = this;
 			jEli.forEach(privateApis[type].postBody,function(name,value){
 				var _failedValidation =[];
-				if(obj[name]){
-					_failedValidation = validate(value,obj[name]);
+				if(requiredFields[name]){
+					_failedValidation = validate(value,requiredFields[name]);
 				}
 
 				if(_failedValidation.length){
@@ -291,6 +318,42 @@
 
 			return errorFound;
 		}
+		/*
+				@Reference : Build validation Object based on user Configuration
+				@MethodName : setValidationObject
+				@Params : type (STRING)
+				@return  : Validation Objects (OBJECT)
+		*/
+
+		function setValidationObject(type, requiredFields){
+			
+			if(!requiredFields && !jEli.$isObject(requiredFields)){
+				throw new error('Configuration is expected to be Object not ('+ typeof requiredFields +')');
+			}
+
+			if(privateApis[type] && jEli.$isObject(requiredFields)){
+				//set the validation flag
+				privateApis[type].requiresValidation = true;
+
+				//this api is avaliable
+				//only when this function is used
+				var self = this,
+					requiredObjects = {};
+
+				this.validateFields = function(){
+					privateApis[type].requiresValidation = false;
+					privateApis[type].failedValidation = {};
+
+					//iterate through the postBody data
+					//Make sure it passes validation
+					privateApis.validate(type,requiredFields);
+
+					return self;
+				};
+			}
+
+			return this;
+		}
 
 		publicApis.register = {
 			setData : function(data){
@@ -302,30 +365,11 @@
 			//Parameter TYPE : OBJ
 			//sample 
 				// {fullname:{maxLength:{value:50},minLength:{value:40},email:{minLength:{value:10}},validate:function(value){}}}
-			setRequiredFields : function(obj){
-				if(!obj && !jEli.$isObject(obj)){
-					throw new error('Configuration is expected to be OBJECT not ('+ typeof obj +')');
-				}
+			setRequiredFields : function(requiredFields){
+				
+				//trigger ValidationObject Method
+				return setValidationObject.apply(this,['register',requiredFields]);
 
-
-				//set the validation flag
-				privateApis.register.requiresValidation = true;
-
-				//this api is avaliable
-				//only when this function is used
-				var self = this;
-				this.validateFields = function(){
-					privateApis.register.requiresValidation = false;
-					privateApis.register.failedValidation = {};
-
-					//iterate through the postBody data
-					//Make sure it passes validation
-					privateApis.validate('register',obj);
-
-					return self;
-				};
-
-				return this;
 			},
 			save : function(success,failure){
 				//check if validation is required
@@ -373,30 +417,11 @@
 			//Only use it when you want validation
 			//Parameter TYPE : OBJ
 			//sample 
-				// {fullname:{maxLength:50,minLength:40},email:{minLength:10},validate:function(value){}}}
-			setRequiredFields : function(obj){
-				if(!obj && !jEli.$isObject(obj)){
-					throw new error('Configuration is expected to be OBJECT not ('+ typeof obj +')');
-				}
+				// ["Email","Password"]
+			setRequiredFields : function(requiredFields){
 
-
-				//set the validation flag
-				privateApis.login.requiresValidation = true;
-
-				//this api is avaliable
-				//only when this function is used
-				var self = this;
-				this.validateFields = function(){
-					privateApis.login.requiresValidation = false;
-					privateApis.login.failedValidation = {};
-					//iterate through the postBody data
-					//Make sure it passes validation
-					privateApis.validate('login',obj);
-
-					return self;
-				};
-
-				return this;
+				//trigger ValidationObject Method
+				return setValidationObject.apply(this,['login',requiredFields]);
 			},
 			Authorize : function(success,failure){
 				//Log user out when Maximum Login

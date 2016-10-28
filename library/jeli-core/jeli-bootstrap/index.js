@@ -57,7 +57,8 @@ function $compileApp()
             if( module[moduleName] )
             {
                 $provider.$jConfigProvider.resolve(moduleName);
-                $provider.$get('$httpProvider').$register();
+                $provider.$get('$httpProvider').register();
+                $provider.$jInitProvider.resolve(moduleName);
                 //compile jFactory,jFilter,jElement
                 moduleCompiler(moduleName);
             } 
@@ -109,6 +110,7 @@ function $compileApp()
     domElementProvider.each(required,function(idx,moduleName)
     {
         $compileTracker.injectors.$new(moduleName,module.$get(moduleName)._jQueue);
+        $provider.$jInitProvider.resolve(moduleName);
         $provider.$jConfigProvider.resolve(moduleName);
     });
   }
@@ -116,7 +118,10 @@ function $compileApp()
 
   function cBuild()
   {
-      this.init = p;
+      this.init = function(fn){
+        $provider.$get('$jInitProvider').register(this.appName,$inject(fn));
+      };
+
       //directive Provider caller
       this.jElement = function(name,fn)
       {

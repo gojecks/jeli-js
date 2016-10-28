@@ -52,6 +52,21 @@
      };
   }
 
+  /*
+    @ProviderName : jRunProvider
+    @return : Object
+  */
+
+  function jRunProvider(){
+    var _runfn = {};
+    this.register = function(module,fn){
+        _runfn[module] = fn;
+    };
+
+    this.resolve = function(module){
+      return q('$jRunProvider', _runfn[module]);
+    }
+  }
 
          
   function $templateFactory()
@@ -110,7 +125,7 @@
     };
 
     //register all interceptors
-    this.$register = function()
+    this.register = function()
     {
       //loop through all list of interceptors
         findInList.call(_interceptors,function(idx,_intercept)
@@ -260,6 +275,9 @@
 
   //$httpInterceptor Provider
   $provider.$httpProvider = new $httpProvider();
+
+  //$jInitProvider
+  $provider.$jInitProvider = new jRunProvider();
 
 
   function $_init(arg)

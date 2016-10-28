@@ -109,7 +109,7 @@ function $dependencyInjector( restricted )
                     return item[1][0] === arg;
                   });
 
-                  if(found.length){
+                  if(found && found.length){
                     //set provider when its found
                       provider = found[0][0];
                       dependency = $provider.$get(provider).resolve(idx,arg,reference);
