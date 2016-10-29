@@ -32,8 +32,7 @@
 	function jEliWebStateProviderFn()
 	{
 		var $stateCollection = {},
-			matchers = ["template","templateUrl","jController"];
-
+			matchers = ["template","templateUrl","jController","jControllerAs"];
 		//Route Creator
 		function createRoute(name)
 		{
@@ -68,32 +67,47 @@
 
 		this.setState = function(name,routeConfig)
 		{
-			routeConfig.route = createRoute(routeConfig.url);
+			//check for abstract route
+			routeConfig.route = createRoute(routeConfig.url || '');
+			
 			routeConfig.route.name = name;
 			if(routeConfig.parent && $stateCollection[routeConfig.parent]){
 				var parentRoute = $stateCollection[routeConfig.parent];
-					routeConfig.views = {}; // create new view
+					routeConfig.views = routeConfig.views || {}; // create new view
 					//copy all views except for
 					//targeted view
 				for(var view in parentRoute.views){
 					if(view !== routeConfig.targetView){
 						routeConfig.views[view] = parentRoute.views[view];
 					}else{
-						routeConfig.views[view] = {};
-						//add the required target view to the view scope
-						var i = matchers.length;
-						while(i--){
-							if(routeConfig[matchers[i]]){
-								routeConfig.views[routeConfig.targetView][matchers[i]] = routeConfig[matchers[i]];
-								delete routeConfig[matchers[i]];
+
+						if(!routeConfig.views[view]){
+							routeConfig.views[view] = {};
+							//add the required target view to the view scope
+							var i = matchers.length;
+							while(i--){
+								if(routeConfig[matchers[i]]){
+									routeConfig.views[view][matchers[i]] = routeConfig[matchers[i]];
+									delete routeConfig[matchers[i]];
+								}
 							}
 						}
 					}
 				}
-				//overwrite our routeConfig
+
+				//set resolvers
+				if(parentRoute.jResolver){
+					routeConfig.jResolver = routeConfig.jResolver || {};
+					for(var resolver in parentRoute.jResolver){
+						routeConfig.jResolver[resolver] = routeConfig.jResolver[resolver] || parentRoute.jResolver[resolver];
+					}
+				}
+
+								//overwrite our routeConfig
 				parentRoute = null;
 				routeConfig.route.parent = routeConfig.parent;
 				delete routeConfig.parent;
+
 			}
 
 			//set the route
@@ -503,7 +517,7 @@
 					var viewInstance = viewObjectInstance.model.$new();
 					if(view.jController)
 					{
-						ctrlP.$resolveController().instantiate( view.jController, viewInstance,view.jResolver,view.jControllerAs);
+						ctrlP.$resolveController().instantiate( view.jController, viewInstance,route.jResolver,view.jControllerAs);
 					}
 
 					//resolve the view instance

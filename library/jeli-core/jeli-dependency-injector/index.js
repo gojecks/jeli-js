@@ -29,14 +29,13 @@ function findInProvider(provider)
 function $dependencyInjector( restricted )
 {
     
-    this.inject = function(fn,provider,model)
+    this.inject = function(fn,provider,model,locals)
     {
       var nArg = [],
           i = 0,
-          dependencies = fn.$injector, //dependency injection Array
-          resolvers = fn.$resolvers; //dependency resolvers Object
+          dependencies = fn.$injector; //dependency injection Array
 
-          if( dependencies.length )
+          if(dependencies && dependencies.length )
           {
               for(; i < dependencies.length; i++)
               {
@@ -59,7 +58,7 @@ function $dependencyInjector( restricted )
                                   injectedArgument = model;
                               }else
                               {
-                                injectedArgument =  this.get( doInject, provider,resolvers);
+                                injectedArgument =  this.get( doInject, provider,locals);
                               }
 
                             }catch(e){}
@@ -83,15 +82,9 @@ function $dependencyInjector( restricted )
 
     this.get = function(arg,reference,resolver)
     {
-      //resolver Object
-        if($isObject(resolver))
-        {
-            if( resolver[arg] )
-            {
-              return q('$resolverProvider', $inject( resolver[arg] ) );
-            } 
+        if(resolver[arg]){
+          return resolver[arg];
         }
-
           //check publicProviders
           if($publicProviders[arg])
           {
@@ -165,12 +158,12 @@ function binding(fn,arg)
     return init;
 }
 
-function q( provider , fn , model , initializer)
+function q( provider , fn , model , initializer,locals)
 {
     if( $isFunction( fn ) && provider)
     {
       //get all dependency injectors
-      var nArg = new $dependencyInjector().inject( fn , provider , model );
+      var nArg = new $dependencyInjector().inject( fn , provider , model ,locals);
 
       //initialize the defined function
       //only initializes when its defined

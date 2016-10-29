@@ -97,7 +97,10 @@
     {
       while (this.pending[0]) 
       {
-         this.pending.shift() [type](result);
+        this.pending.shift() [type](result);
+        this.$$state.pending = false;
+        this.$$state.value = result;
+        this.$$state.resolvedWith = type;
       }
 
       //jEli Background Watcher
@@ -109,6 +112,40 @@
           this.complete(type,result);
         };
       }
+    },
+    all : function(resolve){
+      var slice = [].slice,
+          resolveValues = arguments.length == 1 && $isArray(resolve)? resolve : slice.call(arguments),
+          length = resolveValues.length,
+          remaining = length,
+          deferred = new $p(),
+          failed = 0,
+          results = [];
+
+        function updateDefered(idx,err){
+          return function(res){
+            results[idx] = res;
+            if(err){
+              ++failed;
+            }
+
+            if(!(--remaining)){
+              deferred[(failed)?'reject':'resolve'](results);
+            }
+          };
+        }
+
+      for(var i=0; i < length; i++){
+        var cur = resolveValues[i];
+        if(cur.$$state){
+           cur.then(updateDefered(i),updateDefered(i,1))
+        }else{
+          updateDefered(i)(cur);
+        }
+      }
+
+      return deferred;
+
     }
   };
 
