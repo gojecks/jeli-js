@@ -3,6 +3,9 @@
   //register default providers
   _defaultRegistry('j-eli','$jProvideProvider','$controller')(new $controller);
 
+    //register default providers
+  _defaultRegistry('j-eli','$jProvideProvider','$resolve')(new $resolverProvider);
+
   //register JSON filters
   //return a stringified json object
     _defaultRegistry('j-eli','$jFilterProvider','json')(function(){

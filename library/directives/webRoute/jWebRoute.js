@@ -7,26 +7,11 @@
 
 	jEli
 	.jModule('jEli.web.route',[])
-	.jProvider('$jviewResolver',jviewResolverFn)
 	.jProvider('$jEliWebProvider',jEliWebProviderFn)
 	.jProvider('$jEliWebStateProvider',jEliWebStateProviderFn)
 	.jFactory('$webState',['$jEliWebStateProvider',$webStateFn])
-	.jElement('jView',['$jCompiler','$http','$webState','$jEliWebProvider','$rootModel','$jviewResolver',jViewFn])
+	.jElement('jView',['$jCompiler','$http','$webState','$jEliWebProvider','$rootModel','$controller','$resolve',jViewFn])
 	.jElement('go',['$webState',goFn]);
-
-
-	function jviewResolverFn()
-	{
-
-		this.$get = ['$controller',function($controller){
-			return ({
-				$resolveController : function()
-				{
-					return $controller;
-				}
-			});
-		}];
-	}
 
 
 	function jEliWebStateProviderFn()
@@ -68,7 +53,7 @@
 		this.setState = function(name,routeConfig)
 		{
 			//check for abstract route
-			routeConfig.route = createRoute(routeConfig.url || '');
+			routeConfig.route = createRoute(routeConfig.url || '^');
 			
 			routeConfig.route.name = name;
 			if(routeConfig.parent && $stateCollection[routeConfig.parent]){
@@ -102,12 +87,15 @@
 						routeConfig.jResolver[resolver] = routeConfig.jResolver[resolver] || parentRoute.jResolver[resolver];
 					}
 				}
-
-								//overwrite our routeConfig
+				
+				//overwrite our routeConfig
+				routeConfig.route.parent = parentRoute;
 				parentRoute = null;
-				routeConfig.route.parent = routeConfig.parent;
 				delete routeConfig.parent;
+			}
 
+			if(!routeConfig.url){
+				routeConfig.abstract = true;
 			}
 
 			//set the route
@@ -273,7 +261,7 @@
 
     	this.$stateChanged = function(path)
     	{
-    		return this.state.url !== path;
+    		return (location.hash).replace(/^#/, '') !== path;
     	};
 
     	/*Webstate.getRootUrl
@@ -339,8 +327,9 @@
 //As an Elemen <j-view ref="default"></j-view>
 //as Attribute <element j-view="default"></element>
 
-	function jViewFn($compiler,$http,$webState,jEliWebProvider,$rootModel,ctrlP)
+	function jViewFn($compiler,$http,$webState,jEliWebProvider,$rootModel,ctrlP,$resolve)
 	{
+
 		var eventsHandler = {},
 			viewsHolder = {},
 			currentView = '',
@@ -357,7 +346,8 @@
 				attr : attr,
 				model : model,
 				previousModel : null,
-				previousLoaded : false
+				previousLoaded : false,
+				name : currentView
 			});
 		}
 
@@ -377,16 +367,15 @@
 		{
 			if(!jEliWebProvider.isLoaded)
 			{
+				//hashChange event doesn't fire on reload
+				//work around was to check if location# is not empty
+				//set location if its empty
+				location.hash = refineHash() || jEliWebProvider.getFallBack();
+
 				jEliWebProvider.isLoaded = true;
 				jEli.dom(window)
 				.bind("hashchange", webRouteChangedFn)
 				.on('$locationReplaceState',locationReplaceState);
-
-				//hashChange event doesn't fire on reload
-				//work around was to check if location# is not empty
-				//set location if its empty
-				location.hash = location.hash || jEliWebProvider.getFallBack();
-
 			}
 		}
 
@@ -406,7 +395,7 @@
 
 		function webRouteChangedFn(e)
 		{
-			if(!location.hash.length)
+			if(!location.hash.length || !$webState.$stateChanged(refineHash()))
 			{
 				return false;
 			}
@@ -430,6 +419,7 @@
 			}
 
 		}
+
 
 		//function refineHash
 		function refineHash()
@@ -457,37 +447,54 @@
 		//go to path
 		function go(path)
 		{
-			var previousState = jEli.$extend({},$webState.state.route);
+
 			//set up new events
 			var route = jEliWebProvider.getRoute(path);
-			if( route )
+			if( route)
 			{
+				//set the current state
+				$webState.state.url = path;
 				//initialize state changed 
+				var previousState = jEli.$extend({},$webState.state.route);
+
 				stateChanged(path,route);
 
 				var view = getRouteView(),
-					viewObjectInstance = getView(currentView)();
+					viewObjectInstance = getView(currentView)(),
+					viewInstance = viewObjectInstance.model.$new(),
+					ctrl = view.jController || function(){},
+					locals = {};
+
 
 				//create an Event
 				//Add Default Function to our listener
 				//if Slave Function calls preventDefault
 				//Master FN is not triggered
 				_jView = new jEli.jEvents('addEventListener',function(e){
-					if(jEli.$isEqual('$webRouteStart',e.type)){
-						if(view.templateUrl)
-						{
-							$http
-							.get(view.templateUrl)
-							.done(function(data)
+					if(jEli.$isEqual('$webRouteStart',e.type))
+					{
+						//resolve all resolvers
+						$resolve
+						.instantiate(route.jResolver,locals)
+						.then(function(){
+							if(view.templateUrl)
 							{
-								view.template = data.data;
+								$http
+								.get(view.templateUrl)
+								.done(function(data)
+								{
+									view.template = data.data;
+									compileViewTemplate();
+								});
+							}
+							else if(view.template)
+							{
 								compileViewTemplate();
-							});
-						}
-						else if(view.template)
-						{
-							compileViewTemplate();
-						}
+							}
+
+							//set relovers
+							route.resolvedData = locals;
+						});
 					}
 				});
 
@@ -507,21 +514,27 @@
 			function compileViewTemplate()
 			{
 				buildState();
-				//dispatch event for webRoute Success
-				_jView.$broadcast('$webRouteSuccess', []);
-				//destroy the eventListener
-				$destroyModel()
 
 				if(view.template)
 				{
-					var viewInstance = viewObjectInstance.model.$new();
-					if(view.jController)
-					{
-						ctrlP.$resolveController().instantiate( view.jController, viewInstance,route.jResolver,view.jControllerAs);
+					//dispatch event for webRoute Success
+					var parent = route.route.parent;
+					if((parent && !parent.views[viewObjectInstance.name]) || !parent){
+						_jView.$broadcast('$webRouteSuccess', []);
+					}else{
+						parent.route.$model = viewInstance;
 					}
 
+					//destroy the eventListener
+					$destroyModel();
+
+					if(view.jController){
+						ctrlP
+						.instantiate(ctrl, viewInstance,null,view.jControllerAs,locals);
+					}
 					//resolve the view instance
 					viewObjectInstance.ele.empty().append( view.template ).compile(viewInstance);
+
 					//fire viewContentLoaded Event
 					viewInstance.$publish('$viewContentLoaded')(viewObjectInstance.ele);
 
@@ -560,17 +573,14 @@
 			//initialized Fn
 			function stateChanged(path,route)
 			{
-				if($webState.$stateChanged(path))
+				if( route.targetView && getView(route.targetView)())
 				{
-					if( route.targetView && getView(route.targetView)())
-					{
-						currentView = route.targetView;
-					}
+					currentView = route.targetView;
+				}
 
-					if(currentView && !route.targetView && !route.views)
-					{
-						currentView = '';
-					}
+				if(currentView && !route.targetView && !route.views)
+				{
+					currentView = '';
 				}
 			}
 		};
@@ -587,7 +597,6 @@
 					setViewReference(ele,attr,model);
 					//go to route
 					go(refineHash());
-
 				}
 			}
 		};

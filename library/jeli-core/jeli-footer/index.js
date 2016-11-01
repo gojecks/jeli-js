@@ -191,6 +191,7 @@ __a.prototype =
     noop : function(){ return noop; },
     $extend : extend,
     $isUndefined : $isUndefined,
+    $isDefined : $isDefined,
     $isObject : $isObject,
     $isString : $isString,
     $isNumber : $isNumber,

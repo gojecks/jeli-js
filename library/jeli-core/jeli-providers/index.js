@@ -243,7 +243,6 @@
               this.initializeResolvers(_resolvers,locals)
               .then(function(){
                 initialize();
-                console.log(locals);
               });
             }else{
               initialize();
@@ -266,7 +265,7 @@
                 locals[resolversKey[idx]] = res;
               });
 
-              $q.resolve()
+              $q.resolve(locals);
           });
 
           return $q;
@@ -285,6 +284,21 @@
             instantiate : function()
             {
                 return controller.$initialize.apply(controller,arguments);
+            }
+        })
+     };
+  }
+
+  //Function for dependency Resolvers
+  // @return $promise
+  function $resolverProvider(){
+    var resolvers = new jControllerProvider();
+     this.$get = function()
+     {
+        return ({
+            instantiate : function()
+            {
+                return resolvers.initializeResolvers.apply(resolvers,arguments);
             }
         })
      };

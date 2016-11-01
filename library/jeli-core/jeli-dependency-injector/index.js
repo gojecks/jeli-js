@@ -82,7 +82,7 @@ function $dependencyInjector( restricted )
 
     this.get = function(arg,reference,resolver)
     {
-        if(resolver[arg]){
+        if(resolver && resolver[arg]){
           return resolver[arg];
         }
           //check publicProviders
