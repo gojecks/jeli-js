@@ -127,7 +127,7 @@
   }
 
   function $isDefined(val){
-    return val !== undefined;
+    return  typeof val !== 'undefined';
   }
 
   //check for null attribute

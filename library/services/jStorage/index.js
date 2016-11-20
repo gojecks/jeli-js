@@ -30,8 +30,8 @@
 			throw new error('Your browser does not support '+type);
 		}
 
-		var storage = window[type];
-		_temp = {};
+		var storage = window[type],
+			_temp = {};
 
 		//check if storage already have our attribute
 		if(storage.jStorage){

@@ -79,12 +79,18 @@
     //$rootModel $on event registery
     $modelGenerator.prototype.$on = function(eventName , fn)
     {
-      var subscribers = this.$$subscribers[eventName];
+      var subscribers = this.$$subscribers[eventName],
+        self = this;
         if(!subscribers)
         {
           this.$$subscribers[eventName] = subscribers = []
         }
         subscribers.push(fn);
+
+        //return function to unsubscribe
+        return function(){
+            self.$$subscribers[eventName].pop();
+        }
     };
 
      /* 
@@ -96,20 +102,32 @@
 
     $modelGenerator.prototype.$publish = function(name)
     {
-      var self = this;
+          var self = this;
+            //initialize model subscribers
+            function broadcastSubscribers(current,arg){
+                var child = $modelChildReferenceList.$get(current.$mId);
+
+                if(name && current.$$subscribers[name])
+                {
+                    current.$$subscribers[name].forEach(function(fn){
+                        fn.apply(current , arg );
+                    });
+                }
+
+                //loop through the child
+                child.forEach(function(cur,idx){
+                    //get the child model and subscribe it
+                    var model = $modelMapping.$get(child[idx]);
+                    broadcastSubscribers(model,arg);
+                })
+            }
+
+
         return function()
         {
-          var arg = arguments,
-              current = self;
-          do
-          {
-            if(name && current.$$subscribers[name])
-            {
-              var ev = current.$$subscribers[name][0];
-                ev.apply(current , arg );
-            }
-          }while((current = current.$child))
-          
+          var arg = arguments;
+            //broadCast the parent before the child
+            broadcastSubscribers(self,arg);
         }
     };
 
@@ -176,6 +194,7 @@
                 }
 
             }
+
             //reference to the last child created
             $$0 = child;
 
@@ -184,6 +203,7 @@
 
             return child;
     }
+ 
 
     //Main Template Watcher 
 //@ref : Directive or controller to watch

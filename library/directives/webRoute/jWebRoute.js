@@ -9,7 +9,7 @@
 	.jModule('jEli.web.route',[])
 	.jProvider('$jEliWebProvider',jEliWebProviderFn)
 	.jProvider('$jEliWebStateProvider',jEliWebStateProviderFn)
-	.jFactory('$webState',['$jEliWebStateProvider',$webStateFn])
+	.jFactory('$webState',['$jEliWebProvider',$webStateFn])
 	.jElement('jView',['$jCompiler','$http','$webState','$jEliWebProvider','$rootModel','$controller','$resolve',jViewFn])
 	.jElement('go',['$webState',goFn]);
 
@@ -55,7 +55,7 @@
 			//check for abstract route
 			routeConfig.route = createRoute(routeConfig.url || '^');
 			
-			routeConfig.route.name = name;
+			routeConfig.name = name;
 			if(routeConfig.parent && $stateCollection[routeConfig.parent]){
 				var parentRoute = $stateCollection[routeConfig.parent];
 					routeConfig.views = routeConfig.views || {}; // create new view
@@ -113,12 +113,15 @@
 
 	function jEliWebProviderFn()
 	{
-		var webRouteFallBack;
+		var webRouteFallBack,
+			self = this;
 
 		this.fallBack = function(fallback)
 		{
 			webRouteFallBack = fallback;
 		};
+
+		this.html5Mode = false;
 
 		this.$get = ['$jEliWebStateProvider',function($stateCollection)
 		{
@@ -177,20 +180,26 @@
 					}
 
 					//Fallback when the route is not found
-					location.replace('#'+this.getFallBack());
+					location.hash = '#'+webRouteFallBack;
 				},
 				getAllRoute : function()
 				{
 					return  $stateCollection;
 				},
+				getRouteObj : function(name){
+					return $stateCollection[name];
+				},
 				getParentRoute : function(name){
-					return jEli.$extend({},$stateCollection[name] || {});
+					return $stateCollection[name];
 				},
 				getFallBack : function()
 				{
 					return webRouteFallBack;
 				},
-				isLoaded : false
+				isLoaded : false,
+				getHTML5Mode : function(){
+					return self.html5Mode;
+				}
 			}
 		}];
 
@@ -198,11 +207,16 @@
 	}
 
 	//$location Fn
-	function $webStateFn($jEliWebStateProvider)
+	function $webStateFn($jEliWebProvider)
 	{
 		var locationStates = null,
 			lastState = null;
-		//fake path will be overwritten in the directive
+
+		/* 
+			Method Name : GO
+			Parameter : stateName (STRING) , Params (OBJECT)
+			@returns : self
+		*/
 		this.go = function(path,params)
 		{
 			location.hash = this.$href(path,params);
@@ -214,10 +228,14 @@
 	        return window.location.search = query;
 	    };
 
-    	//current Location href
+    	/* 
+			Method Name : href
+			Parameter : stateName (STRING) , Params (OBJECT)
+			@returns : Path || Fallback
+		*/
     	this.$href = function(stateName,params)
     	{
-    		var state = $jEliWebStateProvider[stateName];
+    		var state = $jEliWebProvider.getRouteObj(stateName);
 			if(state)
 			{
 				var href = state.url.replace(/\:(\w)+/g,function(index,key)
@@ -228,6 +246,8 @@
 
 				return href;
 			}
+
+			return $jEliWebProvider.getFallBack();
     	};
 
     	this.state = {
@@ -252,8 +272,9 @@
     			});
     		
     			// Fallback for HTML4 browsers
-    			/*@EventName  : locationReplaceState
-    			Trigger when replace state is initialized
+    			/*@
+	    			EventName  : locationReplaceState
+	    			Trigger when replace state is initialized
     			*/
     		jEli.dom(window).triggerHandler('$locationReplaceState');
     		lastState = locationStates.hash;
@@ -261,7 +282,7 @@
 
     	this.$stateChanged = function(path)
     	{
-    		return (location.hash).replace(/^#/, '') !== path;
+    		return this.state.url !== path;
     	};
 
     	/*Webstate.getRootUrl
@@ -337,7 +358,12 @@
 			isReplaceState = false,
 			originalState = location.hash,
 			stateChanged = false,
-			_jView = null;
+			_jView = null,
+			stateInProgress,
+			stateQueue = [],
+			currentPath = "",
+			$stateTransitioned = false,
+			html5Mode = jEliWebProvider.getHTML5Mode();
 
 		function setViewReference(ele,attr,model)
 		{
@@ -379,6 +405,22 @@
 			}
 		}
 
+		//set the PopState Functionality
+		//First checked to see if window supports onPopChange Event
+		//@Function window.addEeventListener("popState",FN,false)
+
+		if("onpopstate" in window){
+			if(html5Mode){
+				window.onpopstate = popStateFn;
+			}
+		}
+
+
+		//popStateFN
+		function popStateFn(e){
+			
+		}
+
 		function locationReplaceState(e)
 		{
 			var state = $webState.currentState();
@@ -417,7 +459,6 @@
 				go(refineHash());
 
 			}
-
 		}
 
 
@@ -447,13 +488,26 @@
 		//go to path
 		function go(path)
 		{
+			console.log(stateInProgress,path)
+			//check if state in Progress
+			if(stateInProgress){
+				stateQueue.push(path);
+				$stateTransitioned = (currentState !== path);
+				return false;
+			}
+
+			//set stateInProgress to true
+			stateInProgress = true;
 
 			//set up new events
 			var route = jEliWebProvider.getRoute(path);
+
+			//set the current State
+			currentState = path;
 			if( route)
 			{
-				//set the current state
-				$webState.state.url = path;
+				//set the state
+				$webState.state = route;
 				//initialize state changed 
 				var previousState = jEli.$extend({},$webState.state.route);
 
@@ -473,10 +527,17 @@
 				_jView = new jEli.jEvents('addEventListener',function(e){
 					if(jEli.$isEqual('$webRouteStart',e.type))
 					{
-						//resolve all resolvers
+
 						$resolve
 						.instantiate(route.jResolver,locals)
 						.then(function(){
+							//check for page Transition
+							//useful when user state is been resolved and resolver changes the route
+							if($stateTransitioned){
+								$stateTransitioned = false;
+								return true;
+							}
+
 							if(view.templateUrl)
 							{
 								$http
@@ -499,7 +560,7 @@
 				});
 
 				_jView.addEventListener('$webRouteStart',function(e){
-					$rootModel.$publish(e.type)(e,route.route,route.data);
+					$rootModel.$publish(e.type)(e,resolveRoute(),route.route.params);
 				});
 
 				//bind events listener for successfully Route
@@ -513,6 +574,9 @@
 
 			function compileViewTemplate()
 			{
+				//set Resolver State to false
+				stateInProgress = false;
+				resolveNextStateQueue();
 				buildState();
 
 				if(view.template)
@@ -524,7 +588,6 @@
 					}else{
 						parent.route.$model = viewInstance;
 					}
-
 					//destroy the eventListener
 					$destroyModel();
 
@@ -533,6 +596,7 @@
 						.instantiate(ctrl, viewInstance,null,view.jControllerAs,locals);
 					}
 					//resolve the view instance
+					console.log(view)
 					viewObjectInstance.ele.empty().append( view.template ).compile(viewInstance);
 
 					//fire viewContentLoaded Event
@@ -545,11 +609,22 @@
 
 			}
 
+			/* 
+				Method Name : resolveNextStateQueue
+				Resolve the paths that were pushed to queue
+			*/
+
+			function resolveNextStateQueue(){
+				if(stateQueue.length){
+					//go to the state
+					var nextState = stateQueue.shift();
+					nextState && go(nextState);
+				}
+			}
+
 			function buildState()
 			{
-				$webState.state = route;
 				$webState.state.route.$model = viewObjectInstance.model;
-				
 				//set the baseUrl to the $webState Object
 				//BaseUrl is neccessary when replace state is in use.
 				$webState.$$baseUrl = path;
@@ -569,6 +644,24 @@
 			{
 				return (route.views)?route.views[currentView] : route;
 			}
+
+
+			/* 
+				route extractor
+			*/
+
+			function resolveRoute(){
+				var matchers = ['data','jResolver','url','name','views','jController','jControllerAs','template','templateUrl','jResolver'],
+					ret = {};
+				matchers.forEach(function(name){
+					if(route[name]){
+						ret[name] = route[name];
+					}
+				})
+
+				return ret;
+			}
+
 
 			//initialized Fn
 			function stateChanged(path,route)
