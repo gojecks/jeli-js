@@ -92,6 +92,7 @@ $publicProviders =
     $http : $http,
     $defer : $p ,
     $q : $d,
+    $stacks : new $eventStacks,
     $cookie : $cookie,
     $jCompiler : $templateCompiler,
     $rootModel : new $modelGenerator(),

@@ -45,7 +45,10 @@ function $compileApp()
 
 
 
-
+  /*
+    BootStrapApplication
+  */
+   var _jInitModuleCompiler = [];
   function $jBootStrapApplication()
   {
       if(!$isCompiled)
@@ -58,13 +61,19 @@ function $compileApp()
             {
                 $provider.$jConfigProvider.resolve(moduleName);
                 $provider.$get('$httpProvider').register();
-                $provider.$jInitProvider.resolve(moduleName);
                 //compile jFactory,jFilter,jElement
                 moduleCompiler(moduleName);
+                _jInitModuleCompiler.push(moduleName);
             } 
         });
 
-          $isCompiled = true;
+        return function(){
+          _jInitModuleCompiler.reverse().forEach(function(moduleName){
+            $provider.$jInitProvider.resolve(moduleName);
+          });
+
+           $isCompiled = true;
+        };
       }
   }
 
@@ -79,7 +88,7 @@ function $compileApp()
           $compileTracker.injectors.$new('$rootModel',$publicProviders.$rootModel);
           $compileTracker.injectors.$new(moduleName,module.$get(moduleName)._jQueue);
           injectRequiredModule( module.$get(moduleName).require );
-          $jBootStrapApplication();
+          $jBootStrapApplication()();
           $compileApp();
           $isAfterBootStrap = true;
       }    
@@ -110,8 +119,8 @@ function $compileApp()
     domElementProvider.each(required,function(idx,moduleName)
     {
         $compileTracker.injectors.$new(moduleName,module.$get(moduleName)._jQueue);
-        $provider.$jInitProvider.resolve(moduleName);
         $provider.$jConfigProvider.resolve(moduleName);
+        _jInitModuleCompiler.push(moduleName);
     });
   }
 

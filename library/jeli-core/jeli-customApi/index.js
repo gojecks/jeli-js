@@ -1,186 +1,4 @@
 
-
-
-function jEliFnInitializer(data)
-{
-  var _fn = data.replace(/\W(;)/g,function(idx,key)
-      { 
-        if(idx.indexOf(')') > -1){ return ')|'; }
-        else{ return '|'; }
-      }).split('|');
-
-    this.run = function(params){
-      findInList.call(_fn,function(idx,fn)
-      {
-          //function executor
-          //push fn to initialized Fields
-          params[0] = fn;
-          execFnByName.apply(null,params);
-      });
-    };
-
-    //evaluate
-    this.evaluate = function(model){
-      maskedEval(data,model);
-    }
-}
-
-function attachEventProviders( ele )
-{
-    return function($model,ref)
-    {
-      if($isEqual(ele.nodeType,Node.ELEMENT_NODE))
-      {
-          findInList.call('j-click,j-dblclick,j-submit,j-mouseover,j-mouseenter,j-mousemove,j-mousedown,j-mouseup,j-mouseleave,j-keyup,j-keydown,j-keypress,j-change,j-blur,j-focus'.split(','), function(name,value)
-          {
-              var attr = ele.getAttribute(value),
-                  nElement = element(ele);
-              if(attr)
-              {
-                var splt = value.split('-')[1];
-
-                //ignoreProcess Passer
-                if( $inArray(splt,nElement.data('ignoreProcess') || [] ) )
-                {
-                  return;
-                }
-
-                //j-change requires j-model
-                //check if j-model is defined when this event is used
-                if($isEqual('change',splt) && !ele.getAttribute('j-model'))
-                {
-                    errorBuilder('jChange requires jModel to function with');
-                }
-
-                ignoreProcessCheck(ele,splt);
-                //Store a reference to the element event
-                  nElement
-                  .bind(splt,function(ev)
-                  {
-                      var data = element(this).data(),
-                          dis = this;
-
-                      if(!$isUndefined(data))
-                      {
-                          try{
-
-                             new jEliFnInitializer(data[splt]).run(["",$model,dis,ev]);
-
-                          }finally
-                          {
-                              //consume every watchList
-                              $model.$consume();
-                          }
-                      }
-                  })
-                  .addClass('j-binded');
-              }
-          });
-        
-        }
-    }
-}
-
-function $typeOfModel(el)
-{
-    if (['checkbox', 'radio', 'select-one', 'select-multiple', 'password'].indexOf(el.type) >= 0)
-        return 'change';
-    if (['text', 'textarea', 'email', 'url', 'week', 'time', 'search', 'tel', 'range', 'number', 'month', 'datetime-local', 'date', 'color'].indexOf(el.type) >= 0)
-        return 'input';
-}
-
-function $typeOfValue(el)
-{
-    switch(el.type)
-    {
-        case('checkbox'):
-            return el.checked;
-        break;
-        default:
-            return el.value;
-        break;
-    }
-}
-
-function getCommentNodes(elem)
-{
-    var children = elem.childNodes,
-        comments = [];
-
-    for(var c in children)
-    {
-        if(Number(c))
-        {
-            if(children[c].nodeType === COMMENT_NODE)
-            {
-                comments.push(children[c]);
-            }
-        }
-    }
-
-    return comments;
-}
-
-function moveToUnwatchList(arr)
-{
-    var sliced = $watchList.splice(arr,1)[0];
-    sliced.unWatchRef = sliced.obj[OBJ_REF];
-     $unWatchList.push(sliced);
-}
-
-//get reference obj from unWatchList
-function getObjFromUnWatchList(ref)
-{
-    var found = [];
-    for(var i in $unWatchList)
-    {
-        if($unWatchList[i].obj[OBJ_REF] === ref)
-        {
-            found = $unWatchList.splice(i,1);
-        }
-    }
-
-    return found[0];
-}
-
-//add eli binding class to element
-function addClass(ele,klass)
-{
-    if(!ele) return;
-
-    domElementProvider.addClass.call([ele],(klass?klass:eliBindedClass)); 
-}
-
-
-
-//function html compiler
-//HTML TO DOM function
-
-function toDOM(ignore) 
-{
-  var type = function(text)
-  {
-    if(text.indexOf('tr') > -1 && !ignore)
-    {
-      return 'tbody';
-    }else
-    {
-      return 'div';
-    }
-
-  },
-  d = document,
-  i,
-  a = d.createElement(type(this)),
-  b = d.createDocumentFragment();
-
-  a.innerHTML = this.toString();
-  while (i = a.firstChild){ b.appendChild(i) };
-
-  return (ignore)?b.childNodes:b.firstChild;
-};
-
-
     //$CustomEventHandler Function
   //Create Custom events that can be reused
   //anywhere within the application
@@ -202,7 +20,7 @@ function toDOM(ignore)
                     }
               });
           },
-        _defaultFn = defaultFn || noop;
+        _defaultFn = defaultFn || function(){};
 
     this[type] = function(name,fn){
       if(!_eventsQueue[name]){
@@ -231,6 +49,63 @@ function toDOM(ignore)
       }
     };
   }
+
+
+  /*
+      Custom Events (QUEUE and STACKS)
+  */
+
+  function stack(){
+      var _queues = [];
+
+      var queue = function(fn){
+        _queues.push(fn);
+        return _obj;
+      },
+      executeQueue = function(){
+        var nextFn = _queues.shift() || function(){};
+        nextFn.apply(nextFn,arguments);
+        return _obj;
+      };
+
+      var _obj = {
+        push : queue,
+        pop : executeQueue
+      };
+
+      return _obj;
+  };
+
+  function $eventStacks(){
+      var _events = {};
+    this.broadcast = function(name,arg){
+      var nextFn = _events[name] || function(){};
+      nextFn.apply(nextFn,arg);
+    };
+
+    this.subscribe = function(name,fn){
+      _events[name] = fn;
+      return this;
+    };
+
+    this.bind = function(fn,arg){
+      return function(){
+        fn.apply(fn,arg || []);
+      }
+    };
+
+  }
+
+   /*
+    add the events stacks
+  */
+  $eventStacks.prototype.stack = stack;
+  /*
+        creating a new queue
+  */
+  $eventStacks.prototype.queue = new stack();
+
+
 
 
 

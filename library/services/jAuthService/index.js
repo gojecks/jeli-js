@@ -11,7 +11,7 @@
 	jEli
 	.jModule('jeli.auth.service',[])
 	.jProvider('jAuthProvider',jAuthProviderFN)
-	.jFactory('jAuthService',["$http","Base64","jAuthProvider",jAuthServiceFn]);
+	.jFactory('jAuthService',["$http","Base64","jAuthProvider","$defer",jAuthServiceFn]);
 
 	function jAuthProviderFN(){
 		//Config Object contains service that we support
@@ -28,7 +28,10 @@
 		loginType = false,
 		loginServiceConfiguration = {},
 		registerServiceConfiguration = {},
-		loginTrailCount = 3,
+		loginTrailSettings = {
+			count : 3, //default to 3 attempts
+			expiresIn : 12 //default to 12 hours
+		},
 		validationConfigurationStack = {}; //Default Validation Object
 		//ValidationFn currently supports minLength,maxLength and emailValidation
 
@@ -101,9 +104,7 @@
 
 		//Set the number of times an account
 		//should be locked after too many attempt
-		this.setMaxLoginAttempt = function(num){
-			loginTrailCount = num;
-		};
+		this.loginTrailSettings = loginTrailSettings;
 
 
 		/*
@@ -121,9 +122,18 @@
 			return this;
 		};
 
+		var authManagerSettings = {
+			use : false,
+			storage : false,	//only set to true if you want manager to always handle your data on refresh
+			storageType : "sessionStorage" //supports only local and sessionStorage
+		};
+
+		this.useAuthenticationManager = authManagerSettings;
 
 		this.$get = function(){
-			var publicApis = {};
+			var publicApis = {
+				authManagerSettings : authManagerSettings
+			};
 
 			publicApis.getLoginConfiguration = function(){
 				return loginServiceConfiguration;
@@ -137,8 +147,15 @@
 				return loginType;
 			};
 
-			publicApis.getLoginAttempt = function(){
-				return loginTrailCount;
+			publicApis.getLoginAttempt = function(force){
+				var _stackLoginTrial = window[authManagerSettings.storageType].loginAccountTrial;
+				if(_stackLoginTrial && !force){
+					//delete the variable from the storage
+					delete window[authManagerSettings.storageType].loginAccountTrial;
+					return  JSON.parse(_stackLoginTrial);
+				}
+				
+				return  loginTrailSettings;
 			};
 
 			//get validationConfigurationStack
@@ -152,12 +169,13 @@
 
 
 	//jAuthServiceFn
-	function jAuthServiceFn($http,Base64,jAuthProvider){
+	function jAuthServiceFn($http,Base64,jAuthProvider,$defer){
 
 		var publicApis = {},
 			privateApis = {register:{},login:{},authManager:{}},
 			validationFn = jAuthProvider.getValidationConfiguration(),
-			loginAccountTrial = jAuthProvider.getLoginAttempt();
+			loginAccountTrial = jAuthProvider.getLoginAttempt(),
+			_stack = {};
 
 			//register JDB
 			privateApis.register.jDB = function(postObj,done,fail){
@@ -426,9 +444,18 @@
 			Authorize : function(success,failure){
 				//Log user out when Maximum Login
 				//is reached
-				if(!loginAccountTrial){
+				if(!loginAccountTrial.count){
 					failure({reason:"Too Many Login attempt",code:"-100"});
-
+					if(!loginAccountTrial.expiresAt){
+						loginAccountTrial.expiresAt = ((+new Date) + (loginAccountTrial.expiresIn * (60 * 60 * 1000)));
+					
+						//push to stack to lock user
+						// should in case user refreshes application
+						_stack['loginAccountTrial'] = function(){
+							return loginAccountTrial;
+						};
+					}
+	
 					return;
 				}
 				//check if validation is required
@@ -443,28 +470,110 @@
 					var postObj = jAuthProvider.getLoginConfiguration(),
 						type = jAuthProvider.getLoginType();
 					//check postObj
-					privateApis.login[type](postObj,success,failure);
+					privateApis.login[type](postObj,success,function(){
+						// reduce the limit of attempt
+						loginAccountTrial.count--;
+						failure.apply(failure,arguments);
+					});
 				}else{
 					failure({reason:"Failed Validation","fields":privateApis.login.failedValidation,code:"-102"});
 				}
-
-				// reduce the limit of attempt
-				loginAccountTrial--;
 			}
 		};
 
-		publicApis.authManager = {
-			init : function(data){
-				privateApis.authManager.userAuthenticationData = data;
+		/*
+			Application Auth Manager
+			Manage your authentication information in one service
+			Manage user Authority
+
+			Manager is useAble only when is set to true in configuration
+		*/
+		if(jAuthProvider.authManagerSettings.use){
+			var _userAuthenticationData = {},
+				_authenticated = false;
+			//check if storage is allow
+			getStorageData();
+			publicApis.authManager = {
+				init : function(){
+					_authenticated = true;
+				},
+				isAuthenticated : function(){
+					return _authenticated;
+				},
+				destroy : function(){
+					_userAuthenticationData = {};
+					_authenticated = false;
+				},
+				hasAnyAuthority :  function (authorities,_identity) {
+		            if (!_authenticated || !_identity || !_identity.authorities) {
+		                return false;
+		            }
+
+		            for (var i = 0; i < authorities.length; i++) {
+		                if (_identity.authorities.indexOf(authorities[i]) !== -1) {
+		                    return true;
+		                }
+		            }
+
+		            return false;
+		        },
+		        getData : function(name){
+		        	return _userAuthenticationData[name];
+		        },
+		        storeData : function(name,value){
+		        	_userAuthenticationData[name] = value;
+		        }
+			};
+
+			//set a new stack
+			_stack['auth-reload'] = function(){
+				return _userAuthenticationData;
+			};
+
+			//get the storageData
+			function getStorageData(){
+				if(jAuthProvider.authManagerSettings.storage){
+					_userAuthenticationData = JSON.parse(window[jAuthProvider.authManagerSettings.storageType].getItem('auth-reload') || '{}');
+					//remove the cache data
+					delete window[jAuthProvider.authManagerSettings.storageType]['auth-reload'];
+				}
+			}
+		};
+
+		/*
+			PublicApi for Login Attempt Management
+		*/
+		publicApis.loginManagement = {
+			getExpiresAt : function(){
+				return loginAccountTrial.expiresAt;
 			},
-			isAuthentication : function(){
-				var _identify = privateApis.authManager.userAuthenticationData ;
-				return _identify?true:false;
-			},
-			destroy : function(){
-				delete privateApis.authManager.userAuthenticationData;
+			$destroy : function(force){
+				//reset the user login Attempt to default
+				loginAccountTrial = jAuthProvider.getLoginAttempt(force);
+			}
+		};
+
+		/*
+			Service Watcher
+		*/
+		function initializeWatcher(){
+			if("onbeforeunload" in window){
+				jEli
+				.dom(window)
+				.bind('beforeunload',function(e){
+					if(jEli.dom.support.localStorage){
+						for(var stack in _stack){
+							//store the ref data to be retrieve
+							window[jAuthProvider.authManagerSettings.storageType].setItem(stack,JSON.stringify(_stack[stack]()));
+						}
+					}
+				});
 			}
 		}
+
+		//initialize the storage watcher only when set to true
+		initializeWatcher();
+
 
 		return publicApis;
 	}

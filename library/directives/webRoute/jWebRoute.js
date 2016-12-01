@@ -5,19 +5,144 @@
 	// created 10-11-15 7:00pm
 	// created by Gojecks Joseph
 
+	'use strict';
+
 	jEli
 	.jModule('jEli.web.route',[])
 	.jProvider('$jEliWebProvider',jEliWebProviderFn)
 	.jProvider('$jEliWebStateProvider',jEliWebStateProviderFn)
 	.jFactory('$webState',['$jEliWebProvider',$webStateFn])
-	.jElement('jView',['$jCompiler','$http','$webState','$jEliWebProvider','$rootModel','$controller','$resolve',jViewFn])
-	.jElement('go',['$webState',goFn]);
+	.jFactory('jViewHandler',['$http','$webState','$jEliWebProvider','$rootModel','$controller','$resolve',jViewHandlerFn])
+	.jElement('jView',['jViewHandler',jViewFn])
+	.jElement('go',['$webState',goFn])
+	.init(["$jEliWebProvider","$webState","jViewHandler",initjViewFn]);
+
+	function initjViewFn(jEliWebProvider,$webState,jViewHandler){
+		var locationIsBusy = false,
+			isReplaceState = false,
+			originalState = location.hash,
+			stateChanged = false,
+			html5Mode = jEliWebProvider.getHTML5Mode();
+
+		//set the hash Functionality
+		//First checked to see if window supports onhashchange Event
+		//@Function window.addEeventListener("haschange",FN,false)
+		if("onhashchange" in window)
+		{
+			//regsister an event
+			jViewHandler.events.listener('go',function(ev,path){
+				jViewHandler.events.$broadcast('go.state', path || refineHash() );
+			});
+
+			//hashChange event doesn't fire on reload
+			//work around was to check if location# is not empty
+			//set location if its empty
+			location.hash = refineHash() || jEliWebProvider.getFallBack();
+
+			jEliWebProvider.isLoaded = true;
+			jEli.dom(window)
+			.bind("hashchange", webRouteChangedFn)
+			.on('$locationReplaceState',locationReplaceState);
+
+			/*
+				Triggered When user reloads the page
+			*/
+			if(originalState){
+				jViewHandler.events.$broadcast('go');
+			}
+
+		}
+
+		//set the PopState Functionality
+		//First checked to see if window supports onPopChange Event
+		//@Function window.addEeventListener("popState",FN,false)
+
+		if("onpopstate" in window){
+			if(html5Mode){
+				window.onpopstate = popStateFn;
+			}
+		}
+
+
+		//popStateFN
+		function popStateFn(e){
+			
+		}
+
+		function locationReplaceState(e)
+		{
+			var state = $webState.currentState();
+			isReplaceState = true;
+
+			if(state.hash !== state.previousHash || stateChanged)
+			{
+				location.replace(state.hash);
+				originalState = state.currentLocation;
+				stateChanged = false;
+			}
+		}
+
+
+		function webRouteChangedFn(e)
+		{
+			if(!location.hash.length || !$webState.$stateChanged(refineHash()))
+			{
+				return false;
+			}
+
+
+			var state = $webState.currentState();
+			if(isReplaceState)
+			{
+				if((originalState !== location.hash) && (location.hash !== state.hash))
+				{
+					stateChanged = true;
+					isReplaceState = false;
+					jViewHandler.events.$broadcast('go');
+				}
+
+				return false;
+			}else
+			{
+				//go to the required hash
+				jViewHandler.events.$broadcast('go');
+
+			}
+		}
+
+		
+
+
+		//function refineHash
+		function refineHash()
+		{
+			var hash = getHash();
+
+			if(hash && hash.indexOf('#') > -1)
+			{
+				return hash.replace('#','');
+			}
+
+			return hash;
+		}
+
+		function getHash()
+		{
+			if(isReplaceState)
+			{
+				return originalState;
+			}
+
+			return location.hash;
+		}
+	}
 
 
 	function jEliWebStateProviderFn()
 	{
 		var $stateCollection = {},
-			matchers = ["template","templateUrl","jController","jControllerAs"];
+			matchers = ["template","templateUrl","jController","jControllerAs"],
+			_unregistered = {};
 		//Route Creator
 		function createRoute(name)
 		{
@@ -52,46 +177,92 @@
 
 		this.setState = function(name,routeConfig)
 		{
+			function addViewMatcher(view){
+				//add the required target view to the view scope
+				var i = matchers.length;
+				while(i--){
+					if(routeConfig[matchers[i]]){
+						if(!routeConfig.views[view]){
+							routeConfig.views[view] = {};
+						}
+
+						routeConfig.views[view][matchers[i]] = routeConfig[matchers[i]];
+						delete routeConfig[matchers[i]];
+					}
+				}
+			}
+
 			//check for abstract route
 			routeConfig.route = createRoute(routeConfig.url || '^');
-			
+
+			//get the view names
+			//used to track multiple views
+			var _views  = Object.keys(routeConfig.views || {});
 			routeConfig.name = name;
-			if(routeConfig.parent && $stateCollection[routeConfig.parent]){
-				var parentRoute = $stateCollection[routeConfig.parent];
+
+			if(routeConfig.parent){
+				if($stateCollection[routeConfig.parent]){
+					var parentRoute = $stateCollection[routeConfig.parent];
 					routeConfig.views = routeConfig.views || {}; // create new view
 					//copy all views except for
 					//targeted view
-				for(var view in parentRoute.views){
-					if(view !== routeConfig.targetView){
-						routeConfig.views[view] = parentRoute.views[view];
-					}else{
+					for(var view in parentRoute.views){
+						if(view !== routeConfig.targetView){
+							routeConfig.views[view] = parentRoute.views[view];
+						}else{
 
-						if(!routeConfig.views[view]){
-							routeConfig.views[view] = {};
-							//add the required target view to the view scope
-							var i = matchers.length;
-							while(i--){
-								if(routeConfig[matchers[i]]){
-									routeConfig.views[view][matchers[i]] = routeConfig[matchers[i]];
-									delete routeConfig[matchers[i]];
-								}
+							if(!routeConfig.views[view]){
+								addViewMatcher(view);
 							}
 						}
 					}
+
+					/*
+						only match when the routeConfig
+						doesn't have the targeted view
+						and has views property
+
+						Pardon user errors
+					*/
+					var targetView = routeConfig.targetView;
+					if(targetView && !routeConfig.views[targetView]){
+						addViewMatcher(targetView);
+					}
+
+					//set resolvers
+					if(parentRoute.jResolver){
+						routeConfig.jResolver = routeConfig.jResolver || {};
+						for(var resolver in parentRoute.jResolver){
+							routeConfig.jResolver[resolver] = routeConfig.jResolver[resolver] || parentRoute.jResolver[resolver];
+						}
+					}
+
+					//overwrite our routeConfig
+					routeConfig.route.parent = parentRoute;
+
+					//check if parent views exist in child views
+					if(!_views.length && !routeConfig.abstract){
+						_views = parentRoute.route.$$views;
+					}
+					parentRoute.route.$$views.forEach(function(cView){
+						if(!jEli.$inArray(_views,cView)){
+							_views.push()
+						}
+					});
+
+					parentRoute = null;
+					delete routeConfig.parent;
+
+				}else{
+					//push unregistered route to object
+					if(!_unregistered[routeConfig.parent]){
+						_unregistered[routeConfig.parent] = [];
+					}
+
+					//push to the unregistered watchlist
+					_unregistered[routeConfig.parent].push(routeConfig.name);
 				}
 
-				//set resolvers
-				if(parentRoute.jResolver){
-					routeConfig.jResolver = routeConfig.jResolver || {};
-					for(var resolver in parentRoute.jResolver){
-						routeConfig.jResolver[resolver] = routeConfig.jResolver[resolver] || parentRoute.jResolver[resolver];
-					}
-				}
-				
-				//overwrite our routeConfig
-				routeConfig.route.parent = parentRoute;
-				parentRoute = null;
-				delete routeConfig.parent;
 			}
 
 			if(!routeConfig.url){
@@ -100,6 +271,20 @@
 
 			//set the route
 			$stateCollection[name] = routeConfig;
+
+			//set the current route view paths
+			routeConfig.route.$$views = _views;
+
+			//check if route is parent that needs to register child
+			if(_unregistered[routeConfig.name]){
+				var self = this;
+				_unregistered[routeConfig.name].forEach(function(uName){
+					self.setState(uName,$stateCollection[uName]);
+				});
+
+				//remove the registra
+				delete _unregistered[routeConfig.name];
+			}
 
 			//return the curent state;
 			return this;
@@ -133,7 +318,7 @@
 				for(var i in  $stateCollection)
 				{
 					var webRoutes =  $stateCollection[i];
-					if(webRoutes.route.regexp.test(routeName))
+					if(webRoutes.route.regexp.test(routeName) && !webRoutes.abstract)
 					{
 						foundRoute = webRoutes;
 					}
@@ -211,17 +396,6 @@
 	{
 		var locationStates = null,
 			lastState = null;
-
-		/* 
-			Method Name : GO
-			Parameter : stateName (STRING) , Params (OBJECT)
-			@returns : self
-		*/
-		this.go = function(path,params)
-		{
-			location.hash = this.$href(path,params);
-			return this;
-		};
 
 	    this.search = function(query)
 	    {
@@ -342,183 +516,254 @@
 				});
 			}
 		}
-	}
+	};
 
-//j-View Directive Fn
-//As an Elemen <j-view ref="default"></j-view>
-//as Attribute <element j-view="default"></element>
+	/*
 
-	function jViewFn($compiler,$http,$webState,jEliWebProvider,$rootModel,ctrlP,$resolve)
-	{
-
-		var eventsHandler = {},
-			viewsHolder = {},
-			currentView = '',
-			locationIsBusy = false,
-			isReplaceState = false,
-			originalState = location.hash,
-			stateChanged = false,
+	*/
+	function jViewHandlerFn($http,$webState,jEliWebProvider,$rootModel,ctrlP,$resolve){
+		var viewsHolder = {},
+			currentView = '@',
+			previousView = '@',
 			_jView = null,
 			stateInProgress,
 			stateQueue = [],
 			currentPath = "",
 			$stateTransitioned = false,
-			html5Mode = jEliWebProvider.getHTML5Mode();
+			currentState = "",
+			self = this,
+			_pendingViewStack = {};
 
-		function setViewReference(ele,attr,model)
-		{
-			viewsHolder[currentView] = ({
+		this.setViewReference = function(ele,attr,model){
+			viewsHolder[attr.ref] = ({
 				ele : ele,
 				attr : attr,
 				model : model,
 				previousModel : null,
 				previousLoaded : false,
-				name : currentView
+				name : attr.ref
 			});
-		}
+
+			return this;
+		};
+
+
+		/* 
+			Method Name : GO
+			Parameter : stateName (STRING) , Params (OBJECT)
+			@returns : self
+		*/
+
+		$webState.go = function(path,params)
+		{
+			var state = this.$href(path,params);
+			self.events.$broadcast('state.changed',state);
+			return this;
+		};
+
+
+		//trigger
+		this.events = new jEli.jEvents('listener');
+		//add an event
+		this.events.listener('go.state',function(ev,path){
+			//check if state in Progress
+			if(stateInProgress){
+				stateQueue.push(path);
+				$stateTransitioned = (currentState !== path);
+			}else{
+				//set stateInProgress to true
+				stateInProgress = true;
+				go(path);
+			}
+			//set the current State
+			currentState = path;
+		});
+
+		//check for pending view rendering
+		this.events.listener('view.render',function(ev,viewName){
+			if(_pendingViewStack[viewName]){
+				compileViewTemplate(_pendingViewStack[viewName],viewsHolder[viewName]);
+			}
+		});
+
+		//state changed event handler
+		this.events.listener('state.changed',function(ev,state){
+			self.events.$broadcast('go.state',state);
+			location.hash = state;
+		});
 
 		//getMainView
 		function getView(view)
 		{
 			return function(name)
 			{
-				return (name)?viewsHolder[view][name] : viewsHolder[view];
+				return ((name)?viewsHolder[view][name] : viewsHolder[view]);
 			}
 		}
 
-		//set the hash Functionality
-		//First checked to see if window supports onhashchange Event
-		//@Function window.addEeventListener("haschange",FN,false)
-		if("onhashchange" in window)
-		{
-			if(!jEliWebProvider.isLoaded)
-			{
-				//hashChange event doesn't fire on reload
-				//work around was to check if location# is not empty
-				//set location if its empty
-				location.hash = refineHash() || jEliWebProvider.getFallBack();
+		/*
+			get the template View
+			Load through http when template is not defined
+		*/
+		function loadViewTemplate(view,viewName,callback){
 
-				jEliWebProvider.isLoaded = true;
-				jEli.dom(window)
-				.bind("hashchange", webRouteChangedFn)
-				.on('$locationReplaceState',locationReplaceState);
-			}
-		}
-
-		//set the PopState Functionality
-		//First checked to see if window supports onPopChange Event
-		//@Function window.addEeventListener("popState",FN,false)
-
-		if("onpopstate" in window){
-			if(html5Mode){
-				window.onpopstate = popStateFn;
-			}
-		}
-
-
-		//popStateFN
-		function popStateFn(e){
-			
-		}
-
-		function locationReplaceState(e)
-		{
-			var state = $webState.currentState();
-			isReplaceState = true;
-
-			if(state.hash !== state.previousHash || stateChanged)
-			{
-				location.replace(state.hash);
-				originalState = state.currentLocation;
-				stateChanged = false;
-			}
-		}
-
-
-		function webRouteChangedFn(e)
-		{
-			if(!location.hash.length || !$webState.$stateChanged(refineHash()))
-			{
-				return false;
-			}
-
-			var state = $webState.currentState();
-			if(isReplaceState)
-			{
-				if((originalState !== location.hash) && (location.hash !== state.hash))
+			if(jEli.$isDefined(view)){
+				if(view.templateUrl)
 				{
-					stateChanged = true;
-					isReplaceState = false;
-					go(refineHash());
+					$http
+					.get(view.templateUrl)
+					.done(function(data)
+					{
+						view.template = data.data;
+						callback(viewName,view);
+					});
+				}
+				else if(view.template)
+				{
+					callback(viewName,view);
+				}
+			}
+		}
+
+		/*
+			compile the template when loaded
+		*/
+
+		function compileViewTemplate(view,viewObjectInstance)
+		{
+			var	viewInstance = viewObjectInstance.model.$new(),
+				ctrl = view.jController || function(){};
+
+			$webState.state.route.$model = viewObjectInstance.model;
+			if(view.template)
+			{
+				var parent = $webState.state.route.parent;
+				if((parent && parent.views[viewObjectInstance.name])){
+					parent.route.$model = viewInstance;
+				}
+				//destroy the eventListener
+					var previousModel = viewObjectInstance.previousModel;
+					if(previousModel){
+						//destroy our previous model and its child reference
+						previousModel.$$destroy({message:"View changed"});
+					}
+
+				if(view.jController){
+					ctrlP
+					.instantiate(ctrl, viewInstance,null,view.jControllerAs,$webState.state.route.resolvedData);
+				}
+				//resolve the view instance
+				viewObjectInstance.ele.empty().append( view.template ).compile(viewInstance);
+
+				//fire viewContentLoaded Event
+				viewInstance.$publish('$viewContentLoaded')(viewObjectInstance.ele);
+
+				//set our reference to current viewInstance
+				//used to preform model cleanup
+				viewObjectInstance.previousModel = viewInstance;
+			}
+
+		}
+
+
+			/* 
+				Method Name : resolveNextStateQueue
+				Resolve the paths that were pushed to queue
+			*/
+		this.resolveNextStateQueue =function(){
+			//set Resolver State to false
+			stateInProgress = false;
+			if(stateQueue.length){
+				//go to the state
+				var nextState = stateQueue.shift();
+				nextState && this.events.$broadcast('go.state',nextState);
+			}
+		};
+
+		/*
+			remove Views from holder
+		*/
+
+		function removeViews(views){
+			if(views.length){
+				for(var view in viewsHolder){
+					if(!jEli.$inArray(view,views)){
+						//remove the view
+						delete viewsHolder[view];
+					}
+				}
+			}
+		}
+
+		/*
+			trigger the resolved route views
+		*/
+		this.resolveViews = function(route){
+			var _views = [];
+			if(route.route.parent && !route.route.parent.resolved){
+				route.route.parent.resolved = true;
+				_views = Object.keys(route.views).concat();
+			}else{
+				if(route.targetView){
+					//concat the target view
+					if(!viewsHolder[route.targetView]){
+						//concat the views
+						_views = _views.concat(route.route.$$views);
+						removeViews(_views);
+					}else{
+						_views = _views.concat(route.targetView);
+					}
+				}else{
+					//concat the views
+					_views = _views.concat(route.route.$$views);
+					removeViews(_views);
+				}
+			}
+
+			return function(){
+				var inc = 0;
+				//loop through the required views
+				do{
+					currentView = _views[inc];
+					inc++;
+
+				var view = (route.views)?route.views[currentView] : route;
+					//Load View Template
+					loadViewTemplate( view, currentView , function(vName,_view){
+						var viewObjectInstance = getView(vName)();
+						if(viewObjectInstance){
+							compileViewTemplate(_view, viewObjectInstance);
+						}else{
+							//Push pending view to stack
+							_pendingViewStack[vName] = _view;
+						}
+					});
+
+				//trigger the success
+				if(inc === _views.length - 1){
+					//dispatch event for webRoute Success
+					_jView.$broadcast('$webRouteSuccess', []);
 				}
 
-				return false;
-			}else
-			{
-				//go to the required hash
-				go(refineHash());
+				}while(_views.length > inc);
+			};
+		};
 
-			}
-		}
-
-
-		//function refineHash
-		function refineHash()
-		{
-			var hash = getHash();
-
-			if(hash && hash.indexOf('#') > -1)
-			{
-				return hash.replace('#','');
-			}
-
-			return hash;
-		}
-
-		function getHash()
-		{
-			if(isReplaceState)
-			{
-				return originalState;
-			}
-
-			return location.hash;
-		}
 
 		//go to path
 		function go(path)
 		{
-			console.log(stateInProgress,path)
-			//check if state in Progress
-			if(stateInProgress){
-				stateQueue.push(path);
-				$stateTransitioned = (currentState !== path);
-				return false;
-			}
-
-			//set stateInProgress to true
-			stateInProgress = true;
-
 			//set up new events
 			var route = jEliWebProvider.getRoute(path);
-
-			//set the current State
-			currentState = path;
 			if( route)
 			{
 				//set the state
 				$webState.state = route;
 				//initialize state changed 
 				var previousState = jEli.$extend({},$webState.state.route);
-
-				stateChanged(path,route);
-
-				var view = getRouteView(),
-					viewObjectInstance = getView(currentView)(),
-					viewInstance = viewObjectInstance.model.$new(),
-					ctrl = view.jController || function(){},
-					locals = {};
-
+				//set the current view
+				//get the RouteView Object
+				var locals = {};
 
 				//create an Event
 				//Add Default Function to our listener
@@ -527,35 +772,38 @@
 				_jView = new jEli.jEvents('addEventListener',function(e){
 					if(jEli.$isEqual('$webRouteStart',e.type))
 					{
+						/*
+						 resolve the resolvers if defined
+						*/
+						if(route.jResolver){
+							$resolve
+							.instantiate(route.jResolver,locals)
+							.then(function(){
+								//check for page Transition
+								//useful when user state is been resolved and resolver changes the route
+								if($stateTransitioned){
+									$stateTransitioned = false;
+									self.resolveNextStateQueue();
+									return;
+								}
 
-						$resolve
-						.instantiate(route.jResolver,locals)
-						.then(function(){
-							//check for page Transition
-							//useful when user state is been resolved and resolver changes the route
-							if($stateTransitioned){
-								$stateTransitioned = false;
-								return true;
-							}
+								/*
+									check if view is defined
+								*/
+								self.resolveViews(route)();
 
-							if(view.templateUrl)
-							{
-								$http
-								.get(view.templateUrl)
-								.done(function(data)
-								{
-									view.template = data.data;
-									compileViewTemplate();
-								});
-							}
-							else if(view.template)
-							{
-								compileViewTemplate();
-							}
+								//set the baseUrl to the $webState Object
+								//BaseUrl is neccessary when replace state is in use.
+								$webState.$$baseUrl = path;
 
-							//set relovers
-							route.resolvedData = locals;
-						});
+								self.resolveNextStateQueue();
+
+								//set relovers
+								route.resolvedData = locals;
+							});
+						}else{
+							self.resolveViews(route)();
+						}
 					}
 				});
 
@@ -568,88 +816,16 @@
 					$rootModel.$publish(e.type)(e, route , route.route.params, previousState, (previousState.params || previousState.route.params) );
 				});
 
-
 				_jView.$broadcast('$webRouteStart',[]);
-			}
 
-			function compileViewTemplate()
-			{
-				//set Resolver State to false
+			}else{
+
 				stateInProgress = false;
-				resolveNextStateQueue();
-				buildState();
-
-				if(view.template)
-				{
-					//dispatch event for webRoute Success
-					var parent = route.route.parent;
-					if((parent && !parent.views[viewObjectInstance.name]) || !parent){
-						_jView.$broadcast('$webRouteSuccess', []);
-					}else{
-						parent.route.$model = viewInstance;
-					}
-					//destroy the eventListener
-					$destroyModel();
-
-					if(view.jController){
-						ctrlP
-						.instantiate(ctrl, viewInstance,null,view.jControllerAs,locals);
-					}
-					//resolve the view instance
-					console.log(view)
-					viewObjectInstance.ele.empty().append( view.template ).compile(viewInstance);
-
-					//fire viewContentLoaded Event
-					viewInstance.$publish('$viewContentLoaded')(viewObjectInstance.ele);
-
-					//set our reference to current viewInstance
-					//used to preform model cleanup
-					viewObjectInstance.previousModel = viewInstance;
-				}
-
 			}
-
-			/* 
-				Method Name : resolveNextStateQueue
-				Resolve the paths that were pushed to queue
-			*/
-
-			function resolveNextStateQueue(){
-				if(stateQueue.length){
-					//go to the state
-					var nextState = stateQueue.shift();
-					nextState && go(nextState);
-				}
-			}
-
-			function buildState()
-			{
-				$webState.state.route.$model = viewObjectInstance.model;
-				//set the baseUrl to the $webState Object
-				//BaseUrl is neccessary when replace state is in use.
-				$webState.$$baseUrl = path;
-			}
-
-			//destroy the previous Model
-			function $destroyModel(){
-				var previousModel = getView(currentView)('previousModel');
-				if(previousModel){
-					//destroy our previous model and its child reference
-					previousModel.$$destroy({message:"View changed"});
-				}
-			}
-
-			//get template
-			function getRouteView()
-			{
-				return (route.views)?route.views[currentView] : route;
-			}
-
 
 			/* 
 				route extractor
 			*/
-
 			function resolveRoute(){
 				var matchers = ['data','jResolver','url','name','views','jController','jControllerAs','template','templateUrl','jResolver'],
 					ret = {};
@@ -661,35 +837,29 @@
 
 				return ret;
 			}
-
-
-			//initialized Fn
-			function stateChanged(path,route)
-			{
-				if( route.targetView && getView(route.targetView)())
-				{
-					currentView = route.targetView;
-				}
-
-				if(currentView && !route.targetView && !route.views)
-				{
-					currentView = '';
-				}
-			}
 		};
 
+		return this;
+	}
 
+//j-View Directive Fn
+//As an Elemen <j-view ref="default"></j-view>
+//as Attribute <element j-view="default"></element>
+
+	function jViewFn(jViewHandler)
+	{
 
 		return {
 			allowType : 'AE',
 			$compiler : function(ele,attr)
 			{
 				return function(ele,attr,model){
-					currentView = attr.jView || attr.ref || '';
 					//viewSetter for reference
-					setViewReference(ele,attr,model);
-					//go to route
-					go(refineHash());
+					attr.ref =  '@' + (attr.ref || attr.jView || '');
+					jViewHandler
+					.setViewReference(ele,attr,model)
+					.events.$broadcast('view.render',attr.ref);
+
 				}
 			}
 		};
