@@ -24,15 +24,22 @@
 			stateChanged = false,
 			html5Mode = jEliWebProvider.getHTML5Mode();
 
+
+			//regsister an event
+			jViewHandler.events.listener('go',function(ev,path){
+				jViewHandler.events.$broadcast('go.state', path || refineHash() );
+			});
+
+			//register replaceState event
+			jViewHandler.events.listener('replaceState',function(ev){
+				isReplaceState = true;
+			});
+
 		//set the hash Functionality
 		//First checked to see if window supports onhashchange Event
 		//@Function window.addEeventListener("haschange",FN,false)
 		if("onhashchange" in window)
 		{
-			//regsister an event
-			jViewHandler.events.listener('go',function(ev,path){
-				jViewHandler.events.$broadcast('go.state', path || refineHash() );
-			});
 
 			//hashChange event doesn't fire on reload
 			//work around was to check if location# is not empty
@@ -72,45 +79,29 @@
 		function locationReplaceState(e)
 		{
 			var state = $webState.currentState();
-			isReplaceState = true;
+				isReplaceState = true;
 
 			if(state.hash !== state.previousHash || stateChanged)
 			{
 				location.replace(state.hash);
 				originalState = state.currentLocation;
-				stateChanged = false;
 			}
 		}
 
 
 		function webRouteChangedFn(e)
 		{
-			if(!location.hash.length || !$webState.$stateChanged(refineHash()))
+			if(!location.hash.length || !$webState.$stateChanged(refineHash()) || isReplaceState)
 			{
+				isReplaceState = false;
 				return false;
 			}
-
-
-			var state = $webState.currentState();
-			if(isReplaceState)
-			{
-				if((originalState !== location.hash) && (location.hash !== state.hash))
-				{
-					stateChanged = true;
-					isReplaceState = false;
-					jViewHandler.events.$broadcast('go');
-				}
-
-				return false;
-			}else
-			{
 				//go to the required hash
 				jViewHandler.events.$broadcast('go');
 
-			}
 		}
 
-		
+
 
 
 		//function refineHash
@@ -531,6 +522,7 @@
 			currentPath = "",
 			$stateTransitioned = false,
 			currentState = "",
+			previousState = "",
 			self = this,
 			_pendingViewStack = {};
 
@@ -567,16 +559,22 @@
 		//add an event
 		this.events.listener('go.state',function(ev,path){
 			//check if state in Progress
-			if(stateInProgress){
+			if(!path){
+				return false;
+			}
+				//set the current State
+				previousState = currentState;
+				currentState = path;
+
+			if(stateInProgress ){
 				stateQueue.push(path);
-				$stateTransitioned = (currentState !== path);
+				$stateTransitioned = !jEli.$isEqual(currentState,previousState);
+				return false;
 			}else{
 				//set stateInProgress to true
 				stateInProgress = true;
 				go(path);
 			}
-			//set the current State
-			currentState = path;
 		});
 
 		//check for pending view rendering
@@ -589,6 +587,7 @@
 		//state changed event handler
 		this.events.listener('state.changed',function(ev,state){
 			self.events.$broadcast('go.state',state);
+			self.events.$broadcast('replaceState');
 			location.hash = state;
 		});
 
