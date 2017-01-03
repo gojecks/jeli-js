@@ -99,6 +99,19 @@
         }
     }
 
+    //noTemplate binding
+    function noBinding(ele,model){
+
+      return function(tmpl,name){
+        if(name){
+          ele.setAttribute(name,$jCompiler(tmpl)( model ));
+        }else{
+          //remove filter from textNode and set a new value
+          ele.nodeValue = $jCompiler(ele.nodeValue)(model);
+        }
+      }
+    }
+
     //Global attrWatcher
     function $attrWatcher(ele)
     {
@@ -109,10 +122,14 @@
               addClass(ele);
            findInList.call(attr,function(idx,obj)
            {
-              if(!$isNull(tplRegEx.exec(obj.value)))
+              var _regTest = new RegExp(_defaultTemplateExp).exec(obj.value);
+              if(!$isNull(_regTest))
               {
-                  $attrWatchList.$push($model.$mId,{element:ele,attr:[obj],$$:$model});
-
+                if(_regTest[1].charAt(0) === ":"){
+                  noBinding(ele,$model)(obj.value,obj.name);
+                }else{
+                   $attrWatchList.$push($model.$mId,{element:ele,attr:[obj],$$:$model});
+                }
               }
            });
 
@@ -235,7 +252,7 @@
                             data = nElement.data('ignoreProcess');
                         if(!data)
                         {
-                            nElement.data({ignoreProcess:[]});
+                          nElement.data({ignoreProcess:[]});
                         }
 
                       findInList.call(isDirective,function(i,n)
@@ -315,6 +332,8 @@
   //@Function setTemplateValue
   function setTemplateValue(key,model)
   {
+      //remove the noBinding marker
+      key = key.replace(':','');
 
     var filter = removeFilters(key),
         value = $modelSetterGetter(filter.filterModel,model);
@@ -368,15 +387,18 @@
   //textNode Watcher and compiler
   function textNodeCompiler(textNode)
   {
-      return function($scope,ref)
+      return function($model,ref)
       {
-          if(!$isNull( new RegExp(/\{\%(.*?)\%\}/g).exec(textNode.nodeValue)) )
-          {        
-              var valueHasFilter = removeFilters(textNode.nodeValue),
-                      cloneNode = textNode.cloneNode(true);
-                  $watchBlockList.$push($scope.$mId,{ cNode:cloneNode,orig:textNode,'$object:ref':ref});
-                  //remove filter from textNode and set a new value
-                  textNode.nodeValue = $jCompiler(textNode.nodeValue)($scope);
+          var _regTest = new RegExp(_defaultTemplateExp).exec(textNode.nodeValue);
+          if(!$isNull(_regTest) )
+          { 
+            if(!$isEqual(_regTest[1].charAt(0),":")){
+                var valueHasFilter = removeFilters(textNode.nodeValue),
+                    cloneNode = textNode.cloneNode(true);
+                $watchBlockList.$push($model.$mId,{ cNode:cloneNode,orig:textNode,'$object:ref':ref});
+            }
+
+            noBinding(textNode,$model)(textNode.nodeValue);       
           }
       }
   }
@@ -490,3 +512,60 @@
             return $template;
         };
     }
+
+            /*
+    createElement Method
+    Accepts JSON OBJ and Returns an Element
+    eg : {
+      "element" : "p",
+      "attr" : {
+        "class" : "test"
+      },
+      "children" : [{}], 
+      "text" : "I am a Paragraph"
+    }
+
+    @return DOM Element
+  */
+  function jElementBuilder(ele,data){
+    var element = document.createElement(ele.element);
+        data = data || {};
+      if(ele.attr){
+        for(var prop in ele.attr){
+          element.setAttribute(prop,ele.attr[prop]);
+        }
+      }
+
+    if(ele.text){
+      element.innerHTML = $jCompiler(ele.text)(data);
+    }
+
+    //add eventListener
+    if(ele.eventListener){
+      for(var event in ele.eventListener){
+        element.setAttribute('data-event-'+event,ele.eventListener[event]);
+        $templateCompiler.events.afterLoadevents.push('data-event-'+event);
+      }
+    }
+
+    if(ele.children){
+      for(var child in ele.children){
+        element.appendChild(jElementBuilder(ele.children[child],data));
+      }
+    }
+
+    return element;
+  }
+
+  $templateCompiler.createElement = function(obj,data){
+    var ret = [];
+    obj.forEach(function(ele){
+      ret.push(jElementBuilder(ele,data));
+    });
+    
+    return ret;
+  };
+
+  $templateCompiler.events = {
+    afterLoadevents : []
+  };

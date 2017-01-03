@@ -695,10 +695,14 @@
 		}
 
 		/*
-			trigger the resolved route views
+			getCurrentView
+			@params : Route OBJECT
+
 		*/
-		this.resolveViews = function(route){
+
+		function getCurrentView(route){
 			var _views = [];
+
 			if(route.route.parent && !route.route.parent.resolved){
 				route.route.parent.resolved = true;
 				_views = Object.keys(route.views).concat();
@@ -718,6 +722,16 @@
 					removeViews(_views);
 				}
 			}
+
+			return _views;
+		}
+
+		/*
+			trigger the resolved route views
+		*/
+		this.resolveViews = function(route){
+			var _views = getCurrentView(route);
+			
 
 			return function(){
 				var inc = 0;
@@ -756,8 +770,6 @@
 			var route = jEliWebProvider.getRoute(path);
 			if( route)
 			{
-				//set the state
-				$webState.state = route;
 				//initialize state changed 
 				var previousState = jEli.$extend({},$webState.state.route);
 				//set the current view
@@ -807,6 +819,8 @@
 				});
 
 				_jView.addEventListener('$webRouteStart',function(e){
+					//set the state
+					$webState.state = route;
 					$rootModel.$publish(e.type)(e,resolveRoute(),route.route.params);
 				});
 

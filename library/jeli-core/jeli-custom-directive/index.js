@@ -38,6 +38,7 @@
         }
     });
 
+
   function defaultElementBinder(type)
   {
     //arguments
@@ -110,21 +111,29 @@
               this.cache = [];
 
               //replace the element with the commentNode for reference
-              this.parentNode.insertBefore( this.cNode, this.elem );
-              this.parentNode.insertBefore( this.cENode , this.elem.nextSibling );
+              if(this.parentNode){
+                this.parentNode.insertBefore( this.cNode, this.elem );
+                this.parentNode.insertBefore( this.cENode , this.elem.nextSibling );
+              }
+              
 
               //initialize compiler for the following directives
               //j-for
               //j-include
               //j-do
               if(expect(["for","include","do"]).contains(this.type)){
-                this.parentNode.removeChild(this.elem);
+                if(this.parentNode){
+                   this.parentNode.removeChild(this.elem);
+                }
                 this.isProcessed = false;
                 //remove elem
                 delete this.elem;
               }else{
                   if(!$logicChecker(this.checker,this.$model)){
-                    this.parentNode.removeChild(this.elem);
+                    if(this.parentNode){
+                      this.parentNode.removeChild(this.elem);
+                    }
+
                     this.isProcessed = false;
                 }else{
                   this.isProcessed = true;

@@ -207,8 +207,10 @@ function $inject(arg)
      }
     else if($isFunction(arg))
     {
-        var fn = arg;
+      fn = arg;
+      if(!arg.$injector){
         fn.$injector = $injectorChecker(arg); 
+      }        
     }
 
     return fn;

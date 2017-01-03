@@ -31,17 +31,18 @@ module
 function jTheatreDirectiveFn($mFactory,$document)
 {
 	return ({
+		template : theatreTemplate,
 		$init : jTheatreInitFn
 	});
 
-	function jTheatreInitFn(ele,attr,$model)
-	{
+	//theatreTemplate
+	function theatreTemplate(ele,attr){
 		//Append All modalFactory Object
 			$mFactory.modalObjects.Tbody = _("<div></div>").attr("id", "projata-Tbody").addClass("clearfix");
 			$mFactory.modalObjects.Twrap = _('<div></div>').attr("id", "projata-theatre");
 			$mFactory.modalObjects.TButtonWrapper = _('<div id="projata-theatre-button"></div>');
     		$mFactory.modalObjects.TBottomC = _('<div id="projata-BottomContainer"></div>').append($mFactory.modalObjects.TButtonWrapper);
-    		$mFactory.modalObjects.TMenu = _('<ul id="projata-Menu" theatre-menu-board><li id="pTMenu" j-for="menu in theatreMenu"><a  title="{%menu.title%}"  j-click="$performMenuTask(menu.taskName)" role="button" >{%menu.title%}</a></li></ul>'); //theatre-menu-board
+    		$mFactory.modalObjects.TMenu = _('<ul id="projata-Menu" theatre-menu-board></ul>'); //theatre-menu-board
     		$mFactory.modalObjects.Tbutton = _('<a href="javascript:;" title="More Options" j-click="theatre.slideMenu($event)"> Options </a>');
     		$mFactory.modalObjects.TButtonWrapper.append(
     			$mFactory.modalObjects.TMenu,
@@ -75,32 +76,47 @@ function jTheatreDirectiveFn($mFactory,$document)
 		$mFactory.modalObjects.Twrap
 		.append($mFactory.modalObjects.Tbody,$mFactory.modalObjects.TBottomC);
 
-			$mFactory.modalObjects.TDetailsNav.click(function() {});
-
-			$model.theatre = $mFactory.theatre;
-			$model.theatre.slideMenu = function($event)
-			{
-				$mFactory.modalObjects.TMenu.slideToggle("slow", function()
-    			{
-        			_(this).click(function() 
-        			{
-            			_(this).fadeOut()
-        			});
-    			});
-			};
-
-			$mFactory.$on('$extend.model',function(e,obj){
-				if(obj && jEli.$isObject(obj)){
-					for(var name in obj){
-						$model[name] = obj[name];
-					}
-				}
-			});
-
 		//append the object to the ele
-		ele.append(
-			$mFactory.modalObjects.Twrap
-		);
+			
+
+
+		return $mFactory.modalObjects.Twrap[0];
+	}
+
+	function jTheatreInitFn(ele,attr,$model)
+	{
+		$mFactory.modalObjects.TDetailsNav.click(function() {});
+
+		$model.theatre = $mFactory.theatre;
+		$model.theatre.slideMenu = function($event)
+		{
+			$mFactory.modalObjects.TMenu.slideToggle("slow", function()
+			{
+    			_(this).click(function() 
+    			{
+        			_(this).fadeOut()
+    			});
+			});
+		};
+
+		$mFactory.$on('$extend.model',function(e,obj){
+			if(obj && jEli.$isObject(obj)){
+				for(var name in obj){
+					$model[name] = obj[name];
+				}
+			}
+		});
+
+		$mFactory.$on('theatre.image.change',function(){
+			delete $model.currentPreviewImage;
+		});
+
+		//remove cached data
+		$mFactory.$on('theatre.ended',function(e,obj){
+            delete $model.currentPreviewImage;
+            delete $model.details;
+        });
+
 
 		$mFactory.reformatContainer();
 	}
@@ -111,8 +127,8 @@ function jModalDirectiveFn($mFactory,$document)
 {
 	return {
 		allowType : 'AE',
-		$init : function(ele,attr,$model)
-		{
+		template : function(ele,attr){
+
 			$mFactory.modalObjects.wrap = _("<div></div>").attr("id", "projata-wrap"), 
 			$mFactory.modalObjects.content = _("<div></div>").addClass("ui-corner-all").attr("id", "projata-content"), 
 			$mFactory.modalObjects.overlay = _("<div></div>").attr("id", "projata-overlay"),
@@ -123,15 +139,21 @@ function jModalDirectiveFn($mFactory,$document)
 			$mFactory.modalObjects.outter = _("<div></div>").attr({"id":"projata-outter"}).appendTo($mFactory.modalObjects.wrap);
 			$mFactory.modalObjects.outter.append($mFactory.modalObjects.content);
 
-			$model.$closeModal = $mFactory.$closejata;
-
 			//append the html content to ele
-			ele.append(
+			var wrapper = _("<div></div>").append(
 				$mFactory.modalObjects.wrap,
 				$mFactory.modalObjects.overlay,
 				$mFactory.modalObjects._temp
 			);
 
+			return wrapper[0];
+		},
+		$init : function(ele,attr,$model)
+		{
+			$model.$closeModal = $mFactory.$closejata;
+			$mFactory.$on('cleanup',function(ev,clean){
+				clean[0]();
+			});
 		}
 	};
 }
@@ -180,7 +202,7 @@ function bnModalFactoryFN($document,$window,$http)
 {
 	var modalObject = {},
 		imgPreloader,  
-		netLoad = "<img src=/exc-Loading.gif>",
+		netLoad = null,
 		Tpos = {},
 		descriptionHeight = 70,
 		main_pos, 
@@ -228,7 +250,10 @@ function bnModalFactoryFN($document,$window,$http)
 
 	//set event broadcaster
 	function $on(eventName,fn){
-		_events[eventName] = fn;
+		if(!_events[eventName]){
+			_events[eventName] = []
+		}
+		_events[eventName].push( fn );
 	}
 
 	function buildEvent(evN){
@@ -244,7 +269,10 @@ function bnModalFactoryFN($document,$window,$http)
 
 	function $broadcast(eventsName,arg){
 		if(eventsName && _events[eventsName]){
-			_events[eventsName].apply(modalObject,[buildEvent(eventsName),arg]);
+
+			_events[eventsName].forEach(function(fn){
+				fn.apply(modalObject,[buildEvent(eventsName),arg]);
+			});
 		}
 	}
 
@@ -423,7 +451,6 @@ function bnModalFactoryFN($document,$window,$http)
 	            imgLoader.src = selectedOpts.href;
 	            break;
 	        case "theatre":
-	            netLoading();
 	            netbuzz = false;
 	            startImageModal(selectedOpts.Td);
 	            break;
@@ -911,7 +938,8 @@ function bnModalFactoryFN($document,$window,$http)
 	    imageArray = [];
 	    groupName = null;
 	    startImage = 0;
-	    _("[aria-theatre=" + imageLink.attr("aria-theatre") + "]", modalObject.container).each(function() {
+	    _("[aria-theatre=" + imageLink.attr("aria-theatre") + "]", modalObject.container)
+	    .each(function() {
 	        if ($getHref(this)) 
 	        {
 	            imageArray.push({
@@ -946,9 +974,6 @@ function bnModalFactoryFN($document,$window,$http)
 	    }
 	    modalObject.TImageData.hide();
 	    modalObject.Thover.hide();
-	    modalObject.TCWriteBoard.hide();
-	    modalObject.TCBoard.html("").hide();
-	    modalObject.TMenu.html("");
 	    imgPreloader = new Image;
 	    imgPreloader.onload = function() {
 	        imageArray[activeImage].link = imgPreloader.src;
@@ -1145,8 +1170,7 @@ function bnModalFactoryFN($document,$window,$http)
 	function updateDetails() 
 	{
 		var maxImage = 1;
-	    if (imageArray.length > 1) 
-	    {
+
 	        var num_display = selectedOpts.strings.numDisplayPrefix + " " + eval(activeImage + 1) + " " + selectedOpts.strings.numDisplaySeparator + " " + imageArray.length;
 	        if (selectedOpts.showGroupName && groupName) 
 	        {
@@ -1159,7 +1183,6 @@ function bnModalFactoryFN($document,$window,$http)
 
 	        maxImage = imageArray.length;
 
-	    }
 
 	    $broadcast('imageLoaded',{currentImage:imageArray[activeImage],totalImage:maxImage,status:"Success"});
 	    modalObject.Timg.animate({
@@ -1190,13 +1213,18 @@ function bnModalFactoryFN($document,$window,$http)
 	{
 	   if (imageArray.length > 1) {
 	        if (!selectedOpts.loop && (activeImage == imageArray.length - 1 && startImage == 0 || activeImage + 1 == startImage)) {
-	            i();
-	            return
+	            end();
+	            return;
 	        }
-	        if (activeImage == imageArray.length - 1) 
+	        if (activeImage == imageArray.length - 1) {
 	            changeImageWithData(0)
-	        else 
+	        }
+	        else {
 	            changeImageWithData(activeImage + 1)
+	        }
+
+	        $broadcast('theatre.show.next');
+	        $broadcast('theatre.image.change');
 	    }
 	}
 
@@ -1214,23 +1242,36 @@ function bnModalFactoryFN($document,$window,$http)
 	{
 	    if (imageArray.length > 1) 
 	    {
-	        if (activeImage == 0) 
+	        if (activeImage == 0) {
 	            changeImageWithData(imageArray.length - 1)
-	        else 
+	        }
+	        else {
 	           changeImageWithData(activeImage - 1)
+	        }
+
+	         $broadcast('theatre.show.prev');
+	         $broadcast('theatre.image.change');
 	    }
 	}
 
 	function showFirst() 
 	{
-	    if (imageArray.length > 1) 
+	    if (imageArray.length > 1) {
 	        changeImageWithData(0);
+
+	       $broadcast('theatre.show.first');
+	       $broadcast('theatre.image.change');
+	    }
 	}
 
 	function showLast() 
 	{
-	    if (imageArray.length > 1) 
-	    changeImageWithData(imageArray.length - 1)
+	    if (imageArray.length > 1) {
+	    	changeImageWithData(imageArray.length - 1);
+
+	    	$broadcast('theatre.show.last');
+	    	$broadcast('theatre.image.change');
+	    }
 	}
 
 	function enableKeyboardNav() 
@@ -1439,15 +1480,17 @@ function bnModalFactoryFN($document,$window,$http)
 	    {
 	        return
 	    }
-	    _("div", modalObject.loading).html(netLoad);
-	    modalObject.loading.show()
+
+	    if(netLoad){
+	    	_("div", modalObject.loading).html('<img src="'+netLoad+'">');
+	    	modalObject.loading.show();
+	    }
+	    
 	}
 
 	function hideLoading() 
 	{
-	    if (modalObject.loading.is(":visible")) {
-	        modalObject.loading.hide()
-	    }
+	    modalObject.loading.hide()
 	}
 
 	function cancel() 
@@ -1482,7 +1525,7 @@ function bnModalFactoryFN($document,$window,$http)
 
 	    }
 	    modalObject.wrap.fadeOut((t) ? t : 300, cleanupjata);
-	    $broadcast('cleanup');
+	    $broadcast('cleanup',[cleanupjata]);
 	    $broadcast('modal.is.destroyed');
 	}
 
@@ -1525,6 +1568,10 @@ function bnModalFactoryFN($document,$window,$http)
 	    modalIntializer(obj);
 	}
 
+	function loadingPath(path){
+		netLoad = path || null;
+	}
+
 	return {
 			modalObjects : modalObject,
 			modal : modalIntializer,
@@ -1549,7 +1596,10 @@ function bnModalFactoryFN($document,$window,$http)
 		    $prompt : $prompt,
 		    reformatContainer : reformatContainer,
 		    $on : $on,
-		    $broadcast : $broadcast
+		    $broadcast : $broadcast,
+		    setOptions : {
+		    	loadingPath : loadingPath
+		    }
 		};
 }
 

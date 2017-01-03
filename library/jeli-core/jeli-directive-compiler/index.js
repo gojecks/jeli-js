@@ -160,11 +160,16 @@
       return attr;
   }
 
-  function templateAppender(data)
+  function templateAppender(tmpl)
   {
       return function(ele)
       {
-         ele.innerHTML = data;
+        //check if ele is a string or Object
+          if($isString(tmpl)){
+           ele.innerHTML = tmpl;
+          }else{
+            ele.append(tmpl);
+          }
       }
   }
 

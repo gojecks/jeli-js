@@ -466,10 +466,8 @@ function toDOM(ignore)
   function execFnByName(fn,context,dis,ev)
   {
       var fn = $removeWhiteSpace(fn),
-          namespaces = fn.split("."),
-          func = namespaces.pop(),
-          arg = func.match(/^(?:.*?)\((.*?)\)/),
-          mfn = func.match(/^(.*?)\(.*?\)/),
+          arg = fn.match(/^(?:.*?)\((.*?)\)/),
+          mfn = fn.match(/^(.*?)\(.*?\)/),
           setValuechecker = fn.split(/([=])/ig),
           narg = [];
 
@@ -480,6 +478,8 @@ function toDOM(ignore)
                 setModelValue( setValuechecker.shift(), context, $logicChecker(lastIndex,context,true) );
           }else
           {
+            var namespaces = mfn[1].split("."),
+              func = namespaces.pop();
             //Check if Arguments is required
             if(null !== arg)
             {
@@ -507,17 +507,7 @@ function toDOM(ignore)
                 }           
             }
 
-
-            if(null !== mfn)
-            {
-                mfn = mfn[1];
-            }
-            else
-            {
-                mfn = fn;
-            }
-
-            var initializer = context[mfn] || function(){  };
+            var initializer = context[func] || function(){  };
 
             //initialize the function returned
             return initializer.apply(context,narg);

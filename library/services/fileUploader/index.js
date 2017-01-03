@@ -16,7 +16,16 @@
 
 		var protos= function(){},
 			jQl = jEli.dom,
-			_events = {};
+			_events = {},
+			defualtConfig  = {
+					container: 				"",		
+					button: 				"",
+					width:					100,
+					height:					100,
+					loading:				null,
+					support: 				"image/jpg,image/png,image/bmp,image/jpeg,image/gif",			
+					callback:				function(){}
+			};
 
 
 		protos.prototype.bindJquery = function(){
@@ -33,6 +42,13 @@
 
 				jQl("[aria-role=upload]").jFileUploader();
 			}
+
+			return this;
+		};
+
+		//extend defaultOptions
+		protos.prototype.setOptions = function(name,value){
+			defualtConfig[name] = value;
 
 			return this;
 		};
@@ -56,15 +72,6 @@
 		});
 		//build Button
 		protos.prototype.buildConfiguration = function(settings){
-			var defualtConfig  = {
-					container: 				"",		
-					button: 				"",
-					width:					"100",
-					height:					"100",
-					loading:				'<img src="/loading.gif" />',
-					support: 				"image/jpg,image/png,image/bmp,image/jpeg,image/gif",			
-					callback:				function(){}
-				};
 			this.uOptions = jEli.$extend({},defualtConfig,settings);
 			if(settings.dragArea){
 				this.uOptions.dragArea = jQl("#"+settings.dragArea);
@@ -342,14 +349,17 @@
 						if(this._v(data[i].type)<=0){ return; }
 
 						 var uCover = 	jQl("<div />").addClass("_duCon")
-						 						.attr("rel",uId)
-						 						.css({"width":self.uOptions.width+"px","height":self.uOptions.height+"px"}),
-						 uLoad = 	jQl("<div />").addClass("_lnd")
-						 						.html(self.uOptions.loading),
+				 						.attr("rel",uId)
+				 						.css({"width":self.uOptions.width+"px","height":self.uOptions.height+"px"}),
+						 uLoad = 	jQl("<div />").addClass("_lnd"),
 						 uPrg = 	jQl("<div />").addClass("_pCN")
-						 						.css("width",Math.ceil(self.uOptions.width - 5)+"px")
-						 						.append('<div class="_pCG"><div class="_isPG" class="0%"></div></div>');
-						 uCover.append(uLoad,uPrg);
+			 						.css("width",Math.ceil(self.uOptions.width - 5)+"px")
+			 						.append('<div class="_pCG"><div class="_isPG" class="0%"></div></div>');
+			 			if(self.uOptions.loading){
+			 				uLoad.html('<img src="'+self.uOptions.loading+'" />');
+			 			}
+
+			 			uCover.append(uLoad,uPrg);
 					}
 
 					self.uOptions.dragArea.append(uCover).show();
@@ -483,7 +493,8 @@
 		  	{	
 		  		if( exp )
 		  		{
-		    		_ftempHolder.find("._lnd").show();	
+		    		_ftempHolder.find("._lnd").show();
+
 			  	}else
 			  	{
 			  		_ftempHolder.find("._isPG").animate({"width":"100%"},250);
@@ -491,7 +502,7 @@
 					_ftempHolder.find("._lnd").hide();
 					if(jEli.$isFunction(c))
 					{
-						c(true);
+						c(_ftempHolder);
 					}else
 					{
 						if(me._i('Object',c))
@@ -523,6 +534,20 @@
 			  	}
 			};
 	   };
+
+	   protos.prototype.reset = function(_ftemp){
+	   		var me =  this;
+	   		_ftemp
+			.hide(1,function()
+			{ 
+				jQl(this).remove(); 
+				me.uOptions.button.show();
+			});
+
+			return this;
+	   };
+
+
 	   protos.prototype.__removeImage = function(data,_ftemp)
 	   {
 	   		var settings = jQl(data).data("settings"),
@@ -532,7 +557,7 @@
 	   			options.type = "POST";
 	   			options.dataType = "html";
 	   			options.data = settings;
-	   		_ftemp.animate({'opacity':'30'},250).find("._lnd").show();
+	   			_ftemp.animate({'opacity':'30'},250).find("._lnd").show();
 	   		if(settings)
 	   		{
 	   			jQl
@@ -541,12 +566,7 @@
 	   			{ 
 	   				if(r)
 	   				{ 
-	   					_ftemp
-	   					.hide(1,function()
-	   					{ 
-	   						jQl(this).remove(); 
-	   						me.uOptions.button.show();
-	   					}); 
+	   					me.reset(_ftemp); 
 	   				} 
 	   			}).fail(function(){ });
 	   		}
@@ -562,7 +582,7 @@
 			   		jqXHR;
 		   		this._ld(idx,1);
 				jqXHR = jQl.ajax(options);
-				jqXHR.done(function(r){ me._dn( r );  });
+				jqXHR.done(function(r){ me._dn( r || {} );  });
 				jqXHR.fail(function(){ });
 	    	}else{	console.log("Invalid file format - "+file.name);}
 	    	
@@ -630,7 +650,7 @@
 	        		me._ld( obj.ids,0,{data:obj.data,link:obj.imageLink,enhance:obj.enhance} ); 
 	        	break;
 	        	case"fai":
-	        		me._ld( obj.ids,0,function(){_ftempHolder.html( obj.data ).remove();} );
+	        		me._ld( obj.ids,0,function(_ftempHolder){ me.reset(_ftempHolder).triggerEvent('file.upload.error',obj); } );
 	        	break;
 	        }  	
 	    };
@@ -861,6 +881,8 @@
 	    	}
 
 	    	_events[name].push( fn );
+
+	    	return this;
 	    };
 
 

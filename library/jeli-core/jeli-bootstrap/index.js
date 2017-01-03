@@ -116,14 +116,18 @@ function $compileApp()
   //@ Private Function injectRequiredModule
   function injectRequiredModule(required)
   {
-    domElementProvider.each(required,function(idx,moduleName)
+    required.forEach(function(moduleName,idx)
     {
         $compileTracker.injectors.$new(moduleName,module.$get(moduleName)._jQueue);
         $provider.$jConfigProvider.resolve(moduleName);
         _jInitModuleCompiler.push(moduleName);
+        //add the required Module to the bootstraped App
+        var req = module.$get(moduleName).require;
+        if(req.length){
+          injectRequiredModule(req);
+        }
     });
   }
-
 
   function cBuild()
   {
