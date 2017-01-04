@@ -333,7 +333,9 @@
   function setTemplateValue(key,model)
   {
       //remove the noBinding marker
-      key = key.replace(':','');
+      if($isEqual(key.charAt(0),":")){
+        key = key.replace(':','');
+      }
 
     var filter = removeFilters(key),
         value = $modelSetterGetter(filter.filterModel,model);

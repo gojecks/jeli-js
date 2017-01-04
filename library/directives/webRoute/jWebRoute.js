@@ -670,8 +670,6 @@
 				Resolve the paths that were pushed to queue
 			*/
 		this.resolveNextStateQueue =function(){
-			//set Resolver State to false
-			stateInProgress = false;
 			if(stateQueue.length){
 				//go to the state
 				var nextState = stateQueue.shift();
@@ -729,34 +727,38 @@
 		/*
 			trigger the resolved route views
 		*/
-		this.resolveViews = function(route){
+		this.resolveViews = function(route,path){
 			var _views = getCurrentView(route);
-			
+			//set the baseUrl to the $webState Object
+			//BaseUrl is neccessary when replace state is in use.
+			$webState.$$baseUrl = path;
 
+			//set Resolver State to false
+			stateInProgress = false;
 			return function(){
 				var inc = 0;
 				//loop through the required views
 				do{
-					currentView = _views[inc];
+					currentView = _views[inc] || '@';
 					inc++;
 
-				var view = (route.views)?route.views[currentView] : route;
-					//Load View Template
-					loadViewTemplate( view, currentView , function(vName,_view){
-						var viewObjectInstance = getView(vName)();
-						if(viewObjectInstance){
-							compileViewTemplate(_view, viewObjectInstance);
-						}else{
-							//Push pending view to stack
-							_pendingViewStack[vName] = _view;
-						}
-					});
+					var view = (route.views)?route.views[currentView] : route;
+						//Load View Template
+						loadViewTemplate( view, currentView , function(vName,_view){
+							var viewObjectInstance = getView(vName)();
+							if(viewObjectInstance){
+								compileViewTemplate(_view, viewObjectInstance);
+							}else{
+								//Push pending view to stack
+								_pendingViewStack[vName] = _view;
+							}
+						});
 
-				//trigger the success
-				if(inc === _views.length - 1){
-					//dispatch event for webRoute Success
-					_jView.$broadcast('$webRouteSuccess', []);
-				}
+					//trigger the success
+					if(inc === _views.length - 1){
+						//dispatch event for webRoute Success
+						_jView.$broadcast('$webRouteSuccess', []);
+					}
 
 				}while(_views.length > inc);
 			};
@@ -801,11 +803,7 @@
 								/*
 									check if view is defined
 								*/
-								self.resolveViews(route)();
-
-								//set the baseUrl to the $webState Object
-								//BaseUrl is neccessary when replace state is in use.
-								$webState.$$baseUrl = path;
+								self.resolveViews(route,path)();
 
 								self.resolveNextStateQueue();
 
@@ -813,7 +811,7 @@
 								route.resolvedData = locals;
 							});
 						}else{
-							self.resolveViews(route)();
+							self.resolveViews(route,path)();
 						}
 					}
 				});
