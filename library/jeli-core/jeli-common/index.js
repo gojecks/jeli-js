@@ -13,383 +13,442 @@
   */
   function stringToObject(str,replacerObj)
   {
-    var splitedStr = str.split(''),
+    var splitedStr = str.match(/\{(.*?)\}/),
         newObj = {},
         j;
-      splitedStr.pop();
-      splitedStr.shift();
-      splitedStr = splitedStr.join('').split(',');
+
+      splitedStr = (splitedStr && splitedStr[1] || '').split(',');
 
       for(j in splitedStr)
       {
         var xSplitedStr = splitedStr[j].split(':'),
-         value = $modelSetterGetter(xSplitedStr[1],replacerObj) || xSplitedStr[1];
+            name = xSplitedStr.shift(),
+         value = maskedEval(xSplitedStr.join(':'), replacerObj || {}) || xSplitedStr[1];
 
          //set the value to the key Object
-          newObj[xSplitedStr[0]] = value;
+          newObj[name] = value;
       }
 
     return newObj;
   }
 
-    Function.prototype.construct = function(args)
-    {
-        var temp = Object.create(this.prototype),
-            applied = this.apply(temp,args);
 
-        return applied;
-    };
+//watchBinding prototype function
+function watchBinding(){
+  this._content = {};
+}
 
-    //watchBinding prototype function
-    function watchBinding(){
-      var _content = {};
+watchBinding.prototype.$get = function(id,mock){ 
+  return this._content[id] || mock || [];
+};
 
-      this.$get = function(id,mock){ 
-        return _content[id] || mock || [];
-      };
+watchBinding.prototype.$new = function(id,value){
+  this._content[id] = value; 
+};
 
-      this.$new = function(id,value){
-         _content[id] = value; 
-      };
-
-      this.$remove = function(id){  
-        if(_content[id]){ 
-          delete _content[id];
-        }
-      };
-
-      this.$push = function(id,value)
-      { 
-        if(!_content[id]){
-          _content[id] = [];
-        }
-        //push all object
-         _content[id].push( value );
-      };
-
-      this.$getAll = function(){
-        return _content;
-      };
-    }
-
-
-  function $isObject(obj)
-  {
-      return typeof obj === 'object' && obj instanceof Object && Object.prototype.toString.call(obj) === '[object Object]';
-  };
-
-  function $isString(str)
-  {
-      return typeof str === 'string' && new String(str) instanceof String;
+watchBinding.prototype.$remove = function(id){  
+  if(this._content[id]){ 
+    delete this._content[id];
   }
+};
 
-  function $isJsonString(str)
-  {
-    return str && str.split('')[0] === '{' && str.split('')[str.split('').length-1] === '}';
+watchBinding.prototype.hasProp = function(prop){
+  return this._content.hasOwnProperty(prop);
+};
+
+watchBinding.prototype.$push = function(id,value)
+{ 
+  if(!this._content[id]){
+    this._content[id] = [];
   }
+  //push all object
+   this._content[id].push( value );
+};
 
-  function $isEmptyObject (obj)
-  {
-    return (!$isObject(obj) && !$countObject(obj));
-  }
+watchBinding.prototype.$getAll = function(){
+  return this._content;
+};
 
-  function $isNumber(n)
-  {
-      return Number(n) === n && n % 1 === 0;
-  }
 
-  function $isFloat(n){
-      return Number(n) === n && n % 1 !== 0;
-  }
+function $isObject(obj)
+{
+    return typeof obj === 'object' && obj instanceof Object && Object.prototype.toString.call(obj) === '[object Object]';
+};
 
-  function $isDouble(n){
-    return parseFloat(n) > 0;
-  }
+function $isString(str)
+{
+    return typeof str === 'string' && new String(str) instanceof String;
+}
 
-  function $isArray(obj)
-  {
-      return Object.prototype.toString.call(obj) === '[object Array]';
-  }
+function $isJsonString(str)
+{
+  return str && str.split('')[0] === '{' && str.split('')[str.split('').length-1] === '}';
+}
 
-  function $isFunction(fn)
-  {
-      return typeof fn === 'function';
-  }
+function $isEmptyObject (obj)
+{
+  return (!$isObject(obj) && !$countObject(obj));
+}
 
-  function $countObject(obj)
-  {
-      return Object.keys(obj);
-  }
+function $isNumber(n)
+{
+    return Number(n) === n && n % 1 === 0;
+}
 
-  function $isUndefined(val)
-  {
-      return typeof val === 'undefined';
-  }
+function $isFloat(n){
+    return Number(n) === n && n % 1 !== 0;
+}
 
-  function $isDefined(val){
-    return  typeof val !== 'undefined';
-  }
+function $isDouble(n){
+  return parseFloat(n) > 0;
+}
 
-  //check for null attribute
+function $isArray(obj)
+{
+    return Object.prototype.toString.call(obj) === '[object Array]';
+}
 
-  function $isNull(val)
-  {
-      return null === val;
-  }
+function $isFunction(fn)
+{
+    return typeof fn === 'function';
+}
 
-  //check for empty value
-  function $isEmpty(val)
-  {
-      return val === "";
-  }
+function $countObject(obj)
+{
+    return Object.keys(obj);
+}
 
-  function $isEqual(a,b)
-  {
-      return a === b;
-  }
+function $isUndefined(val)
+{
+    return typeof val === 'undefined';
+}
 
-  function $inArray(a,b)
-  {
-    return  b.indexOf(a) > -1;
-  }
+function $isDefined(val){
+  return  typeof val !== 'undefined';
+}
 
-    /*
-    @Function serialize object to string
-    @Argument (OBJECT)
-    @return Query Param eg(foo=bar&bar=foo)
-  */
+//check for null attribute
 
-  function serialize(obj)
-  {
-      if ($isUndefined(obj)) return;
+function $isNull(val)
+{
+    return null === val;
+}
 
-      var param = [],
-        buildParams = function(prefix,dn)
+//check for empty value
+function $isEmpty(val)
+{
+    return val === "";
+}
+
+function $isEqual(a,b)
+{
+    return a === b;
+}
+
+function $inArray(a,b)
+{
+  return  b.indexOf(a) > -1;
+}
+
+  /*
+  @Function serialize object to string
+  @Argument (OBJECT)
+  @return Query Param eg(foo=bar&bar=foo)
+*/
+
+function serialize(obj)
+{
+    if ($isUndefined(obj)) return;
+
+    var param = [],
+      buildParams = function(prefix,dn)
+      {
+        if($isArray(dn))
         {
-          if($isArray(dn))
+          domElementProvider.each(dn,function(i,n)
           {
-            domElementProvider.each(dn,function(i,n)
+            if((/\[\]$/).test(prefix))
             {
-              if((/\[\]$/).test(prefix))
-              {
-                add(prefix,n);
-              }else
-              {
-                buildParams(prefix+"["+($isObject(n)?prefix :"")+"]",n)
-              }
-            });
-          }else if($isObject(dn))
-          {
-            for(var name in dn)
+              add(prefix,n);
+            }else
             {
-              buildParams(prefix+"["+name+"]",dn[name]);
+              buildParams(prefix+"["+($isObject(n)?prefix :"")+"]",n)
             }
-          }else
+          });
+        }else if($isObject(dn))
+        {
+          for(var name in dn)
           {
-            add(prefix,dn);
+            buildParams(prefix+"["+name+"]",dn[name]);
           }
-        },
-        add = function(key,value)
-        {
-          value = $isFunction(value)?value():($isEmpty(value)?"":value);
-          param[param.length] = encodeURIComponent(key) +'='+encodeURIComponent(value);
-        };
-
-        if ($isArray(obj) && $isObject(obj))
-        {
-            domElementProvider.each(obj, function (i, n)
-            {
-              add(i,n)
-            });
         }else
         {
-          for(var name in obj)
+          add(prefix,dn);
+        }
+      },
+      add = function(key,value)
+      {
+        value = $isFunction(value)?value():($isEmpty(value)?"":value);
+        param[param.length] = encodeURIComponent(key) +'='+encodeURIComponent(value);
+      };
+
+      if ($isArray(obj) && $isObject(obj))
+      {
+          domElementProvider.each(obj, function (i, n)
           {
-            buildParams(name,obj[name]);
-          }
-        }
-
-      return param.join("&").replace(/%20/g,'+');
-  }
-
-  //@Function unSerialize
-    function unSerialize(par)
-    {
-      var ret = {};
-      if(!$isUndefined(par))
-      {
-        var pairs = par.split("&"),
-          i;
-        for(i in pairs)
-        {
-          var splitPairs = pairs[i].split('=');
-          ret[splitPairs[0]] = splitPairs[1]
-        }
-      }
-
-      return ret;
-    }
-
-  //@Function Make ID
-  function makeUID(e)
-  {
-    var h = '';
-    var f = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (var g = 0; g < e; g++) {
-      h += f.charAt(Math.floor(Math.random() * f.length))
-    }
-    return h
-  }
-
-  //element ref ID
-  function getUID()
-  {
-    return '$$ele:'+$eUID++;
-  }
-
-  //@Function parseJSON
-  function parseJSON(string) 
-  {
-      if (!$isString(string) || !string) return null;
-
-      string = trim(string);
-      return $isSupport.jsonParser ? JSON.parse(JSON.stringify(string))  : (new Function('return ' + string)) ();
-  }
-
-  //@Function xmlParser
-
-  function parseXML(text) 
-  {
-      if ($isSupport.DOMParser)
-      {
-          return new DOMParser().parseFromString(text, 'text/xml');
+            add(i,n)
+          });
       }else
       {
-          var xml = new ActiveXObject('Microsoft.XMLDOM');
-            xml.async = 'false';
-            xml.loadXML(text);
-            return xml;
-      }
-  }
-
-  //@Function extend
-    function extend(ret, source, replacer) 
-    {
-      ret = ret || {};
-      if (!$isUndefined(replacer))
-      {
-        return extend(extend(ret, source), replacer);
-      }
-
-      for(var name in source){
-        if(source.hasOwnProperty(name)){
-          //set the value
-            ret[name] = source[name];
+        for(var name in obj)
+        {
+          buildParams(name,obj[name]);
         }
       }
 
-      return ret;
-    }
+    return param.join("&").replace(/%20/g,'+');
+}
 
-  //function to buildErrors
-  function errorBuilder( str )
+//@Function unSerialize
+function unSerialize(par)
+{
+  var ret = {};
+  if(!$isUndefined(par))
   {
-      throw new Error( str );
+    var pairs = par.split("&"),
+      i;
+    for(i in pairs)
+    {
+      var splitPairs = pairs[i].split('=');
+      ret[splitPairs[0]] = splitPairs[1]
+    }
   }
 
+  return ret;
+}
 
-  function camelCase()
+//@Function Make ID
+function makeUID(e)
+{
+  var h = '';
+  var f = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (var g = 0; g < e; g++) {
+    h += f.charAt(Math.floor(Math.random() * f.length))
+  }
+  return h
+}
+
+//element ref ID
+function getUID()
+{
+  return 'jeli:'+ +new Date + ":"+$eUID++;
+}
+
+//@Function parseJSON
+function parseJSON(string) 
+{
+    if (!$isString(string) || !string) return null;
+
+    string = trim(string);
+    return $isSupport.jsonParser ? JSON.parse(JSON.stringify(string))  : (new Function('return ' + string)) ();
+}
+
+//@Function xmlParser
+
+function parseXML(text) 
+{
+    if ($isSupport.DOMParser)
+    {
+        return new DOMParser().parseFromString(text, 'text/xml');
+    }else
+    {
+        var xml = new ActiveXObject('Microsoft.XMLDOM');
+          xml.async = 'false';
+          xml.loadXML(text);
+          return xml;
+    }
+}
+
+//@Function extend
+function extend(ret, source, replacer) 
+{
+  ret = ret || {};
+  if (!$isUndefined(replacer))
   {
-      return this.replace(/^([A-Z])|[\s-_](\w)/g, function(match, p1, p2, offset) {
-          if (p2){ return p2.toUpperCase(); } 
-          return p1.toLowerCase();        
-      });
+    return extend(extend(ret, source), replacer);
   }
 
-    //function deleteAndReStructure
-    function deleteAndReStructure(arr,index)
+  for(var name in source){
+    if(source.hasOwnProperty(name)){
+      //set the value
+        ret[name] = source[name];
+    }
+  }
+
+  return ret;
+}
+
+//function to buildErrors
+function errorBuilder( str )
+{
+    throw new Error( str );
+}
+
+
+function camelCase()
+{
+    return this.replace(/^([A-Z])|[\s-_](\w)/g, function(match, p1, p2, offset) {
+        if (p2){ return p2.toUpperCase(); } 
+        return p1.toLowerCase();        
+    });
+}
+
+  //function deleteAndReStructure
+function deleteAndReStructure(arr,index)
+{
+  var temp = [],
+      i=0;
+  if($isArray(arr))
+  {
+    for(;i< arr.length; i++)
     {
-      var temp = [],
-          i=0;
-      if($isArray(arr))
+      if(i !== index)
       {
-        for(;i< arr.length; i++)
-        {
-          if(i !== index)
-          {
-            temp.push( arr[i] );
-          }
-        }
+        temp.push( arr[i] );
       }
+    }
+  }
 
-      return temp;
+  return temp;
+}
+
+function findInList(fn)
+{
+    var found = false,checker;
+    for(var i in this)
+    {
+        checker = fn(i,this[i]);
+       if(checker)
+       {
+            found = checker;
+       }
     }
 
-    function findInList(fn)
-    {
-        var found = false,checker;
-        for(var i in this)
-        {
-            checker = fn(i,this[i]);
-           if(checker)
-           {
-                found = checker;
-           }
-        }
+    return found;
+}
 
-        return found;
+
+function domElementLoop(loop, callback)
+{
+    var last = loop.length-1,
+        i = 0;
+    while(last>=i)
+    {
+      var val = callback(loop[i],i);
+      if (val === false)
+      {
+        break;
+      }
+      i++;
     }
+}
 
+function $removeWhiteSpace(str)
+{
+    return (str || '').replace(/\s+/g, '');
+}
 
-    function domElementLoop(loop, callback)
+function removeSingleQuote(str)
+{
+  if($isBooleanValue.indexOf(str) > -1 || $isUndefined(str)) return str;
+  
+  return String(str).replace(/[']/g, "");
+}
+
+function $remArrayWhiteSpace(arr,fn)
+{
+  var nArr = [];
+  if(arr && arr.length)
+  {
+    arr.filter(function(item,idx)
     {
-        var last = loop.length-1,
-            i = 0;
-        while(last>=i)
-        {
-          var val = callback(loop[i],i);
-          if (val === false)
-          {
-            break;
-          }
-          i++;
-        }
-    }
-
-    function $removeWhiteSpace(str)
-    {
-        return (str || '').replace(/\s+/g, '');
-    }
-
-    function removeSingleQuote(str)
-    {
-      if($isBooleanValue.indexOf(str) > -1 || $isUndefined(str)) return str;
+      if(item)
+      {
+        nArr.push((fn)?fn(item):$removeWhiteSpace(item));
+      }
       
-      return str.replace(/[']/g, "");
+    });
+    
+  }
+
+  return nArr;
+}
+
+
+function $sce(){
+  // trustAsHTML
+   // this prevents any overhead from creating the object each time
+  var element = document.createElement('div');
+
+  function htmlEscape(s) {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  };
+
+  function decodeHTMLEntities (str) {
+    if(str && typeof str === 'string') {
+      // strip script/html tags
+      str = htmlEscape(str).replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, '');
+      str = str.replace(/<\/?\w(?:[^"'>]|"[^"]*"|'[^']*')*>/gmi, '');
+      element.innerHTML = str;
+      str = element.textContent;
+      element.textContent = '';
     }
 
-    function $remArrayWhiteSpace(arr,fn)
-    {
-      var nArr = [];
-      if(arr && arr.length)
-      {
-        arr.filter(function(item,idx)
-        {
-          if(item)
-          {
-            nArr.push((fn)?fn(item):$removeWhiteSpace(item));
-          }
-          
-        });
-        
-      }
+    return str;
+  }
 
-      return nArr;
+
+  return {
+    trustAsHTML : decodeHTMLEntities,
+    escapeHTML : htmlEscape
+  };
+}
+
+    //remove last white space in a string
+function $remLastWhiteSpace(str)
+{
+  return ($isEqual(str.slice(str.length-1)," "))?str.slice(0,str.length-1):str;
+}
+
+// removeSingle Operand
+function removeSingleOperand(str, matcher, replacer, flags){
+  return str.replace(new RegExp(matcher, flags), function(s,n,t){  
+    if((t.charAt(n+1) === s && t.charAt(n-1) !== s) || (t.charAt(n+1) !== s && t.charAt(n-1) === s) ){
+      return s;
+    }else{
+      return replacer;
     }
 
-      //remove last white space in a string
-    function $remLastWhiteSpace(str)
-    {
-      return ($isEqual(str.slice(str.length-1)," "))?str.slice(0,str.length-1):str;
+  });
+}
+
+  // string to hashCode
+function $hashCode(code) {
+    var hash = 0, i, chr, len;
+    if (code.length === 0) return hash;
+    for (i = 0, len = code.length; i < len; i++) {
+      chr   = code.charCodeAt(i);
+      hash  = ((hash << 5) - hash) + chr;
+      hash |= 0; // Convert to 32bit integer
     }
 
+    return hash;
+}
+
+//@Function trim
+var trim = ''.trim ? function (s) { return s.trim(); }  : function (s) {
+    return s.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+};

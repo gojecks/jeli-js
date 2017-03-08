@@ -9,230 +9,124 @@ function $compileApp()
   }
 
     //reference the elementToBootStrap
-    $0 = $publicProviders.$rootElement = elementToBootStrap;
+    $0 = elementToBootStrap;
 
-  $templateCompiler( elementToBootStrap )( $publicProviders.$rootModel );
+    // register the rootElement
+    $provider.$get('$jEliServices').$register('$rootElement', elementToBootStrap);
+
+  $templateCompiler( elementToBootStrap )( $provider.$jEliServices.$get('$rootModel') );
 
 }
 
   //@Objectives : register all Factory,Directives,Filters
-  function moduleCompiler(moduleName)
-  {
-      var queue = module.$get(moduleName)._jQueue;
+function moduleCompiler(moduleName)
+{
+    var queue = module.$get(moduleName)._jQueue;
 
-        if(queue.length)
-        {
-            var len = 0;
-            while(len < queue.length)
-            {
-                var _list = queue[len++];
-
-                switch(_list[0])
-                {
-                    case('$jElementProvider'):
-                    case('jFilterProvider'):
-                    case('$jFactoryProvider'):
-                      var currentProvider = $provider.$get(_list[0]),
-                          _fn = currentProvider.resolve(moduleName,_list[1][0]);
-                      //initialize the fn and re-register the module
-                      currentProvider.register(moduleName,_list[1][0], q( _list[0], _fn));
-                      _list[1][1] = 'registered';
-                    break;
-                }
-            };
-        }
-  }
-
-
-
-  /*
-    BootStrapApplication
-  */
-   var _jInitModuleCompiler = [];
-  function $jBootStrapApplication()
-  {
-      if(!$isCompiled)
+      if(queue.length)
       {
-        //app BootStrap
-        domElementProvider.each($compileTracker.compiledModule,function(idx,moduleName)
-        {
+          var len = 0;
+          while(len < queue.length)
+          {
+              var _list = queue[len++],
+                  currentProvider = $provider.$get(_list[0]);
 
-            if( module[moduleName] )
-            {
-                $provider.$jConfigProvider.resolve(moduleName);
-                $provider.$get('$httpProvider').register();
-                //compile jFactory,jFilter,jElement
-                moduleCompiler(moduleName);
-                _jInitModuleCompiler.push(moduleName);
-            } 
+              switch(_list[0])
+              {
+                  case('$jElementProvider'):
+                  case('jFilterProvider'):
+                  case('$jFactoryProvider'):
+                    var _fn = currentProvider.resolve(moduleName, _list[1][0]);
+                    //initialize the fn and re-register the module
+                    currentProvider.register(moduleName, _list[1][0], q( _list[0], _fn));
+                    _list[1][1] = 'registered';
+                  break;
+                  case('$jComponentProvider'):
+                    var _component = currentProvider.resolve(moduleName, _list[1][0]);
+                      if(_component.controller){
+                          // check for DI
+                          if(_component.controllerDI){
+                            _component.controller.$injector = _component.controllerDI.concat();
+                          }
+                      }
+                  break;
+              }
+          };
+      }
+}
+
+
+
+/*
+  BootStrapApplication
+*/
+ var _jInitModuleCompiler = [];
+function $jBootStrapApplication()
+{
+    if(!$isCompiled)
+    {
+      //app BootStrap
+      domElementProvider.each($compileTracker.compiledModule,function(idx,moduleName)
+      {
+
+          if( module[moduleName] )
+          {
+              $provider.$jConfigProvider.resolve(moduleName);
+              $provider.$get('$httpProvider').register();
+              //compile jFactory,jFilter,jElement
+              moduleCompiler(moduleName);
+              _jInitModuleCompiler.push(moduleName);
+          } 
+      });
+
+      return function(){
+        _jInitModuleCompiler.reverse().forEach(function(moduleName){
+          $provider.$jInitProvider.resolve(moduleName);
         });
 
-        return function(){
-          _jInitModuleCompiler.reverse().forEach(function(moduleName){
-            $provider.$jInitProvider.resolve(moduleName);
-          });
-
-           $isCompiled = true;
-        };
-      }
-  }
-
-  //eli initializer and compiler
-  function $eliInitializer(elementToBootStrap , moduleToBootStrap)
-  {
-      if(elementToBootStrap.length && $isArray(moduleToBootStrap))
-      {
-        var moduleName = moduleToBootStrap[0];
-          $compileTracker.lastCompiledWith = elementToBootStrap[0];
-          $compileTracker.compiledModule = moduleToBootStrap;
-          $compileTracker.injectors.$new('$rootModel',$publicProviders.$rootModel);
-          $compileTracker.injectors.$new(moduleName,module.$get(moduleName)._jQueue);
-          injectRequiredModule( module.$get(moduleName).require );
-          $jBootStrapApplication()();
-          $compileApp();
-          $isAfterBootStrap = true;
-      }    
-  }
-
-
-  //jEli Queue Builder
-  function queueBuilder(providername,injectors)
-  {
-    return [providername,injectors];
-  }
-
-  //Register default providers
-  function _defaultRegistry(module,provider,name)
-  {
-       //register to default Module
-      //add the object to _jInjector Array
-      $compileTracker.injectors.$push(module,queueBuilder(provider,[name,'unregistered' ]));
-      return function(fn)
-      {
-        $provider.$get(provider).register(module,name,($isFunction(fn)?$inject(fn):fn));
+         $isCompiled = true;
       };
-  }
-  
-  //@ Private Function injectRequiredModule
-  function injectRequiredModule(required)
-  {
-    required.forEach(function(moduleName,idx)
+    }
+}
+
+//eli initializer and compiler
+function $eliInitializer(elementToBootStrap , moduleToBootStrap)
+{
+    if(elementToBootStrap.length && $isArray(moduleToBootStrap))
     {
+      var moduleName = moduleToBootStrap[0];
+        $compileTracker.lastCompiledWith = elementToBootStrap[0];
+        $compileTracker.compiledModule = moduleToBootStrap;
+        $compileTracker.injectors.$new('$rootModel', $provider.$get('$jEliServices').$get('$rootModel') );
         $compileTracker.injectors.$new(moduleName,module.$get(moduleName)._jQueue);
-        $provider.$jConfigProvider.resolve(moduleName);
-        _jInitModuleCompiler.push(moduleName);
-        //add the required Module to the bootstraped App
-        var req = module.$get(moduleName).require;
-        if(req.length){
-          injectRequiredModule(req);
-        }
-    });
-  }
+        injectRequiredModule( module.$get(moduleName).require );
+        $jBootStrapApplication()();
+        $compileApp();
+        $isAfterBootStrap = true;
+    }    
+}
 
-  function cBuild()
+
+//jEli Queue Builder
+function queueBuilder(providername,injectors)
+{
+  return [providername,injectors];
+}
+
+//@ Private Function injectRequiredModule
+function injectRequiredModule(required)
+{
+  required.forEach(function(moduleName,idx)
   {
-      this.init = function(fn){
-        $provider.$get('$jInitProvider').register(this.appName,$inject(fn));
-      };
+      $compileTracker.injectors.$new(moduleName,module.$get(moduleName)._jQueue);
+      $provider.$jConfigProvider.resolve(moduleName);
+      _jInitModuleCompiler.push(moduleName);
+      //add the required Module to the bootstraped App
+      var req = module.$get(moduleName).require;
+      if(req.length){
+        injectRequiredModule(req);
+      }
+  });
+}
 
-      //directive Provider caller
-      this.jElement = function(name,fn)
-      {
-          if($isString(name) && name.indexOf('-') < 0 && !$isUndefined(fn))
-          {
-              //add the object to _jInjector Array
-              this._jQueue.push( queueBuilder('$jElementProvider',[ name,'unregistered' ]) );
-              $provider.$get('$jElementProvider').register(this.appName,name, $inject(fn));
-          }
-
-          return this;
-      };
-
-      //Module Provider 
-      this.jProvider = function(name,fn)
-      {
-         if($isString(name) && !$isUndefined(fn))
-          {
-              //add the object to _jInjector Array
-              this._jQueue.push( queueBuilder('$jProvideProvider',[ name,'unregistered' ] ) );
-              $provider.$get('$jProvideProvider').register(this.appName,name, new fn );
-          }
-
-          return this;
-      };
-
-      this.jFactory = function(name,fn)
-      {
-          if($isString(name) && !$isUndefined(fn))
-          {
-            //add the object to _jInjector Array
-            this._jQueue.push( queueBuilder('$jFactoryProvider', [ name,'unregistered'] ) );
-            $provider.$get('$jFactoryProvider').register(this.appName,name, $inject(fn));
-          }
-
-          return this;
-      };
-
-      this.jService = function(name,fn)
-      {
-          if($isString(name) && !$isUndefined(fn))
-          {
-            //add the object to _jInjector Array
-            this._jQueue.push( queueBuilder('$jServiceProvider', [ name,'unregistered' ] ) );
-            $provider.$get('$jServiceProvider').register(this.appName,name, $inject(fn));
-          }
-
-          return this
-      };
-
-      this.jConfig = function(a)
-      {
-          var config = [$inject(a)];
-
-          //add the object to _jInjector Array
-          this._jQueue.push( queueBuilder('$jConfigProvider', [name]) );
-          $provider.$get('$jConfigProvider').register(this.appName , config );
-
-          return this;
-      };
-
-      this.jFilter = function(name,fn)
-      {
-          if(!$isUndefined(name) && !$isUndefined(fn))
-          {
-            this._jQueue.push( queueBuilder('$jFilterProvider', [ name,'unregistered' ] ) );
-            $provider.$get('$jFilterProvider').register(this.appName,name, $inject(fn));
-          }
-
-          return this;
-      };
-
-      this.jController = function(name,fn)
-      {
-          if(!$isUndefined(name) && !$isUndefined(fn))
-          {
-
-            this._jQueue.push( queueBuilder('$jControllerProvider', [ name ] ) );
-            $provider.$get('$jControllerProvider').register(this.appName, name, $inject(fn));
-          }
-
-          return this;
-      };
-
-      //$value that runs in compile mode
-      this.jValue = function(name,fn)
-      {
-          if(!$isUndefined(name) && !$isUndefined(fn))
-          {
-              //add the object to _jInjector Array
-              this._jQueue.push( queueBuilder('$jValueProvider', [ name ] ) );
-              $provider.$get('$jValueProvider').register(this.appName,name,($isFunction(fn)?fn():fn));
-          }
-
-          return this;
-      };
-
-      this.jCompiler = q;
-      this.require = [];
-      this._jQueue = [];
-  } 
+  

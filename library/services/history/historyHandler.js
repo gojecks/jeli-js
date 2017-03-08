@@ -7,7 +7,7 @@
 //Basically we can use the browser native history.go() function :)
 
 jEli
-.jModule('rpApp')
+.jModule('com.jeli.history',{})
 .jFactory('historyHandler',historyHandlerFn);
 
 //inject dependencies

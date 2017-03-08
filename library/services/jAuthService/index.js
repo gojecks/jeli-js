@@ -9,7 +9,7 @@
 	//Version 1.2.0 Wed 26.10.16
 
 	jEli
-	.jModule('jeli.auth.service',[])
+	.jModule('jeli.auth.service',{})
 	.jProvider('jAuthProvider',jAuthProviderFN)
 	.jFactory('jAuthService',["$http","Base64","jAuthProvider","$defer",jAuthServiceFn]);
 
@@ -203,6 +203,7 @@
 					$http({
 						url : postObj.url,
 						dataType:'json',
+						type: 'POST', 
 						contentType : 'application/json',
 						data : privateApis.register.postBody
 					}).then(done,fail);

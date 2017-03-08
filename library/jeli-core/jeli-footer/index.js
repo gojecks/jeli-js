@@ -1,136 +1,5 @@
 
-/** JELI MODULE INITIALIZER **/
-function $jModule(name,require)
-{
-  if(!module.hasOwnProperty(name))
-  {
-      ( module[name] = (new cBuild()), 
-       module[name].appName = name,
-       $factory[name] = {}, 
-       $service[name] = {}, 
-       $directivesProvider[name] = {}, 
-       $jValueProvider[name] = {},
-        module[name]['require'] = [] );
-
-    if(arguments.length > 1)
-    {
-        if(require.length > 0)
-        {
-          module[name].require = require;
-        }
-    }
-  }
-        
-    return module[name];
-}
-
-//moduleCompileFn
-function copy(item)
-{
-  var type = {};
-  if($isArray(item)){
-    type = [];
-  }
-
-    if(item && item.nodeType){
-        // DOM Node
-        return item.cloneNode(true); // Node
-    }
-
-    if($isFunction(item)){
-      return item;
-    }
-
-    if(item instanceof Date){
-        // Date
-        return new Date(item.getTime());    // Date
-    }
-
-    if(item instanceof RegExp){
-        // RegExp
-        return new RegExp(item);   // RegExp
-    }
-
-  return extend(type,item);
-}
-
-//setup $httpProvider
-function $http( url , options )
-{
-    return ajax.apply(ajax,arguments);
-}
-
-$http.get = function (url,  data,headers)
-{
-  var options = {};
-      options.type = 'get';
-      options.data = data;
-      options.headers = headers || {};
-
-  return ajax(url, options);
-};
-
-//set $http prototype
-$http.post = function (url, data,headers)
-{
-  var options = {};
-      options.type = 'post';
-      options.data = data;
-      options.headers = headers || {};
-
-  return ajax(url, options);
-};
-
-function jQueryResolver(ele)
-{
-  return window.jQuery && jQuery(ele) || element(ele)
-}
-
-//setUp Public Providers Here
-$publicProviders = 
-{   
-    $http : $http,
-    $defer : $p ,
-    $q : $d,
-    $stacks : new $eventStacks,
-    $cookie : $cookie,
-    $jCompiler : $templateCompiler,
-    $rootModel : new $modelGenerator(),
-    $document : jQueryResolver(document),
-    $window : jQueryResolver(window),
-    $timeout : $timeout,
-    $rootElement : null,
-    $localStorage : $localStorage,
-    $sessionStorage : $sessionStorage,
-    $injector : new $dependencyInjector(),
-    "Base64" : Base64Fn
-};
-
-//@Function binding
-//@Argument Element (required)
-//@true
-
-function bind(evName,fn)
-{
-    if(!$isEqual(this.nodeType,Node.ELEMENT_NODE)){
-      return;
-    } 
-
-    //addListener to the element
-    if(this.addEventListener)
-    {
-        this.addEventListener(evName,fn);
-    }else if(this.attachEvent)
-    {
-        this.attachEvent('on'+evName,fn);
-    }
-    addClass( this );
-}
-
-
-
-
-var __a = function() {},
+var __a = {},
   objectCreate = (function() 
   {
         function Temp() {}
@@ -162,33 +31,64 @@ var __a = function() {},
               return obj;
         };
   })(),
-    BuildVersion = function(name,version)
-    {
-        var vSplit = version.split('.'),
-            matchPhase = {dot:0,major:1,minor:2};
+  BuildVersion = function(name,version)
+  {
+      var vSplit = version.split('.'),
+          matchPhase = {dot:0,major:1,minor:2};
 
-          for(var n in matchPhase)
+        for(var n in matchPhase)
+        {
+          if(vSplit[matchPhase[n]])
           {
-            if(vSplit[matchPhase[n]])
-            {
-                matchPhase[n] = parseInt(vSplit[matchPhase[n]]);
-            }else
-            {
-              matchPhase[n] = 0;
-            }
+              matchPhase[n] = parseInt(vSplit[matchPhase[n]]);
+          }else
+          {
+            matchPhase[n] = 0;
           }
+        }
 
-        matchPhase['name'] = name;
+      matchPhase['name'] = name;
 
-        return matchPhase;
-    };
+      return matchPhase;
+  };
+/*
 
-__a.prototype = 
+  jEli Public Apis
+  jModule
+  dom
+  noop
+  $extend
+  $isUndefined
+  $isDefined
+  $isObject
+  $isString
+  $isNumber
+  $isArray
+  $inArray
+  $isFunction
+  $create
+  $copy
+  $isEmpty
+  $isEqual
+  $initializer
+  $parseJSON
+  $parseXML
+  $serialize
+  $unSerialize
+  $externalLoader
+  $stringToObject
+  $isJsonString
+  $isNull
+  $jDB
+  version
+  bind
+  forEach
+  buildTime
+*/
+__a = 
 {
-    constructor: __a,
     jModule : $jModule,
     dom : (window.jQuery)?jQuery : element,
-    $cookie : $cookie,
     noop : function(){ return noop; },
     $extend : extend,
     $isUndefined : $isUndefined,
@@ -198,7 +98,6 @@ __a.prototype =
     $isNumber : $isNumber,
     $isArray : $isArray,
     $inArray : $inArray,
-    $deleteIndex : deleteAndReStructure,
     $isFunction : $isFunction,
     $create : objectCreate,
     $copy : copy,
@@ -214,44 +113,29 @@ __a.prototype =
     $isJsonString : $isJsonString,
     $isNull : $isNull,
     $jDB : jEliDB,
-    $jEncrypt : $encrypt,
-    version : BuildVersion("Elizabeth", "0.10.0" ),
+    version : BuildVersion("Elizabeth", "1.0.0" ),
     bind : binding,
     forEach : domElementProvider.each,
-    jObserver : jObserver,
-    jEvents:$CustomEventHandler,
     buildTime : Date.now()
 };
   
   if($isSupport.sqlite){
-    __a.prototype.jSqlite = sqliteStorage;
+    __a.jSqlite = sqliteStorage;
   }
 
- window.jEli = new __a();
+ window.jEli = __a;
 
 element(document).ready(function()
 {
-
     $isDomLoaded = true;
-      var elementToBootStrap = element('[j-module]');
-        if(!$isUndefined( elementToBootStrap) && elementToBootStrap.length)
-        {
-          var moduleName = [elementToBootStrap.attr('j-module')];
-          $eliInitializer( elementToBootStrap , moduleName );
-        }
+    var elementToBootStrap = element('[j-module]');
+      if(!$isUndefined( elementToBootStrap ) && elementToBootStrap.length)
+      {
+        var moduleName = [hasAnyAttribute(elementToBootStrap[0],['j-module',':app'])];
+        $eliInitializer( elementToBootStrap , moduleName );
+      }
 });
 
 /*jEli css styleSheet
 Appended to the head of the HTML*/
-
-var jEliStyles = document.createElement('style');
-    jEliStyles.setAttribute('type','text/css');
-var css = '.j-hide,.j-cloak{display:none} .j-show{display:""} ';
-if (jEliStyles.styleSheet)
-{
-  jEliStyles.styleSheet.cssText = css;
-} else 
-{
-  jEliStyles.appendChild( document.createTextNode(css) );
-}
-document.getElementsByTagName('head')[0].appendChild( jEliStyles );
+customStyleSheetAppender('.j-hide,.j-cloak{display:none} .j-show{display:""}', document.getElementsByTagName('head')[0]);

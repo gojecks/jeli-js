@@ -3,7 +3,7 @@
 	//stores data on the client storage system
 
 	jEli
-	.jModule('jStorage',[])
+	.jModule('jStorage',{})
 	.jProvider('jStorageProvider',jPrefixHandler)
 	.jFactory('jSessionStorage',jStorageHandler('sessionStorage'))
 	.jFactory('jLocalStorage', jStorageHandler('localStorage'));

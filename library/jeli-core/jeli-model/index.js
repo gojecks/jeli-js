@@ -2,210 +2,212 @@
     //Eli Root Model
     //Prototype that controls all Model
     //@Private
-    function $modelGenerator()
+function $modelGenerator()
+{
+    this.$mId = $eUID++;
+    this.$$asyncQueue = [];
+    this.$$subscribers = {};
+    this.$self = this;
+    this.$parent = this.$child = this.$$phase = this.$$watchList = this.$next = this.$previous = this.$$isIsolated = null;
+}
+
+//set model constructor here
+$modelGenerator.prototype.constructor = $modelGenerator;
+
+//creating a new instance of model
+$modelGenerator.prototype.$new = createNewModelInstance
+
+//$model Phase Setter
+$modelGenerator.prototype.$$beginPhase = function(phase)
+{
+    if(this.$$phase)
     {
-        this.$mId = $eUID++;
-        this.$$asyncQueue = [];
-        this.$$subscribers = {};
-        this.$self = this;
-        this.$parent = this.$child = this.$$phase = this.$$watchList = this.$next = this.$previous = this.$$isIsolated = null;
+        throw this.$$phase +" phase is already in progress";
+    }
+    this.$$phase = phase;
+};
+
+//$model Phase destroy
+$modelGenerator.prototype.$$destroyPhase = function()
+{
+    this.$$phase = null;
+};
+
+//$model Evaluate
+//@Public Function
+$modelGenerator.prototype.$evaluate = function( expr  )
+{
+    return $isFunction(expr)?expr(this) : maskedEval( expr, this );
+};
+//$model apply
+$modelGenerator.prototype.$apply = function(fn)
+{
+    try
+    {
+        this.$$beginPhase('$apply');
+        return this.$evaluate( fn || function(){} );
+    }finally
+    {
+        this.$$destroyPhase();
+        this.$consume();
+    }
+}
+//$model Watcher
+$modelGenerator.prototype.$watch = $watch;
+//$model WatchList consumer
+$modelGenerator.prototype.$consume = $consume;
+//$model Equal Value checker
+$modelGenerator.prototype.$$areEqual = function( oldValue , newValue )
+{
+    var changes = false;
+    if($isObject( newValue ) || $isArray( newValue ))
+    {
+        changes = JSON.stringify(oldValue).length === JSON.stringify(newValue).length;
+    }
+    else if($isNumber(newValue)){
+        changes = Number(oldValue) === Number(newValue);
+    }
+    else if($isString(oldValue)){
+        changes = newValue.length === oldValue.length;
     }
 
-    //set model constructor here
-    $modelGenerator.prototype.constructor = $modelGenerator;
+    //return changes
 
-    //creating a new instance of model
-    $modelGenerator.prototype.$new = createNewModelInstance
+    return changes;
+};
 
-    //$model Phase Setter
-    $modelGenerator.prototype.$$beginPhase = function(phase)
+//$rootModel $on event registery
+$modelGenerator.prototype.$on = function(eventName , fn)
+{
+  var subscribers = this.$$subscribers[eventName],
+    self = this;
+    if(!subscribers)
     {
-        if(this.$$phase)
-        {
-            throw this.$$phase +" phase is already in progress";
-        }
-        this.$$phase = phase;
-    };
-
-    //$model Phase destroy
-    $modelGenerator.prototype.$$destroyPhase = function()
-    {
-        this.$$phase = null;
-    };
-
-    //$model Evaluate
-    //@Public Function
-    $modelGenerator.prototype.$evaluate = function( expr  )
-    {
-        return $isFunction(expr)?expr(this) : maskedEval( expr, this );
-    };
-    //$model apply
-    $modelGenerator.prototype.$apply = function(fn)
-    {
-        try
-        {
-            this.$$beginPhase('$apply');
-            return this.$evaluate( fn || function(){} );
-        }finally
-        {
-            this.$$destroyPhase();
-            this.$consume();
-        }
+      this.$$subscribers[eventName] = subscribers = []
     }
-    //$model Watcher
-    $modelGenerator.prototype.$watch = $watch;
-    //$model WatchList consumer
-    $modelGenerator.prototype.$consume = $consume;
-    //$model Equal Value checker
-    $modelGenerator.prototype.$$areEqual = function( oldValue , newValue )
-    {
-        var changes = false;
-        if($isObject( newValue ) || $isArray( newValue ))
+    subscribers.push(fn);
+
+    //return function to unsubscribe
+    return function(){
+        self.$$subscribers[eventName].pop();
+    }
+};
+
+ /* 
+  $rootModel $model {$publish} event
+  Loops through the Model child from top to bottom
+  @Param {string}
+  @return {FUNCTION}-@arguments {Object || String || Array}
+  */
+
+$modelGenerator.prototype.$publish = function(name)
+{
+    var self = this;
+    //initialize model subscribers
+    function broadcastSubscribers(current,arg){
+        var child = $modelChildReferenceList.$get(current.$mId);
+
+        if(name && current.$$subscribers[name])
         {
-            changes = JSON.stringify(oldValue).length === JSON.stringify(newValue).length;
+            current.$$subscribers[name].forEach(function(fn){
+                fn.apply(current , arg );
+            });
         }
-        else if($isNumber(newValue)){
-            changes = Number(oldValue) === Number(newValue);
-        }
-        else if($isString(oldValue)){
-            changes = newValue.length === oldValue.length;
-        }
+        //loop through the child
+        child.forEach(function(cur,idx){
+            //get the child model and subscribe it
+            var model = $modelMapping.$get(child[idx]);
+            broadcastSubscribers(model,arg);
+        })
+    }
 
-        //return changes
 
-        return changes;
-    };
-
-    //$rootModel $on event registery
-    $modelGenerator.prototype.$on = function(eventName , fn)
+    return function()
     {
-      var subscribers = this.$$subscribers[eventName],
-        self = this;
-        if(!subscribers)
-        {
-          this.$$subscribers[eventName] = subscribers = []
-        }
-        subscribers.push(fn);
+      var arg = arguments;
+        //broadCast the parent before the child
+        broadcastSubscribers(self,arg);
+    }
+};
 
-        //return function to unsubscribe
-        return function(){
-            self.$$subscribers[eventName].pop();
-        }
-    };
+//Model destroy function
+$modelGenerator.prototype.$$destroy = function(){
+    this.$publish('$destroy')(this);
+    var id = this.$mId;
+    $removeAllBinding(id);
+    var parentModel = this.$parent;
+    $modelChildReferenceList.$get(id).forEach(function(_id){
+        $removeAllBinding(_id);
+    });
 
-     /* 
-      $rootModel $model {$publish} event
-      Loops through the Model child from top to bottom
-      @Param {string}
-      @return {FUNCTION}-@arguments {Object || String || Array}
-      */
-
-    $modelGenerator.prototype.$publish = function(name)
-    {
-          var self = this;
-            //initialize model subscribers
-            function broadcastSubscribers(current,arg){
-                var child = $modelChildReferenceList.$get(current.$mId);
-
-                if(name && current.$$subscribers[name])
-                {
-                    current.$$subscribers[name].forEach(function(fn){
-                        fn.apply(current , arg );
-                    });
-                }
-
-                //loop through the child
-                child.forEach(function(cur,idx){
-                    //get the child model and subscribe it
-                    var model = $modelMapping.$get(child[idx]);
-                    broadcastSubscribers(model,arg);
-                })
-            }
-
-
-        return function()
-        {
-          var arg = arguments;
-            //broadCast the parent before the child
-            broadcastSubscribers(self,arg);
-        }
-    };
-
-    //Model destroy function
-    $modelGenerator.prototype.$$destroy = function(){
-        this.$publish('$destroy')(this);
-        var id = this.$mId;
-        $removeAllBinding(id);
-        var parentModel = this.$parent;
-        $modelChildReferenceList.$get(id).forEach(function(_id){
-            $removeAllBinding(_id);
-        });
-
-        //remove the watch list from parent model
+    //remove the watch list from parent model
+    if(parentModel){
         $modelChildReferenceList.$new(parentModel.$mId,$modelChildReferenceList.$get(parentModel.$mId).filter(function(key){
             return key !== id;
         }));
-
-    };
-
-    //New Model Instance Creator
-    function createNewModelInstance(isolate)
-    {
-        var childModel,
-            child;
-
-            if(isolate)
-            {
-                child = new $modelGenerator();
-                child.$self = this;
-            }else
-            {
-              if(this.$$isIsolated){
-                this.$$childModel = null;
-              }
-
-                if(!this.$$childModel)
-                {
-                    this.$$childModel = function()
-                    {
-                        this.$$watchList = [];
-                        this.$$broadcast = [];
-                        this.$mId = $eUID++;
-                        this.$$subscribers = {};
-                        this.$previous = this.$child;
-                        this.$child = this.$$unObserve = this.$$childModel = null;
-                        this.$$asyncQueue = [];
-
-                        //delete observer for new model
-                        delete this.$$isIsolated;
-                    };
-
-                    this.$$childModel.prototype = this;
-                }
-
-                child = new this.$$childModel();
-                //set the child to the Parent Model
-                this.$child = child;
-                child.$parent = this;
-
-                //track child Model
-                if(!$modelChildReferenceList.$get(this.$mId).indexOf(child.$mId) > -1){
-                  $modelChildReferenceList.$push(this.$mId,child.$mId);
-                }
-
-            }
-
-            //reference to the last child created
-            $$0 = child;
-
-            //reference to the watchList
-            $modelMapping.$new(child.$mId,child);
-
-            return child;
     }
- 
+    // free Memory
+    parentModel = null;
+};
 
-    //Main Template Watcher 
+//New Model Instance Creator
+function createNewModelInstance(isolate)
+{
+    var childModel,
+        child;
+
+    if(isolate)
+    {
+        child = new $modelGenerator();
+        child.$self = this;
+    }else
+    {
+      if(this.$$isIsolated){
+        this.$$childModel = null;
+      }
+
+        if(!this.$$childModel)
+        {
+            this.$$childModel = function()
+            {
+                this.$$watchList = [];
+                this.$$broadcast = [];
+                this.$mId = $eUID++;
+                this.$$subscribers = {};
+                this.$previous = this.$child;
+                this.$child = this.$$unObserve = this.$$childModel = null;
+                this.$$asyncQueue = [];
+
+                //delete observer for new model
+                delete this.$$isIsolated;
+            };
+
+            this.$$childModel.prototype = this;
+        }
+
+        child = new this.$$childModel();
+        //set the child to the Parent Model
+        this.$child = child;
+        child.$parent = this;
+
+        //track child Model
+        if(!$modelChildReferenceList.$get(this.$mId).indexOf(child.$mId) > -1){
+          $modelChildReferenceList.$push(this.$mId, child.$mId);
+        }
+
+    }
+
+    //reference to the last child created
+    $$0 = child;
+
+    //reference to the watchList
+    $modelMapping.$new(child.$mId, child);
+
+    return child;
+}
+
+
+//Main Template Watcher 
 //@ref : Directive or controller to watch
 //@@Model : Scope to watch against
 
@@ -217,18 +219,19 @@ function $atp( ref , $id )
     $jElementProviderWatchListFn(ref,$id);
 }
 
-  //@ElementObserver
-  //Observe when an element is removed
-  //from the DOM
-  //remove all watchList
-  //Destroy Model observer if any
-  function $observeElement(ele,$id,fn)
-  {
+//@ElementObserver
+//Observe when an element is removed
+//from the DOM
+//remove all watchList
+//Destroy Model observer if any
+function $observeElement(ele,$id,fn)
+{
     if(fn)
     {
         model.$on('$destroy',fn);
     }
-      element(ele)
+
+    element(ele)
       .bind('remove',function(e)
       {
         var cmodel = $modelMapping.$get($id);
@@ -236,102 +239,98 @@ function $atp( ref , $id )
                 cmodel.$$destroy();
             }
       });
-  }
+}
 
+//rootModel Watcher
+function $watch()
+{
+   if($isObject(this))
+   {
+        var self = this,
+            watchers = {
+                watchFn : arguments[0],
+                listenerFn : arguments[1] || false,
+                core : !!arguments[2],
+                lastValue : getWatchValue(arguments[0] , self )
+            };
 
-    //rootModel Watcher
-    function $watch()
-    {
-       if($isObject(this))
-       {
-            var self = this,
-                watchers = {
-                    watchFn : arguments[0],
-                    listenerFn : arguments[1] || false,
-                    core : !!arguments[2],
-                    lastValue : getWatchValue(arguments[0] , self )
-                };
-
-            if($isNull(this.$$watchList))
-            {
-              this.$$watchList = [];
-            }
-          //add the watchList
-          this.$$watchList.push( watchers );
-
-          //add the object to $modelMapping
-          $modelMapping.$new(this.$mId,this);
-       }
-    }
-
-    //get the value of a watch list
-    function getWatchValue (watch,obj)
-    {
-        if($isFunction(watch))
+        if($isNull(this.$$watchList))
         {
-            return $observe(obj,watch);
-        }else
-        {
-            return obj[watch];
+          this.$$watchList = [];
         }
-    }
+      //add the watchList
+      this.$$watchList.push( watchers );
 
-    function $consume(fn)
+      //add the object to $modelMapping
+      $modelMapping.$new(this.$mId,this);
+   }
+}
+
+//get the value of a watch list
+function getWatchValue (watch,obj)
+{
+    if($isFunction(watch))
     {
-        var watchers = this.$$watchList,
-            self = this;
+        return $observe(obj,watch);
+    }else
+    {
+        return obj[watch];
+    }
+}
 
-          //initialize the argument Fn
-          if(fn && $isFunction(fn))
-          {
-            fn.apply(fn,[]);
-          }
-            
-            self.$$beginPhase('$consume');
-            if(watchers.length > 0)
-            {
-                watchers.forEach(function(obj,idx)
-                {
-                    if(!obj.listenerFn)
-                    {
-                        return obj.watchFn();
-                    }
-                    try{
-                        var newValue = getWatchValue(obj.watchFn,self),
-                            oldValue = obj.lastValue;
-                        if(!obj.core)
-                        {
-                            obj.listenerFn(newValue , oldValue, self );
-                            obj.lastValue = newValue;
-                        }else
-                        {
-                           if(self.$$areEqual(newValue,oldValue))
-                           {
-                               obj.listenerFn(newValue , oldValue, self ); 
-                           } 
-                        }
-                    }catch(e)
-                    {
-                        errorBuilder( e );
-                    }
-                    
-                });
-            }
-            self.$$destroyPhase();
+function $consume(fn)
+{
+    var watchers = this.$$watchList,
+        self = this;
+
+    //initialize the argument Fn
+    if(fn && $isFunction(fn))
+    {
+    fn.apply(fn,[]);
     }
 
-  //$remove All Binding
-  function $removeAllBinding($id){
+    self.$$beginPhase('$consume');
+    if(watchers.length > 0)
+    {
+        watchers.forEach(function(obj,idx)
+        {
+            if(!obj.listenerFn)
+            {
+                return obj.watchFn();
+            }
+            try{
+                var newValue = getWatchValue(obj.watchFn,self),
+                    oldValue = obj.lastValue;
+                if(!obj.core)
+                {
+                    obj.listenerFn(newValue , oldValue, self );
+                    obj.lastValue = newValue;
+                }else
+                {
+                   if(self.$$areEqual(newValue,oldValue))
+                   {
+                       obj.listenerFn(newValue , oldValue, self ); 
+                   } 
+                }
+            }catch(e)
+            {
+                errorBuilder( e );
+            }
+            
+        });
+    }
+    self.$$destroyPhase();
+}
+
+//$remove All Binding
+function $removeAllBinding($id){
     $modelMapping.$remove($id);
     $attrWatchList.$remove($id);
     $directivesProviderWatchList.$remove($id);
 
-    var _Observer = $modelObserverList.$get($id);
-        if(_Observer.started){
-             _Observer.$destroy();
-        }
-        //remove model Observer    
-        $modelObserverList.$remove($id);
-        $modelChildReferenceList.$remove($id);
-        $watchBlockList.$remove($id);
-  }
+    _modelObserver.removeWatch($id);
+    //remove model Observer    
+    $modelObserverList.$remove($id);
+    $modelChildReferenceList.$remove($id);
+    $watchBlockList.$remove($id);
+}

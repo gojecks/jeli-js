@@ -1,7 +1,9 @@
 
-/*@Private Function findInProvider
-@Argument : Provider to inject (String)
-@return if found or else throw new error*/
+/*
+  @Private Function findInProvider
+  @Argument : Provider to inject (String)
+  @return if found or else throw new error
+*/
 
 function findInProvider(provider)
 {
@@ -23,123 +25,132 @@ function findInProvider(provider)
     }
 }
 
+// set accepted provider for config and debugMode
+$provider.$restrictDebugMode = [''];
+$provider.$restrictDebugMode.push(
+  ['$jProvideProvider','$jElementProvider','$jComponentProvider','$jServiceProvider','$httpProvider','$jValueProvider']
+);
+$provider.$restrictDebugMode.push(
+  ['$jElementProvider','$jComponentProvider','$jControllerProvider','$jFactoryProvider','$jFilterProvider']
+);
 
 //@Private Function
 //@DependencyInjector( fn );
 function $dependencyInjector( restricted )
 {
     
-    this.inject = function(fn,provider,model,locals)
+  this.get = function(arg,reference,resolver)
+  {
+      if(resolver && resolver[arg]){
+        return resolver[arg];
+      }
+    //check publicProviders
+    var _publicProvider = $provider.$get('$jEliServices').$get(arg);
+    if(_publicProvider)
     {
-      var nArg = [],
-          i = 0,
-          dependencies = fn.$injector; //dependency injection Array
+      return _publicProvider;
+    } 
 
-          if(dependencies && dependencies.length )
+    var dependency = null,
+        provider=null,
+        _injectors = $compileTracker.injectors.$getAll();
+      domElementProvider.each(_injectors,function(idx,queue)
+      {
+          if($isArray(queue))
           {
-              for(; i < dependencies.length; i++)
-              {
-                var doInject = dependencies[i],
-                    injectedArgument = null;
-                  //Try and catch injectors
-                  if(doInject)
-                  {
-                      switch(provider)
-                      {
-                          case('$jConfigProvider'):
-                          case('$jProvideProvider'):
-                              injectedArgument = findInProvider( doInject );
-                          break;
-                          default:
-                            try
-                            {
-                              if($inArray(doInject,['$scope','$model','model']))
-                              {
-                                  injectedArgument = model;
-                              }else
-                              {
-                                injectedArgument =  this.get( doInject, provider,locals);
-                              }
-
-                            }catch(e){}
-                            finally
-                            {
-                                if($isNull(injectedArgument))
-                                {
-                                    throw new Error('Could not Find '+doInject+'Provider in ' + provider);
-                                }
-                            }
-                          break;
-                      }
-                  }
-
-                  nArg.push( injectedArgument );
-              }
-          }
-
-          return nArg;
-      };
-
-    this.get = function(arg,reference,resolver)
-    {
-        if(resolver && resolver[arg]){
-          return resolver[arg];
-        }
-          //check publicProviders
-          if($publicProviders[arg])
-          {
-            return $publicProviders[arg];
-          } 
-
-          var dependency = null,
-              provider=null,
-              _injectors = $compileTracker.injectors.$getAll();
-            domElementProvider.each(_injectors,function(idx,queue)
-            {
-                if($isArray(queue))
-                {
-                  var found = queue.filter(function(item){
-                    return item[1][0] === arg;
-                  });
-
-                  if(found && found.length){
-                    //set provider when its found
-                      provider = found[0][0];
-                      dependency = $provider.$get(provider).resolve(idx,arg,reference);
-
-                      if($isEqual(found[0][1][1],'unregistered'))
-                      {
-                        //only inject dependency
-                        //when its required
-                        if(dependency && dependency.$injector){
-                          dependency = q( provider, dependency );
-                        }
-                        //register the application
-                        $provider.$get(provider).register(idx,arg,dependency);
-                        found[0][1][1] = 'registered';
-                      }
-                  }
-                }else
-                {
-                    if($isEqual(idx,arg))
-                    {
-                      dependency = queue;
-                    }
-                }
+            var found = queue.filter(function(item){
+              return item[1][0] === arg;
             });
 
-            if(restricted)
-            {
-              if($inArray(provider,$provider.$restrictDebugMode[restricted]))
-              {
-                var msg = ((restricted < 2)?'Could not Find '+arg+'Provider in ' + provider:'Cannot inject '+provider+' in Config State');
-                errorBuilder(msg);
-              }
+            if(found && found.length){
+              //set provider when its found
+                provider = found[0][0];
+                dependency = $provider.$get(provider).resolve(idx,arg,reference);
+
+                if($isEqual(found[0][1][1],'unregistered'))
+                {
+                  //only inject dependency
+                  //when its required
+                  if(dependency && dependency.$injector){
+                    dependency = q( provider, dependency );
+                  }
+                  //register the application
+                  $provider.$get(provider).register(idx,arg,dependency);
+                  found[0][1][1] = 'registered';
+                }
             }
-        //return the dependency
-        return dependency;
-    };
+          }else
+          {
+              if($isEqual(idx,arg))
+              {
+                dependency = queue;
+              }
+          }
+      });
+
+      if(restricted)
+      {
+        if($inArray(provider,$provider.$restrictDebugMode[restricted]))
+        {
+          var msg = ((restricted < 2)?'Could not Find '+arg+'Provider in ' + provider:'Cannot inject '+provider+' in Config State');
+          errorBuilder(msg);
+        }
+      }
+      //return the dependency
+      return dependency;
+  };
 }
+
+$dependencyInjector.prototype.inject = function(fn,provider,model,locals)
+{
+  var nArg = [],
+      i = 0,
+      dependencies = fn.$injector; //dependency injection Array
+
+    if(dependencies && dependencies.length )
+    {
+        for(; i < dependencies.length; i++)
+        {
+          var doInject = dependencies[i],
+              injectedArgument = null;
+            //Try and catch injectors
+            if(doInject)
+            {
+                switch(provider)
+                {
+                    case('$jConfigProvider'):
+                    case('$jProvideProvider'):
+                        injectedArgument = findInProvider( doInject );
+                    break;
+                    default:
+                      try
+                      {
+                        if($inArray(doInject,['$scope','$model','model']))
+                        {
+                            injectedArgument = model;
+                        }else
+                        {
+                          injectedArgument =  this.get( doInject, provider,locals);
+                        }
+
+                      }catch(e){}
+                      finally
+                      {
+                          if($isNull(injectedArgument))
+                          {
+                              throw new Error('Could not Find '+doInject+'Provider in ' + provider);
+                          }
+                      }
+                    break;
+                }
+            }
+
+            nArg.push( injectedArgument );
+        }
+    }
+
+      return nArg;
+  };
 
 
 /*
@@ -156,6 +167,14 @@ function binding(fn,arg)
       
   init.prototype = fn.prototype;
     return init;
+}
+
+function dependencyFnWrapper(fn, args){
+
+    var temp = Object.create(fn.prototype),
+        applied = fn.apply(temp,args);
+
+    return applied;
 }
 
 function q( provider , fn , model , initializer,locals)
@@ -175,7 +194,7 @@ function q( provider , fn , model , initializer,locals)
       {
         case('$jFactoryProvider'):
         case('$jControllerProvider'):
-          return fn.construct(nArg);
+          return dependencyFnWrapper(fn,nArg);
         break;
         case('$jServiceProvider'):
           return binding(fn,nArg);
