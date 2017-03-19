@@ -8,46 +8,73 @@
       attr <any j-include="/ui-template.html">
 
     */
+$defaultDirectiveProvider.push({
+  selector: "j-include",
+  priority: 7,
+  canDetachElement: true,
+  isDefault:true
+});
 
-     defaultElementInitializer.prototype['include'] = function()
-     {
-        var url = (this.checker.indexOf('/') > -1)?this.checker:$modelSetterGetter(this.checker,this.$model),
-            templFac = findInProvider('$templateCache'),
-            $self = this;
-        if(!$isUndefined(url))
-        {
-            if($isFunction(url)){ url = url(); }
+defaultElementInitializer.prototype['include'] = function()
+{
+  /**
+    Resolve the URL
+  **/
+  var url = (this.checker.indexOf('/') > -1)?this.checker:maskedEval(this.checker,this.$model),
+      templFac = findInProvider('$templateCache'),
+      $self = this;
 
-            //check if content is in templateCache
-            //If true render the template
-            if( !$isEqual(url,this.lastProcessed) )
-            {
-                $http.get(url).then(function(data)
-                {
-                   if($isString(data.data))
-                   {
-                    var parsedHTML = $sce().trustAsHTML(data.data);
-                      templFac.put(url, parsedHTML);
-                      $includeBuilder( parsedHTML );
-                   }
-                });
-            }
-        }
+  /**
+    check for processed Element
+    remove element if cannot resolve URL
+  **/
+  if(!this.lastProcessed){
+    this.lastProcessed = true;
+  }
 
-        function $includeBuilder(html)
-        {
-          //remove previous Element before adding new
-            removeCacheElement( $self.cache );
-          //create a new instance of Element
-          var newEle = $self.$createElement();
-          //insert the element to the parentnode
-            $self.parentNode.insertBefore( newEle, $self.cENode );
-            element(newEle).html(html);
-            //transverse the new instance of element with the model
-            transverseTemplate( newEle )($self.$model,$self.ref);
-            $self.cache = [newEle];
-            newEle = null;
-        }
-        //track  last processed url
-        this.lastProcessed = url;
-     };
+
+  if(url)
+  {
+      //check if content is in templateCache
+      //If true render the template
+      if( !$isEqual(url, this.lastProcessed) )
+      {
+        this.elem.innerHTML = "";
+        // get the required template
+          $http.get(url).then(function(data)
+          {
+             if($isString(data.data))
+             {
+              var parsedHTML = $sce().trustAsHTML(data.data);
+                templFac.put(url, parsedHTML);
+                $includeBuilder( parsedHTML );
+             }
+          },resetIncludeTemplate);
+      }
+  }else{
+    resetIncludeTemplate();
+  }
+
+  function resetIncludeTemplate(){
+    $self.parentNode.removeChild( $self.elem );
+    //remove previous Element before adding new
+      removeCacheElement( $self.cache );
+  }
+
+  function $includeBuilder(html)
+  {
+    if(!$self.parentNode.contains($self.elem)){
+        //create a new instance of Element
+      $self.elem = $self.$createElement();
+      //insert the element to the parentnode
+      $self.parentNode.insertBefore( $self.elem, $self.cENode );
+    }
+
+      element($self.elem).html(html);
+      //transverse the new instance of element with the model
+      transverseTemplate( $self.elem )($self.$model, $self.ref);
+      $self.cache = [$self.elem];
+  }
+  //track  last processed url
+  this.lastProcessed = url;
+};

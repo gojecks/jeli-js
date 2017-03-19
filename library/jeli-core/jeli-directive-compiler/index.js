@@ -247,6 +247,9 @@ function jElementCompilerFn(){
   this.controller = function(){};
   this.controllers = "$ctrl";
   this.props = {};
+  this.priority = 1;
+  this.selector = "";
+  this.style = "";
 }
 
     // registerComponentToWatch
@@ -294,11 +297,9 @@ function attachComponentStyles(style, ele){
 //@return function (DOM Element)
 function initializeDirective(obj, ele, $model)
 {
-  if( !$inArray(obj[0], ele.data('ignoreProcess')))
-  {
-      registerComponentToProcess(ele, obj[0]);
+  registerComponentToProcess(ele, obj.selector);
 
-      var _directive = extend({},new jElementCompilerFn(), obj[1]),
+      var _directive = extend({},new jElementCompilerFn(), obj),
           _linker;
       //set the refID of the directive
         ele[0]['$object:id'] = getUID();
@@ -309,10 +310,9 @@ function initializeDirective(obj, ele, $model)
     directiveTemplateBuilder(_directive,ele[0],attr)
     .then(function(canCompile){
       //intialize the compile state
-      _linker = _directive.$compiler.apply(_directive,[ele,attr]);
+      _linker = _directive.$compiler.apply(_directive, [ele,attr]);
       //Initialize directive
         var model = $compileScope.call(_directive, ele[0], attr, $model);
-        
         //initialize the linker function
         _linker.apply(_linker, [ele,attr,model]);
         // register Component to watchList
@@ -321,32 +321,29 @@ function initializeDirective(obj, ele, $model)
 
     _directive = null;
 
-  }    
 }
 
 
 // jComponent Compiler
 function initializeComponent(obj,ele, model){
-  if( !$inArray(obj[0], ele.data('ignoreProcess')))
-  {
-     var _component = extend({},new jElementCompilerFn(), obj[1]),
-          attr = $compileAttribute.call(ele[0]),
-            controllerAs = _component.controllerAs || '$ctrl',
-            _model = model.$new(1);
 
-    registerComponentToProcess(ele, obj[0]);
-    // initilize the directive
-    $provider.$jControllerProvider.$initialize(_component.controller , _model, null, controllerAs);
-     structureModel(_model[controllerAs], model)(attr, _component.props);
-      //build Directive template
-      directiveTemplateBuilder(_component, ele[0], attr)
-      .then(function(canCompile){
-        // register Component to watchList
-        registerComponentToWatch(ele, _model, canCompile);
-        attachComponentStyles(_component.style, ele); 
+   var _component = extend({},new jElementCompilerFn(), obj),
+        attr = $compileAttribute.call(ele[0]),
+          controllerAs = _component.controllerAs || '$ctrl',
+          _model = model.$new(1);
 
-        // trigger the init
-        (_model[controllerAs].onInit || function(){}).apply(_model[controllerAs], [ele]);
-    });
-  }
+  registerComponentToProcess(ele, obj.selector);
+  // initilize the directive
+  $provider.$jControllerProvider.$initialize(_component.controller , _model, null, controllerAs);
+   structureModel(_model[controllerAs], model)(attr, _component.props);
+    //build Directive template
+    directiveTemplateBuilder(_component, ele[0], attr)
+    .then(function(canCompile){
+      // register Component to watchList
+      registerComponentToWatch(ele, _model, canCompile);
+      attachComponentStyles(_component.style, ele); 
+
+      // trigger the init
+      (_model[controllerAs].onInit || function(){}).apply(_model[controllerAs], [ele]);
+  });
 }

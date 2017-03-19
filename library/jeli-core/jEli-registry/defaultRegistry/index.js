@@ -59,15 +59,6 @@ function lowerCaseFilter(){
     }
 });
 
-//register Number filters
-//return a NUMBER
-_defaultRegistry('j-eli','$jFilterProvider','number')(
-// numberFilter
-function numberFilter(){
-    return function(value){
-      return Number(value);
-    }
-});
 
 // register filterService
 _defaultRegistry('j-eli','$jFactoryProvider','$filter')(function(){

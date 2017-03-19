@@ -5,7 +5,12 @@
 
       cannot be used in class list
     */
-    defaultElementInitializer.prototype['selected'] = function()
-    {
-      this.elem[($logicChecker.call(this.elem, this.checker,this.$model))?'setAttribute':'removeAttribute']('selected',true); 
-    };
+$defaultDirectiveProvider.push({
+  selector: "j-selected",
+  priority: 1,
+  isDefault:true
+});
+defaultElementInitializer.prototype['selected'] = function()
+{
+  this.elem[($logicChecker.call(this.elem, this.checker,this.$model))?'setAttribute':'removeAttribute']('selected',true); 
+};

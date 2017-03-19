@@ -15,6 +15,7 @@ var $isSupport =
   xhrFileUpload : !!(window.XMLHttpRequestUpload && window.FileReader),
   fileReader : (window.File&&window.FileReader&&window.FileList&&window.Blob),
   webWorker:!!window.Worker,
+  intl: !!window.Intl,
   dom:
   {
     cloning: (function () 

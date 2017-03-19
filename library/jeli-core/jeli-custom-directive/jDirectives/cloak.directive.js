@@ -5,6 +5,11 @@
 
   cannot be used in class list
 */
+$defaultDirectiveProvider.push({
+  selector: "j-cloak",
+  priority: 100,
+  isDefault:true
+});
 
 defaultElementInitializer.prototype['cloak'] = function()
 {

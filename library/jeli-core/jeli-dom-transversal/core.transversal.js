@@ -24,6 +24,12 @@ function toDOM(ignore)
   return (ignore)?fragment.childNodes:fragment.firstChild;
 }
 
+function checkStructuralDirective(dir, restrictA, restrictB){
+  if(expect(dir).contains(restrictA) && expect(dir).contains(restrictB)){
+    errorBuilder(restrictA +' directive cannot be used with '+restrictB+' directive');
+  }
+}
+
 //transverse Template Compiler
 function transverseCompiler(ele)
 {
@@ -50,53 +56,84 @@ function transverseCompiler(ele)
 
         //find directive
         //find controller
-        var isDirective = $isDirective(ele);
-          compileDefaultDirectiveProvider(ele)($model,ref);
-          attachEventProviders(ele)($model,ref);
-          if(isDirective.isLocal || isDirective.isClassName || isDirective.isAttribute)
-          {
-            //change template if recompiler is in use
-            if(replacerChildren)
-            {
-              ele.innerHTML = replacerChildren.innerHTML;
-            }
+        var isDirective = $isDirective(ele),
+          _elementDetached = false;
+          //compile directive
+          if(isDirective.length){
+            /**
+                check for occurence of DOM structural directive
+            **/
+            var strDirective = JSON.stringify(isDirective);
+            checkStructuralDirective(strDirective, 'j-for', 'j-if');
+            checkStructuralDirective(strDirective, 'j-for', 'j-do');
+            checkStructuralDirective(strDirective, 'j-min', 'j-minlength');
+            checkStructuralDirective(strDirective, 'j-max', 'j-maxlength');
+
 
             var nElement = element(ele),
-                data = nElement.data('ignoreProcess');
+              data = nElement.data('ignoreProcess');
             if(!data)
             {
               nElement.data({ignoreProcess:[]});
             }
+            //addEli class to the element
+            addClass( ele );
 
-            findInList.call(isDirective,function(i,dirList)
-            {
-              if(dirList)
+            isDirective.forEach(function(dir){
+              var _dirName = camelCase.call( dir.selector );
+
+              if($inArray(_dirName, data || []) || _elementDetached)
               {
-                findInList.call(dirList,function(idx,dir)
+                return;
+              }
+
+              if(dir.isDefault && !_elementDetached){
+                //push the ignoreProcess
+                ignoreProcessCheck(ele, _dirName );
+                // compile default directives
+                defaultElementBinder(dir, ele, $model, ref);
+              }else if(!_elementDetached && !dir.isDefault){
+                //change template if recompiler is in use
+                if(replacerChildren)
                 {
-                    if(!dir[1].$isComponent){
-                      initializeDirective( dir, nElement , $model );
-                    }else{
-                      initializeComponent( dir, nElement , $model );
-                    }
-                });
-              }
-            });
+                  ele.innerHTML = replacerChildren.innerHTML;
+                }
 
-            // cleanUp
-              nElement = null;
-              data = null;
-          }else
-          {
-              //attribute checker for all element
-              $attrWatcher(ele)($model);
-              //proceed with the compilation
-              //checking child elements
-              var subchildren = getChildrenNode(ele);
-              if(subchildren && subchildren.length)
-              {
-                transverseTemplate(ele)($model,ref,replacerChildren);
+                //push the ignoreProcess
+                ignoreProcessCheck(ele, _dirName);
+                if(!dir.$isComponent){
+                  initializeDirective( dir, nElement , $model );
+                }else{
+                  initializeComponent( dir, nElement , $model );
+                }
               }
+                //compile default directive
+                if(dir.canDetachElement){
+                  _elementDetached = true;
+                }
+            });
+          }
+
+          /**
+            Bind Listeners to the Element
+          **/
+          attachEventProviders(ele)($model,ref);
+
+          // cleanUp
+          nElement = null;
+          data = null;
+         
+          
+          if(!_elementDetached){
+            //attribute checker for all element
+            $attrWatcher(ele)($model);
+            //proceed with the compilation
+            //checking child elements
+            var subchildren = getChildrenNode(ele);
+            if(subchildren && subchildren.length)
+            {
+              transverseTemplate(ele)($model,ref,replacerChildren);
+            }
           }
       }
       
@@ -151,22 +188,6 @@ function transverseTemplate(template)
   };
 }
 
-
-//@Function Unbind
-//set Providers WatchList
-function compileDefaultDirectiveProvider(ele)
-{
-  return function($model,ref)
-  {
-      //create a new instance WatchList
-      var binder = new defaultElementBinder( ele, $model, ref );
-      binder.process(function(fn){
-        $directivesProviderWatchList.$push($model.$mId,  fn);
-      }, ref); 
-
-      binder = null;
-  };
-}
 
 //Template compiler
 var compilerStackWatch = new $eventStacks();

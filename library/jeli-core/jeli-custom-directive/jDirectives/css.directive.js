@@ -2,8 +2,7 @@
   // adds a class or style based on logic provided
   /*@Usage 
     allowed type Attirbute and Element
-  */
-                  
+  */                
    function jCss()
    {
       var dis = element(this.elem),
@@ -52,6 +51,16 @@
         }
       }
     };
+$defaultDirectiveProvider.push({
+  selector: "j-style",
+  priority: 1,
+  isDefault:true
+});
 
+$defaultDirectiveProvider.push({
+  selector: "j-class",
+  priority: 1,
+  isDefault:true
+});
 defaultElementInitializer.prototype.style = jCss;
 defaultElementInitializer.prototype['class'] = jCss;

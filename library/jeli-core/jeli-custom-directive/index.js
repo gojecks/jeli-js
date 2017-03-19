@@ -22,92 +22,39 @@
   'j-switch',
   'j-cloak',
   'j-max',
-  'j-min',
-  'j-number'
+  'j-min'
 **/
-var $defaultDirectiveProvider = [
-  'j-controller',
-  'j-init',
-  'j-if',
-  'j-href',
-  'j-src',
-  'j-include',
-  'j-for',
-  'j-do',
-  'j-hide',
-  'j-show',
-  'j-class',
-  'j-style',
-  'j-disabled',
-  'j-model',
-  'j-value',
-  'j-html',
-  'j-checked',
-  'j-selected',
-  'j-switch',
-  'j-cloak',
-  'j-max',
-  'j-maxlength',
-  'j-min',
-  'j-minlength',
-  'j-number'];
+var $defaultDirectiveProvider = [];
 
-function defaultElementBinder(ele, $model, ref)
+/**
+
+  Function defaultElementBinder
+  @Param: ELEMENT, MODEL, REF
+  @return defaultElementBinder Instance
+
+**/
+
+function defaultElementBinder(dir, ele, $model, ref)
 {
-  var defaultCompileElement = element(ele).data({}),
-    _self = this;
 
-    // set private property
-    this._canRemoveElement = 0;
-    this._queue = [];
-    //addEli class to the element
-    addClass( ele );
+  var set = dir.selector.split('-')[1],
+      val = hasAnyAttribute(ele, [dir.selector, ':'+set], "*") || ele.getAttribute('source');
 
-    $defaultDirectiveProvider.forEach(function(value)
-    {
-        var set = value.split('-')[1],
-            isDefaultDirective =  hasAnyAttribute(ele, [value, ':'+set])  || $isEqual( ele.localName, value );
-
-        if( isDefaultDirective)
-        {
-          var
-          //get the watch value from the element
-          val = hasAnyAttribute(ele, [value, ':'+set]) || ele.getAttribute('source'),
-          $ignoreList = defaultCompileElement.data('ignoreProcess');
-
-            if(!$inArray(set,$ignoreList || []))
-            {
-                //push the ignoreProcess
-                ignoreProcessCheck(ele,set);
-                var binding = elementProcessor( set, val, ele, $model, ref, _self);
-                //create a new instance WatchList
-                if(binding){
-                  _self._queue.push( binding );
-                }
-            }                
-        }
-    });
-
-    if(this._canRemoveElement){
-      ele.parentNode.removeChild(ele);
-    }
-
-    _self = null;
+  var binding = elementProcessor( set, val, ele, $model, ref);
+  //create a new instance WatchList
+  if(binding){
+    $directivesProviderWatchList.$push($model.$mId,  binding);
+    binding(ref);
+  }
 }
 
-defaultElementBinder.prototype.process = function(CB, ref){
-  this._queue.forEach(function(fn){
-    CB( fn );
-    // trigger the fn
-    fn(ref);
-  });
 
-  // empty our queue
-  this._queue = null;
-};
-
-
-function elementProcessor(type,  checker, ele, $model, ref, _parent){
+/**
+  @Function elementProcessor
+  Initialize the required Directive
+  @return Function (binded)
+**/
+function elementProcessor(type,  checker, ele, $model, ref){
   var ret = null;
     //arguments
     //type,elem,checker,$model,ref
@@ -127,9 +74,15 @@ function elementProcessor(type,  checker, ele, $model, ref, _parent){
     function trigger(arg){
       try{
         (defaultElementInitializer.prototype[type] || noop).apply(arg);
-      }catch(e){}
+      }catch(e){
+        if(typeof e === 'object'){
+          throw new Error(e)
+        }
+      }
       finally{
-        
+        if(arg.bindOnce){
+          $directivesProviderWatchList.$removeFromArray($model.$mId, arg.watchListIndex);
+        }
       }
     }
 
@@ -160,14 +113,15 @@ function elementProcessor(type,  checker, ele, $model, ref, _parent){
       //type,elem,checker,$model,ref
       this.type =     type;
       this.elem =     ele;
-      this.checker =  checker;
       this.$model =   $model;
       this.ref =      ref;
+      this.checker = checker;
       this.watchListIndex = $directivesProviderWatchList.$get($model.$mId).length;
       this.$attr = buildAttributes(ele);
       /*
         Directive that transcludes
       */
+
       switch(type)
       {
         case("for"):
@@ -181,6 +135,7 @@ function elementProcessor(type,  checker, ele, $model, ref, _parent){
           this.cloneNode = ele.cloneNode(true);
           this.cNode = toDOM.call('<!--'+cCase+' '+checker+'  -->');
           this.cENode = toDOM.call('<!-- end '+cCase+' '+checker+'  -->');
+          this.cSelector = cCase;
 
           this.parentNode = ele.parentNode;
           this.cache = [];
@@ -195,12 +150,10 @@ function elementProcessor(type,  checker, ele, $model, ref, _parent){
             this.parentNode.insertBefore( this.cENode , ele.nextSibling );
           }
           
-          _parent._canRemoveElement++;
            // switchBuilder
           if(type === 'switch'){
             switchBuilder.call(this);
             ele.innerHTML = "";
-            _parent._canRemoveElement = 0;
           }
 
         break;

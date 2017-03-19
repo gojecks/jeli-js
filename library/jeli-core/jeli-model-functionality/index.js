@@ -89,15 +89,22 @@ function attachEventProviders( ele )
           //check if j-model is defined when this event is used
           if($isEqual('change',splt) && !hasAnyAttribute(ele, ['j-model',':model'])){
 
-              errorBuilder('jChange requires jModel to function with');
+            errorBuilder('jChange requires jModel to function');
           }
 
-          ignoreProcessCheck(ele,splt);
-          //Store a reference to the element event
+          /**
+            Register the Events
+          **/
+
+
+            //Store a reference to the element event
             nElement
             .bind(splt, jEventHandler)
             .addClass('j-event-binder')
             .data(splt, attr);
+
+          ignoreProcessCheck(ele,splt);
+ 
 
           function jEventHandler(ev)
           {

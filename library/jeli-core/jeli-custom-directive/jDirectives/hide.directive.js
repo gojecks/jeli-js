@@ -8,12 +8,17 @@
       cannot be used in class list
     */
 
+$defaultDirectiveProvider.push({
+  selector: "j-hide",
+  priority: 1,
+  isDefault:true
+});
 
-    defaultElementInitializer.prototype.hide = function()
-    {
-        var $hide = $logicChecker.apply(this.elem, [this.checker,this.$model]);
-        // set our class
-        element(this.elem)
-        .addClass(($hide?'j-hide':'j-show'))
-        .removeClass(($hide?'j-show':'j-hide'));  
-    };
+defaultElementInitializer.prototype.hide = function()
+{
+    var $hide = $logicChecker.apply(this.elem, [this.checker,this.$model]);
+    // set our class
+    element(this.elem)
+    .addClass(($hide?'j-hide':'j-show'))
+    .removeClass(($hide?'j-show':'j-hide'));  
+};

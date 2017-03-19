@@ -11,26 +11,31 @@
 
   @return Object (new Object)
   */
-  function stringToObject(str,replacerObj)
-  {
-    var splitedStr = str.match(/\{(.*?)\}/),
-        newObj = {},
-        j;
+function stringToObject(str,replacerObj)
+{
+  var newObj;
+  try{
+    newObj = maskedEval(str, replacerObj || {});
+  }catch(e){
+    var splitedStr = str.match(new RegExp("\\"+str.charAt(0)+"(.*?)"+"\\"+str.charAt(str.length-1))),
+      newObj = ($isEqual("{",str.charAt(0))?{}:[]),
+      j;
 
-      splitedStr = (splitedStr && splitedStr[1] || '').split(',');
+    splitedStr = (splitedStr && splitedStr[1] || '').split(',');
 
-      for(j in splitedStr)
-      {
-        var xSplitedStr = splitedStr[j].split(':'),
-            name = xSplitedStr.shift(),
-         value = maskedEval(xSplitedStr.join(':'), replacerObj || {}) || xSplitedStr[1];
+    for(j in splitedStr)
+    {
+      var xSplitedStr = splitedStr[j].split(':'),
+          name = xSplitedStr.shift(),
+       value = maskedEval(xSplitedStr.join(':'), replacerObj || {}) || xSplitedStr[1];
 
-         //set the value to the key Object
-          newObj[name] = value;
-      }
-
-    return newObj;
+       //set the value to the key Object
+        newObj[name] = value;
+    }
   }
+
+  return newObj;
+}
 
 
 //watchBinding prototype function
@@ -69,6 +74,11 @@ watchBinding.prototype.$getAll = function(){
   return this._content;
 };
 
+// remove from array
+watchBinding.prototype.$removeFromArray = function(id, idx){
+  (this._content[id] || []).splice(1,idx);
+};
+
 
 function $isObject(obj)
 {
@@ -82,7 +92,7 @@ function $isString(str)
 
 function $isJsonString(str)
 {
-  return str && str.split('')[0] === '{' && str.split('')[str.split('').length-1] === '}';
+  return ( str && ("{[".indexOf(str.charAt(0)) > -1) && ("}]".indexOf(str.charAt(str.length-1)) > -1) );
 }
 
 function $isEmptyObject (obj)

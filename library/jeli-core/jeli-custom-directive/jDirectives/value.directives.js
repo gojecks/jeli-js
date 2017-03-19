@@ -7,10 +7,19 @@
 
       cannot be used in class list
     */
-    defaultElementInitializer.prototype.value = function()
+$defaultDirectiveProvider.push({
+  selector: "j-value",
+  priority: 1,
+  isDefault:true
+});
+defaultElementInitializer.prototype.value = function()
+{
+  var value = setTemplateValue(this.checker,this.$model);
+
+    if(!$isEqual(this.lastProcessed, value))
     {
-        if(this.elem)
-        {
-            element(this.elem).val( $modelSetterGetter(this.checker,this.$model) );
-        }
-    };
+      this.elem.value =  value;
+    }
+
+    this.lastProcessed = value;
+};

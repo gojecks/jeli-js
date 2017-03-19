@@ -6,13 +6,17 @@
 
       cannot be used in class list
     */
+$defaultDirectiveProvider.push({
+  selector: "j-show",
+  priority: 1,
+  isDefault:true
+});
+defaultElementInitializer.prototype.show = function()
+{
+    var $show = $logicChecker.apply(this.elem, [this.checker,this.$model]);
 
-    defaultElementInitializer.prototype.show = function()
-    {
-        var $show = $logicChecker.apply(this.elem, [this.checker,this.$model]);
-
-        // set our class
-        element(this.elem)
-        .addClass(($show?'j-show':'j-hide'))
-        .removeClass(($show?'j-hide':'j-show')); 
-    };
+    // set our class
+    element(this.elem)
+    .addClass(($show?'j-show':'j-hide'))
+    .removeClass(($show?'j-hide':'j-show')); 
+};

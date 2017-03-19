@@ -50,11 +50,11 @@ function buildAttributes(ele){
 }
 
 // hasAnyAttribute
-function hasAnyAttribute(ele, list){
+function hasAnyAttribute(ele, list, force){
   var found = 0;
   list.forEach(function(attr){
     if(ele.hasAttribute(attr)){
-      found = ele.getAttribute(attr) || true;
+      found = ele.getAttribute(attr) || force || true;
     }
   });
 
@@ -141,16 +141,16 @@ function $attrWatcher(ele)
     return function($model)
     {
        var attr = getAttributes.call(ele.cloneNode(true));
-         //ELi Attribute Watcher
-          addClass(ele);
        findInList.call(attr,function(idx,obj)
        {
           var _regTest = new RegExp(_defaultTemplateExp).exec(obj.value);
           if(!$isNull(_regTest))
           {
+              //ELi Attribute Watcher
             if(_regTest[1].charAt(0) === ":"){
               noBinding(ele,$model)(obj.value,obj.name);
             }else{
+              addClass(ele);
                $attrWatchList.$push($model.$mId,{element:ele,attr:[obj],$$:$model});
             }
           }
@@ -172,21 +172,20 @@ function dirFound(dir,type)
     return false;
 }
 
-function isLocalName(name)
+function isLocalName(name, stack)
 {
   if(name)
   {
       var dir = dirFound(new $dependencyInjector().get( camelCase.call(name) ),'e');
-
-    return dir?[[name, dir]] : false;
+      if(dir){
+        extendDirectiveObj(dir, camelCase.call(name));
+        stack.push(dir)
+      }
   }
-    return false;
 }
 
-function isClass(className)
+function isClass(className, stack)
 {
-  var isClass = [];
-
   if(className)
   {
       findInList.call(className.split(' '),function(idx,value)
@@ -194,17 +193,15 @@ function isClass(className)
         var dir = dirFound( new $dependencyInjector().get( camelCase.call(value) ),'c');
           if(dir)
           {
-            isClass.push( dir );
+            extendDirectiveObj(dir, value);
+            stack.push( dir );
           }
       });
   }
-
-    return isClass.length?isClass : false;
 }
 
-function hasAttribute(attr)
+function hasAttribute(attr, stack)
 {
-  var isAttr = [];
   if(attr.length)
   {
       findInList.call(attr,function(i,v)
@@ -214,22 +211,64 @@ function hasAttribute(attr)
             var dir = dirFound(new $dependencyInjector().get( camelCase.call(v.name) ),'a');
             if(dir)
             {
-              isAttr.push([v.name,dir]);
+              extendDirectiveObj(dir, v.name);
+              stack.push(dir);
             }
         }
       });
   }
+}
 
-  return isAttr.length?isAttr : false;
+/**
+  directive extender
+**/
+function extendDirectiveObj(dir, name){
+  // set the directive name and priority
+  // only when missing
+  dir.selector = dir.selector || name;
+  dir.priority = dir.priority || 1;
+}
+
+/**
+  getDefaultDirectives
+  @return Directives Array
+
+**/
+function getDefaultDirectives(ele, stack){
+  $defaultDirectiveProvider.forEach(function(obj)
+  {
+    var set = obj.selector.split('-')[1],
+    isDefaultDirective =  hasAnyAttribute(ele, [obj.selector, ':'+set])  || $isEqual( ele.localName, obj.selector );
+    if( isDefaultDirective)
+    {
+      stack.push( obj );
+    }
+  });
+}
+
+/**
+  directiveByPriority
+  @return Directives by priority
+**/
+function directiveByPriority(obj){
+ return obj.sort(function(a,b){
+    if(a.priority > b.priority){
+      return -1
+    }else{
+      return 1;
+    }
+  });
 }
 
 function $isDirective(ele)
 {
-  return {
-    isLocal : isLocalName(ele.localName),
-    isClassName : isClass(ele.className),
-    isAttribute : hasAttribute(getAttributes.call(ele))
-  };
+  var directives = [];
+  isLocalName(ele.localName, directives);
+  isClass(ele.className, directives);
+  hasAttribute(getAttributes.call(ele), directives);
+  getDefaultDirectives(ele, directives);
+
+  return directiveByPriority( directives );
 }
 
 //remove filters from string
@@ -272,7 +311,7 @@ function getChildrenNode(ele)
 }
 
 //@Function setTemplateValue
-function setTemplateValue(key,model)
+function setTemplateValue(key, model)
 {
     //remove the noBinding marker
     if($isEqual(key.charAt(0),":")){
@@ -287,7 +326,7 @@ function setTemplateValue(key,model)
       for(var i in filter.filterName)
       {
         //initialize the filters
-        value = $provider.$jFilterProvider.parse(filter.filterName[i])(filter.filterExpression[i],(value || filter.filterModel),model);
+        value = $provider.$jFilterProvider.parse(filter.filterName[i])((value || filter.filterModel), filter.filterExpression[i], model);
       }
     }
 

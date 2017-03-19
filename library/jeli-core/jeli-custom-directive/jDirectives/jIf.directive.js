@@ -4,26 +4,30 @@
     /*@Usage :
       allowed type Attirbute and Element
     */
-     
-     defaultElementInitializer.prototype['if'] =  function()
-     {
-        if(!maskedEval(this.checker,this.$model) || !this.checker)
-        {   
-            if(this.isProcessed)
-            {
-                element(this.elem).remove();
-                this.isProcessed = false; 
-            }  
-        }
-       else
-       {
-            if(!this.isProcessed)
-            {
-                this.elem = element(this.$createElement()).data({ignoreProcess : ['if']})[0];
-                this.parentNode.insertBefore( $templateCompiler(this.elem, true)(this.$model) , this.cENode );
-                //addClass(this.elem);
-                this.isProcessed = true;
-            }
-       }
+$defaultDirectiveProvider.push({
+  selector: "j-if",
+  priority: 10,
+  canDetachElement: true,
+  isDefault:true
+});   
 
-     };
+defaultElementInitializer.prototype['if'] =  function()
+{
+    if(!maskedEval(this.checker,this.$model) || !this.checker)
+    {   
+            element(this.elem).remove();
+            this.isProcessed = false; 
+    }
+    else
+    {
+        if(!this.isProcessed)
+        {
+            this.elem = element(this.$createElement()).data({ignoreProcess : [this.cSelector]})[0];
+            this.parentNode.insertBefore( this.elem , this.cENode );
+            $templateCompiler(this.elem, true)(this.$model);
+            //addClass(this.elem);
+            this.isProcessed = true;
+        }
+    }
+
+};
