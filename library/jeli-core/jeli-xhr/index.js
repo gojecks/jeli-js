@@ -43,7 +43,7 @@ function ajax(url, options) {
     var request = xhr(),
         promise = new $p,
         response = {},
-        interceptor = $provider.$get('$httpProvider'),
+        interceptor = $provider && $provider.$get('$httpProvider'),
         chain = {},
         _defaultHeader = ({
             'Accept': 'text/javascript, application/json, text/html, application/xml, text/xml, */*',
@@ -67,14 +67,17 @@ function ajax(url, options) {
 
     //$httpProvider Interceptor
     //Request Interceptor
-    interceptor.resolveInterceptor('request', {
+    if(interceptor){
+       interceptor.resolveInterceptor('request', {
             headers: options.headers,
             url: options.url,
             type: options.type
         })
         .then(function(_opts) {
             options = extend({}, options, _opts);
-        });
+        }); 
+    }
+    
 
     //Successful Request
     function successfulRequest(request) {
@@ -109,9 +112,11 @@ function ajax(url, options) {
             response.data = data;
 
             //intercept response
-            interceptor
+            if(interceptor){
+                interceptor
                 .resolveInterceptor(((response.success) ? 'responseSuccess' : 'responseError'), response);
-
+            }
+            
             //resolve our response
             $ajaxResolver.apply(((response.success) ? 'success' : 'error'), [response, request]);
             promise[((response.success) ? 'resolve' : 'reject')](response, request);

@@ -43,8 +43,9 @@
 
 			jEliWebProvider.isLoaded = true;
 			jEli.dom(window)
-			.bind("hashchange", webRouteChangedFn)
 			.on('$locationReplaceState',locationReplaceState);
+
+			window.addEventListener("hashchange", webRouteChangedFn);
 
 			/*
 				Triggered When user reloads the page

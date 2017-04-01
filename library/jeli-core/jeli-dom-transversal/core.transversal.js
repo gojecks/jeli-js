@@ -159,7 +159,7 @@ function transverseTemplate(template)
       childrenChecker = getChildrenNode( replacerChildren );
     }
 
-    if(children.length && children && isValidElement(template))
+    if(children.length && children)
     {
       domElementLoop(children , function(ele,i)
       {

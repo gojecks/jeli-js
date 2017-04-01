@@ -15,19 +15,18 @@ defaultElementInitializer.prototype['if'] =  function()
 {
     if(!maskedEval(this.checker,this.$model) || !this.checker)
     {   
-            element(this.elem).remove();
-            this.isProcessed = false; 
+        element(this.elem).remove();
+        this.elemIsDetached = true; 
     }
     else
     {
-        if(!this.isProcessed)
+        if(this.elemIsDetached)
         {
             this.elem = element(this.$createElement()).data({ignoreProcess : [this.cSelector]})[0];
             this.parentNode.insertBefore( this.elem , this.cENode );
             $templateCompiler(this.elem, true)(this.$model);
             //addClass(this.elem);
-            this.isProcessed = true;
+            this.elemIsDetached = false;
         }
     }
-
 };

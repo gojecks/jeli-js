@@ -170,7 +170,6 @@
 			return $stateCollection;
 		};
 
-		console.log($stateCollection)
 	}
 
 })();
