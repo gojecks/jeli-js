@@ -129,7 +129,6 @@ function elementProcessor(type,  checker, ele, $model, ref){
         case("include"):
         case("if"):
         case('switch'):
-
           //set the clone node for the object
           var cCase = camelCase.call('j-'+type);
           this.cloneNode = ele.cloneNode(true);

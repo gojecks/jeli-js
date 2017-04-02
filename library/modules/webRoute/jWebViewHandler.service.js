@@ -156,7 +156,8 @@ function jViewHandlerFn($jEvents, $http, $webState,jEliWebProvider,$rootModel,ct
 				.instantiate(ctrl, viewInstance, null, view.jControllerAs, $webState.state.route.resolvedData);
 			}
 			//resolve the view instance
-			viewObjectInstance.ele.empty().append( jCompiler(view.template)(viewInstance) );
+			viewObjectInstance.ele.empty().append( view.template );
+			jCompiler(viewObjectInstance.ele[0])(viewInstance) 
 
 			//fire viewContentLoaded Event
 			viewInstance.$publish('$viewContentLoaded')(viewObjectInstance.ele);

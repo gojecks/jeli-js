@@ -29,7 +29,7 @@ function insertBefore(ele, elem)
   // @Function to check for valid Element
   function isValidElement(ele) 
   {
-    return (('nodeType' in ele) && ele.nodeType !== 3 && ele.nodeType !== 8);
+    return (('nodeType' in ele || ele === window) && ele.nodeType !== 3 && ele.nodeType !== 8);
   }
 
 
