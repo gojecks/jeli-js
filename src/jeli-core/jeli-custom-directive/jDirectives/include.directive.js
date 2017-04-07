@@ -28,8 +28,9 @@ defaultElementInitializer.prototype['include'] = function()
     check for processed Element
     remove element if cannot resolve URL
   **/
-  if(!this.lastProcessed){
-    this.lastProcessed = true;
+  if(!this.isProcessed){
+    resetIncludeTemplate();
+    this.isProcessed = true;
   }
 
 
@@ -56,6 +57,7 @@ defaultElementInitializer.prototype['include'] = function()
   }
 
   function resetIncludeTemplate(){
+    $self.isDetached = true;
     $self.parentNode.removeChild( $self.elem );
     //remove previous Element before adding new
       removeCacheElement( $self.cache );
@@ -63,17 +65,18 @@ defaultElementInitializer.prototype['include'] = function()
 
   function $includeBuilder(html)
   {
-    if(!$self.parentNode.contains($self.elem)){
+    if($self.isDetached){
         //create a new instance of Element
       $self.elem = $self.$createElement();
       //insert the element to the parentnode
       $self.parentNode.insertBefore( $self.elem, $self.cENode );
     }
 
-      element($self.elem).html(html);
+      element($self.elem).html(html).data({ignoreProcess : [$self.cSelector]});
       //transverse the new instance of element with the model
-      transverseTemplate( $self.elem )($self.$model, $self.ref);
+      $templateCompiler( $self.elem )($self.$model, $self.ref);
       $self.cache = [$self.elem];
+      $self.detached = false;
   }
   //track  last processed url
   this.lastProcessed = url;

@@ -20,6 +20,5 @@ $defaultDirectiveProvider.push({
       addClass(ele);
       $templateCompiler(ele)(jModel);
       $observeElement(ele,jModel.$mId);
-
     }
   }

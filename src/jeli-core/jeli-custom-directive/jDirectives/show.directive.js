@@ -18,5 +18,5 @@ defaultElementInitializer.prototype.show = function()
     // set our class
     element(this.elem)
     .addClass(($show?'j-show':'j-hide'))
-    .removeClass(($show?'j-hide':'j-show')); 
+    .removeClass(($show?'j-hide':'j-show'));
 };
