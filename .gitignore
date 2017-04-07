@@ -1,7 +1,4 @@
 /target/
 node_modules
 dist
-src
 test
-packages
-/modules/webroute
