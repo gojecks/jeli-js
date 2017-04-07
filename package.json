@@ -1,0 +1,24 @@
+{
+  "name": "jelijs",
+  "version": "1.0.0",
+  "description": "Javascript Framework for front-end development",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gojecks/jEliJS.git"
+  },
+  "keywords": [
+    "jelijs",
+    "javascript",
+    "frontend"
+  ],
+  "author": "Joseph Gojecks Kadiri",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gojecks/jEliJS/issues"
+  },
+  "homepage": "https://github.com/gojecks/jEliJS#readme"
+}
