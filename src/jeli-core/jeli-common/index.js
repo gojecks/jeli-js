@@ -301,7 +301,16 @@ function extend(ret, source, replacer)
 //function to buildErrors
 function errorBuilder( str )
 {
-    throw new Error( str );
+  function userException(){
+    this.name ="jEliException";
+    this.message = str;
+  }
+
+  userException.prototype.toString = function() {
+    return this.name + ': "' + this.message + '"';
+  };
+
+  throw new userException( str );
 }
 
 
@@ -368,8 +377,10 @@ function $removeWhiteSpace(str)
     return (str || '').replace(/\s+/g, '');
 }
 
+var $isBooleanValue = 'true | false | 1 | 0';
 function removeSingleQuote(str)
 {
+    
   if($isBooleanValue.indexOf(str) > -1 || $isUndefined(str)) return str;
   
   return String(str).replace(/[']/g, "");

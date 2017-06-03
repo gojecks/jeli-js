@@ -1,5 +1,4 @@
-var $isBooleanValue = 'true | false | 1 | 0',
-    $0 = null,
+var $0 = null,
     $$0 = null;
 var noop = {
     get: function() {
