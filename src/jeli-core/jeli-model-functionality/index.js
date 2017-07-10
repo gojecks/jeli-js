@@ -63,8 +63,9 @@ function jEliFnInitializer(data)
     j-change,
     j-blur,
     j-focus
+    j-input
 */
-var eventNames = 'j-click,j-dblclick,j-submit,j-mouseover,j-mouseenter,j-mousemove,j-mousedown,j-mouseup,j-mouseleave,j-keyup,j-keydown,j-keypress,j-change,j-blur,j-focus';
+var eventNames = 'j-click,j-dblclick,j-submit,j-mouseover,j-mouseenter,j-mousemove,j-mousedown,j-mouseup,j-mouseleave,j-keyup,j-keydown,j-keypress,j-change,j-blur,j-focus,j-input';
 function attachEventProviders( ele )
 {
   return function($model,ref)

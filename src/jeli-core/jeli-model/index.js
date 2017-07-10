@@ -124,9 +124,8 @@ $modelGenerator.prototype.$publish = function(name)
 
     return function()
     {
-      var arg = arguments;
         //broadCast the parent before the child
-        broadcastSubscribers(self,arg);
+        broadcastSubscribers(self,arguments);
     }
 };
 
@@ -228,7 +227,7 @@ function $observeElement(ele,$id,fn)
 {
     if(fn)
     {
-        model.$on('$destroy',fn);
+       $modelMapping.$get($id).$on('$destroy',fn);
     }
 
     element(ele)
