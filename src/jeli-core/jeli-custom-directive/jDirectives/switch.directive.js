@@ -22,12 +22,14 @@
           }
       };
   }     
-$defaultDirectiveProvider.push({
-  selector: "j-switch",
-  priority: 7,
-  canDetachElement: true,
-  isDefault:true
-});
+ 
+
+  $defaultDirectiveProvider.push({
+    selector: "j-switch",
+    priority: 7,
+    canDetachElement: true,
+    isDefault:true
+  });
 
 defaultElementInitializer.prototype['switch'] = function(){
   var _value = maskedEval(this.checker, this.$model),
@@ -44,9 +46,8 @@ defaultElementInitializer.prototype['switch'] = function(){
   if(!this.$$compiledWith && this.$$default){
     this.$$compiledWith = this.$$default;
   }
-
   // only process when the lastProcess !== value
-  if(!$isEqual(this.lastProcessed, _value) && this.$$compiledWith){
+  if((!$isEqual(this.lastProcessed, _value) || !_value) && this.$$compiledWith){
        //insert the element to the parentnode
     var newEle = _children[this.$$compiledWith.$index].cloneNode(true);
     //empty the elem
