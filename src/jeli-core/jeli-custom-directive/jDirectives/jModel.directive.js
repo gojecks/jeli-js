@@ -167,8 +167,14 @@ function prepareModel(){
   this.canSetValue = $isEqual('input',evName);
 
   bind.call(this.elem, evName, _jModelInstance.inputListener());
-
-
+   // check for external binder
+   if(this.$attr.getAttribute('@listener')){
+      _jModelInstance
+      // bind Listener to jModel
+      .$eventListener.register(':input', function(ev, elem){
+          execFnByName(_self.$attr.getAttribute('@listener'), _self.$model, elem);
+      });
+   }
 
   /*
     update the viewModel if default value is set
@@ -181,6 +187,7 @@ function prepareModel(){
   }
 
     _jModelInstance.$$setViewValue(cVal || eleVal);
+
 
     return _onviewModelChanged(this.checker);
 }
