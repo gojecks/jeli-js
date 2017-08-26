@@ -100,7 +100,7 @@ $modelGenerator.prototype.$on = function(eventName , fn)
   @return {FUNCTION}-@arguments {Object || String || Array}
   */
 
-$modelGenerator.prototype.$publish = function(name)
+$modelGenerator.prototype.$publish = function(name, once)
 {
     var self = this;
     //initialize model subscribers
@@ -110,7 +110,11 @@ $modelGenerator.prototype.$publish = function(name)
         if(name && current.$$subscribers[name])
         {
             current.$$subscribers[name].forEach(function(fn){
-                fn.apply(current , arg );
+                if(!fn.$$isTriggered){
+                    fn.apply(current , arg );
+                }
+                // check for destroyed
+                fn.$$isTriggered = once;
             });
         }
         //loop through the child
@@ -131,7 +135,7 @@ $modelGenerator.prototype.$publish = function(name)
 
 //Model destroy function
 $modelGenerator.prototype.$$destroy = function(){
-    this.$publish('$destroy')(this);
+    this.$publish('$destroy', 1)(this);
     var id = this.$mId;
     $removeAllBinding(id);
     var parentModel = this.$parent;
@@ -141,9 +145,12 @@ $modelGenerator.prototype.$$destroy = function(){
 
     //remove the watch list from parent model
     if(parentModel){
-        $modelChildReferenceList.$new(parentModel.$mId,$modelChildReferenceList.$get(parentModel.$mId).filter(function(key){
-            return key !== id;
-        }));
+        $modelChildReferenceList
+            .$new(parentModel.$mId,$modelChildReferenceList
+            .$get(parentModel.$mId)
+            .filter(function(key){
+                return key !== id;
+            }));
     }
     // free Memory
     parentModel = null;
@@ -230,15 +237,61 @@ function $observeElement(ele,$id,fn)
        $modelMapping.$get($id).$on('$destroy',fn);
     }
 
-    element(ele)
-      .bind('remove',function(e)
-      {
+    _mutationObserver(ele, function(){
         var cmodel = $modelMapping.$get($id);
-            if(cmodel && cmodel.$$destroy){
-                cmodel.$$destroy();
-            }
-      });
+        if(cmodel && cmodel.$$destroy){
+            cmodel.$$destroy();
+        }
+    });
 }
+
+
+//@Method _MutationObserver
+// @param : HTMLELEMENT
+// @param : FUNCTION
+var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+function _mutationObserver(ele, CB){
+    if(!ele){
+        return;
+    }
+
+    
+    if(!MutationObserver){
+        element(ele)
+        .bind('remove', CB);
+
+        return;
+    }
+
+    function isDetached(elem){
+        if(elem.parentNode === document){
+            return false;
+        }else if($isNull(elem.parentNode)){
+            return true
+        }else{
+            return isDetached(elem.parentNode);
+        }
+    }
+
+
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if(isDetached(ele)){
+                CB();
+                observer.disconnect();
+                observer = null;
+            }
+        });
+    });
+
+    observer.observe(document.body, {
+        attributes: true,
+        childList: true,
+        characterData: true
+    });
+
+}
+
 
 //rootModel Watcher
 function $watch()
