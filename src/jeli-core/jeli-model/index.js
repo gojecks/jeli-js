@@ -254,7 +254,6 @@ function _mutationObserver(ele, CB){
     if(!ele){
         return;
     }
-
     
     if(!MutationObserver){
         element(ele)
@@ -278,8 +277,10 @@ function _mutationObserver(ele, CB){
         mutations.forEach(function(mutation) {
             if(isDetached(ele)){
                 CB();
-                observer.disconnect();
-                observer = null;
+                if(observer){
+                    observer.disconnect();
+                    observer = null;
+                }
             }
         });
     });
