@@ -98,7 +98,7 @@ function attachEventProviders(ele) {
 
                     function jEventHandler(ev) {
                         // prevent the default only when its a submit event
-                        if (expect(['submit']).contains(splt)) {
+                        if (expect(['submit', 'touchstart', 'touchend', 'touchmove']).contains(splt)) {
                             ev.preventDefault();
                         }
 
