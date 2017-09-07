@@ -121,8 +121,8 @@ function attachEventProviders(ele) {
 }
 
 var eleEventTypes = {
-    change: ['checkbox', 'radio', 'select-one', 'select-multiple', 'password'],
-    input: ['text', 'textarea', 'email', 'url', 'week', 'time', 'search', 'tel', 'range', 'number', 'month', 'datetime-local', 'date', 'color']
+    change: ['checkbox', 'radio', 'select-one', 'select-multiple', 'select'],
+    input: ['text', 'password', 'textarea', 'email', 'url', 'week', 'time', 'search', 'tel', 'range', 'number', 'month', 'datetime-local', 'date', 'color']
 };
 
 function $typeOfModel(el) {
