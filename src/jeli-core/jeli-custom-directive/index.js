@@ -160,16 +160,6 @@ function elementProcessor(type, checker, ele, $model, ref) {
 }
 
 function defaultElementInitializer(type) {}
-//function to remove cache element
-function removeCacheElement(list) {
-    var len = list.length;
-    while (len--) {
-        var ele = list.pop();
-        ele.parentNode.removeChild(ele);
-        element(ele).triggerHandler('remove');
-        ele = null;
-    };
-}
 
 // set j-initProvider
 $defaultDirectiveProvider.push({

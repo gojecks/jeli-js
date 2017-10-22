@@ -1,13 +1,13 @@
          /*
-                                                                                                                  @Directive <j-include>
-                                                                                                                  loads the required template and append it to the parent element 
-                                                                                                                  (content of the parent element will be overwritten)
-                                                                                                                
-                                                                                                                  @Usage 
-                                                                                                                  element <j-include source="/ui-template.html">
-                                                                                                                  attr <any j-include="/ui-template.html">
+                   @Directive <j-include>
+                   loads the required template and append it to the parent element 
+                   (content of the parent element will be overwritten)
+                 
+                   @Usage 
+                   element <j-include source="/ui-template.html">
+                   attr <any j-include="/ui-template.html">
 
-                                                                                                                */
+                 */
          $defaultDirectiveProvider.push({
              selector: "j-include",
              priority: 7,

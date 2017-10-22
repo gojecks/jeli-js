@@ -1,56 +1,47 @@
-
 var __a = {},
-  objectCreate = (function() 
-  {
+    objectCreate = (function() {
         function Temp() {}
 
         var hasOwn = Object.prototype.hasOwnProperty;
-        return function (O) 
-        {
-          if(Object.create)
-          {
-            return Object.create(O);
-          }
-              if (typeof O != 'object') {
+        return function(O) {
+            if (Object.create) {
+                return Object.create(O);
+            }
+            if (typeof O != 'object') {
                 throw TypeError('Object prototype may only be an Object or null');
-              }
+            }
 
-              Temp.prototype = O;
-              var obj = new Temp();
-              Temp.prototype = null; 
+            Temp.prototype = O;
+            var obj = new Temp();
+            Temp.prototype = null;
 
-              if (arguments.length > 1) 
-              {
+            if (arguments.length > 1) {
                 var Properties = Object(arguments[1]);
                 for (var prop in Properties) {
-                  if (hasOwn.call(Properties, prop)) {
-                    obj[prop] = Properties[prop];
-                  }
+                    if (hasOwn.call(Properties, prop)) {
+                        obj[prop] = Properties[prop];
+                    }
                 }
-              }
-              return obj;
+            }
+            return obj;
         };
-  })(),
-  BuildVersion = function(name,version)
-  {
-      var vSplit = version.split('.'),
-          matchPhase = {dot:0,major:1,minor:2};
+    })(),
+    BuildVersion = function(name, version) {
+        var vSplit = version.split('.'),
+            matchPhase = { dot: 0, major: 1, minor: 2 };
 
-        for(var n in matchPhase)
-        {
-          if(vSplit[matchPhase[n]])
-          {
-              matchPhase[n] = parseInt(vSplit[matchPhase[n]]);
-          }else
-          {
-            matchPhase[n] = 0;
-          }
+        for (var n in matchPhase) {
+            if (vSplit[matchPhase[n]]) {
+                matchPhase[n] = parseInt(vSplit[matchPhase[n]]);
+            } else {
+                matchPhase[n] = 0;
+            }
         }
 
-      matchPhase['name'] = name;
+        matchPhase['name'] = name;
 
-      return matchPhase;
-  };
+        return matchPhase;
+    };
 /*
 
   jEli Public Apis
@@ -85,55 +76,52 @@ var __a = {},
   forEach
   buildTime
 */
-__a = 
-{
-    jModule : $jModule,
-    dom : (window.jQuery)?jQuery : element,
-    noop : function(){ return noop; },
-    $extend : extend,
-    $isUndefined : $isUndefined,
-    $isDefined : $isDefined,
-    $isObject : $isObject,
-    $isString : $isString,
-    $isNumber : $isNumber,
-    $isArray : $isArray,
-    $inArray : $inArray,
-    $isFunction : $isFunction,
-    $create : objectCreate,
-    $copy : copy,
-    $isEmpty : $isEmpty,
-    $isEqual : $isEqual,
-    $initializer : $eliInitializer,
-    $parseJSON : parseJSON,
-    $parseXML : parseXML,
-    $serialize : serialize,
-    $unSerialize : unSerialize,
-    $externalLoader : new loadExternalScript,
-    $stringToObject : stringToObject,
-    $isJsonString : $isJsonString,
-    $isNull : $isNull,
-    $jDB : jEliDB,
-    version : BuildVersion("Elizabeth", "1.0.0" ),
-    bind : binding,
-    forEach : domElementProvider.each,
-    buildTime : Date.now()
+__a = {
+    jModule: $jModule,
+    dom: (window.jQuery) ? jQuery : element,
+    noop: function() { return noop; },
+    $extend: extend,
+    $isUndefined: $isUndefined,
+    $isDefined: $isDefined,
+    $isObject: $isObject,
+    $isString: $isString,
+    $isNumber: $isNumber,
+    $isBoolean: $isBoolean,
+    $isArray: $isArray,
+    $inArray: $inArray,
+    $isFunction: $isFunction,
+    $create: objectCreate,
+    $copy: copy,
+    $isEmpty: $isEmpty,
+    $isEqual: $isEqual,
+    $initializer: $eliInitializer,
+    $parseJSON: parseJSON,
+    $parseXML: parseXML,
+    $serialize: serialize,
+    $unSerialize: unSerialize,
+    $externalLoader: new loadExternalScript,
+    $stringToObject: stringToObject,
+    $isJsonString: $isJsonString,
+    $isNull: $isNull,
+    $jDB: jEliDB,
+    version: BuildVersion("Elizabeth", "1.0.0"),
+    bind: binding,
+    forEach: domElementProvider.each,
+    buildTime: Date.now()
 };
-  
-  if($isSupport.sqlite){
+
+if ($isSupport.sqlite) {
     __a.jSqlite = sqliteStorage;
-  }
+}
 
- window.jEli = __a;
-
-element(document).ready(function()
-{
+window.jEli = __a;
+element(document).ready(function() {
     $isDomLoaded = true;
     var elementToBootStrap = element('[j-module]');
-      if(!$isUndefined( elementToBootStrap ) && elementToBootStrap.length)
-      {
-        var moduleName = [hasAnyAttribute(elementToBootStrap[0],['j-module',':app'])];
-        $eliInitializer( elementToBootStrap , moduleName );
-      }
+    if (!$isUndefined(elementToBootStrap) && elementToBootStrap.length) {
+        var moduleName = [hasAnyAttribute(elementToBootStrap[0], ['j-module', ':app'])];
+        $eliInitializer(elementToBootStrap, moduleName);
+    }
 });
 
 /*jEli css styleSheet
