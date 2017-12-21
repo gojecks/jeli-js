@@ -129,32 +129,31 @@ function expect(objToInspect) {
         }
     }
 
-    function search(str, callback) {
-        var found = false;
+    function search(str, iteratorFn) {
+        var found = false,
+            len = 0,
+            trigger = function(prop) {
+                len++;
+                if (iteratorFn && $isFunction(iteratorFn)) {
+                    if (iteratorFn(objToInspect[prop], prop)) {
+                        found = objToInspect[prop];
+                    }
+                } else {
+                    if ($isEqual(JSON.stringify(objToInspect[prop]), JSON.stringify(str))) {
+                        found = objToInspect[len];
+                    }
+                }
+            };
+
         if ($isObject(objToInspect)) {
-            for (var i in objToInspect) {
-                if (callback && $isFunction(callback)) {
-                    if (callback(objToInspect[i], i)) {
-                        found = objToInspect[i];
-                    }
-                } else {
-                    if ($isEqual(JSON.stringify(objToInspect[i]), JSON.stringify(str))) {
-                        found = objToInspect[i];
-                    }
-                }
+            var ObjKeys = Object.keys(objToInspect);
+            while (ObjKeys.length > len) {
+                trigger(ObjKeys[len]);
             }
+            ObjKeys = null;
         } else {
-            var len = objToInspect.length;
-            while (len--) {
-                if (callback && $isFunction(callback)) {
-                    if (callback(objToInspect[len], len)) {
-                        found = objToInspect[len];
-                    }
-                } else {
-                    if ($isEqual(JSON.stringify(objToInspect[len]), JSON.stringify(str))) {
-                        found = objToInspect[len];
-                    }
-                }
+            while (objToInspect.length > len) {
+                trigger(len);
             };
         }
 
@@ -162,8 +161,13 @@ function expect(objToInspect) {
         return found;
     }
 
+    function each(iterator) {
+        this.search(null, iterator);
+    }
+
     return {
         search: search,
-        contains: contains
+        contains: contains,
+        each: each
     };
 }

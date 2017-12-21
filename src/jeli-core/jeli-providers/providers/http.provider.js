@@ -1,13 +1,13 @@
   /*
-        $httpProvider functionality
-        $interceptor idea was referenced from https://en.wikipedia.org/wiki/Interceptor_pattern
-        Function Name:  $httpProvider
-        Instance: Function
-        Properties: 
-          - resolveInterceptor
-          - register
-          - $get
-      */
+          $httpProvider functionality
+          $interceptor idea was referenced from https://en.wikipedia.org/wiki/Interceptor_pattern
+          Function Name:  $httpProvider
+          Instance: Function
+          Properties: 
+            - resolveInterceptor
+            - register
+            - $get
+        */
 
   // register $http Provider
   $provider.registerProvider('$httpProvider', function $httpProvider() {
@@ -43,7 +43,7 @@
               if ($isString(_intercept)) {
                   _intercept = new $dependencyInjector().get(_intercept);
               } else {
-                  _intercept = q('$resolveHttpInterceptor', $inject(_intercept));
+                  _intercept = dependencyInjectorMain('$resolveHttpInterceptor', $inject(_intercept));
               }
 
               if ($isObject(_intercept)) {

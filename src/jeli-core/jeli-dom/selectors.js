@@ -1,7 +1,7 @@
 //isMy child
 function $isMyChild(parent) {
     return function(child) {
-        return parent.contains(child);
+        return parent && parent.contains(child);
     }
 }
 

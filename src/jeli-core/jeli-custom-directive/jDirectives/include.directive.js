@@ -1,13 +1,13 @@
          /*
-                   @Directive <j-include>
-                   loads the required template and append it to the parent element 
-                   (content of the parent element will be overwritten)
-                 
-                   @Usage 
-                   element <j-include source="/ui-template.html">
-                   attr <any j-include="/ui-template.html">
+                                              @Directive <j-include>
+                                              loads the required template and append it to the parent element 
+                                              (content of the parent element will be overwritten)
+                                            
+                                              @Usage 
+                                              element <j-include source="/ui-template.html">
+                                              attr <any j-include="/ui-template.html">
 
-                 */
+                                            */
          $defaultDirectiveProvider.push({
              selector: "j-include",
              priority: 7,
@@ -17,16 +17,16 @@
 
          defaultElementInitializer.prototype['include'] = function() {
              /**
-               Resolve the URL
-             **/
+     Resolve the URL
+ **/
              var url = (this.checker.indexOf('/') > -1) ? this.checker : maskedEval(this.checker, this.$model),
                  templFac = findInProvider('$templateCache'),
                  $self = this;
 
              /**
-               check for processed Element
-               remove element if cannot resolve URL
-             **/
+     check for processed Element
+     remove element if cannot resolve URL
+ **/
              if (!this.isProcessed) {
                  resetIncludeTemplate();
                  this.isProcessed = true;

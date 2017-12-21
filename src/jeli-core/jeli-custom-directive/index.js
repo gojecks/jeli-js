@@ -23,6 +23,8 @@
   'j-cloak',
   'j-max',
   'j-min'
+  'j-readonly'
+  'j-pattern'
 **/
 var $defaultDirectiveProvider = [];
 
@@ -112,6 +114,9 @@ function elementProcessor(type, checker, ele, $model, ref) {
         this.checker = checker;
         this.watchListIndex = $directivesProviderWatchList.$get($model.$mId).length;
         this.$attr = buildAttributes(ele);
+        this.$createElement = function() {
+            return this.cloneNode.cloneNode(true);
+        };
         /*
           Directive that transcludes
         */
@@ -128,13 +133,9 @@ function elementProcessor(type, checker, ele, $model, ref) {
                 this.cNode = toDOM.call('<!--' + cCase + ' ' + checker + '  -->');
                 this.cENode = toDOM.call('<!-- end ' + cCase + ' ' + checker + '  -->');
                 this.cSelector = cCase;
-
                 this.parentNode = ele.parentNode;
                 this.cache = [];
 
-                this.$createElement = function() {
-                    return this.cloneNode.cloneNode(true);
-                };
 
                 //replace the element with the commentNode for reference
                 if (this.parentNode) {
@@ -151,6 +152,9 @@ function elementProcessor(type, checker, ele, $model, ref) {
                 break;
         }
 
+        /**
+         * check once directive
+         */
         if (hasAnyAttribute(this.$attr, ["j-once", ":once"])) {
             this.bindOnce = true;
         }

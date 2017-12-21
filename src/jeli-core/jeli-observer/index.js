@@ -42,7 +42,7 @@ function getDirtySnapShot(watchObj, _currentWatch) {
         function profiler(obj1, obj2, reProfile, path) {
             path = path || [];
             var tp;
-            expect(obj1).search(null, function(obj, prop) {
+            expect(obj1).each(function(obj, prop) {
                 //addd new path
                 if (obj2 && obj2.hasOwnProperty(prop) && !reProfile) {
                     tp = path.concat(prop);

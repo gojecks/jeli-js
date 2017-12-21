@@ -6,33 +6,36 @@
   @return: FilterIntstance
 */
 var $eliFilters = 'json|date|uppercase|lowercase|capitalize|number|'.split('|');
-$provider.registerProvider('$jFilterProvider', function(){
-  var filterInstance = new $providerFn('$jFilterProvider');
+$provider.registerProvider('$jFilterProvider', function() {
+    var filterInstance = new $providerFn('$jFilterProvider');
 
-  filterInstance.parse = function $filtersProviderFn(type)
-  {
-    return function(value,exp,$model)
-    {
-       /*
-          Custom defined filters
-          Get the require filter and then initialize it
-          throw error if filter was not found
-        */
-
-      var replacerObject = stringToObject($removeWhiteSpace( (exp || "").toString() ), $model) || exp;
-
-      var filterFn = new $dependencyInjector().get( type );
-      if($isFunction(filterFn))
-      {
-        return filterFn( value , replacerObject );
-      }else
-      {
-        errorBuilder(type+'Provider was not found in FilterProvider');
-      }
-      //return the value
-      return value;
+    filterInstance.parse = function $filtersProviderFn(type, $options) {
+        return function(value) {
+            /*
+               Custom defined filters
+               Get the require filter and then initialize it
+               throw error if filter was not found
+             */
+            var _args = [value],
+                arg,
+                i = 1;
+            for (; i < arguments.length; i++) {
+                arg = removeQuotesFromString($removeWhiteSpace(arguments[i]));
+                if ($isJsonString(arg)) {
+                    arg = maskedEval(arg.toString(), $options) || arg;
+                }
+                _args.push(arg);
+            }
+            var filterFn = new $dependencyInjector().get(type);
+            if ($isFunction(filterFn)) {
+                return filterFn.apply(filterFn, _args);
+            } else {
+                errorBuilder(type + 'Provider was not found in FilterProvider');
+            }
+            //return the value
+            return value;
+        };
     };
-  };
 
-  return filterInstance;
+    return filterInstance;
 });

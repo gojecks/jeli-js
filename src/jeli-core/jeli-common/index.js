@@ -86,7 +86,7 @@
   }
 
   function $isJsonString(str) {
-      return (str && ("{[".indexOf(str.charAt(0)) > -1) && ("}]".indexOf(str.charAt(str.length - 1)) > -1));
+      return (str && $isString(str) && ("{[".indexOf(str.charAt(0)) > -1) && ("}]".indexOf(str.charAt(str.length - 1)) > -1));
   }
 
   function $isEmptyObject(obj) {
@@ -233,6 +233,14 @@
 
       string = trim(string);
       return $isSupport.jsonParser ? JSON.parse(JSON.stringify(string)) : (new Function('return ' + string))();
+  }
+
+  function jSonParser(str) {
+      try {
+          str = JSON.parse(str);
+      } catch (e) {}
+
+      return str;
   }
 
   //@Function xmlParser
@@ -420,6 +428,14 @@
           }
 
       });
+  }
+
+  function removeQuotesFromString(str) {
+      if (str.charAt(0).match(/['"]/) && str.charAt(str.length - 1).match(/['"]/)) {
+          return str.substr(1, str.length - 2);
+      }
+
+      return str;
   }
 
   // string to hashCode

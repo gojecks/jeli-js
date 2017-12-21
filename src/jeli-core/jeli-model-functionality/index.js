@@ -170,94 +170,14 @@ function addClass(ele, klass) {
     domElementProvider.addClass.call([ele], (klass ? klass : eliBindedClass));
 }
 
-function matchScopeObject(ckey, fn) {
-    var fnd = false;
-    for (var i in ckey) {
-        if (!$isUndefined(fn)) {
-            if (fn.indexOf(ckey[i]) > -1) {
-                fnd = ckey[i];
-            }
-        }
-    }
-
-    return fnd;
-}
-
-//RegExp to match is array key
-var isArrayKey = new RegExp(/.*\[(\d+)\]/);
-//isArrayType Function
-//deepCheck the key of a require Model
-//if Model type is Array
-//remove array brackect and return the keys
-function isArrayType(key, model) {
-    if (expect(key).contains('[')) {
-        var sptKey = key.split('['),
-            len = sptKey.length;
-        while (len--) {
-            var set = ((expect(sptKey[len]).contains(']')) ? sptKey[len].split(']')[0] : sptKey[len]);
-            sptKey[len] = (!$isObject(model[set])) ? model[set] : set;
-        }
-
-        return function(create, value) {
-            var end = sptKey[sptKey.length - 1],
-                nModel = matchStringWithArray(sptKey.join("."), model, create);
-            if (value) {
-                nModel[end] = removeSingleQuote(value);
-                return;
-            }
-
-            return nModel[end];
-        };
-    }
-
-    return false;
-}
-
-//match key with array type
-function matchStringWithArray(key, model, create) {
-    var splitKey = $removeWhiteSpace(key).split('.'),
-        modelDepth = model,
-        i,
-        diveIntoArray = function() {
-            var justKey, isInArray,
-                dived = false;
-            isInArray = isArrayKey.exec(splitKey[i]);
-            if (isInArray && isInArray.length && modelDepth) {
-                justKey = splitKey[i].split('[')[0];
-                modelDepth = modelDepth[justKey][isInArray[1]];
-                dived = true;
-            }
-
-            return dived;
-        };
-
-
-
-    for (i = 0; i < splitKey.length - 1; i++) {
-        if (!diveIntoArray()) {
-            //get or set the Object
-            modelDepth = createNewInstance(modelDepth, splitKey[i], create);
-        }
-    }
-
-    //commented because of array-like loop
-
-    // if(splitKey.length > 1){
-    //     diveIntoArray();
-    // }
-
-    return modelDepth;
-}
-
-function createNewInstance(model, key, create) {
-    if (create && !model[key]) {
-        model[key] = {};
-    }
-
-    return model && model[key] || {};
-}
 
 /*Get and Set the value of a given key to a model*/
+/**
+ * 
+ * @param {*} key 
+ * @param {*} model 
+ * @param {*} value 
+ */
 function setModelValue(key, model, value) {
 
     var setKey = $removeWhiteSpace(key).split('.').pop(),
@@ -282,35 +202,13 @@ function setModelValue(key, model, value) {
     return value;
 }
 
-//$modelSetterGetter for $scope
-function $modelSetterGetter(key, context, create) {
-    var namespaces = $removeWhiteSpace(key).split("."),
-        func = namespaces.pop(),
-        deepContext = matchStringWithArray(key, context, create);
 
-    var check = isArrayKey.exec(func);
-    if (check && check.length && deepContext) {
-        var dKey = func.split('[')[0];
-        if (deepContext.hasOwnProperty(dKey)) {
-            return deepContext[dKey][+check[1]];
-        } else {
-            return "";
-        }
-    } else {
-        var deepArrayChecker = isArrayType(key, context);
-        if (deepArrayChecker) {
-            return deepArrayChecker();
-        }
-
-        return (!$isUndefined(deepContext)) ? deepContext[func] : "";
-    }
-
-}
-
-//Logic Directive Logic Checker
-//@Private Function
-//@arguments : $logic (String)
-//@arguments : $model (Element Scope)
+/**
+ * 
+ * @param {*} logic 
+ * @param {*} model 
+ * @param {*} ignore 
+ */
 function $logicChecker($logic, $model, ignore) {
     var self = this;
 
@@ -329,19 +227,20 @@ function $logicChecker($logic, $model, ignore) {
         return nArguments;
     }
 
-    var splitExpr = $removeWhiteSpace($logic).split(/([|()=<>!*+//&-])/ig);
-    for (var i in splitExpr) {
-        if (splitExpr[i].match(/[a-zA-Z]/ig)) {
+    var splitExpr = $removeWhiteSpace($logic).split(/([|()=<>!*+//&-])/ig),
+        len = splitExpr.length;
+    while (len--) {
+        if (splitExpr[len].match(/[a-zA-Z]/ig)) {
             //get the exprValue from model
-            var exprValue = maskedEval(splitExpr[i], $model);
+            var exprValue = maskedEval(splitExpr[len], $model);
             //check if exprValue is a function
             //initialize the function and set the value
             if ($isFunction(exprValue)) {
                 //wrap the user function in a masked IIFE
                 //IIFE only returns the actually result of the user function
-                var arg = getFunctionArg(i, splitExpr);
+                var arg = getFunctionArg(len, splitExpr);
                 //remove the function method from the list
-                splitExpr.splice(parseInt(i) + 1, 3);
+                splitExpr.splice(parseInt(len) + 1, 3);
                 exprValue = exprValue.apply(exprValue, arg);
             }
             //check if exprValue is an Object or Array
@@ -356,9 +255,9 @@ function $logicChecker($logic, $model, ignore) {
                 exprValue = false;
             }
 
-            splitExpr[i] = (($isString(exprValue)) ? "'" + exprValue + "'" : exprValue);
+            splitExpr[len] = (($isString(exprValue)) ? "'" + exprValue + "'" : exprValue);
         }
-    };
+    }
     //MaskedEval 
     return maskedEval(splitExpr.join(''));
 }
@@ -387,6 +286,14 @@ function generateArguments(arg, context, ele) {
 //@Arguments : FUNCTION,MODEL,ELEMENT,EVENT
 //Initialize the the Function 
 //@return FN value
+
+/**
+ * 
+ * @param {*} fn 
+ * @param {*} context 
+ * @param {*} dis 
+ * @param {*} ev 
+ */
 function execFnByName(fn, context, dis, ev) {
     var fn = $removeWhiteSpace(fn),
         arg = fn.match(/^(?:.*?)\((.*?)\)/),

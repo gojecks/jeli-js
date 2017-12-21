@@ -5,17 +5,16 @@
 
       cannot be used in class list
     */
-$defaultDirectiveProvider.push({
-  selector: "j-disabled",
-  priority: 1,
-  isDefault:true
-}); 
-   
-defaultElementInitializer.prototype.disabled = function()
-{
-   if( $logicChecker.call(this.elem, this.checker,this.$model) ){
-        this.elem.setAttribute('disabled','true') 
-    }else{
-      this.elem.removeAttribute('disabled'); 
-    } 
-};
+    $defaultDirectiveProvider.push({
+        selector: "j-disabled",
+        priority: 1,
+        isDefault: true
+    });
+
+    defaultElementInitializer.prototype.disabled = function() {
+        if ($logicChecker.call(this.elem, this.checker, this.$model)) {
+            this.elem.setAttribute('disabled', 'true')
+        } else {
+            this.elem.removeAttribute('disabled');
+        }
+    };
