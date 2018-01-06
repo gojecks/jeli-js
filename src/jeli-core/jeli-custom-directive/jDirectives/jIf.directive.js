@@ -4,29 +4,24 @@
     /*@Usage :
       allowed type Attirbute and Element
     */
-$defaultDirectiveProvider.push({
-  selector: "j-if",
-  priority: 10,
-  canDetachElement: true,
-  isDefault:true
-});   
+    $defaultDirectiveProvider.push({
+        selector: "j-if",
+        priority: 10,
+        canDetachElement: true,
+        isDefault: true
+    });
 
-defaultElementInitializer.prototype['if'] =  function()
-{
-    if(!maskedEval(this.checker,this.$model) || !this.checker)
-    {   
-        element(this.elem).remove();
-        this.elemIsDetached = true; 
-    }
-    else
-    {
-        if(this.elemIsDetached)
-        {
-            this.elem = element(this.$createElement()).data({ignoreProcess : [this.cSelector]})[0];
-            this.parentNode.insertBefore( this.elem , this.cENode );
-            $templateCompiler(this.elem, true)(this.$model);
-            //addClass(this.elem);
-            this.elemIsDetached = false;
+    defaultElementInitializer.prototype['if'] = function() {
+        if (!maskedEval(this.checker, this.$model) || !this.checker) {
+            element(this.elem).remove();
+            this.elemIsDetached = true;
+        } else {
+            if (this.elemIsDetached) {
+                this.elem = element(this.$createElement()).data({ ignoreProcess: [this.cSelector] })[0];
+                this.parentNode.insertBefore(this.elem, this.cENode);
+                $templateCompiler(this.elem, true)(this.$model);
+                //addClass(this.elem);
+                this.elemIsDetached = false;
+            }
         }
-    }
-};
+    };

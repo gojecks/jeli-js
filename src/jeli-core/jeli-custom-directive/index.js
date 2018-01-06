@@ -27,6 +27,18 @@
   'j-pattern'
 **/
 var $defaultDirectiveProvider = [];
+// set j-initProvider
+$defaultDirectiveProvider.push({
+    selector: "j-init",
+    priority: 1,
+    isDefault: true
+});
+
+/**
+ * 
+ * @param {*} type 
+ */
+function defaultElementInitializer(type) {}
 
 /**
 
@@ -39,9 +51,15 @@ var $defaultDirectiveProvider = [];
 function defaultElementBinder(dir, ele, $model, ref) {
 
     var set = dir.selector.split('-')[1],
-        val = hasAnyAttribute(ele, [dir.selector, ':' + set], "*") || ele.getAttribute('source');
+        type = hasAnyAttribute(ele, [dir.selector, ':' + set], "*") || ele.getAttribute('source');
 
-    var binding = elementProcessor(set, val, ele, $model, ref);
+    var binding = elementProcessor({
+        type: set,
+        elem: ele,
+        $model: $model,
+        ref: ref,
+        checker: type
+    });
     //create a new instance WatchList
     if (binding) {
         $directivesProviderWatchList.$push($model.$mId, binding);
@@ -55,119 +73,115 @@ function defaultElementBinder(dir, ele, $model, ref) {
   Initialize the required Directive
   @return Function (binded)
 **/
-function elementProcessor(type, checker, ele, $model, ref) {
+function elementProcessor(definition) {
     var ret = null;
-    //arguments
-    //type,elem,checker,$model,ref
-    function binded() {
-        var dContext = new generateArg();
-        // trigger the watch
-        return function(ref) {
-            if ($isEqual(ref, dContext.ref)) {
-                //initialize the required Function
-                trigger(dContext)
-            }
-        };
-    };
-
-    function trigger(arg) {
-        try {
-            (defaultElementInitializer.prototype[type] || noop).apply(arg);
-        } catch (e) {
-            if (typeof e === 'object') {
-                throw new Error(e)
-            }
-        } finally {
-            if (arg.bindOnce) {
-                $directivesProviderWatchList.$removeFromArray($model.$mId, arg.watchListIndex);
-            }
-        }
-    }
-
     /*  
       switch case when
       j-MODEL
       j-CONTROLLER
       j-INIT
     */
-    switch (type) {
+    switch (definition.type) {
         case ("controller"):
-            initializeController(ele)($model, checker);
+            initializeController.call(definition);
             break;
         case ("init"):
-            new jEliFnInitializer(checker).evaluate($model);
+            new jEliFnInitializer(definition.checker).evaluate(definition.$model);
             break;
         case ("model"):
-            ret = prepareModel.call(new generateArg());
+            ret = prepareModel.call(generateArg.call(definition));
             break;
         default:
-            ret = binded();
+            ret = defaultBinder.call(null, generateArg.call(definition));
             break;
-    }
-
-    function generateArg() {
-        //type,elem,checker,$model,ref
-        this.type = type;
-        this.elem = ele;
-        this.$model = $model;
-        this.ref = ref;
-        this.checker = checker;
-        this.watchListIndex = $directivesProviderWatchList.$get($model.$mId).length;
-        this.$attr = buildAttributes(ele);
-        this.$createElement = function() {
-            return this.cloneNode.cloneNode(true);
-        };
-        /*
-          Directive that transcludes
-        */
-
-        switch (type) {
-            case ("for"):
-            case ("do"):
-            case ("include"):
-            case ("if"):
-            case ('switch'):
-                //set the clone node for the object
-                var cCase = camelCase.call('j-' + type);
-                this.cloneNode = ele.cloneNode(true);
-                this.cNode = toDOM.call('<!--' + cCase + ' ' + checker + '  -->');
-                this.cENode = toDOM.call('<!-- end ' + cCase + ' ' + checker + '  -->');
-                this.cSelector = cCase;
-                this.parentNode = ele.parentNode;
-                this.cache = [];
-
-
-                //replace the element with the commentNode for reference
-                if (this.parentNode) {
-                    this.parentNode.insertBefore(this.cNode, ele);
-                    this.parentNode.insertBefore(this.cENode, ele.nextSibling);
-                }
-
-                // switchBuilder
-                if (type === 'switch') {
-                    switchBuilder.call(this);
-                    ele.innerHTML = "";
-                }
-
-                break;
-        }
-
-        /**
-         * check once directive
-         */
-        if (hasAnyAttribute(this.$attr, ["j-once", ":once"])) {
-            this.bindOnce = true;
-        }
     }
 
     return ret;
 }
 
-function defaultElementInitializer(type) {}
+function defaultBinder(definition) {
+    // trigger the watch
+    return function() {
+        //initialize the required Function
+        try {
+            (defaultElementInitializer.prototype[definition.type] || noop).apply(definition);
+        } catch (e) {
+            if (typeof e === 'object') {
+                throw new Error(e)
+            }
+        } finally {
+            if (definition.bindOnce) {
+                $directivesProviderWatchList.$removeFromArray(definition.$model.$mId, definition.watchListIndex);
+            }
+        }
+    };
+}
 
-// set j-initProvider
-$defaultDirectiveProvider.push({
-    selector: "j-init",
-    priority: 1,
-    isDefault: true
-});
+function generateArg() {
+    this.watchListIndex = $directivesProviderWatchList.$get(this.$model.$mId).length;
+    this.$attr = buildAttributes(this.elem);
+    /*
+      Directive that transcludes
+    */
+
+    switch (this.type) {
+        case ("for"):
+        case ("do"):
+        case ("include"):
+        case ("if"):
+        case ('switch'):
+            //set the clone node for the object
+            this.cSelector = camelCase.call('j-' + this.type);
+            this.cache = [];
+            this.replacerFn = domElementReplacerFn.call(this, this.cSelector, this.checker);
+            // switchBuilder
+            if (this.type === 'switch') {
+                switchBuilder.call(this);
+                this.elem.innerHTML = "";
+            }
+
+            break;
+    }
+
+    /**
+     * check once directive
+     */
+    if (hasAnyAttribute(this.$attr, ["j-once", ":once"])) {
+        this.bindOnce = true;
+    }
+
+    return this;
+}
+
+function domElementReplacerFn(dirType, checker) {
+    var self = this || {};
+    checker = checker || '';
+    this.cNode = toDOM.call('<!--' + dirType + ': ' + checker + '-->');
+    this.cENode = toDOM.call('<!-- end ' + dirType + ': ' + checker + '-->');
+    this.cloneNode = this.elem.cloneNode(true);
+    this.parentNode = this.elem.parentNode;
+    this.$createElement = function() {
+        return this.cloneNode.cloneNode(true);
+    };
+    //replace the element with the commentNode for reference
+    if (this.elem.parentNode) {
+        this.elem.parentNode.insertBefore(this.cNode, this.elem);
+        this.elem.parentNode.insertBefore(this.cENode, this.elem.nextSibling);
+    }
+
+    return function(html, fn) {
+        /**
+         * only remove the ELEMENT when isProcessed
+         */
+        if (self.isProcessed) {
+            self.parentNode.removeChild(self.elem);
+            self.elem = element(self.$createElement()).data({ ignoreProcess: [dirType] }).html(html)[0];
+            self.cNode.parentNode.insertBefore(self.elem, self.cENode);
+        } else {
+            self.elem.innerHTML = html;
+            self.isProcessed = true;
+        }
+
+        (fn || noop)(self.elem, self.isProcessed);
+    }
+}

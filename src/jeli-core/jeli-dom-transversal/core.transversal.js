@@ -32,15 +32,13 @@ function transverseCompiler(ele) {
         canCompile = compileAbleElement || isTextNode;
 
     return function($model, ref, replacerChildren) {
-
         function proceedWithCompilation() {
             //attribute checker for all element
             $attrWatcher(ele)($model);
             //proceed with the compilation
             //checking child elements
-            var subchildren = getChildrenNode(ele);
-            if (subchildren && subchildren.length) {
-                transverseTemplate(ele)($model, ref, replacerChildren);
+            if (ele.hasChildNodes()) {
+                transverseTemplate(ele)($model, ref);
             }
         }
 
@@ -53,14 +51,12 @@ function transverseCompiler(ele) {
         if (compileAbleElement) {
             //reference the element Scope
             //if DebugMode is enabled
-            if (!findInProvider('jDebugProvider').$disableDebugMode) {
-                element(ele).data({ 'jModel': $model.$mId });
-            }
-
-            //find directive
-            //find controller
-            var isDirective = $isDirective(ele),
+            var nElement = element(ele),
+                //find directive
+                //find controller
+                isDirective = $isDirective(ele),
                 _elementDetached = false;
+            nElement.data({ 'jModel': $model.$mId });
             //compile directive
             if (isDirective.length) {
                 /**
@@ -73,17 +69,15 @@ function transverseCompiler(ele) {
                 checkStructuralDirective(strDirective, 'j-max', 'j-maxlength');
 
 
-                var nElement = element(ele),
-                    data = nElement.data('ignoreProcess');
+                var data = nElement.data('ignoreProcess');
                 if (!data) {
                     nElement.data({ ignoreProcess: [] });
                 }
+
                 //addEli class to the element
                 addClass(ele);
-
                 isDirective.forEach(function(dir) {
                     var _dirName = camelCase.call(dir.selector);
-
                     if ($inArray(_dirName, data || []) || _elementDetached) {
                         if (nElement.data('reCompileChild')) {
                             proceedWithCompilation();
@@ -116,19 +110,19 @@ function transverseCompiler(ele) {
                 });
             }
 
-            /**
-              Bind Listeners to the Element
-            **/
-            attachEventProviders(ele)($model, ref);
+
+
+            if (!_elementDetached) {
+                /**
+                 * Bind Listeners to the Element
+                 **/
+                attachEventProviders(ele)($model, ref);
+                proceedWithCompilation();
+            }
 
             // cleanUp
             nElement = null;
             data = null;
-
-
-            if (!_elementDetached) {
-                proceedWithCompilation();
-            }
         } else if (!compileAbleElement && isTextNode) {
             textNodeCompiler(ele)($model, ref);
         }
@@ -138,36 +132,18 @@ function transverseCompiler(ele) {
 //@Attach eliFunctionality
 //recursive Node checker
 function transverseTemplate(template) {
-    var children = getChildrenNode(template),
-        lastChild = children.length - 1,
-        childrenChecker = [];
+    if (!isValidElement(template)) {
+        template = template[0].parentNode;
+    }
+
+    var childrenNode = getChildrenNode(template);
 
     return function($model, ref, replacerChildren) {
-        if (replacerChildren) {
-            childrenChecker = getChildrenNode(replacerChildren);
-        }
+        expect(childrenNode).each(function(ele) {
+            transverseCompiler(ele)($model, ref)
+        });
 
-        if (children.length && children) {
-            domElementLoop(children, function(ele, i) {
-                transverseCompiler(ele)($model, ref, childrenChecker[i]);
-
-                var checker = getChildrenNode(template);
-
-                if (i == lastChild) {
-                    //All Element Must be compiled
-                    if (checker.length - 1 > lastChild) {
-                        for (lastChild; lastChild <= checker.length - 1; lastChild++) {
-                            //Recompile elements found in this loop
-                            transverseCompiler(checker[lastChild])($model, ref, childrenChecker[i]);
-                        }
-                    }
-                }
-            });
-        }
-
-        // clean up children
-        children = null;
-        childrenChecker = null;
+        childrenNode = null;
     };
 }
 
@@ -176,7 +152,8 @@ function transverseTemplate(template) {
 var compilerStackWatch = new $eventStacks();
 
 function $templateCompiler($template, ignoreWatch) {
-    var ref = getUID();
+    var ref = $template['$object:id'] || getUID(),
+        _fn_ = transverseTemplate;
 
     //check if $template is a string
     //converts to DOM element
@@ -184,21 +161,18 @@ function $templateCompiler($template, ignoreWatch) {
         $template = element($template);
     }
 
+    if ($isUndefined($template['$object:id']) && isValidElement($template)) {
+        //set the uniques reference key for the element
+        $template['$object:id'] = ref;
+        //Compile parent before child
+        //transverse the template required for rendering
+        _fn_ = transverseCompiler;
+    }
+
     return function($model) {
-        if ($isUndefined($template['$object:id']) && isValidElement($template)) {
-            //set the uniques reference key for the element
-            $template['$object:id'] = ref;
-            //Compile parent before child
-            //transverse the template required for rendering
-            transverseCompiler($template)($model, ref);
-        } else {
-            //transverse the children only
-            transverseTemplate($template)($model, ref);
-        }
-
+        _fn_($template)($model, ref);
         //watch scope
-        $model.$watch(function() { $atp(ref, $model.$mId); });
-
+        $model.$watch(function() { $atp(this.$mId); });
         // trigger the template event binder
         compilerStackWatch.broadcast(ref, ['finished.compilations']);
         compilerStackWatch.destroy(ref);

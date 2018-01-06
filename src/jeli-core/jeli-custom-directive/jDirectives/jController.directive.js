@@ -1,24 +1,30 @@
+/**
+ * jEli Controller initializer
+ * Build and compile current ELEMENT
+ */
 $defaultDirectiveProvider.push({
-  selector: "j-controller",
-  priority: 1,
-  isDefault:true
-});  
-  //controller compiler
-  function initializeController(ele)
-  {
-    return function($model,isController)
-    {
-        var useAsChecker = isController.split(' as '),
-            ctrlName = useAsChecker[0];
-                  
-      //add binding class to the object
-      //bootStrap Controller
-      var jModel = $model.$new(),
-          ctrlAs = $provider.$jControllerProvider.$initialize(ctrlName , jModel, null, useAsChecker[1]);
+    selector: "j-controller",
+    priority: 6,
+    canDetachElement: true,
+    isDefault: true
+});
 
-      $0 = ele;
-      addClass(ele);
-      $templateCompiler(ele)(jModel);
-      $observeElement(ele,jModel.$mId);
-    }
-  }
+/**
+ * 
+ * @param {*} ele 
+ * @param {*} model 
+ * @param {*} isController 
+ */
+function initializeController() {
+    var useAsChecker = this.checker.split(' as ');
+
+    //add binding class to the object
+    //bootStrap Controller
+    var jModel = this.$model.$new(),
+        ctrlAs = $provider.$jControllerProvider.$initialize(useAsChecker[0], jModel, null, useAsChecker[1]);
+    addClass(this.elem);
+    $templateCompiler(this.elem)(jModel);
+    $observeElement(this.elem, jModel.$mId);
+
+    jModel = null;
+}

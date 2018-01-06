@@ -1,16 +1,14 @@
   //@function $jElementProviderWatchListFn
   //@private function
   function $jElementProviderWatchListFn(ref, $id) {
-      var len = 0,
-          $consumeState = $directivesProviderWatchList.$get($id);
-      while (len < $consumeState.length) {
+      expect($directivesProviderWatchList.$get($id)).each(function($consumeState) {
           /*
             @annonymous fn
             @Binded from directiveProviderChecker
             @Required argument ref key to parent Container
           */
-          $consumeState[len++](ref);
-      };
+          $consumeState(ref);
+      });
   }
 
   //function get all Attributes of an element
@@ -85,7 +83,7 @@
       }
   }
 
-  function $watchBlockFn(ctrl, id) {
+  function $watchBlockFn(id) {
       var _watchList = $watchBlockList.$get(id);
       if (_watchList.length > 0) {
           domElementProvider.each(_watchList, function(i, n) {
@@ -262,10 +260,14 @@
   //get children node of an element
   function getChildrenNode(ele) {
       if ($isObject(ele)) {
-          return ele[0].parentNode.childNodes;
+          ele = ele[0].parentNode;
       }
+      var all = [];
+      ele.childNodes.forEach(function(node) {
+          all.push(node)
+      });
 
-      return ele.childNodes;
+      return all;
   }
 
   //@Function setTemplateValue
@@ -287,22 +289,16 @@
       return !$isUndefined(value) ? value : '';
   }
 
-  function $evalTemplate(obj, setVar, tmpl) {
+  function $evalTemplate(tmpl, model) {
       return (tmpl) && (tmpl).replace(this.pattern, function(i, key) {
-          return setTemplateValue(key, obj);
+          return setTemplateValue(key, model);
       });
   }
 
   //jEli template expression compiler
   function $jCompiler(template) {
       return function(model, ref) {
-
-          var tmpl = !$isUndefined(template.outerHTML) ? template.outerHTML : template,
-              _tmpl = new _Template();
-          _tmpl.init = $evalTemplate;
-
-          var compiled = _tmpl.init(model, ref, tmpl);
-
+          var compiled = $templateParser(!$isUndefined(template.outerHTML) ? template.outerHTML : template, model);
           if (!$isUndefined(template.outerHTML)) {
               template = toDOM.call(compiled);
           } else {
@@ -311,6 +307,16 @@
 
           return template;
       }
+  }
+
+  /**
+   * 
+   * @param {*} tmpl 
+   * @param {*} model 
+   * @param {*} definition 
+   */
+  function $templateParser(tmpl, model, definition) {
+      return $evalTemplate.apply(new _Template(definition), arguments);
   }
 
   //textNode Watcher and compiler

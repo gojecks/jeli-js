@@ -6,9 +6,6 @@
             $compileTracker.lastCompiledWith = document;
         }
 
-        //reference the elementToBootStrap
-        $0 = elementToBootStrap;
-
         // register the rootElement
         $provider.$get('$jEliServices').$register('$rootElement', elementToBootStrap);
 

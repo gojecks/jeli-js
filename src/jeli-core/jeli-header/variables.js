@@ -1,5 +1,6 @@
-var $0 = null,
-    $$0 = null;
+/**
+ * JELI LOCAL VARIABLES
+ */
 var noop = {
     get: function() {
         return {}
@@ -30,4 +31,5 @@ var COMMENT_NODE = 8,
     $isDomLoaded = false,
     $isAfterBootStrap = false,
     _defaultTemplateExp = /\{\%(.*?)\%\}/g,
-    $eUID = 0;
+    $eUID = 1,
+    $mUID = 1;
