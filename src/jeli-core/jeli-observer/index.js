@@ -203,7 +203,7 @@ var ignoreList = ["$mId", "$$isIsolated", "$$asyncQueue", "$$subscribers", "$pre
 function digestFromChanges(changes) {
 
     if (!this.$$phase) {
-        this.$consume();
+        this.$consume(changes);
     }
 
     //disgest other binding

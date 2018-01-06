@@ -1,13 +1,13 @@
   //@function $jElementProviderWatchListFn
   //@private function
-  function $jElementProviderWatchListFn(ref, $id) {
+  function $jElementProviderWatchListFn($id) {
       expect($directivesProviderWatchList.$get($id)).each(function($consumeState) {
           /*
             @annonymous fn
             @Binded from directiveProviderChecker
             @Required argument ref key to parent Container
           */
-          $consumeState(ref);
+          $consumeState($id);
       });
   }
 

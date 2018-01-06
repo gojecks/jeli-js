@@ -86,6 +86,11 @@
      @return {FUNCTION}-@arguments {Object || String || Array}
      */
 
+    /**
+     * 
+     * @param {*} name 
+     * @param {*} once 
+     */
     $modelGenerator.prototype.$publish = function(name, once) {
         var self = this;
         //initialize model subscribers
@@ -93,12 +98,12 @@
             var child = $modelChildReferenceList.$get(current.$mId);
             if (name && current.$$subscribers[name]) {
                 current.$$subscribers[name].forEach(function(fn) {
-                    if (!fn.$$isTriggered) {
-                        fn.apply(current, arg);
-                    }
-                    // check for destroyed
-                    fn.$$isTriggered = once;
+                    fn.apply(current, arg);
                 });
+
+                if (once) {
+                    current.$$subscribers[name] = [];
+                }
             }
             //loop through the child
             child.forEach(function(cur, idx) {
@@ -112,6 +117,22 @@
             //broadCast the parent before the child
             broadcastSubscribers(self, arguments);
         }
+    };
+
+    /**
+     * 
+     * @param {*} name 
+     */
+    $modelGenerator.prototype.$emit = function(name) {
+        var current = this,
+            arg = [].concat.apply([], arguments).filter(function(a, i) { return i > 0; });
+        do {
+            if (name && current.$$subscribers[name]) {
+                current.$$subscribers[name].forEach(function(fn) {
+                    fn.apply(current, arg);
+                });
+            }
+        } while (current = current.$parent);
     };
 
     //Model destroy function
@@ -268,12 +289,13 @@
     //rootModel Watcher
     function $watch() {
         if ($isObject(this)) {
-            var watchers = {
-                watchFn: arguments[0],
-                listenerFn: arguments[1] || false,
-                core: !!arguments[2],
-                lastValue: getWatchValue(arguments[0], this)
-            };
+            var watchFn = buildWatchExpression(arguments),
+                watchers = {
+                    watchFn: watchFn,
+                    listenerFn: arguments[2] || arguments[1] || false,
+                    core: !!arguments[2],
+                    lastValue: watchFn.call(this)
+                };
 
             if ($isNull(this.$$watchList)) {
                 this.$$watchList = [];
@@ -286,49 +308,80 @@
         }
     }
 
-    //get the value of a watch list
-    function getWatchValue(watch, obj) {
-        if ($isFunction(watch)) {
-            return $observe(obj, watch);
-        } else {
-            return obj[watch];
+    /**
+     * 
+     * @param {*} arg 
+     */
+    function buildWatchExpression(arg) {
+        if ($isString(arg[0])) {
+            return function() {
+                var newValue = $modelSetterGetter(arg[0], this);
+                if (arg.length > 2) {
+                    return arg[1].call(this, newValue);
+                }
+
+                return newValue;
+            }
         }
+
+        return arg[0];
     }
 
-    function $consume(fn) {
+    /**
+     * 
+     * @param {*} watch 
+     * @param {*} obj 
+     */
+    function getWatchValue(watch, obj) {
+        if ($isString(watch)) {
+            return $modelSetterGetter(watch, obj);
+        }
+
+        return watch();
+    }
+
+    /**
+     * 
+     * @param {*}  $modelChanges
+     */
+    function $consume($modelChanges) {
         var watchers = this.$$watchList,
             self = this;
 
-        //initialize the argument Fn
-        if (fn && $isFunction(fn)) {
-            fn.apply(fn, []);
-        }
+        console.log("Consume state:", $modelChanges, this.$mId);
 
         self.$$beginPhase('$consume');
         if (watchers.length > 0) {
             watchers.forEach(function(obj, idx) {
+                var newValue = obj.watchFn.call(self);
                 if (!obj.listenerFn) {
-                    return obj.watchFn.call(this);
+                    return;
                 }
+
                 try {
-                    var newValue = getWatchValue(obj.watchFn, self),
-                        oldValue = obj.lastValue;
                     if (!obj.core) {
-                        obj.listenerFn(newValue, oldValue, self);
+                        obj.listenerFn(newValue, obj.lastValue, self);
                         obj.lastValue = newValue;
                     } else {
-                        if (self.$$areEqual(newValue, oldValue)) {
-                            obj.listenerFn(newValue, oldValue, self);
+                        if (self.$$areEqual(newValue, obj.lastValue)) {
+                            obj.listenerFn(newValue, obj.lastValue, self);
+                            obj.lastValue = newValue;
                         }
                     }
                 } catch (e) {
                     errorBuilder(e);
                 }
-
             });
         }
 
         self.$$destroyPhase();
+
+        /**
+         * destroy watch state
+         */
+        return function() {
+            this.$$watchList = null;
+        };
     }
 
     //$remove All Binding

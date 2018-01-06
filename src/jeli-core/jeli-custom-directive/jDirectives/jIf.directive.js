@@ -24,4 +24,12 @@
                 this.elemIsDetached = false;
             }
         }
+
+        /**
+         * proceed with compilation
+         */
+        if (!this.isProcessed && !this.elemIsDetached) {
+            this.isProcessed = true;
+            transverseTemplate(this.elem)(this.$model, this.ref);
+        }
     };

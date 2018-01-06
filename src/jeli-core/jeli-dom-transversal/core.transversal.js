@@ -137,7 +137,6 @@ function transverseTemplate(template) {
     }
 
     var childrenNode = getChildrenNode(template);
-
     return function($model, ref, replacerChildren) {
         expect(childrenNode).each(function(ele) {
             transverseCompiler(ele)($model, ref)
@@ -172,7 +171,8 @@ function $templateCompiler($template, ignoreWatch) {
     return function($model) {
         _fn_($template)($model, ref);
         //watch scope
-        $model.$watch(function() { $atp(this.$mId); });
+        var modelId = $model.$mId;
+        $model.$watch(function() { $atp(modelId); });
         // trigger the template event binder
         compilerStackWatch.broadcast(ref, ['finished.compilations']);
         compilerStackWatch.destroy(ref);

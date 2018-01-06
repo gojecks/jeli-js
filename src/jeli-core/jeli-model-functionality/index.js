@@ -1,7 +1,8 @@
-//@Function binding
-//@Argument Element (required)
-//@true
-
+/**
+ * 
+ * @param {*} evName 
+ * @param {*} fn 
+ */
 function bind(evName, fn) {
     if (!$isEqual(this.nodeType, Node.ELEMENT_NODE)) {
         return;
@@ -17,12 +18,19 @@ function bind(evName, fn) {
     addClass(this);
 }
 
-
+/**
+ * 
+ * @param {*} data 
+ */
 function jEliFnInitializer(data) {
     var _fn = data.replace(/\W(;)/g, function(idx, key) {
         if (idx.indexOf(')') > -1) { return ')|'; } else { return '|'; }
     }).split('|');
 
+    /**
+     * 
+     * @param {*} params 
+     */
     this.run = function(params) {
         findInList.call(_fn, function(idx, fn) {
             //function executor
@@ -32,7 +40,10 @@ function jEliFnInitializer(data) {
         });
     };
 
-    //evaluate
+    /**
+     * 
+     * @param {*} model 
+     */
     this.evaluate = function(model) {
         maskedEval(data, model);
     };
@@ -105,8 +116,9 @@ function attachEventProviders(ele) {
                         var _init = element(this).data();
                         if (!$isUndefined(_init[splt])) {
                             try {
-
                                 new jEliFnInitializer(_init[splt]).run(["", $model, this, ev]);
+
+                            } catch (e) {
 
                             } finally {
                                 //consume every watchList
@@ -148,6 +160,10 @@ function $typeOfValue(el) {
     }
 }
 
+/**
+ * 
+ */
+
 function getCommentNodes(elem) {
     var children = elem.childNodes,
         comments = [];
@@ -164,6 +180,11 @@ function getCommentNodes(elem) {
 }
 
 //add eli binding class to element
+/**
+ * 
+ * @param {*} ele 
+ * @param {*} klass 
+ */
 function addClass(ele, klass) {
     if (!ele) return;
 
@@ -217,6 +238,11 @@ function $logicChecker($logic, $model, ignore) {
     }
 
     //get Function Arg
+    /**
+     * 
+     * @param {*} key 
+     * @param {*} list 
+     */
     function getFunctionArg(key, list) {
         var nArguments = [];
         if (list && list[key]) {

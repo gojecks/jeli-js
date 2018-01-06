@@ -80,7 +80,6 @@ function updateViews(elem, checker) {
 */
 
 function _onviewModelChanged(checker) {
-
     return function() {
         updateViews(null, checker);
     };
