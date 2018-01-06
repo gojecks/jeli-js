@@ -2,7 +2,7 @@
 
 function $backgroundModelWatcher() {
     findInList.call($modelMapping.$getAll(), function(idx, obj) {
-        obj.$consume();
+        //obj.$consume();
     });
 }
 
@@ -178,7 +178,7 @@ function jObserver(ignoreList, callback) {
     //Observer Start
     this.start = function(timer) {
         //set timer
-        _stat.timer = timer || 10;
+        _stat.timer = timer || 100;
 
         //setTimeInterval
         WatchChanges();
@@ -212,7 +212,7 @@ function digestFromChanges(changes) {
         var current = $modelMapping.$get(idx);
         //only perform digest if current state is available
         if (current && current.$consume) {
-            digestFromChanges.call(current);
+            digestFromChanges.call(current, changes);
         }
     });
 
@@ -223,14 +223,18 @@ function digestFromChanges(changes) {
 
 //Observer for complete change in Object
 var _modelObserver = new jObserver(ignoreList, digestFromChanges);
-
+/**
+ * 
+ * @param {*} model 
+ * @param {*} watch 
+ */
 function $observe(model, watch) {
     // add to our observer
     _modelObserver.add(model, model.$mId);
 
     if (!_modelObserver.started) {
         //start observer
-        _modelObserver.start(10);
+        _modelObserver.start(1);
         _modelObserver.started = true;
     }
 

@@ -305,6 +305,9 @@
 
             //add the object to $modelMapping
             $modelMapping.$new(this.$mId, this);
+
+            // add to observer
+            $observe(this, watchFn);
         }
     }
 
@@ -347,8 +350,6 @@
     function $consume($modelChanges) {
         var watchers = this.$$watchList,
             self = this;
-
-        console.log("Consume state:", $modelChanges, this.$mId);
 
         self.$$beginPhase('$consume');
         if (watchers.length > 0) {

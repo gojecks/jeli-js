@@ -171,8 +171,10 @@ function $templateCompiler($template, ignoreWatch) {
     return function($model) {
         _fn_($template)($model, ref);
         //watch scope
-        var modelId = $model.$mId;
-        $model.$watch(function() { $atp(modelId); });
+        if (!ignoreWatch) {
+            $model.$watch(function() { $atp(this.$mId); });
+        }
+
         // trigger the template event binder
         compilerStackWatch.broadcast(ref, ['finished.compilations']);
         compilerStackWatch.destroy(ref);

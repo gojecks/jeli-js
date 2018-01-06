@@ -62,14 +62,14 @@
       if (!watch) return;
 
       if (watch.length) {
-          findInList.call(watch, function(idx, obj) {
+          expect(watch).each(function(obj) {
               if (obj.attr.length) {
-                  for (var i in obj.attr) {
-                      if (obj.attr[i].value.match(new RegExp(_defaultTemplateExp))) {
-                          obj.element.removeAttribute(obj.attr[i].name);
-                          obj.element.setAttribute(obj.attr[i].name, $jCompiler(obj.attr[i].value)(obj.$$));
+                  expect(obj.attr).each(function(attr) {
+                      if (attr.value.match(new RegExp(_defaultTemplateExp))) {
+                          obj.element.removeAttribute(attr.name);
+                          obj.element.setAttribute(attr.name, $jCompiler(attr.value)(obj.$$));
                       }
-                  }
+                  })
               }
           });
 
