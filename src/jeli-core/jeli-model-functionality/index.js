@@ -119,10 +119,7 @@ function attachEventProviders(ele) {
                                 new jEliFnInitializer(_init[splt]).run(["", $model, this, ev]);
 
                             } catch (e) {
-
-                            } finally {
-                                //consume every watchList
-                                $model.$consume();
+                                errorBuilder(e);
                             }
                         }
                     }
