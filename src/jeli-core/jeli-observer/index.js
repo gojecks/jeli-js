@@ -1,11 +1,3 @@
-//background model Watcher
-
-function $backgroundModelWatcher() {
-    findInList.call($modelMapping.$getAll(), function(idx, obj) {
-        //obj.$consume();
-    });
-}
-
 //customStringify Fn
 function customStringify(obj, ignoreList) {
     var cache = [],
@@ -122,14 +114,22 @@ function jObserver(ignoreList, callback) {
         _Id: _ObserverCount++,
         lastCount: 0,
         _watchObj: {}, // hold list of object to watch
-        _ignoreList: ignoreList || []
+        _ignoreList: ignoreList || [],
+        inProgress: false,
+        _count: 0
     };
 
     //WatchChanges
     function WatchChanges() {
-        for (var watch in _stat._watchObj) {
-            performCheck(_stat._watchObj[watch]);
+        if (_stat.inProgress) {
+            return;
         }
+
+        _stat.inProgress = true;
+        var idx = 0,
+            totalWatch = _stat._count;
+
+        expect(_stat._watchObj).each(performCheck);
 
         function performCheck(_current) {
             var watchObj = customStringify(_current._main, _current._ignoreList),
@@ -143,11 +143,13 @@ function jObserver(ignoreList, callback) {
                 }
             }
 
+            idx++;
             watchObj = profile = null;
+            if (idx === totalWatch) {
+                _stat.inProgress = false;
+                //_stat._interval = setTimeout(WatchChanges, _stat.timer);
+            }
         }
-
-
-        _stat._interval = setTimeout(WatchChanges, _stat.timer);
     }
 
     // ignoreList And Callback are OPTIONAL
@@ -173,6 +175,8 @@ function jObserver(ignoreList, callback) {
             callback: _callback || callback || noop,
             _ignoreList: _ignoreList || ignoreList
         });
+
+        _stat._count++;
     };
 
     //Observer Start
@@ -184,6 +188,11 @@ function jObserver(ignoreList, callback) {
         WatchChanges();
     };
 
+    /**
+     * Trigger the watch changes
+     */
+    this.digest = WatchChanges;
+
 
     this.$destroy = function() {
         if (_stat._interval) {
@@ -194,6 +203,7 @@ function jObserver(ignoreList, callback) {
 
     this.removeWatch = function(_id) {
         delete _stat._watchObj[_id];
+        _stat._count--;
     };
 }
 
@@ -218,25 +228,4 @@ function digestFromChanges(changes) {
 
     _childReference = null
 
-}
-
-
-//Observer for complete change in Object
-var _modelObserver = new jObserver(ignoreList, digestFromChanges);
-/**
- * 
- * @param {*} model 
- * @param {*} watch 
- */
-function $observe(model, watch) {
-    // add to our observer
-    _modelObserver.add(model, model.$mId);
-
-    if (!_modelObserver.started) {
-        //start observer
-        _modelObserver.start(1);
-        _modelObserver.started = true;
-    }
-
-    watch(model);
 }

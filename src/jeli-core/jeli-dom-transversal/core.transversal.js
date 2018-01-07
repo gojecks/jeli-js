@@ -150,7 +150,7 @@ function transverseTemplate(template) {
 //Template compiler
 var compilerStackWatch = new $eventStacks();
 
-function $templateCompiler($template, ignoreWatch) {
+function $templateCompiler($template, ignoreObserver) {
     var ref = $template['$object:id'] || getUID(),
         _fn_ = transverseTemplate;
 
@@ -171,9 +171,10 @@ function $templateCompiler($template, ignoreWatch) {
     return function($model) {
         _fn_($template)($model, ref);
         //watch scope
-        if (!ignoreWatch) {
-            $model.$watch(function() { $atp(this.$mId); });
-        }
+        $model.$watch(function() { $atp(this.$mId); });
+        //add the object to $modelMapping
+        $modelMapping.$new($model.$mId, $model);
+
 
         // trigger the template event binder
         compilerStackWatch.broadcast(ref, ['finished.compilations']);

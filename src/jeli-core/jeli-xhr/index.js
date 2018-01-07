@@ -41,7 +41,7 @@ var unsafeHeaders = {
 //@Function Ajax
 function ajax(url, options) {
     var request = xhr(),
-        promise = new $p,
+        xhrPromise = new $d,
         response = {},
         interceptor = $provider && $provider.$get('$httpProvider'),
         chain = {},
@@ -67,17 +67,17 @@ function ajax(url, options) {
 
     //$httpProvider Interceptor
     //Request Interceptor
-    if(interceptor){
-       interceptor.resolveInterceptor('request', {
-            headers: options.headers,
-            url: options.url,
-            type: options.type
-        })
-        .then(function(_opts) {
-            options = extend({}, options, _opts);
-        }); 
+    if (interceptor) {
+        interceptor.resolveInterceptor('request', {
+                headers: options.headers,
+                url: options.url,
+                type: options.type
+            })
+            .then(function(_opts) {
+                options = extend({}, options, _opts);
+            });
     }
-    
+
 
     //Successful Request
     function successfulRequest(request) {
@@ -112,14 +112,13 @@ function ajax(url, options) {
             response.data = data;
 
             //intercept response
-            if(interceptor){
+            if (interceptor) {
                 interceptor
-                .resolveInterceptor(((response.success) ? 'responseSuccess' : 'responseError'), response);
+                    .resolveInterceptor(((response.success) ? 'responseSuccess' : 'responseError'), response);
             }
-            
+
             //resolve our response
-            $ajaxResolver.apply(((response.success) ? 'success' : 'error'), [response, request]);
-            promise[((response.success) ? 'resolve' : 'reject')](response, request);
+            xhrPromise[((response.success) ? 'resolve' : 'reject')](response, request);
 
             //send the response header
             if (options.getResponseHeader) {
@@ -142,19 +141,24 @@ function ajax(url, options) {
         }
     }
 
-    //resolve all binding attached to this call
-    //Success and Error Handling
-    function $ajaxResolver() {
-        if (options[this]) {
-            options[this].apply(options[this], arguments);
-        }
-    }
-
     //check if header requires withCredentials flag
     if (options.xhrFields && options.xhrFields.withCredentials) {
         //set the withCredentials Flag
         request.withCredentials = true;
     }
+
+    /**
+     * check register success and error handler
+     */
+    if (options.success) {
+        xhrPromise.done(options.success);
+    }
+
+    if (options.error) {
+        xhrPromise.fail(options.error);
+    }
+
+
 
     function setHeaders() {
         for (var name in options.headers) {
@@ -218,23 +222,11 @@ function ajax(url, options) {
     //send the request
     send();
 
-    function xhrPromise(options) {}
-    xhrPromise.prototype.done = function(fn) {
-        if (!options.success) {
-            options.success = fn;
-        }
-
-        return this;
-    };
-
-    xhrPromise.prototype.fail = function(fn) {
-        if (!options.error) {
-            options.error = fn;
-        }
-        return this;
-    };
-
-    xhrPromise.prototype.end = function(callback) {
+    /**
+     * 
+     * @param {*} callback 
+     */
+    xhrPromise.end = function(callback) {
         //write callback function
         //only when options.callback is not defined
         if (!options.callback && callback) {
@@ -246,14 +238,21 @@ function ajax(url, options) {
         return this;
     };
 
-    xhrPromise.prototype.then = function() {
-        //end request to process binding
-        this.end();
-        if (promise) promise.then.apply(promise, arguments);
+    /**
+     * 
+     * @param {*} done 
+     * @param {*} fail 
+     */
+    xhrPromise.then = function(done, fail) {
+        this.done(done);
+        this.fail(fail);
+
         return this;
     };
 
-    return new xhrPromise();
+
+
+    return xhrPromise;
 }
 /** End of Ajax**/
 

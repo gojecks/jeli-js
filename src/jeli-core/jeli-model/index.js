@@ -302,12 +302,6 @@
             }
             //add the watchList
             this.$$watchList.push(watchers);
-
-            //add the object to $modelMapping
-            $modelMapping.$new(this.$mId, this);
-
-            // add to observer
-            $observe(this, watchFn);
         }
     }
 
@@ -390,10 +384,26 @@
         $modelMapping.$remove($id);
         $attrWatchList.$remove($id);
         $directivesProviderWatchList.$remove($id);
-
-        _modelObserver.removeWatch($id);
         //remove model Observer    
         $modelObserverList.$remove($id);
         $modelChildReferenceList.$remove($id);
         $watchBlockList.$remove($id);
     }
+
+    /**
+     * Add DigestCycle to watches
+     */
+    $modelMapping.$digestAll = function() {
+        expect(this.$getAll()).each(function(model) {
+            model.$consume();
+        })
+    };
+
+    $modelMapping.$digestParentAndChild = function(model) {
+        digestFromChanges.call(model);
+        var parent = model;
+        do {
+            parent.$consume();
+        } while (parent = parent.$parent);
+        parent = null;
+    };

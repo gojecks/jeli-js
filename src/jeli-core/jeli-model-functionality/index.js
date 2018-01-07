@@ -120,6 +120,8 @@ function attachEventProviders(ele) {
 
                             } catch (e) {
                                 errorBuilder(e);
+                            } finally {
+                                $modelMapping.$digestParentAndChild($model);
                             }
                         }
                     }

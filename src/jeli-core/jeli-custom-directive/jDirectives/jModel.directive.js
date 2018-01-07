@@ -99,8 +99,7 @@ function modelInstance() {
         var modelInstance = self.getView(elem);
         if (modelInstance) {
             setModelValue(modelInstance.checker, modelInstance.$model, $typeOfValue(modelInstance.elem));
-            modelInstance.$model.$consume();
-
+            $modelMapping.$digestParentAndChild(modelInstance.$model);
             updateViews.call(modelInstance, modelInstance.elem, modelInstance.checker);
             //set state
             modelInstance.isProcessed = true;

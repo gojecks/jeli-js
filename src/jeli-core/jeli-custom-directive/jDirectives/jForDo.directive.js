@@ -20,7 +20,7 @@ function jDoForDirective() {
     if (!this.inProgress) {
         this.inProgress = true;
         var par = this.parentNode,
-            cache = [],
+            cache = this.cache || [],
             $self = this,
             name,
             trackBy = '$index',
@@ -83,12 +83,14 @@ function jDoForDirective() {
          * 
          * @param {*} list 
          */
-        function removeCacheElement(list) {
-            expect(list).search(null, function(cacheObj) {
+        function removeCacheElement() {
+            cache = cache.filter(function(cacheObj) {
                 if (!checkCacheObj(cacheObj.$$trackId)) {
-                    cacheObj.ele.parentNode.removeChild(cacheObj.ele);
-                    element(cacheObj.ele).triggerHandler('remove');
+                    element(cacheObj.ele).remove();
+                    return false;
                 }
+
+                return true;
             });
         }
 
@@ -97,7 +99,7 @@ function jDoForDirective() {
          * @param {*} trackID 
          */
         function trackIDExistsInCache(trackID) {
-            return expect($self.cache).search(null, function(cacheObj) {
+            return $self.cache.some(function(cacheObj) {
                 return cacheObj.$$trackId === trackID;
             });
         }
@@ -107,9 +109,9 @@ function jDoForDirective() {
          * @param {*} trackId 
          */
         function checkCacheObj(trackId) {
-            return Object.keys(obj).filter(function(key) {
-                return $isEqual(trackId, obj[key]['$$obj:id']);
-            }).length;
+            return expect(obj).search(null, function(item) {
+                return trackId === item['$$obj:id'];
+            });
         }
 
         function finishedRendering() {
@@ -120,6 +122,7 @@ function jDoForDirective() {
                 $self.$model.$evaluate(_trigger);
             }
             $self.inProgress = false;
+            $self.cache = cache.concat();
             // cleanUp
             cleanUp();
         }
@@ -149,7 +152,7 @@ function jDoForDirective() {
 
         checkUnProcessedRepeater();
 
-        if (obj && (!$isEqual(this.cache.length, objLength) || checkForNewChanges().length)) {
+        if (obj && (!$isEqual(cache.length, objLength) || checkForNewChanges().length)) {
             //initialize configureTrackByAndOrderBy()
             configureTrackByAndOrderBy();
 
@@ -169,10 +172,8 @@ function jDoForDirective() {
                 }
             }
 
-
             //remove cache element and free up memory
-            removeCacheElement(this.cache);
-
+            removeCacheElement(cache);
             //render
             expect(obj).each(function(item, idx) {
                 if (!trackIDExistsInCache(item['$$obj:id'])) {
@@ -180,8 +181,6 @@ function jDoForDirective() {
                     elementAppender(setTempScope(item, idx), $self.cSelector);
                 }
             });
-
-            this.cache = cache.concat();
 
             // trigger rendering FN
             finishedRendering();
