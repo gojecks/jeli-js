@@ -30,13 +30,11 @@ function setViewValue(newVal, oldVal) {
 function performOptions(type, context) {
     var _options = {};
     _options.select = function(newVal) {
-        var len = context.elem.options.length;
-        while (len--) {
-            var option = context.elem.options[len];
-            if (option.value === newVal) {
+        expect(context.elem.options).each(function(options) {
+            if (options.value === newVal) {
                 option.selected = true;
             }
-        }
+        });
     };
 
     _options.checked = function(checked) {
@@ -94,16 +92,13 @@ function modelInstance() {
     /**
       Model Event Listener
     **/
+
     var self = this;
     this.$eventListener = new $CustomEventHandler('register', function(ev, elem) {
         var modelInstance = self.getView(elem);
-        if (modelInstance) {
-            setModelValue(modelInstance.checker, modelInstance.$model, $typeOfValue(modelInstance.elem));
-            $modelMapping.$digestParentAndChild(modelInstance.$model);
-            updateViews.call(modelInstance, modelInstance.elem, modelInstance.checker);
-            //set state
-            modelInstance.isProcessed = true;
-        }
+        setModelValue(modelInstance.checker, modelInstance.$model, $typeOfValue(elem));
+        //set state
+        modelInstance.isProcessed = true;
     });
 
     this.$$views = [];
@@ -115,7 +110,7 @@ function modelInstance() {
         return this.$$views.filter(function(ins) {
             return ins.elem === ele;
         })[0];
-    }
+    };
 }
 
 /*
@@ -127,6 +122,7 @@ modelInstance.prototype.$$setViewValue = function(val) {
     });
 };
 
+
 /*
   jModel Listener
 */
@@ -137,13 +133,48 @@ modelInstance.prototype.inputListener = function() {
     }
 };
 
+/**
+ * 
+ * @param {*} jModelObj 
+ */
+modelInstance.prototype.__registerEvents = function(jModelObj) {
+    var jModelInstance = this;
+
+    jModelObj.modelOptions.$events.split(/\s/).forEach(function(evName) {
+        var $bindingName = $isEqual(evName, 'default') ? jModelObj.eventName : evName;
+        jModelInstance.$eventListener.register(':' + $bindingName, debounce(updateModelBindings, jModelObj.modelOptions.debounce[evName]));
+        bind.call(jModelObj.elem, $bindingName, jModelInstance.inputListener());
+    });
+
+    function updateModelBindings(ev, elem) {
+        var modelInstance = jModelInstance.getView(elem);
+        $modelMapping.$digestParentAndChild(modelInstance.$model);
+        updateViews.call(modelInstance, elem, modelInstance.checker);
+        modelInstance = null;
+    }
+};
+
+/**
+ * 
+ * @param {*} jModelObj 
+ */
+modelInstance.prototype.__unregisterEvents = function(jModelObj) {
+    var jModelInstance = this;
+    jModelObj.modelOptions.$events.split(/\s/).forEach(function(evName) {
+        var $bindingName = $isEqual(evName, 'default') ? jModelObj.eventName : evName;
+        jModelInstance.$eventListener.$destroy(evName);
+    });
+}
+
+
+
 
 /*
   jModel Core Function
   Directive Name: j-Model
 */
 function prepareModel() {
-    var evName = $typeOfModel(this.elem),
+    var evName = this.eventName = $typeOfModel(this.elem),
         cVal = $modelSetterGetter(this.checker, this.$model, true),
         eleVal = $typeOfValue(this.elem),
         _self = this;
@@ -153,18 +184,23 @@ function prepareModel() {
     }
 
     var _jModelInstance = _modelBinder.$get(this.checker);
+    this.modelOptions = extend(true, {
+        $events: 'default',
+        debounce: {
+            default: 0
+        }
+    }, maskedEval(this.$attr['model-options']) || {});
+
     /**
       set the view to the model instance
     **/
     _jModelInstance.$$views.push(this);
-
     this.isProcessed = false;
 
     //Check for setting Value
     //onChange Input Types shouldn't change Value
     this.canSetValue = $isEqual('input', evName);
-
-    bind.call(this.elem, evName, _jModelInstance.inputListener());
+    _jModelInstance.__registerEvents(this);
     // check for external binder
     if (this.$attr.getAttribute('@listener')) {
         _jModelInstance
@@ -184,6 +220,19 @@ function prepareModel() {
     }
 
     _jModelInstance.$$setViewValue(cVal || eleVal);
+
+
+    // perform cleanUp
+    // observe the element change
+    _mutationObserver(this.elem, function() {
+        if (_jModelInstance.$$views.length < 2) {
+            _modelBinder.$remove(_self.checker);
+            _jModelInstance.__unregisterEvents(_self);
+        }
+
+        _self.$unWatch();
+        _self = _jModelInstance = null;
+    });
 
 
     return _onviewModelChanged(this.checker);
