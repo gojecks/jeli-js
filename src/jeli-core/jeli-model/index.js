@@ -214,7 +214,7 @@
     function $atp($id) {
         //WatchList Functions
         $watchBlockFn($id);
-        $dirtyChecker();
+        $digestAttr($id);
         $jElementProviderWatchListFn($id);
     }
 
@@ -240,50 +240,54 @@
     //@Method _MutationObserver
     // @param : HTMLELEMENT
     // @param : FUNCTION
-    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver,
+        _mutationObserver = (function() {
+            var _regsisteredEvents = [];
 
-    function _mutationObserver(ele, CB) {
-        if (!ele) {
-            return;
-        }
-
-        if (!MutationObserver) {
-            element(ele)
-                .bind('remove', CB);
-
-            return;
-        }
-
-        function isDetached(elem) {
-            if (elem.parentNode === document) {
-                return false;
-            } else if ($isNull(elem.parentNode)) {
-                return true
-            } else {
-                return isDetached(elem.parentNode);
-            }
-        }
-
-
-        var observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (isDetached(ele)) {
-                    CB();
-                    if (observer) {
-                        observer.disconnect();
-                        observer = null;
+            function triggerRemovedNodes() {
+                _regsisteredEvents = _regsisteredEvents.filter(function(event) {
+                    var removed = (!event.node.parentNode || (event.node.parentNode && !event.node.parentNode.parentNode));
+                    if (removed) {
+                        event._callback();
                     }
-                }
+
+                    return !removed;
+                });
+            }
+
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.removedNodes.length) {
+                        triggerRemovedNodes();
+                    }
+                });
             });
-        });
 
-        observer.observe(document.body, {
-            attributes: true,
-            childList: true,
-            characterData: true
-        });
+            observer.observe(document.body, {
+                attributes: true,
+                childList: true,
+                characterData: true,
+                subtree: true
+            });
 
-    }
+            return function(ele, CB) {
+                if (!ele) {
+                    return;
+                }
+
+                if (!MutationObserver) {
+                    element(ele)
+                        .bind('remove', CB);
+
+                    return;
+                }
+
+                _regsisteredEvents.push({
+                    node: ele,
+                    _callback: CB || noop
+                });
+            };
+        })();
 
 
     //rootModel Watcher
