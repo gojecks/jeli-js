@@ -34,7 +34,7 @@ function transverseCompiler(ele) {
     return function($model, ref, replacerChildren) {
         function proceedWithCompilation() {
             //attribute checker for all element
-            $attrWatcher(ele)($model);
+            $attrWatcher(ele, $model);
             //proceed with the compilation
             //checking child elements
             if (ele.hasChildNodes()) {
@@ -124,7 +124,7 @@ function transverseCompiler(ele) {
             nElement = null;
             data = null;
         } else if (!compileAbleElement && isTextNode) {
-            textNodeCompiler(ele)($model, ref);
+            textNodeCompiler(ele, $model, ref);
         }
     };
 }

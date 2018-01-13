@@ -95,47 +95,41 @@
 
   //@Function $ditryChecker
   //Intializies the Attr-binding
-  function $dirtyChecker() {
-      var $dirtyList = $attrWatchList.$getAll();
-      if ($dirtyList) {
-          for (var i in $dirtyList) {
-              $attrDeepChecker($dirtyList[i]);
-          }
+  function $digestAttr($id) {
+      var $list = $attrWatchList.$get($id);
+      if ($list) {
+          expect($list).each(function(attrObj) {
+              $attrDeepChecker(attrObj);
+          })
       }
   }
 
   //noTemplate binding
-  function noBinding(ele, model) {
-
-      return function(tmpl, name) {
-          if (name) {
-              ele.setAttribute(name, $jCompiler(tmpl)(model));
-          } else {
-              //remove filter from textNode and set a new value
-              ele.nodeValue = $jCompiler(ele.nodeValue)(model);
-          }
+  function noBinding(ele, model, tmpl, name) {
+      if (name) {
+          ele.setAttribute(name, $jCompiler(tmpl)(model));
+      } else {
+          //remove filter from textNode and set a new value
+          ele.nodeValue = $jCompiler(ele.nodeValue)(model);
       }
   }
 
   //Global attrWatcher
-  function $attrWatcher(ele) {
-      return function($model) {
-          var attr = getAttributes.call(ele.cloneNode(true));
-          findInList.call(attr, function(idx, obj) {
-              var _regTest = new RegExp(_defaultTemplateExp).exec(obj.value);
-              if (!$isNull(_regTest)) {
-                  //ELi Attribute Watcher
-                  if (_regTest[1].charAt(0) === ":") {
-                      noBinding(ele, $model)(obj.value, obj.name);
-                  } else {
-                      addClass(ele);
-                      $attrWatchList.$push($model.$mId, { element: ele, attr: [obj], $$: $model });
-                  }
+  function $attrWatcher(ele, $model) {
+      expect(getAttributes.call(ele.cloneNode(true))).each(function(obj, idx) {
+          var _regTest = new RegExp(_defaultTemplateExp).exec(obj.value);
+          if (!$isNull(_regTest)) {
+              //ELi Attribute Watcher
+              if (_regTest[1].charAt(0) === ":") {
+                  noBinding(ele, $model, obj.value, obj.name);
+              } else {
+                  addClass(ele);
+                  $attrWatchList.$push($model.$mId, { element: ele, attr: [obj], $$: $model });
               }
-          });
+          }
+      });
 
-          $dirtyChecker();
-      }
+      $digestAttr($model.$mId);
   }
 
   //Function DirFound
@@ -320,16 +314,17 @@
   }
 
   //textNode Watcher and compiler
-  function textNodeCompiler(textNode) {
-      return function($model, ref) {
-          var _regTest = new RegExp(_defaultTemplateExp).exec(textNode.nodeValue);
-          if (!$isNull(_regTest)) {
-              if (!$isEqual(_regTest[1].charAt(0), ":")) {
-                  var valueHasFilter = removeFilters(textNode.nodeValue);
-                  $watchBlockList.$push($model.$mId, { cNode: textNode.cloneNode(true), orig: textNode, '$object:ref': ref });
-              }
+  function textNodeCompiler(textNode, $model, ref) {
+      var _match = textNode.nodeValue.match(_defaultTemplateExp);
+      if (_match) {
+          var findNoWatch = _match.filter(function(key) {
+              return !$isEqual(new RegExp(_defaultTemplateExp).exec(key)[1].charAt(0), ":");
+          });
 
-              noBinding(textNode, $model)(textNode.nodeValue);
+          if (findNoWatch.length) {
+              $watchBlockList.$push($model.$mId, { cNode: textNode.cloneNode(true), orig: textNode, '$object:ref': ref });
           }
+
+          noBinding(textNode, $model, textNode.nodeValue);
       }
   }
