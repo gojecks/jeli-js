@@ -87,6 +87,7 @@ function jDoForDirective() {
             cache = cache.filter(function(cacheObj) {
                 if (!checkCacheObj(cacheObj.$$trackId)) {
                     element(cacheObj.ele).remove();
+
                     return false;
                 }
 
@@ -176,7 +177,7 @@ function jDoForDirective() {
             removeCacheElement(cache);
             //render
             expect(obj).each(function(item, idx) {
-                if (!trackIDExistsInCache(item['$$obj:id'])) {
+                if (!item['$$obj:id']) {
                     //check if expression has a while
                     elementAppender(setTempScope(item, idx), $self.cSelector);
                 }
