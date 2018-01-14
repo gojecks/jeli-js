@@ -46,6 +46,8 @@
     };
     //$model Watcher
     $modelGenerator.prototype.$watch = $watch;
+    // $model watchCollection
+    $modelGenerator.prototype.$watchCollection = $watchCollection;
     //$model WatchList consumer
     $modelGenerator.prototype.$consume = $consume;
     //$model Equal Value checker
@@ -242,7 +244,10 @@
     // @param : FUNCTION
     var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver,
         _mutationObserver = (function() {
-            var _regsisteredEvents = [];
+
+            var _regsisteredEvents = [],
+                observer,
+                observerStarted = false;
 
             function triggerRemovedNodes() {
                 _regsisteredEvents = _regsisteredEvents.filter(function(event) {
@@ -255,20 +260,32 @@
                 });
             }
 
-            var observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.removedNodes.length) {
-                        triggerRemovedNodes();
-                    }
+            function startObserver() {
+                observer.observe(document.body, {
+                    attributes: true,
+                    childList: true,
+                    characterData: true,
+                    subtree: true
                 });
-            });
 
-            observer.observe(document.body, {
-                attributes: true,
-                childList: true,
-                characterData: true,
-                subtree: true
-            });
+                observerStarted = true;
+            }
+
+            if (MutationObserver) {
+                observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.removedNodes.length) {
+                            triggerRemovedNodes();
+                        }
+                    });
+                });
+
+                if (document.body) {
+                    startObserver();
+                }
+            }
+
+
 
             return function(ele, CB) {
                 if (!ele) {
@@ -282,6 +299,10 @@
                     return;
                 }
 
+                if (!observerStarted) {
+                    startObserver();
+                }
+
                 _regsisteredEvents.push({
                     node: ele,
                     _callback: CB || noop
@@ -289,44 +310,71 @@
             };
         })();
 
+    /**
+     * 
+     * @param {*} expression 
+     * @param {*} listener 
+     */
+    function $watchCollection(collectionExpression, listener) {
+        this.$watch(collectionExpression, listener, function(newValue, oldValue) {
+            var profile = getDirtySnapShot(newValue, oldValue);
+            return (profile.changes.length || profile.insert.length || profile.deleted.length);
+        });
+    }
 
-    //rootModel Watcher
-    function $watch() {
+    /**
+     * 
+     * @param {*} expression 
+     * @param {*} listner 
+     * @param {*} core 
+     */
+    function $watch(expression, listener, core) {
         if ($isObject(this)) {
             var watchFn = buildWatchExpression(arguments),
                 watchers = {
                     watchFn: watchFn,
-                    listenerFn: arguments[2] || arguments[1] || false,
-                    core: !!arguments[2],
+                    listenerFn: listener || false,
+                    core: buildCoreFn(),
                     lastValue: watchFn.call(this)
                 };
 
-            if ($isNull(this.$$watchList)) {
+            if (!this.$$watchList) {
                 this.$$watchList = [];
             }
             //add the watchList
             this.$$watchList.push(watchers);
         }
-    }
 
-    /**
-     * 
-     * @param {*} arg 
-     */
-    function buildWatchExpression(arg) {
-        if ($isString(arg[0])) {
-            return function() {
-                var newValue = $modelSetterGetter(arg[0], this);
-                if (arg.length > 2) {
-                    return arg[1].call(this, newValue);
+        function buildCoreFn() {
+            if (core && !$isFunction(core)) {
+                return function(newValue, oldValue, model) {
+                    return model.$$areEqual(newValue, oldValue);
                 }
-
-                return newValue;
             }
+
+            return core;
         }
 
-        return arg[0];
+        /**
+         * 
+         * @param {*} arg 
+         */
+        function buildWatchExpression() {
+            if ($isString(expression)) {
+                return function() {
+                    var newValue = $modelSetterGetter(expression, this);
+                    if ($isObject(newValue)) {
+                        return customStringify(newValue, []);
+                    }
+
+                    return newValue;
+                }
+            }
+
+            return expression;
+        }
     }
+
 
     /**
      * 
@@ -348,7 +396,6 @@
     function $consume($modelChanges) {
         var watchers = this.$$watchList,
             self = this;
-
         self.$$beginPhase('$consume');
         if (watchers.length > 0) {
             watchers.forEach(function(obj, idx) {
@@ -362,7 +409,7 @@
                         obj.listenerFn(newValue, obj.lastValue, self);
                         obj.lastValue = newValue;
                     } else {
-                        if (self.$$areEqual(newValue, obj.lastValue)) {
+                        if (obj.core(newValue, obj.lastValue, self)) {
                             obj.listenerFn(newValue, obj.lastValue, self);
                             obj.lastValue = newValue;
                         }
@@ -399,6 +446,10 @@
      */
     $modelMapping.$digestAll = function() {
         expect(this.$getAll()).each(function(model) {
+            if (model.$$phase) {
+                return;
+            }
+
             model.$consume();
         })
     };

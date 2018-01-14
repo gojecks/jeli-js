@@ -32,7 +32,7 @@ function performOptions(type, context) {
     _options.select = function(newVal) {
         expect(context.elem.options).each(function(options) {
             if (options.value === newVal) {
-                option.selected = true;
+                options.selected = true;
             }
         });
     };
