@@ -19,12 +19,38 @@ function jDoForDirective() {
     //proceed with the checker
     if (!this.inProgress) {
         this.inProgress = true;
-        var par = this.parentNode,
-            cache = this.cache || [],
+        /**
+         * removed bind from unprocessed obj
+         * usefull when using same obj for multiple repeaters
+         */
+        if (!this.isProcessed) {
+            this.parentNode.removeChild(this.elem);
+            this.cache = [];
+            this.elem = null;
+            // set isProcessed status
+            this.isProcessed = true;
+        }
+
+        var repeater = setTemplateValue(conf[2], this.$model),
+            profile = getDirtySnapShot({ repeater: repeater }, { repeater: this.lastProcessedValue });
+        if (profile.changes.length || profile.insert.length || profile.deleted.length) {
+            this.lastProcessedValue = copy(repeater, true);
+            listenerFn.call(this, profile);
+        } else {
+            this.inProgress = false;
+        }
+
+    }
+
+    /**
+     * inherits model instance
+     */
+    function listenerFn() {
+        var cache = this.cache || [],
             $self = this,
             name,
             trackBy = '$index',
-            whileExpr = $self.cloneNode.getAttribute('while'),
+            whileExpr = this.$attr.getAttribute('while'),
             $compilerListFn = [],
             setTempScope = function(item, i) {
                 var temp = $self.$model.$new();
@@ -52,11 +78,11 @@ function jDoForDirective() {
                 name = nsplit.pop();
             },
             determineLength = function() {
-                return (($isObject(obj)) ? Object.keys(obj) : obj || []).length;
+                return (($isObject(repeater)) ? Object.keys(repeater) : repeater || []).length;
             },
             elementAppender = function(nModel, type) {
                 var nElement = element($self.$createElement()).data({ ignoreProcess: [type] })[0];
-                par.insertBefore(nElement, $self.cENode);
+                $self.parentNode.insertBefore(nElement, $self.cENode);
                 $templateCompiler(nElement, true)(nModel);
                 /**
                  * store to our cache
@@ -71,19 +97,18 @@ function jDoForDirective() {
                 $observeElement(nElement, nModel.$mId);
                 nElement = null;
             },
-            obj = setTemplateValue(conf[2], this.$model),
             objLength = determineLength();
 
         // cleanUp our reference
         function cleanUp() {
-            obj = par = cache = $self = null;
+            repeater = cache = $self = null;
         }
 
         /**
          * 
          * @param {*} list 
          */
-        function removeCacheElement() {
+        function removeCacheElement(force) {
             cache = cache.filter(function(cacheObj) {
                 if (!checkCacheObj(cacheObj.$$trackId)) {
                     element(cacheObj.ele).remove();
@@ -110,7 +135,7 @@ function jDoForDirective() {
          * @param {*} trackId 
          */
         function checkCacheObj(trackId) {
-            return expect(obj).search(null, function(item) {
+            return expect(repeater).search(null, function(item) {
                 return trackId === item['$$obj:id'];
             });
         }
@@ -128,68 +153,39 @@ function jDoForDirective() {
             cleanUp();
         }
 
-        function checkForNewChanges() {
-            return Object.keys(obj).filter(function(key) {
-                if ($isObject(obj[key])) {
-                    return !Object.hasOwnProperty.call(obj[key], '$$obj:id');
+        //initialize configureTrackByAndOrderBy()
+        configureTrackByAndOrderBy();
+        //j-Do Element require while condition to function
+        //Make sure all requirement are met
+        //else throw an error
+        if ($isEqual(this.type, 'do')) {
+            if (!whileExpr) {
+                errorBuilder('jDo requires while condition to function');
+            } else {
+                whileExpr = this.$model.$evaluate(whileExpr);
+                if ($isFunction(whileExpr)) {
+                    whileExpr = whileExpr();
                 }
-                return false;
-            });
-        }
 
-        /**
-         * removed bind from unprocessed obj
-         * usefull when using same obj for multiple repeaters
-         */
-        function checkUnProcessedRepeater() {
-            if (!$self.isProcessed) {
-                $self.parentNode.removeChild($self.elem);
-                $self.cache = [];
-                $self.elem = null;
-                // set isProcessed status
-                $self.isProcessed = true;
+                repeater = new $query(repeater).where(whileExpr);
             }
         }
 
-        checkUnProcessedRepeater();
-
-        if (obj && (!$isEqual(cache.length, objLength) || checkForNewChanges().length)) {
-            //initialize configureTrackByAndOrderBy()
-            configureTrackByAndOrderBy();
-
-            //j-Do Element require while condition to function
-            //Make sure all requirement are met
-            //else throw an error
-            if ($isEqual(this.type, 'do')) {
-                if (!whileExpr) {
-                    errorBuilder('jDo requires while condition to function');
-                } else {
-                    whileExpr = this.$model.$evaluate(whileExpr);
-                    if ($isFunction(whileExpr)) {
-                        whileExpr = whileExpr();
-                    }
-
-                    obj = new $query(obj).where(whileExpr);
-                }
+        //remove cache element and free up memory
+        removeCacheElement(false);
+        //render
+        expect(repeater).each(function(item, idx) {
+            if (!item['$$obj:id'] || !trackIDExistsInCache(item['$$obj:id'])) {
+                //check if expression has a while
+                elementAppender(setTempScope(item, idx), $self.cSelector);
             }
+        });
 
-            //remove cache element and free up memory
-            removeCacheElement(cache);
-            //render
-            expect(obj).each(function(item, idx) {
-                if (!item['$$obj:id']) {
-                    //check if expression has a while
-                    elementAppender(setTempScope(item, idx), $self.cSelector);
-                }
-            });
-
-            // trigger rendering FN
-            finishedRendering();
-        } else {
-            this.inProgress = false;
-        }
+        // trigger rendering FN
+        finishedRendering();
     }
 };
+
 
 $defaultDirectiveProvider.push({
     selector: "j-for",
