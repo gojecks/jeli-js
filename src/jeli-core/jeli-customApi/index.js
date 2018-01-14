@@ -130,6 +130,10 @@ function expect(objToInspect) {
     }
 
     function search(str, iteratorFn) {
+        if (!objToInspect) {
+            return false;
+        }
+
         var found = false,
             len = 0,
             trigger = function(prop) {
