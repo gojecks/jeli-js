@@ -57,25 +57,6 @@
       return found;
   }
 
-  //function Attribute Deep Checker
-  function $attrDeepChecker(watch) {
-      if (!watch) return;
-
-      if (watch.length) {
-          expect(watch).each(function(obj) {
-              if (obj.attr.length) {
-                  expect(obj.attr).each(function(attr) {
-                      if (attr.value.match(new RegExp(_defaultTemplateExp))) {
-                          obj.element.removeAttribute(attr.name);
-                          obj.element.setAttribute(attr.name, $jCompiler(attr.value)(obj.$$));
-                      }
-                  })
-              }
-          });
-
-      }
-  }
-
   //check if is child of Parent
   function isChildOfParent(refId) {
       return function(ref) {
@@ -98,9 +79,13 @@
   function $digestAttr($id) {
       var $list = $attrWatchList.$get($id);
       if ($list) {
-          expect($list).each(function(attrObj) {
-              $attrDeepChecker(attrObj);
-          })
+          expect($list).each(iterate);
+      }
+
+      function iterate(obj) {
+          expect(obj.attr).each(function(attr) {
+              obj.element.setAttribute(attr.name, $jCompiler(attr.value)(obj.$$));
+          });
       }
   }
 
@@ -123,7 +108,6 @@
               if (_regTest[1].charAt(0) === ":") {
                   noBinding(ele, $model, obj.value, obj.name);
               } else {
-                  addClass(ele);
                   $attrWatchList.$push($model.$mId, { element: ele, attr: [obj], $$: $model });
               }
           }

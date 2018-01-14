@@ -25,8 +25,14 @@ function customStringify(obj, ignoreList) {
 
 //Object Checker
 function getDirtySnapShot(watchObj, _currentWatch) {
-    var cdata = JSON.parse(watchObj),
+    var cdata,
         cnt = 0;
+
+    try {
+        cdata = JSON.parse(watchObj)
+    } catch (e) {
+        cdata = watchObj;
+    }
 
     function snapshot() {
         var out = { changes: [], insert: [], deleted: [] };
@@ -90,6 +96,12 @@ function getDirtySnapShot(watchObj, _currentWatch) {
 
         }
 
+        if (!_currentWatch) {
+            out.insert.push(watchObj);
+            cdata = null;
+            return out;
+        }
+
         //start profiler
         profiler(cdata, _currentWatch);
         //check for deletedObj
@@ -147,7 +159,7 @@ function jObserver(ignoreList, callback) {
             watchObj = profile = null;
             if (idx === totalWatch) {
                 _stat.inProgress = false;
-                //_stat._interval = setTimeout(WatchChanges, _stat.timer);
+                _stat._interval = setTimeout(WatchChanges, _stat.timer);
             }
         }
     }
@@ -212,16 +224,17 @@ var ignoreList = ["$mId", "$$isIsolated", "$$asyncQueue", "$$subscribers", "$pre
 //disgest from changes
 function digestFromChanges(changes) {
 
-    if (!this.$$phase) {
-        this.$consume(changes);
+    if (this.$$phase) {
+        return;
     }
 
     //disgest other binding
+    this.$consume(changes);
     var _childReference = $modelChildReferenceList.$get(this.$mId);
     _childReference.forEach(function(idx) {
         var current = $modelMapping.$get(idx);
         //only perform digest if current state is available
-        if (current && current.$consume) {
+        if (current) {
             digestFromChanges.call(current, changes);
         }
     });
