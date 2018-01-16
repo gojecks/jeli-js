@@ -1,4 +1,8 @@
 //isMy child
+/**
+ * 
+ * @param {*} parent 
+ */
 function $isMyChild(parent) {
     return function(child) {
         return parent && parent.contains(child);
@@ -6,12 +10,21 @@ function $isMyChild(parent) {
 }
 
 //$hasClass
+/**
+ * 
+ * @param {*} klass 
+ */
 function $hasClass(klass) {
     if (!this) return false
 
     return (this.className.indexOf(klass) > -1) ? 1 : 0;
 }
 
+/**
+ * 
+ * @param {*} ele 
+ * @param {*} elem 
+ */
 function insertBefore(ele, elem) {
     var ins = (ele.childNodes.length) ? ele.childNodes[0] : ele.childNodes;
     if (ins) {
@@ -22,16 +35,22 @@ function insertBefore(ele, elem) {
 }
 
 // @Function to check for valid Element
+/**
+ * 
+ * @param {*} ele 
+ */
 function isValidElement(ele) {
     return (('nodeType' in ele || ele === window) && ele.nodeType !== 3 && ele.nodeType !== 8);
 }
 
-
 //extend the domProvider methods
 events.addDomMethods();
 
-
 //element Checker
+/**
+ * 
+ * @param {*} elements 
+ */
 function elementBuilder(elements) {
     var found = {},
         j = 0;
@@ -50,6 +69,11 @@ function elementBuilder(elements) {
 }
 
 //Check Element
+/**
+ * 
+ * @param {*} query 
+ * @param {*} elements 
+ */
 function elementChecker(query, elements) {
     var i,
         ret = [];
@@ -71,7 +95,11 @@ function elementChecker(query, elements) {
 
     return elementBuilder(ret);
 }
-
+/**
+ * 
+ * @param {*} ele 
+ * @param {*} query 
+ */
 function findInElement(ele, query) {
     var l;
     if ($isObject(ele) || $isArray(ele)) {
@@ -88,10 +116,17 @@ function findInElement(ele, query) {
 }
 
 //jEli find
-function find(h) {
-    return (this && this.length) ? findInElement(this, h) : findByXpr(h);
+/**
+ * 
+ * @param {*} query 
+ */
+function find(query) {
+    return (this && this.length) ? findInElement(this, query) : findByXpr(query);
 }
-
+/**
+ * 
+ * @param {*} query 
+ */
 function findByXpr(query) {
     var nquery,
         ret = [];
@@ -122,6 +157,10 @@ function findByXpr(query) {
     }
 }
 
+/**
+ * 
+ * @param {*} tag 
+ */
 function ByNew(tag) {
     if (tag.match(/[<>]/g)) {
         return elementBuilder(toDOM.call(tag, true));
@@ -180,6 +219,11 @@ jEliDOM.prototype.init = function(tag, context) {
 
 
 //@Function jEli DOM
+/**
+ * 
+ * @param {*} tag 
+ * @param {*} context 
+ */
 function element(tag, context) {
     return new jEliDOM().init.apply(null, arguments);
 }
@@ -188,7 +232,10 @@ function element(tag, context) {
   jQuery Resolver
   if jQuery is present use it else use jEliQuery
 */
-
+/**
+ * 
+ * @param {*} ele 
+ */
 function jQueryResolver(ele) {
     return window.jQuery && jQuery(ele) || element(ele)
 }
