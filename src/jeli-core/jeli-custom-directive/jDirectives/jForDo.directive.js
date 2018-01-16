@@ -190,7 +190,7 @@ function jDoForDirective() {
 $defaultDirectiveProvider.push({
     selector: "j-for",
     priority: 10,
-    canDetachElement: true,
+    transplace: true,
     isDefault: true,
     sample: "user in users | orderBy:property:reverse | where:'user.id === 1'"
 });
@@ -198,7 +198,7 @@ $defaultDirectiveProvider.push({
 $defaultDirectiveProvider.push({
     selector: "j-do",
     priority: 10,
-    canDetachElement: true,
+    transplace: true,
     isDefault: true,
     where: "id == 1"
 });

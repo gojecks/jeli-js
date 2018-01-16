@@ -9,7 +9,7 @@
 $defaultDirectiveProvider.push({
     selector: "j-include",
     priority: 7,
-    canDetachElement: true,
+    transplace: true,
     isDefault: true
 });
 

@@ -5,7 +5,7 @@
 $defaultDirectiveProvider.push({
     selector: "j-controller",
     priority: 6,
-    canDetachElement: true,
+    transplace: true,
     isDefault: true
 });
 

@@ -23,7 +23,7 @@ function switchBuilder() {
 $defaultDirectiveProvider.push({
     selector: "j-switch",
     priority: 7,
-    canDetachElement: true,
+    transplace: true,
     isDefault: true
 });
 
