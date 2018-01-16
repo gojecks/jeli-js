@@ -73,7 +73,7 @@
 
   // remove from array
   watchBinding.prototype.$removeFromArray = function(id, idx) {
-      (this._content[id] || []).splice(1, idx);
+      (this._content[id] || []).splice(idx, 1);
   };
 
 
