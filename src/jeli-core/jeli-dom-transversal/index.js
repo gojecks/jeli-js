@@ -46,6 +46,12 @@
   }
 
   // hasAnyAttribute
+  /**
+   * 
+   * @param {*} ele 
+   * @param {*} list 
+   * @param {*} force 
+   */
   function hasAnyAttribute(ele, list, force) {
       var found = 0;
       list.forEach(function(attr) {
@@ -310,5 +316,73 @@
           }
 
           noBinding(textNode, $model, textNode.nodeValue);
+      }
+  }
+
+  /**
+   * 
+   * @param {*} dirType 
+   * @param {*} checker 
+   */
+  function domElementReplacerFn(dirType, checker) {
+      var self = this || {};
+      checker = checker || '';
+      this.cNode = toDOM.call('<!--' + dirType + ': ' + checker + '-->');
+      this.cENode = toDOM.call('<!-- end ' + dirType + ': ' + checker + '-->');
+      this.cloneNode = this.elem.cloneNode(true);
+      this.parentNode = this.elem.parentNode;
+      this.$createElement = function() {
+          return this.cloneNode.cloneNode(true);
+      };
+
+      this.removeCommentNode = function() {
+          this.parentNode.removeChild(this.cENode);
+          this.parentNode.removeChild(this.cNode);
+      };
+
+      //replace the element with the commentNode for reference
+      if (this.elem.parentNode) {
+          this.elem.parentNode.insertBefore(this.cNode, this.elem);
+          this.elem.parentNode.insertBefore(this.cENode, this.elem.nextSibling);
+      }
+
+      /**
+       * replace : 'element'
+       * remove the element from the DOM
+       */
+      if ($isEqual(this.transplace, 'element')) {
+          this.parentNode.removeChild(this.elem);
+          this.elem = this.cNode;
+          this.isDetachedElem = true;
+      }
+
+      /**
+       * replace : "true"
+       * empty the current element
+       */
+      if ($isBoolean(this.transplace) && this.transplace) {
+          this.elem.innerHTML = "";
+          this.removeCommentNode();
+      }
+
+      return function(model, fn) {
+          if (!fn && $isFunction(model)) {
+              fn = model;
+              model = null;
+          }
+          /**
+           * only remove the ELEMENT when isProcessed
+           */
+          var cloneElement = self.$createElement();
+          if (!self.isDetachedElem) {
+              cloneElement = cloneElement.innerHTML;
+              if (cloneElement.indexOf('<') < 0) {
+                  cloneElement = jElementBuilder({
+                      element: 'span',
+                      text: cloneElement
+                  })
+              };
+          }
+          (fn || noop)(element(cloneElement), model);
       }
   }

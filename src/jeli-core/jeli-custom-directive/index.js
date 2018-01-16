@@ -156,36 +156,3 @@ function generateArg() {
 
     return this;
 }
-
-function domElementReplacerFn(dirType, checker) {
-    var self = this || {};
-    checker = checker || '';
-    this.cNode = toDOM.call('<!--' + dirType + ': ' + checker + '-->');
-    this.cENode = toDOM.call('<!-- end ' + dirType + ': ' + checker + '-->');
-    this.cloneNode = this.elem.cloneNode(true);
-    this.parentNode = this.elem.parentNode;
-    this.$createElement = function() {
-        return this.cloneNode.cloneNode(true);
-    };
-    //replace the element with the commentNode for reference
-    if (this.elem.parentNode) {
-        this.elem.parentNode.insertBefore(this.cNode, this.elem);
-        this.elem.parentNode.insertBefore(this.cENode, this.elem.nextSibling);
-    }
-
-    return function(html, fn) {
-        /**
-         * only remove the ELEMENT when isProcessed
-         */
-        if (self.isProcessed) {
-            self.parentNode.removeChild(self.elem);
-            self.elem = element(self.$createElement()).data({ ignoreProcess: [dirType] }).html(html)[0];
-            self.cNode.parentNode.insertBefore(self.elem, self.cENode);
-        } else {
-            self.elem.innerHTML = html;
-            self.isProcessed = true;
-        }
-
-        (fn || noop)(self.elem, self.isProcessed);
-    }
-}

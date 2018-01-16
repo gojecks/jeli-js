@@ -75,9 +75,11 @@ function Base64Fn() {
     return publicApis;
 }
 
-/*
-  jEli Extend Method
-*/
+/**
+ * 
+ * @param {*} item 
+ * @param {*} deep 
+ */
 function copy(item, deep) {
     var type = {};
     if ($isArray(item)) {
@@ -118,6 +120,10 @@ function copy(item, deep) {
 }
 
 //Expect Function
+/**
+ * 
+ * @param {*} objToInspect 
+ */
 function expect(objToInspect) {
     // contains
     function contains(ins) {
@@ -128,7 +134,11 @@ function expect(objToInspect) {
             return objToInspect.indexOf(ins) > -1;
         }
     }
-
+    /**
+     * 
+     * @param {*} str 
+     * @param {*} iteratorFn 
+     */
     function search(str, iteratorFn) {
         if (!objToInspect) {
             return false;

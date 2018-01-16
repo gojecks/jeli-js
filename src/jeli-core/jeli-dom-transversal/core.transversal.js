@@ -82,7 +82,6 @@ function transverseCompiler(ele) {
                         if (nElement.data('reCompileChild')) {
                             proceedWithCompilation();
                         }
-
                         return;
                     }
 
@@ -104,7 +103,7 @@ function transverseCompiler(ele) {
                         }
                     }
                     //compile default directive
-                    if (dir.canDetachElement) {
+                    if (dir.transplace) {
                         _elementDetached = true;
                     }
                 });
@@ -132,17 +131,24 @@ function transverseCompiler(ele) {
 //@Attach eliFunctionality
 //recursive Node checker
 function transverseTemplate(template) {
+    var childrenNode;
     if (!isValidElement(template)) {
-        template = template[0].parentNode;
+        childrenNode = new Array(template.length - 1);
+        template.each(function(idx, ele) {
+            childrenNode[idx] = ele;
+        });
+    } else {
+        childrenNode = getChildrenNode(template)
     }
 
-    var childrenNode = getChildrenNode(template);
     return function($model, ref, replacerChildren) {
         expect(childrenNode).each(function(ele) {
             transverseCompiler(ele)($model, ref)
         });
 
         childrenNode = null;
+
+        return template;
     };
 }
 

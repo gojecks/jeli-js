@@ -137,10 +137,9 @@ function structureModel(model, replacerModel) {
  * @param {*} attr 
  * @param {*} model 
  */
-function $compileScope(ele, attr, $model) {
+function $compileScope(attr, $model) {
     var model,
-        isIsolated = $isObject(this.props),
-        mID = element(ele).data('jModel');
+        isIsolated = $isObject(this.props);
 
     if (!isIsolated) {
         model = $model.$new();
@@ -148,7 +147,6 @@ function $compileScope(ele, attr, $model) {
         model = $model.$new(1);
         model.$$watchList = [];
         model.$$isIsolated = true;
-        addClass(ele, 'j-isolated-model');
     }
 
     return structureModel(model, $model)(attr, this.props);
@@ -172,22 +170,6 @@ function $compileAttribute() {
 
 /**
  * 
- * @param {*} tmpl 
- */
-function templateAppender(tmpl) {
-    return function(ele) {
-        //check if ele is a string or Object
-        if ($isString(tmpl)) {
-            ele.innerHTML = tmpl;
-        } else {
-            ele.append(tmpl);
-        }
-    }
-}
-
-//directive template checker
-/**
- * 
  * @param {*} obj 
  * @param {*} ele 
  * @param {*} attr 
@@ -200,28 +182,24 @@ function directiveTemplateBuilder(obj, ele, attr) {
 
     if (obj.template) {
         //resolve our template
-        templateAppender(getTemplateValue(obj.template))(ele);
-        defer.resolve(1);
+        defer.resolve(getTemplateValue(obj.template));
     } else if (obj.templateUrl) {
         var url = getTemplateValue(obj.templateUrl),
             _cache = $provider.$get('$templateCache').get(url);
 
         //template was stored in templateCache
         if (_cache) {
-            templateAppender(_cache)(ele);
-            defer.resolve(1);
+            defer.resolve(_cache);
         } else {
             //get resource from server
             $http({ url: url, cache: true })
                 .done(function(template) {
-                    //append the template using template appender
-                    templateAppender(template.data)(ele);
-                    defer.resolve(1);
+                    defer.resolve(template.data);
                 });
         }
     } else {
         //element is having children
-        defer.resolve(ele.firstChild);
+        defer.resolve();
     }
 
     return defer;
@@ -234,7 +212,7 @@ function directiveTemplateBuilder(obj, ele, attr) {
  */
 function jElementCompilerFn(options) {
     this.allowType = 'AE';
-    this.replace = false;
+    this.transplace = false;
     //compiler function
     this.$compiler = function(element, attr, init) {
         return this.$init;
@@ -263,16 +241,15 @@ function jElementCompilerFn(options) {
  * @param {*} canCompile 
  */
 function registerComponentToWatch(ele, model, canCompile) {
-
     ele.data('jModel', model.$mId);
     //element can compile
-    if (canCompile) {
+    if (ele[0].hasChildNodes()) {
         $templateCompiler(ele[0])(model);
+        //Add event Watcher to the ele
+        // set element observer only when the 
+        // ParentModel is different from the childModel
+        $observeElement(ele[0], model.$mId, model.onDestroy);
     }
-    //Add event Watcher to the ele
-    // set element observer only when the 
-    // ParentModel is different from the childModel
-    $observeElement(ele[0], model.$mId, model.onDestroy);
 }
 
 // registerComponentToProcess
@@ -323,25 +300,42 @@ function initializeDirective(obj, ele, $model) {
     registerComponentToProcess(ele, obj.selector);
     var _directive = new jElementCompilerFn(obj),
         _linker,
+        replacerFn,
         attr = $compileAttribute.call(ele[0]);
+    /**
+     * retrieve linker Function
+     */
+    _linker = _directive.$compiler.apply(_directive, [ele, attr]);
+
+    /**
+     * Process the replace configuration
+     * replace : true || 'element'
+     */
+    if (_directive.transplace) {
+        _directive.elem = ele[0];
+        /**
+         * generate a replacer function 
+         * that will be passed to the compiler
+         */
+        replacerFn = domElementReplacerFn.call(_directive, _directive.selector, attr[_directive.selector]);
+
+        if (_directive.isDetachedElem) {
+            ele = element(_directive.elem);
+        } else {
+            ele.data('$replacerFn', replacerFn);
+        }
+    }
 
     //build Directive template
-    directiveTemplateBuilder(_directive, ele[0], attr)
-        .then(function(canCompile) {
-            var nArg = [ele, attr];
-            //intialize the compile state
-            if (_directive.replace) {
-                _directive.elem = ele[0];
-                nArg.push(domElementReplacerFn.call(_directive, _directive.selector, attr[_directive.selector]));
-            }
-
-            _linker = _directive.$compiler.apply(_directive, nArg);
+    directiveTemplateBuilder(_directive, ele, attr)
+        .then(function(template) {
+            ele.html(template);
             //Initialize directive
-            var model = $compileScope.call(_directive, ele[0], attr, $model);
+            var model = $compileScope.call(_directive, attr, $model);
             //initialize the linker function
-            _linker.apply(_linker, [ele, attr, model]);
+            _linker.apply(_linker, [ele, attr, model, replacerFn]);
             // register Component to watchList
-            registerComponentToWatch(ele, model, canCompile);
+            registerComponentToWatch(ele, model);
         });
 
     _directive = null;
@@ -368,9 +362,9 @@ function initializeComponent(obj, ele, model) {
     structureModel(_model[controllerAs], model)(attr, _component.props);
     //build Directive template
     directiveTemplateBuilder(_component, ele[0], attr)
-        .then(function(canCompile) {
+        .then(function(template) {
             // register Component to watchList
-            registerComponentToWatch(ele, _model, canCompile);
+            registerComponentToWatch(ele, _model);
             attachComponentStyles(_component.style, ele);
 
             // trigger the init
