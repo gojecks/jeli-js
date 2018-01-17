@@ -100,7 +100,10 @@
             var child = $modelChildReferenceList.$get(current.$mId);
             if (name && current.$$subscribers[name]) {
                 current.$$subscribers[name].forEach(function(fn) {
-                    fn.apply(current, arg);
+                    if (!fn.$$triggered) {
+                        fn.apply(current, arg);
+                        fn.$$triggered = once;
+                    }
                 });
 
                 if (once) {

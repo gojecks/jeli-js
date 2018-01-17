@@ -25,6 +25,7 @@
   'j-min'
   'j-readonly'
   'j-pattern'
+  'j-place'
 **/
 var $defaultDirectiveProvider = [];
 // set j-initProvider
