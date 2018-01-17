@@ -313,12 +313,64 @@ domElementProvider.parent = function(ele) {
  * @param {*} ele 
  */
 domElementProvider.children = function(ele) {
-    var ret = ret || [];
+    var ret = [],
+        children;
     if (!ele) {
-        ret = this[0].children;
+        var children = this[0].children;
     } else {
-        ret.push.apply(ret, this[0].querySelectorAll(ele));
+        children = this[0].querySelectorAll(ele);
     }
+
+    domElementLoop(children, function(elem) {
+        ret.push(elem)
+    });
 
     return element(ret);
 };
+
+domElementProvider.contents = function() {
+    var ret = [];
+    domElementLoop(this[0].childNodes, function(elem) {
+        ret.push(elem)
+    });
+
+    return element(ret);
+};
+
+
+domElementProvider.insertAfter = domInsertFn(function(node) {
+    return node.nextSibling;
+});
+
+domElementProvider.insertBefore = domInsertFn(function(node) {
+    return node;
+});
+
+/**
+ * 
+ * @param {*} callback 
+ */
+function domInsertFn(callback) {
+    return function(node) {
+        if (!node) {
+            throw new Error('NODE is required!!')
+        }
+
+        if ($isString(node)) {
+            node = element(node);
+        }
+
+        var dis = this;
+        domElementLoop(node, function(insertNode) {
+            domElementLoop(dis, function(ele) {
+                insertNode.parentNode.insertBefore(ele, callback(insertNode));
+                if (dis['$object:id']) {
+                    ele['$object:id'] = dis['$object:id'];
+                }
+            });
+        });
+
+        dis = null;
+        return this;
+    };
+}

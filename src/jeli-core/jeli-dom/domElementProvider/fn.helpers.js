@@ -1,3 +1,7 @@
+/**
+ * 
+ * @param {*} data 
+ */
 domElementProvider.getLength = function(data) {
     data = $isUndefined(data) ? this[0] : data;
 
@@ -18,10 +22,18 @@ domElementProvider.jID = function() {
     }
 };
 
+/**
+ * 
+ * @param {*} index 
+ */
 domElementProvider.get = function(index) {
     return this[index];
 };
 
+/**
+ * 
+ * @param {*} selector 
+ */
 domElementProvider.find = function(selector) {
     if (this.length) {
         return findInElement(this, selector);
@@ -39,6 +51,10 @@ domElementProvider.getFirstChild = function() {
 };
 
 // domElementProvider Not Function
+/**
+ * 
+ * @param {*} obj 
+ */
 domElementProvider.not = function(obj) {
     return this.is(obj, 1);
 };

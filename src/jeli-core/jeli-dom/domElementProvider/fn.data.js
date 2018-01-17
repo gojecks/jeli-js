@@ -1,7 +1,7 @@
   /*
-            jEliQuery Data Fn
+                  jEliQuery Data Fn
 
-          */
+                */
   var $data = {},
       EDS = {},
       EUID = 0;
@@ -39,10 +39,15 @@
           }
 
           function store() {
+              var ref = getElementStorageID(self);
+              if (!ref) {
+                  return;
+              }
+
               if (!value && $isObject(key)) {
-                  EDS[getElementStorageID(self)] = extend(getStorage(), key);
+                  EDS[ref] = extend(getStorage(), key);
               } else {
-                  EDS[getElementStorageID(self)][key] = value;
+                  EDS[ref][key] = value;
               }
           }
 
