@@ -363,6 +363,7 @@ function initializeComponent(obj, ele, model) {
     //build Directive template
     directiveTemplateBuilder(_component, ele[0], attr)
         .then(function(template) {
+            ele.html(template);
             // register Component to watchList
             registerComponentToWatch(ele, _model);
             attachComponentStyles(_component.style, ele);
