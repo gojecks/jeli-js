@@ -100,10 +100,7 @@
             var child = $modelChildReferenceList.$get(current.$mId);
             if (name && current.$$subscribers[name]) {
                 current.$$subscribers[name].forEach(function(fn) {
-                    if (!fn.$$triggered) {
-                        fn.apply(current, arg);
-                        fn.$$triggered = once;
-                    }
+                    fn.apply(current, arg);
                 });
 
                 if (once) {
@@ -114,7 +111,7 @@
             child.forEach(function(cur, idx) {
                 //get the child model and subscribe it
                 broadcastSubscribers($modelMapping.$get(child[idx]), arg);
-            })
+            });
         }
 
 
@@ -123,7 +120,6 @@
             broadcastSubscribers(self, arguments);
         }
     };
-
     /**
      * 
      * @param {*} name 
