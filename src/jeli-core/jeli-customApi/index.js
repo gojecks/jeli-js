@@ -147,9 +147,8 @@ function expect(objToInspect) {
         var found = false,
             len = 0,
             trigger = function(prop) {
-                len++;
                 if (iteratorFn && $isFunction(iteratorFn)) {
-                    if (iteratorFn(objToInspect[prop], prop)) {
+                    if (iteratorFn(objToInspect[prop], prop, len)) {
                         found = objToInspect[prop];
                     }
                 } else {
@@ -157,6 +156,7 @@ function expect(objToInspect) {
                         found = objToInspect[len];
                     }
                 }
+                len++;
             };
 
         if ($isObject(objToInspect)) {

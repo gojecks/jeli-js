@@ -174,10 +174,10 @@ function jDoForDirective() {
          * 
          * @param {*} idx 
          */
-        function updateCacheModel(idx) {
+        function updateCacheModel(prop, idx) {
             var curModel = $modelMapping.$get(cache[idx]['$$model']);
-            if ($isObject(curModel) && !$isEqual(curModel[$index], idx)) {
-                curModel[$index] = idx;
+            if ($isObject(curModel) && !$isEqual(curModel[$index], prop)) {
+                curModel[$index] = prop;
                 setTimeout(function() {
                     curModel.$consume()
                 }, 0);
@@ -218,12 +218,12 @@ function jDoForDirective() {
         //remove cache element and free up memory
         removeCacheElement(false);
         //render
-        expect(repeater).each(function(item, idx) {
+        expect(repeater).each(function(item, prop, idx) {
             if (!item.hasOwnProperty('$$obj:id') || !trackIDExistsInCache(item['$$obj:id'])) {
                 //check if expression has a while
-                elementAppender(setTempScope(item, idx), $self.cSelector);
+                elementAppender(setTempScope(item, prop), $self.cSelector);
             } else {
-                updateCacheModel(idx);
+                updateCacheModel(prop, idx);
             }
         });
 
