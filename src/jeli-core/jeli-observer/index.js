@@ -120,7 +120,13 @@ function getDirtySnapShot(watchObj, _currentWatch) {
 
 //generic WatcherObject
 var _ObserverCount = 0;
+var ignoreList = ["$mId", "$$isIsolated", "$$asyncQueue", "$$subscribers", "$previous", "$next", "$$watchList", "$$phase", "$child", "$$broadcast", "$parent", "$$childModel", "$$unObserve", "$self"];
 
+/**
+ * 
+ * @param {*} ignoreList 
+ * @param {*} callback 
+ */
 function jObserver(ignoreList, callback) {
     var _stat = {
         _Id: _ObserverCount++,
@@ -218,8 +224,6 @@ function jObserver(ignoreList, callback) {
         _stat._count--;
     };
 }
-
-var ignoreList = ["$mId", "$$isIsolated", "$$asyncQueue", "$$subscribers", "$previous", "$next", "$$watchList", "$$phase", "$child", "$$broadcast", "$parent", "$$childModel", "$$unObserve", "$self"];
 
 //disgest from changes
 function digestFromChanges(changes) {

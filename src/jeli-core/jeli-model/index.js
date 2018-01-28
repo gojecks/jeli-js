@@ -316,7 +316,7 @@
      */
     function $watchCollection(collectionExpression, listener) {
         this.$watch(collectionExpression, listener, function(newValue, oldValue) {
-            var profile = getDirtySnapShot(newValue, oldValue);
+            var profile = getDirtySnapShot(customStringify({ watchObj: newValue }, []), { watchObj: oldValue });
             return (profile.changes.length || profile.insert.length || profile.deleted.length);
         });
     }
@@ -362,8 +362,8 @@
             if ($isString(expression)) {
                 return function() {
                     var newValue = $modelSetterGetter(expression, this);
-                    if ($isObject(newValue)) {
-                        return customStringify(newValue, []);
+                    if (typeof newValue === "object") {
+                        return copy(newValue, true);
                     }
 
                     return newValue;
@@ -406,15 +406,15 @@
                 try {
                     if (!obj.core) {
                         obj.listenerFn(newValue, obj.lastValue, self);
-                        obj.lastValue = newValue;
                     } else {
                         if (obj.core(newValue, obj.lastValue, self)) {
                             obj.listenerFn(newValue, obj.lastValue, self);
-                            obj.lastValue = newValue;
                         }
                     }
                 } catch (e) {
                     errorBuilder(e);
+                } finally {
+                    obj.lastValue = newValue;
                 }
             });
         }

@@ -70,12 +70,18 @@
       }
   }
 
+  /**
+   * 
+   * @param {*} id 
+   */
   function $watchBlockFn(id) {
-      var _watchList = $watchBlockList.$get(id);
-      if (_watchList.length > 0) {
+      var _watchList = $watchBlockList.$get(id),
+          _model = $modelMapping.$get(id),
+          _isModel = $isObject(_model);
+      if (_watchList.length > 0 && _isModel) {
           domElementProvider.each(_watchList, function(i, n) {
               //change node value
-              this.orig.nodeValue = $jCompiler(this.cNode.nodeValue)($modelMapping.$get(id));
+              this.orig.nodeValue = $jCompiler(this.cNode.nodeValue)(_model);
           });
       }
   }
