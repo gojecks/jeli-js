@@ -8,3 +8,11 @@
 
       return undefined;
   };
+
+  domElementProvider.injector = function() {
+      if (this[0] === $compileTracker.lastCompiledWith) {
+          return new $dependencyInjector(1);
+      }
+
+      return undefined;
+  };
