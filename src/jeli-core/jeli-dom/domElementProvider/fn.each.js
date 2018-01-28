@@ -42,3 +42,19 @@
 
       return obj;
   };
+
+  /**
+   * mapping
+   */
+  domElementProvider.map = function(fn) {
+      if (fn) {
+          var _this = this;
+          if ($isArray(_this[0])) {
+              expect(_this[0]).each(function(item, idx) {
+                  _this[0][idx] = fn(item, idx);
+              });
+          }
+      }
+
+      return this;
+  }
