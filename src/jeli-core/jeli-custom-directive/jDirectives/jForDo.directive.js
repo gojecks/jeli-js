@@ -8,11 +8,12 @@
 var $hashKey = 0
 
 function jDoForDirective() {
-    var conf = this.checker.match(/^\s*([\s\S]+?)\s+in\s+([\s\S]+?)?\s*$/);
+    var conf = this.checker.match(/^\s*(.+)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/),
+        repeater;
     /**
      * throw error with invalid configuration
      */
-    if (conf.length < 2) {
+    if ($isUndefined(conf[2])) {
         errorBuilder("invalid condition received in " + this.cSelector + ", expecting _item_ in _condition_ or (_idx_, _item_) in _condition_");
     }
 
@@ -29,17 +30,20 @@ function jDoForDirective() {
             this.elem = null;
             // set isProcessed status
             this.isProcessed = true;
+            this.$debounce = debounce(function($self) {
+                repeater = setTemplateValue(conf[2], $self.$model),
+                    profile = getDirtySnapShot(customStringify({ repeater: repeater }, []), { repeater: $self.lastProcessedValue }),
+                    changes = ((profile.changes.length || profile.insert.length || profile.deleted.length));
+                if (changes) {
+                    $self.lastProcessedValue = copy(repeater, true);
+                    listenerFn.call($self, profile);
+                } else {
+                    $self.inProgress = false;
+                }
+            }, 5)
         }
 
-        var repeater = setTemplateValue(conf[2], this.$model),
-            profile = getDirtySnapShot({ repeater: repeater }, { repeater: this.lastProcessedValue });
-        if (profile.changes.length || profile.insert.length || profile.deleted.length) {
-            this.lastProcessedValue = copy(repeater, true);
-            listenerFn.call(this, profile);
-        } else {
-            this.inProgress = false;
-        }
-
+        this.$debounce(this);
     }
 
     /**
@@ -49,36 +53,43 @@ function jDoForDirective() {
         var cache = this.cache || [],
             $self = this,
             name,
-            trackBy = '$index',
+            $index = '$index',
+            trackBy = conf[4],
             whileExpr = this.$attr.getAttribute('while'),
             $compilerListFn = [],
             setTempScope = function(item, i) {
                 var temp = $self.$model.$new();
                 temp[name] = item;
-                curHash = (item['$$obj:id'] || $hashKey + ":" + i);
-                $hashKey++;
+                //set the Object key
+                //trackBy can only be set when its declared in configuration
+                temp[$index] = !isNaN(Number(i)) ? Number(i) : i;
 
+                curHash = getHash(temp, i);
                 if ($isObject(item) && !item.hasOwnProperty('$$obj:id')) {
                     item['$$obj:id'] = curHash;
                 }
-                //set the Object key
-                //trackBy can only be set when its declared in configuration
-                temp[trackBy] = !isNaN(Number(i)) ? Number(i) : i;
 
                 return temp;
+            },
+            getHash = function(item, prop) {
+                var hash = item['$$obj:id'] || ($hashKey + ":" + prop);
+                if (trackBy) {
+                    hash = item.$evaluate(trackBy) + ":" + prop;
+                }
+
+                $hashKey++;
+
+                return hash;
             },
             configureTrackByAndOrderBy = function() {
                 var nsplit = $removeWhiteSpace(conf[1]).split(/\W/g);
                 if (nsplit.length > 1) {
                     nsplit.pop();
                     nsplit.shift();
-                    trackBy = nsplit.shift();
+                    $index = nsplit.shift();
                 }
 
                 name = nsplit.pop();
-            },
-            determineLength = function() {
-                return (($isObject(repeater)) ? Object.keys(repeater) : repeater || []).length;
             },
             elementAppender = function(nModel, type) {
                 var nElement = element($self.$createElement()).data({ ignoreProcess: [type] })[0];
@@ -90,14 +101,14 @@ function jDoForDirective() {
                 cache.push({
                     ele: nElement,
                     $$trackId: curHash,
-                    $$index: cache.length
+                    $$index: cache.length,
+                    $$model: nModel.$mId
                 });
 
                 //Observe the element
                 $observeElement(nElement, nModel.$mId);
                 nElement = null;
-            },
-            objLength = determineLength();
+            };
 
         // cleanUp our reference
         function cleanUp() {
@@ -111,8 +122,8 @@ function jDoForDirective() {
         function removeCacheElement(force) {
             cache = cache.filter(function(cacheObj) {
                 if (!checkCacheObj(cacheObj.$$trackId)) {
+                    $modelMapping.$get(cacheObj['$$model']).$$destroy();
                     element(cacheObj.ele).remove();
-
                     return false;
                 }
 
@@ -138,6 +149,20 @@ function jDoForDirective() {
             return expect(repeater).search(null, function(item) {
                 return trackId === item['$$obj:id'];
             });
+        }
+
+        /**
+         * 
+         * @param {*} idx 
+         */
+        function updateCacheModel(idx) {
+            var curModel = $modelMapping.$get(cache[idx]['$$model']);
+            if ($isObject(curModel) && !$isEqual(curModel[$index], idx)) {
+                curModel[$index] = idx;
+                setTimeout(function() {
+                    curModel.$consume()
+                }, 0);
+            }
         }
 
         function finishedRendering() {
@@ -175,9 +200,11 @@ function jDoForDirective() {
         removeCacheElement(false);
         //render
         expect(repeater).each(function(item, idx) {
-            if (!item['$$obj:id'] || !trackIDExistsInCache(item['$$obj:id'])) {
+            if (!item.hasOwnProperty('$$obj:id') || !trackIDExistsInCache(item['$$obj:id'])) {
                 //check if expression has a while
                 elementAppender(setTempScope(item, idx), $self.cSelector);
+            } else {
+                updateCacheModel(idx);
             }
         });
 

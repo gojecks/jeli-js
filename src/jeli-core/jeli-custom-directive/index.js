@@ -87,7 +87,7 @@ function elementProcessor(definition) {
             initializeController.call(definition);
             break;
         case ("init"):
-            new jEliFnInitializer(definition.checker).evaluate(definition.$model);
+            new jEliFnInitializer(definition.checker).run(["", definition.$model]);
             break;
         case ("model"):
             ret = prepareModel.call(generateArg.call(definition));
