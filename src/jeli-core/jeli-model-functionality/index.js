@@ -55,7 +55,7 @@ function bind(evName, fn) {
  */
 function jEliFnInitializer(data) {
     var _fn = data.replace(/\W(;)/g, function(idx, key) {
-        if (idx.indexOf(')') > -1) { return ')|'; } else { return '|'; }
+        if (idx.length > 1) { return idx.charAt(0) + '|'; } else { return '|'; }
     }).split('|');
 
     /**
@@ -66,6 +66,7 @@ function jEliFnInitializer(data) {
         findInList.call(_fn, function(idx, fn) {
             //function executor
             //push fn to initialized Fields
+            if (!fn) { return; }
             params[0] = fn;
             execFnByName.apply(null, params);
         });
@@ -234,7 +235,8 @@ function setModelValue(key, model, value) {
     var setKey = $removeWhiteSpace(key).split('.').pop(),
         deepModel = matchStringWithArray(key, model);
 
-    if (!$isUndefined(value) && deepModel) {
+    if (deepModel) {
+        value = $isString(value) ? removeSingleQuote(value) : value;
         var check = isArrayKey.exec(setKey), //isArrayKey RegExp
             deepArrayChecker = isArrayType(setKey, model); //isArrayType Function
         if (check && check.length) {
@@ -242,11 +244,11 @@ function setModelValue(key, model, value) {
             if (!deepModel.hasOwnProperty(dKey)) {
                 deepModel[dKey] = [];
             }
-            deepModel[dKey][+check[1]] = removeSingleQuote(value);
+            deepModel[dKey][+check[1]] = value;
         } else if (deepArrayChecker) {
             deepArrayChecker(true, value);
         } else {
-            deepModel[setKey] = removeSingleQuote(value);
+            deepModel[setKey] = value;
         }
     }
 
@@ -265,6 +267,15 @@ function $logicChecker($logic, $model, ignore) {
 
     if ($isBooleanValue.indexOf($logic) > -1) {
         return simpleBooleanParser($logic);
+    }
+
+    var _evaluate;
+    try {
+        _evaluate = maskedEval($logic, $model);
+    } catch (e) {};
+
+    if (_evaluate) {
+        return _evaluate;
     }
 
     //get Function Arg
@@ -359,8 +370,7 @@ function execFnByName(fn, context, dis, ev) {
 
     //check if Operation is set value
     if (setValuechecker.length > 1) {
-        var lastIndex = setValuechecker.pop();
-        setModelValue(setValuechecker.shift(), context, $logicChecker(lastIndex, context, true));
+        setModelValue(setValuechecker.shift(), context, $logicChecker(setValuechecker.pop(), context, true));
     } else {
         var namespaces = mfn[1].split("."),
             func = namespaces.pop();
