@@ -17,6 +17,23 @@ function jDoForDirective() {
         errorBuilder("invalid condition received in " + this.cSelector + ", expecting _item_ in _condition_ or (_idx_, _item_) in _condition_");
     }
 
+    function checkDuplicateRepeater(repeater) {
+        if (repeater && !conf[4] && $isArray(repeater)) {
+            if (noDubs(repeater).length < repeater.length) {
+                errorBuilder("Duplicate values are not allowed in repeaters. Use 'track by' expression to specify unique keys");
+            }
+        }
+    }
+
+    function getRepeaters(model) {
+        if (!isNaN(parseInt(conf[2]))) {
+            return element(new Array(parseInt(conf[2]))).map(function(_, idx) { return idx + 1; }).get(0);
+        }
+
+
+        return setTemplateValue(conf[2], model);
+    }
+
     //proceed with the checker
     if (!this.inProgress) {
         this.inProgress = true;
@@ -31,8 +48,9 @@ function jDoForDirective() {
             // set isProcessed status
             this.isProcessed = true;
             this.$debounce = debounce(function($self) {
-                repeater = setTemplateValue(conf[2], $self.$model),
-                    profile = getDirtySnapShot(customStringify({ repeater: repeater }, []), { repeater: $self.lastProcessedValue }),
+                repeater = getRepeaters($self.$model);
+                checkDuplicateRepeater(repeater);
+                var profile = getDirtySnapShot(customStringify({ repeater: repeater }, []), { repeater: $self.lastProcessedValue }),
                     changes = ((profile.changes.length || profile.insert.length || profile.deleted.length));
                 if (changes) {
                     $self.lastProcessedValue = copy(repeater, true);
@@ -54,7 +72,7 @@ function jDoForDirective() {
             $self = this,
             name,
             $index = '$index',
-            trackBy = conf[4],
+            trackBy = conf[4] || this.$attr.getAttribute(':key'),
             whileExpr = this.$attr.getAttribute('while'),
             $compilerListFn = [],
             setTempScope = function(item, i) {
@@ -150,6 +168,7 @@ function jDoForDirective() {
                 return trackId === item['$$obj:id'];
             });
         }
+
 
         /**
          * 
