@@ -395,8 +395,8 @@
     function $consume($modelChanges) {
         var watchers = this.$$watchList,
             self = this;
-        self.$$beginPhase('$consume');
-        if (watchers.length > 0) {
+        if (watchers && watchers.length > 0) {
+            self.$$beginPhase('$consume');
             watchers.forEach(function(obj, idx) {
                 var newValue = obj.watchFn.call(self);
                 if (!obj.listenerFn) {
