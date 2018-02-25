@@ -15,6 +15,7 @@
       if (match) {
           var isArray = $isArray(this[0]),
               found = ((isArray) ? [] : {}),
+              isFunctionMatch = $isFunction(match),
               $setContentOnType = function(index, context) {
                   if (isArray) {
                       found.push(context)
@@ -25,7 +26,7 @@
           domElementLoop(this, function(context, index) {
               var matched = false;
               //User defined a function as match
-              if ($isFunction(match)) {
+              if (isFunctionMatch) {
                   if (match.apply(null, [context])) {
                       matched = true
                   }

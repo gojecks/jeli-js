@@ -20,15 +20,16 @@
 	 * @param {*} val 
 	 */
 	domElementProvider.attr = function(name, val) {
-	    if (!val && name && !$isObject(name)) {
+	    var isObjectRef = $isObject(name);
+	    if (!val && name && !isObjectRef) {
 	        return this[0].getAttribute(name);
 	    } else {
 	        domElementLoop(this, function(ele) {
-	            if ($isString(name) && $isString(val)) {
+	            if (!isObjectRef && val) {
 	                ele.setAttribute(name, val);
 	            } else {
-	                if ($isObject(name)) {
-	                    domElementLoop(name, function(_name, value) {
+	                if (isObjectRef) {
+	                    expect(name).each(function(value, _name) {
 	                        ele.setAttribute(_name, value);
 	                    });
 	                }
