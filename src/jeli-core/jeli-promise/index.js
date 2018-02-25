@@ -11,10 +11,15 @@
 
   $d.prototype.execute = function(list, args) {
       var i = this[list].length,
+          len = 0,
           deferredFn = this[list];
 
       args = Array.prototype.slice.call(args);
-      while (i--) deferredFn[i].apply(null, args);
+      while (i > len) {
+          deferredFn[len] && deferredFn[len].apply(null, args);
+          len++;
+      }
+
       this.$$state.pending = false;
       this.$$state.value = args;
       this.$$state.resolvedWith = list;

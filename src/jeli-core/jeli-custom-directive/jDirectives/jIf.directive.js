@@ -30,6 +30,6 @@
          */
         if (!this.isProcessed && !this.elemIsDetached) {
             this.isProcessed = true;
-            transverseTemplate(this.elem)(this.$model, this.ref);
+            transverseCompiler(this.elem)(this.$model, this.ref);
         }
     };

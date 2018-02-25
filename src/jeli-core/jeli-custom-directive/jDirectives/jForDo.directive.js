@@ -140,7 +140,11 @@ function jDoForDirective() {
         function removeCacheElement(force) {
             cache = cache.filter(function(cacheObj) {
                 if (!checkCacheObj(cacheObj.$$trackId)) {
-                    $modelMapping.$get(cacheObj['$$model']).$$destroy();
+                    var _model = $modelMapping.$get(cacheObj['$$model']);
+                    if ($isObject(_model)) {
+                        _model.$$destroy();
+                        _model = null;
+                    }
                     element(cacheObj.ele).remove();
                     return false;
                 }
