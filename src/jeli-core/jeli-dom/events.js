@@ -152,10 +152,10 @@ events.add = function(element, type, handler) {
 events._data = function(type, element, needsKey) {
     var ret = [];
     for (var c = 0; c < cache.length; c++) {
-        if (cache[c].type === type && cache[c].element === element) {
-            ret.push(cache[c]);
+        if ((cache[c].type === type || !type) && cache[c].element === element) {
+            ret.push([cache[c]]);
             if (needsKey) {
-                ret.push(c);
+                ret[ret.length - 1].push(c);
             }
         }
     }
@@ -183,17 +183,15 @@ events.remove = function(element, type, handler) {
         responder = null;
 
     if (cachedEvent.length) {
-        responder = cachedEvent[0].responder;
-        //remove the event from cache
-        removeCachedResponder(cachedEvent[1]);
-    }
-
-
-    // Finally remove the eventListener from the element
-    if (document.removeEventListener) {
-        element.removeEventListener(type, responder, false);
-    } else {
-        element.detachEvent(IEType(type), responder);
+        domElementLoop(cachedEvent, function(_cahched, idx) {
+            removeCachedResponder(_cahched[1]);
+            // Finally remove the eventListener from the element
+            if (document.removeEventListener) {
+                element.removeEventListener(_cahched[0].type, _cahched[0].responder, false);
+            } else {
+                element.detachEvent(IEType(_cahched[0].type), _cahched[0].responder);
+            }
+        });
     }
 };
 
@@ -214,13 +212,12 @@ events.addDomMethods = function() {
     if ($isUndefined(domElementProvider)) return;
 
     domElementProvider.bind = function(type, handler) {
-        var element;
-        for (var i = 0; i < this.length; i++) {
-            element = this[i];
+        domElementLoop(this, function(context, index) {
             if (handler) {
-                events.add(element, type, handler);
+                events.add(context, type, handler);
             }
-        }
+        });
+
         return this;
     };
 
@@ -229,16 +226,14 @@ events.addDomMethods = function() {
      * @param {*} type 
      */
     domElementProvider.unbind = function(type) {
-        var element;
-        for (var i = 0; i < this.length; i++) {
-            element = this[i];
-            events.remove(element, type);
-
+        domElementLoop(this, function(context, index) {
+            events.remove(context, type);
             //trigger event special event
             if (events.special[type] && events.special[type].remove) {
-                events.special[type].remove.call(element);
+                events.special[type].remove.call(context);
             }
-        }
+        });
+
         return this;
     };
 
@@ -265,6 +260,8 @@ events.addDomMethods = function() {
         }
         return this;
     };
+
+    domElementProvider.off = domElementProvider.unbind;
 
     var chainedAliases = ('click dblclick mouseover mouseout mousemove ' +
         'mousedown mouseup blur focus change keydown ' +

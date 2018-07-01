@@ -1,7 +1,7 @@
   /*
-                  jEliQuery Data Fn
+                          jEliQuery Data Fn
 
-                */
+                        */
   var $data = {},
       EDS = {},
       EUID = 0;
@@ -110,8 +110,10 @@
   domElementProvider.clearData = function() {
       domElementLoop(this, function(ele) {
           var ref = ele[OBJ_REF];
-          if (ref && EDS[ref]) {
+          if (ref && EDS.hasOwnProperty(ref)) {
               delete EDS[ref];
           }
-      })
+      });
+
+      return this;
   };

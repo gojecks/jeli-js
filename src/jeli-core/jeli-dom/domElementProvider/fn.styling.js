@@ -63,7 +63,7 @@
         return this;
     };
 
-    domElementProvider.hasClass = function(klas) {
+    domElementProvider.hasClass = function(klass) {
         if (!this) return;
 
         return $hasClass.call(this[0], klass);

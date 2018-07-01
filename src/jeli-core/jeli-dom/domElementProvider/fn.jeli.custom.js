@@ -2,7 +2,7 @@
    * retrieve the Model binded to the current element
    */
   domElementProvider.jModel = function() {
-      if (!findInProvider('jDebugProvider').$disableDebugMode) {
+      if (!$provider.jDebugProvider.$disableDebugMode) {
           return $modelMapping.$get(this.data('jModel'));
       }
 
