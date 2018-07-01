@@ -105,6 +105,10 @@ function copy(item, deep) {
         return new RegExp(item); // RegExp
     }
 
+    if (typeof item !== "object") {
+        return item;
+    }
+
     if (deep) {
         var ret;
         try {

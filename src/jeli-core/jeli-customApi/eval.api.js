@@ -37,35 +37,42 @@ function simpleArgumentParser(arg, sub) {
     }
 }
 
+function generateArrayKeyType(key, model) {
+    if ($inArray("[", key)) {
+        key = key.split('['),
+            len = key.length;
+        while (len--) {
+            var set = key[len];
+            if (key[len].indexOf(']') > -1) {
+                var _key = key[len].split(']')[0];
+                set = model[_key] || _key;
+            }
+            key[len] = set;
+        }
+
+        key = key.join(".");
+    }
+
+    return key
+}
+
 //RegExp to match is array key
 var isArrayKey = new RegExp(/.*\[(\d+)\]/);
-//isArrayType Function
+//deepArrayChecker Function
 //deepCheck the key of a require Model
 //if Model type is Array
 //remove array brackect and return the keys
-function isArrayType(key, model) {
-    if (expect(key).contains('[')) {
-        var sptKey = key.split('['),
-            len = sptKey.length;
-        while (len--) {
-            var set = ((expect(sptKey[len]).contains(']')) ? sptKey[len].split(']')[0] : sptKey[len]);
-            sptKey[len] = (!$isObject(model[set])) ? model[set] : set;
-        }
-
-        return function(create, value) {
-            var end = sptKey[sptKey.length - 1],
-                nModel = matchStringWithArray(sptKey.join("."), model, create);
-            if (value) {
-                nModel[end] = removeSingleQuote(value);
-                return;
-            }
-
-            return nModel[end];
-        };
+function deepArrayChecker(create, key, model, value) {
+    key = generateArrayKeyType(key, model).split(".");
+    var end = key.pop(),
+        nModel = matchStringWithArray(key, model, create);
+    if (arguments.length > 3) {
+        nModel[end] = value;
+        return;
     }
 
-    return false;
-}
+    return !$isUndefined(nModel[end]) ? nModel[end] : "";
+};
 
 //match key with array type
 /**
@@ -75,36 +82,12 @@ function isArrayType(key, model) {
  * @param {*} create 
  */
 function matchStringWithArray(key, model, create) {
-    var splitKey = $removeWhiteSpace(key).split('.'),
-        modelDepth = model,
-        i,
-        diveIntoArray = function() {
-            var justKey, isInArray,
-                dived = false;
-            isInArray = isArrayKey.exec(splitKey[i]);
-            if (isInArray && isInArray.length && modelDepth) {
-                justKey = splitKey[i].split('[')[0];
-                modelDepth = modelDepth[justKey][isInArray[1]];
-                dived = true;
-            }
-
-            return dived;
-        };
-
-
-
-    for (i = 0; i < splitKey.length - 1; i++) {
-        if (!diveIntoArray()) {
-            //get or set the Object
-            modelDepth = createNewInstance(modelDepth, splitKey[i], create);
-        }
+    var modelDepth = model,
+        i = 0;
+    while (i <= key.length - 1) {
+        modelDepth = createNewInstance(modelDepth, key[i], create, !isNaN(Number(key[i + 1])));
+        i++;
     }
-
-    //commented because of array-like loop
-
-    // if(splitKey.length > 1){
-    //     diveIntoArray();
-    // }
 
     return modelDepth;
 }
@@ -115,12 +98,13 @@ function matchStringWithArray(key, model, create) {
  * @param {*} key 
  * @param {*} create 
  */
-function createNewInstance(model, key, create) {
+function createNewInstance(model, key, create, nextIsArrayKey) {
+    var objectType = nextIsArrayKey ? [] : {};
     if (create && !model[key]) {
-        model[key] = {};
+        model[key] = objectType
     }
 
-    return model && model[key] || {};
+    return model && model[key] || objectType;
 }
 
 /**
@@ -134,27 +118,7 @@ function $modelSetterGetter(key, context, create) {
         return key;
     }
 
-    var namespaces = $removeWhiteSpace(key).split("."),
-        func = namespaces.pop(),
-        deepContext = matchStringWithArray(key, context, create);
-
-    var check = isArrayKey.exec(func);
-    if (check && check.length && deepContext) {
-        var dKey = func.split('[')[0];
-        if (deepContext.hasOwnProperty(dKey)) {
-            return deepContext[dKey][+check[1]];
-        } else {
-            return "";
-        }
-    } else {
-        var deepArrayChecker = isArrayType(key, context);
-        if (deepArrayChecker) {
-            return deepArrayChecker();
-        }
-
-        return (!$isUndefined(deepContext)) ? deepContext[func] : "";
-    }
-
+    return deepArrayChecker(create, $removeWhiteSpace(key), context);
 }
 
 function matchScopeObject(ckey, fn) {
