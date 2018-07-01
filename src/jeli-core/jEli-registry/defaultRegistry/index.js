@@ -55,6 +55,14 @@
           }
       });
 
+  _defaultRegistry('j-eli', '$jFilterProvider', 'capitalize')(
+      // lowerCaseFilter
+      function lowerCaseFilter() {
+          return function(value) {
+              return value.charAt(0).toUpperCase() + value.substr(1, value.length);
+          }
+      });
+
 
   // register filterService
   _defaultRegistry('j-eli', '$jFactoryProvider', '$filter')(function() {
