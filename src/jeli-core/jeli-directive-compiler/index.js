@@ -110,24 +110,51 @@ function getParentControllerModel(parentController, module) {
  * 
  * @param {*} model 
  * @param {*} replacerModel 
+ * @param {*} attr 
+ * @param {*} attrModel 
  */
-function structureModel(model, replacerModel) {
-    return function(attr, attrModel) {
-        if ($isObject(attr) && $isObject(attrModel)) {
-            domElementProvider.each(attrModel, function(name, value) {
-                if (value.match(/[&@=?]/g)) {
-                    if (expect('=?').contains(value)) {
-                        model[name] = $modelSetterGetter(attr[name], replacerModel);
-                    } else {
-                        value = value.split(/[&@=]/g)[1];
-                        model[name] = copy($modelSetterGetter(attr[value], replacerModel));
-                    }
-
+function structureModel(model, replacerModel, attr, attrModel) {
+    if ($isObject(attr) && $isObject(attrModel)) {
+        domElementProvider.each(attrModel, function(prop, value) {
+            var matcher = value.match(/[&@=?]/g);
+            if (matcher) {
+                switch (matcher.join('')) {
+                    /**
+                     * two way binding and conditional binding
+                     * 
+                     */
+                    case ("?="):
+                    case ("="):
+                        value = value.split(/[=]/g)[1] || prop;
+                        var binding = $modelSetterGetter(value, replacerModel);
+                        if (!binding && $inArray('?', matcher)) {
+                            return;
+                        }
+                        model[prop] = binding;
+                        binding = null;
+                        break;
+                        /**
+                         * one way binding
+                         */
+                    case ("<"):
+                    case ("@"):
+                        value = value.split(/[@<]/g)[1] || prop;
+                        model[prop] = $modelSetterGetter(attr[value], replacerModel) || jSonParser(attr[value]);
+                        break;
+                    case ('&'):
+                        model[prop] = (function(def) {
+                            var fn = generateFnFromString(def, replacerModel);
+                            return function(props) {
+                                var arg = generateArguments(fn.arg, props);
+                                return fn.apply(fn.context, arg);
+                            };
+                        })(attr[prop]);
+                        break;
                 }
-            });
-        }
-        return model;
+            }
+        });
     }
+    return model;
 }
 
 //compile element scope
@@ -149,23 +176,7 @@ function $compileScope(attr, $model) {
         model.$$isIsolated = true;
     }
 
-    return structureModel(model, $model)(attr, this.props);
-}
-
-//compile element Attribute
-function $compileAttribute() {
-    var attr = { $$ele: this };
-    if (this.attributes) {
-        findInList.call(getAttributes.call(this), function(name, node) {
-            if (node.name.indexOf('data-') > -1) {
-                node.name = node.name.replace('data-', '');
-            }
-
-            attr[camelCase.call(node.name)] = node.value;
-        });
-    }
-
-    return attr;
+    return structureModel(model, $model, attr, this.props);
 }
 
 /**
@@ -301,7 +312,8 @@ function initializeDirective(obj, ele, $model) {
     var _directive = new jElementCompilerFn(obj),
         _linker,
         replacerFn,
-        attr = $compileAttribute.call(ele[0]);
+        attr = buildAttributes(ele[0], $model, true);
+
     /**
      * retrieve linker Function
      */
@@ -352,14 +364,18 @@ function initializeDirective(obj, ele, $model) {
  */
 function initializeComponent(obj, ele, model) {
     var _component = new jElementCompilerFn(obj),
-        attr = $compileAttribute.call(ele[0]),
+        attr = buildAttributes(ele[0], model, true),
         controllerAs = _component.controllerAs || '$ctrl',
         _model = model.$new(1);
 
     registerComponentToProcess(ele, obj.selector);
     // initilize the directive
-    $provider.$jControllerProvider.$initialize(_component.controller, _model, null, controllerAs);
-    structureModel(_model[controllerAs], model)(attr, _component.props);
+    $provider.$jControllerProvider.$initialize(_component.controller, _model, null, controllerAs, {
+        $attrs: attr,
+        $element: ele
+    });
+
+    structureModel(_model[controllerAs], model, attr, _component.props);
     //build Directive template
     directiveTemplateBuilder(_component, ele[0], attr)
         .then(function(template) {

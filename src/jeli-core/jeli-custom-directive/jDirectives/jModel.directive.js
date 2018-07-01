@@ -15,10 +15,10 @@ function setViewValue(newVal, oldVal) {
     } else {
         switch (this.elem.localName) {
             case ('select'):
-                performOptions('select', this)(newVal, oldVal);
+                selectType(this, newVal, oldVal);
                 break;
             case ('input'):
-                performOptions('checked', this)(newVal, oldVal)
+                checkType(this, newVal, oldVal)
                 break;
             default:
                 this.elem.innerHTML = newVal;
@@ -27,47 +27,38 @@ function setViewValue(newVal, oldVal) {
     }
 }
 
-function performOptions(type, context) {
-    var _options = {};
-    _options.select = function(newVal) {
-        expect(context.elem.options).each(function(options) {
-            if (options.value === newVal) {
-                options.selected = true;
+function checkType(context, checked) {
+    switch (context.elem.type.toLowerCase()) {
+        case ('checkbox'):
+            context.elem[checked ? 'setAttribute' : 'removeAttribute']('checked', true);
+            break;
+        case ('radio'):
+            if ($isEqual($typeOfValue(context.elem), checked)) {
+                context.elem.setAttribute('checked', true);
             }
-        });
-    };
-
-    _options.checked = function(checked) {
-        switch (context.elem.type.toLowerCase()) {
-            case ('checkbox'):
-                context.elem[checked ? 'setAttribute' : 'removeAttribute']('checked', true);
-                break;
-            case ('radio'):
-                if ($isEqual(context.elem.value, checked)) {
-                    context.elem.setAttribute('checked', true);
-                }
-                break;
-        }
-
-    };
-
-    return function() {
-        (_options[type] || noop).apply(null, arguments)
-    };
+            break;
+    }
 }
+
+function selectType(context, newVal) {
+    expect(context.elem.options).each(function(options) {
+        if ($isEqual(options.value, newVal)) {
+            options.selected = true;
+        }
+    });
+}
+
 
 function updateViews(elem, checker) {
     //model was modified
-    var _jModelInstance = _modelBinder.$get(checker);
-
-    _jModelInstance.$$views.forEach(function(viewInstance) {
+    (_modelBinder.$get(checker).$$views || [])
+    .forEach(function(viewInstance) {
         if (!$isEqual(elem, viewInstance.elem)) {
-
-            var val = $modelSetterGetter(viewInstance.checker, viewInstance.$model),
-                eleVal = $typeOfValue(viewInstance.elem);
-            setViewValue.call(viewInstance, val, eleVal);
+            setViewValue.call(viewInstance,
+                $modelSetterGetter(viewInstance.checker, viewInstance.$model),
+                $typeOfValue(viewInstance.elem)
+            );
         }
-
     });
 
 }
@@ -77,9 +68,12 @@ function updateViews(elem, checker) {
   @return function
 */
 
-function _onviewModelChanged(checker) {
+function _onviewModelChanged(checker, didRender) {
     return function() {
-        updateViews(null, checker);
+        if (!didRender) {
+            didRender = true;
+            updateViews(null, checker);
+        }
     };
 }
 
@@ -94,11 +88,13 @@ function modelInstance() {
     **/
 
     var self = this;
-    this.$eventListener = new $CustomEventHandler('register', function(ev, elem) {
-        var modelInstance = self.getView(elem);
-        setModelValue(modelInstance.checker, modelInstance.$model, $typeOfValue(elem));
+    this.$$totalBinding = 0;
+    this.$modelValue;
+    this.$eventListener = new $CustomEventHandler('register', function(ev, directiveModel) {
+        self.$modelValue = $typeOfValue(directiveModel.elem);
+        setModelValue(directiveModel.checker, directiveModel.$model, self.$modelValue);
         //set state
-        modelInstance.isProcessed = true;
+        directiveModel.isProcessed = true;
     });
 
     this.$$views = [];
@@ -117,54 +113,70 @@ function modelInstance() {
   Jmodel setViewValue Method
 */
 modelInstance.prototype.$$setViewValue = function(val) {
+    this.$modelValue = val;
     this.$$views.forEach(function(viewInstance) {
         setViewValue.call(viewInstance, val);
     });
+};
+
+/**
+ * jModel remove view from collector
+ */
+modelInstance.prototype.removeFromView = function(viewIndex) {
+    this.$$views = this.$$views.filter(function(directiveModel) {
+        return directiveModel.jModelViewReferenceIndex != viewIndex;
+    });
+
+    return this;
 };
 
 
 /*
   jModel Listener
 */
-modelInstance.prototype.inputListener = function() {
+modelInstance.prototype.inputListener = function(directiveModel) {
     var jModelInstance = this;
     return function(ev) {
-        jModelInstance.$eventListener.$broadcast(":" + ev.type, this);
+        jModelInstance.$eventListener.$broadcast(":" + ev.type, directiveModel);
     }
 };
 
 /**
  * 
- * @param {*} jModelObj 
+ * @param {*} directiveModel 
  */
-modelInstance.prototype.__registerEvents = function(jModelObj) {
+modelInstance.prototype.__registerEvents = function(directiveModel) {
     var jModelInstance = this;
-
-    jModelObj.modelOptions.$events.split(/\s/).forEach(function(evName) {
-        var $bindingName = $isEqual(evName, 'default') ? jModelObj.eventName : evName;
-        jModelInstance.$eventListener.register(':' + $bindingName, debounce(updateModelBindings, jModelObj.modelOptions.debounce[evName]));
-        bind.call(jModelObj.elem, $bindingName, jModelInstance.inputListener());
+    directiveModel.modelOptions.$events.split(/\s/).forEach(function(evName) {
+        var $bindingName = $isEqual(evName, 'default') ? directiveModel.eventName : evName;
+        directiveModel.$$eventRegistryIdx = jModelInstance.$eventListener.register(':' + $bindingName, debounce(updateModelBindings, directiveModel.modelOptions.debounce[evName]));
+        bind.call(directiveModel.elem, $bindingName, jModelInstance.inputListener(directiveModel));
     });
-
-    function updateModelBindings(ev, elem) {
-        var modelInstance = jModelInstance.getView(elem);
-        $modelMapping.$digestParentAndChild(modelInstance.$model);
-        updateViews.call(modelInstance, elem, modelInstance.checker);
-        modelInstance = null;
-    }
+    return this;
 };
 
-/**
- * 
- * @param {*} jModelObj 
- */
-modelInstance.prototype.__unregisterEvents = function(jModelObj) {
-    var jModelInstance = this;
-    jModelObj.modelOptions.$events.split(/\s/).forEach(function(evName) {
-        var $bindingName = $isEqual(evName, 'default') ? jModelObj.eventName : evName;
-        jModelInstance.$eventListener.$destroy(evName);
-    });
+function updateModelBindings(ev, directiveModel) {
+    updateViews.call(directiveModel, directiveModel.elem, directiveModel.checker);
+    $modelMapping.$digestParentAndChild(directiveModel.$model);
 }
+
+/**
+ * 
+ * @param {*} directiveModel 
+ */
+modelInstance.prototype.__unregisterEvents = function(directiveModel, one) {
+    var jModelInstance = this;
+    directiveModel.modelOptions.$events.split(/\s/).forEach(function(evName) {
+        var $bindingName = ':' + ($isEqual(evName, 'default') ? directiveModel.eventName : evName);
+        if (one) {
+            jModelInstance.$eventListener.$removeOne($bindingName, directiveModel.$$eventRegistryIdx);
+        } else {
+            jModelInstance.$eventListener.$destroy($bindingName);
+        }
+    });
+
+    return this;
+};
 
 
 
@@ -174,11 +186,12 @@ modelInstance.prototype.__unregisterEvents = function(jModelObj) {
   Directive Name: j-Model
 */
 function prepareModel() {
+    // change checker for ArrayCase
+    this.checker = generateArrayKeyType(this.checker, this.$model);
     var evName = this.eventName = $typeOfModel(this.elem),
         cVal = $modelSetterGetter(this.checker, this.$model, true),
         eleVal = $typeOfValue(this.elem),
         _self = this;
-
     if (!_modelBinder.hasProp(this.checker)) {
         _modelBinder.$new(this.checker, (new modelInstance));
     }
@@ -195,6 +208,10 @@ function prepareModel() {
       set the view to the model instance
     **/
     _jModelInstance.$$views.push(this);
+    // set the viewReferenceIndex
+    // used to remove Object from the collector when element is removed from DOM
+    this.jModelViewReferenceIndex = "jModel:" + +new Date;
+    _jModelInstance.$$totalBinding++;
     this.isProcessed = false;
 
     //Check for setting Value
@@ -219,15 +236,19 @@ function prepareModel() {
         this.isProcessed = true;
     }
 
-    _jModelInstance.$$setViewValue(cVal || eleVal);
-
-
+    _jModelInstance.$$setViewValue($isDefined(cVal) ? cVal : eleVal);
     // perform cleanUp
     // observe the element change
     _mutationObserver(this.elem, function() {
-        if (_jModelInstance.$$views.length < 2) {
+        _jModelInstance.$$totalBinding--;
+        if (!_jModelInstance.$$totalBinding) {
             _modelBinder.$remove(_self.checker);
             _jModelInstance.__unregisterEvents(_self);
+        } else {
+            _jModelInstance
+                .removeFromView(_self.jModelViewReferenceIndex)
+                .__unregisterEvents(_self, true);
+
         }
 
         _self.$unWatch();

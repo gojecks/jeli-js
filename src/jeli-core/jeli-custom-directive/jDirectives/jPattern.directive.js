@@ -45,7 +45,6 @@ function jPatternDirectiveFn() {
         }
 
         var _regx = new RegExp(rExp).exec(getValue(_ele));
-
         return _regx && _regx[0].length === _regx.input.length;
     }
 

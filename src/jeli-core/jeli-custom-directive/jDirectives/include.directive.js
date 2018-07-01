@@ -21,21 +21,12 @@ defaultElementInitializer.prototype['include'] = function() {
         templFac = findInProvider('$templateCache'),
         $self = this;
 
-    /**
-     check for processed Element
-     remove element if cannot resolve URL
- **/
-    if (!this.isProcessed) {
-        resetIncludeTemplate();
-        this.isProcessed = true;
-    }
-
-
     if (url) {
         //check if content is in templateCache
         //If true render the template
-        if (!$isEqual(url, this.lastProcessed)) {
-            this.elem.innerHTML = "";
+        this.isDetached = !$isEqual(url, this.lastProcessed);
+        if (this.isDetached) {
+            resetIncludeTemplate();
             // get the required template
             $http.get(url).then(function(data) {
                 if ($isString(data.data)) {
@@ -50,25 +41,21 @@ defaultElementInitializer.prototype['include'] = function() {
     }
 
     function resetIncludeTemplate() {
-        $self.isDetached = true;
-        $self.parentNode.removeChild($self.elem);
+        if ($self.isProcessed) {
+            $self.parentNode.removeChild($self.elem);
+            $self.elem = $self.$createElement();
+            $self.parentNode.insertBefore($self.elem, $self.cENode);
+        }
+        $self.isProcessed = true;
     }
 
     function $includeBuilder(html) {
-        if ($self.isDetached) {
-            //create a new instance of Element
-            $self.elem = $self.$createElement();
-            //insert the element to the parentnode
-            $self.parentNode.insertBefore($self.elem, $self.cENode);
-        }
-
         element($self.elem)
             .html(html)
             .data({ ignoreProcess: [$self.cSelector], reCompileChild: !hasAnyAttribute($self.$attr, [':controller', 'j-controller']) });
         //transverse the new instance of element with the model
-        $templateCompiler($self.elem)($self.$model, $self.ref);
-
-        $self.detached = false;
+        var nModel = $self.$model.$new();
+        $templateCompiler($self.elem, true)(nModel, $self.ref);
     }
     //track  last processed url
     this.lastProcessed = url;

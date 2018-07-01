@@ -56,9 +56,11 @@ function transverseCompiler(ele) {
                 //find controller
                 isDirective = $isDirective(ele),
                 _elementDetached = false;
-            nElement.data({ 'jModel': $model.$mId });
             //compile directive
             if (isDirective.length) {
+                if (!$provider.jDebugProvider.$disableDebugMode) {
+                    nElement.data({ 'jModel': $model.$mId });
+                }
                 /**
                     check for occurence of DOM structural directive
                 **/
@@ -156,7 +158,7 @@ function transverseTemplate(template) {
 //Template compiler
 var compilerStackWatch = new $eventStacks();
 
-function $templateCompiler($template, ignoreObserver) {
+function $templateCompiler($template, attachElementObserver) {
     var ref = $template['$object:id'] || getUID(),
         _fn_ = transverseTemplate;
 
@@ -181,6 +183,9 @@ function $templateCompiler($template, ignoreObserver) {
         //add the object to $modelMapping
         $modelMapping.$new($model.$mId, $model);
 
+        if (attachElementObserver) {
+            $observeElement($template, $model.$mId)
+        }
 
         // trigger the template event binder
         compilerStackWatch.broadcast(ref, ['finished.compilations']);

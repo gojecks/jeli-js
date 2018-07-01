@@ -41,24 +41,47 @@
       this._content = {};
   }
 
+  /**
+   * 
+   * @param {*} id 
+   * @param {*} mock 
+   */
   watchBinding.prototype.$get = function(id, mock) {
       return this._content[id] || mock || [];
   };
 
+  /**
+   * 
+   * @param {*} id 
+   * @param {*} value 
+   */
   watchBinding.prototype.$new = function(id, value) {
       this._content[id] = value;
   };
 
+  /**
+   * 
+   * @param {*} id 
+   */
   watchBinding.prototype.$remove = function(id) {
       if (this._content[id]) {
           delete this._content[id];
       }
   };
 
+  /**
+   * 
+   * @param {*} prop 
+   */
   watchBinding.prototype.hasProp = function(prop) {
       return this._content.hasOwnProperty(prop);
   };
 
+  /**
+   * 
+   * @param {*} id 
+   * @param {*} value 
+   */
   watchBinding.prototype.$push = function(id, value) {
       if (!this._content[id]) {
           this._content[id] = [];
@@ -72,39 +95,75 @@
   };
 
   // remove from array
+  /**
+   * 
+   * @param {*} id 
+   * @param {*} idx 
+   */
   watchBinding.prototype.$removeFromArray = function(id, idx) {
       (this._content[id] || []).splice(idx, 1);
   };
 
-
+  /**
+   * 
+   * @param {*} obj 
+   */
   function $isObject(obj) {
       return typeof obj === 'object' && obj instanceof Object && Object.prototype.toString.call(obj) === '[object Object]';
   };
 
+  /**
+   * 
+   * @param {*} str 
+   */
   function $isString(str) {
       return typeof str === 'string' && new String(str) instanceof String;
   }
 
+  /**
+   * 
+   * @param {*} str 
+   */
   function $isJsonString(str) {
       return (str && $isString(str) && ("{[".indexOf(str.charAt(0)) > -1) && ("}]".indexOf(str.charAt(str.length - 1)) > -1));
   }
 
+  /**
+   * 
+   * @param {*} obj 
+   */
   function $isEmptyObject(obj) {
-      return (!$isObject(obj) && !$countObject(obj));
+      return ($isObject(obj) && !$countObject(obj));
   }
 
+  /**
+   * 
+   * @param {*} n 
+   */
   function $isNumber(n) {
       return Number(n) === n && n % 1 === 0;
   }
 
+  /**
+   * 
+   * @param {*} n 
+   */
   function $isFloat(n) {
       return Number(n) === n && n % 1 !== 0;
   }
 
+  /**
+   * 
+   * @param {*} n 
+   */
   function $isDouble(n) {
       return parseFloat(n) > 0;
   }
 
+  /**
+   * 
+   * @param {*} obj 
+   */
   function $isArray(obj) {
       return Object.prototype.toString.call(obj) === '[object Array]';
   }
@@ -112,46 +171,85 @@
   function $isEmptyObject(obj) {
       return obj && !$countObject(obj).length;
   }
-
+  /**
+   * 
+   * @param {*} fn 
+   */
   function $isFunction(fn) {
       return typeof fn === 'function';
   }
 
+  /**
+   * 
+   * @param {*} obj 
+   */
   function $countObject(obj) {
       return Object.keys(obj);
   }
-
+  /**
+   * 
+   * @param {*} bool 
+   */
   function $isBoolean(bool) {
       return Object.prototype.toString.call(bool) === '[object Boolean]';
   }
 
+  /**
+   * 
+   * @param {*} val 
+   */
   function $isUndefined(val) {
       return typeof val === 'undefined';
   }
 
+  /**
+   * 
+   * @param {*} val 
+   */
   function $isDefined(val) {
       return typeof val !== 'undefined';
   }
 
   //check for null attribute
-
+  /**
+   * 
+   * @param {*} val 
+   */
   function $isNull(val) {
       return null === val;
   }
 
   //check for empty value
+  /**
+   * 
+   * @param {*} val 
+   */
   function $isEmpty(val) {
       return val === "";
   }
 
+  /**
+   * 
+   * @param {*} a 
+   * @param {*} b 
+   */
   function $isEqual(a, b) {
       return a === b;
   }
 
+  /**
+   * 
+   * @param {*} a 
+   * @param {*} b 
+   */
   function $inArray(a, b) {
       return b.indexOf(a) > -1;
   }
 
+  /**
+   * 
+   * @param {*} arr 
+   */
   function noDubs(arr) {
       return arr.reduce(function(all, item, index) {
           if (arr.indexOf(arr[index]) === index) {
@@ -166,7 +264,10 @@
   @Argument (OBJECT)
   @return Query Param eg(foo=bar&bar=foo)
 */
-
+  /**
+   * 
+   * @param {*} obj 
+   */
   function serialize(obj) {
       if ($isUndefined(obj)) return;
 
@@ -207,6 +308,10 @@
   }
 
   //@Function unSerialize
+  /**
+   * 
+   * @param {*} par 
+   */
   function unSerialize(par) {
       var ret = {};
       if (!$isUndefined(par)) {
@@ -222,6 +327,10 @@
   }
 
   //@Function Make ID
+  /**
+   * 
+   * @param {*} e 
+   */
   function makeUID(e) {
       var h = '';
       var f = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -237,6 +346,10 @@
   }
 
   //@Function parseJSON
+  /**
+   * 
+   * @param {*} string 
+   */
   function parseJSON(string) {
       if (!$isString(string) || !string) return null;
 
@@ -244,6 +357,10 @@
       return $isSupport.jsonParser ? JSON.parse(JSON.stringify(string)) : (new Function('return ' + string))();
   }
 
+  /**
+   * 
+   * @param {*} str 
+   */
   function jSonParser(str) {
       try {
           str = JSON.parse(str);
@@ -252,8 +369,30 @@
       return str;
   }
 
-  //@Function xmlParser
+  /**
+   * 
+   * @param {*} to 
+   * @param {*} from 
+   */
+  function copyFrom(to, from) {
+      for (var key in to) {
+          if (from.hasOwnProperty(key)) {
+              if (typeof to[key] === "object") {
+                  to[key] = copyFrom(to[key], from[key]);
+              } else {
+                  to[key] = from[key];
+              }
+          }
+      }
 
+      return to;
+  }
+
+  //@Function xmlParser
+  /**
+   * 
+   * @param {*} text 
+   */
   function parseXML(text) {
       if ($isSupport.DOMParser) {
           return new DOMParser().parseFromString(text, 'text/xml');
@@ -299,6 +438,10 @@
   }
 
   //function to buildErrors
+  /**
+   * 
+   * @param {*} str 
+   */
   function errorBuilder(str) {
       function userException() {
           this.name = "jEliException";
@@ -321,6 +464,11 @@
   }
 
   //function deleteAndReStructure
+  /**
+   * 
+   * @param {*} arr 
+   * @param {*} index 
+   */
   function deleteAndReStructure(arr, index) {
       var temp = [],
           i = 0;
@@ -335,6 +483,10 @@
       return temp;
   }
 
+  /**
+   * 
+   * @param {*} fn 
+   */
   function findInList(fn) {
       var found = false,
           checker;
@@ -348,7 +500,11 @@
       return found;
   }
 
-
+  /**
+   * 
+   * @param {*} loop 
+   * @param {*} callback 
+   */
   function domElementLoop(loop, callback) {
       var last = loop.length - 1,
           i = 0;
@@ -361,19 +517,34 @@
       }
   }
 
+  /**
+   * 
+   * @param {*} str 
+   */
   function $removeWhiteSpace(str) {
-      return (str || '').replace(/\s+/g, '');
+      str = (str || '')
+      if (/["']/g.test(str)) {
+          return str
+      }
+      return str.replace(/\s+/g, '');
   }
 
   var $isBooleanValue = 'true | false | 1 | 0';
-
+  /**
+   * 
+   * @param {*} str 
+   */
   function removeSingleQuote(str) {
 
       if ($isBooleanValue.indexOf(str) > -1 || $isUndefined(str)) return str;
 
       return String(str).replace(/[']/g, "");
   }
-
+  /**
+   * 
+   * @param {*} arr 
+   * @param {*} fn 
+   */
   function $remArrayWhiteSpace(arr, fn) {
       var nArr = [];
       if (arr && arr.length) {
@@ -402,6 +573,10 @@
               .replace(/>/g, '&gt;');
       };
 
+      /**
+       * 
+       * @param {*} str 
+       */
       function decodeHTMLEntities(str) {
           if (str && typeof str === 'string') {
               // strip script/html tags
@@ -428,6 +603,13 @@
   }
 
   // removeSingle Operand
+  /**
+   * 
+   * @param {*} str 
+   * @param {*} matcher 
+   * @param {*} replacer 
+   * @param {*} flags 
+   */
   function removeSingleOperand(str, matcher, replacer, flags) {
       return str.replace(new RegExp(matcher, flags), function(s, n, t) {
           if ((t.charAt(n + 1) === s && t.charAt(n - 1) !== s) || (t.charAt(n + 1) !== s && t.charAt(n - 1) === s)) {
@@ -439,6 +621,10 @@
       });
   }
 
+  /**
+   * 
+   * @param {*} str 
+   */
   function removeQuotesFromString(str) {
       if (str.charAt(0).match(/['"]/) && str.charAt(str.length - 1).match(/['"]/)) {
           return str.substr(1, str.length - 2);
@@ -448,6 +634,10 @@
   }
 
   // string to hashCode
+  /**
+   * 
+   * @param {*} code 
+   */
   function $hashCode(code) {
       var hash = 0,
           i, chr, len;

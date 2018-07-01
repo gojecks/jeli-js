@@ -119,12 +119,12 @@ function defaultBinder(definition) {
 }
 
 function generateArg() {
+    var self = this;
     this.watchListIndex = $directivesProviderWatchList.$get(this.$model.$mId).length;
     this.$unWatch = function() {
         $directivesProviderWatchList.$removeFromArray(this.$model.$mId, this.watchListIndex);
     };
-
-    this.$attr = buildAttributes(this.elem);
+    this.$attr = buildAttributes(this.elem, this.$model);
     /*
       Directive that transcludes
     */

@@ -142,10 +142,6 @@
         var id = this.$mId;
         $removeAllBinding(id);
         var parentModel = this.$parent;
-        $modelChildReferenceList.$get(id).forEach(function(_id) {
-            $removeAllBinding(_id);
-        });
-
         //remove the watch list from parent model
         if (parentModel) {
             $modelChildReferenceList
@@ -248,10 +244,17 @@
                 observer,
                 observerStarted = false;
 
+            function isInPage(node) {
+                return (node === document.body) ? false : !document.body.contains(node);
+            }
+
             function triggerRemovedNodes() {
                 _regsisteredEvents = _regsisteredEvents.filter(function(event) {
-                    var removed = (!event.node.parentNode || (event.node.parentNode && !event.node.parentNode.parentNode));
+                    var removed = isInPage(event.node);
                     if (removed) {
+                        element(event.node)
+                            .clearData()
+                            .off();
                         event._callback();
                     }
 
@@ -302,10 +305,12 @@
                     startObserver();
                 }
 
-                _regsisteredEvents.push({
-                    node: ele,
-                    _callback: CB || noop
-                });
+                if (!_regsisteredEvents.some(function(obj) { return obj.node === ele; })) {
+                    _regsisteredEvents.push({
+                        node: ele,
+                        _callback: CB || noop
+                    });
+                }
             };
         })();
 
@@ -436,6 +441,12 @@
         $directivesProviderWatchList.$remove($id);
         //remove model Observer    
         $modelObserverList.$remove($id);
+        /**
+         * remove all child reference
+         */
+        $modelChildReferenceList.$get($id).forEach(function(_id) {
+            $removeAllBinding(_id);
+        });
         $modelChildReferenceList.$remove($id);
         $watchBlockList.$remove($id);
     }

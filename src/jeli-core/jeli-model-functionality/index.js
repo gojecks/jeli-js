@@ -121,7 +121,6 @@ function attachEventProviders(ele) {
                     //j-change requires j-model
                     //check if j-model is defined when this event is used
                     if ($isEqual('change', splt) && !hasAnyAttribute(ele, ['j-model', ':model'])) {
-
                         errorBuilder('jChange requires jModel to function');
                     }
 
@@ -137,6 +136,7 @@ function attachEventProviders(ele) {
                         .data(splt, attr);
 
                     ignoreProcessCheck(ele, splt);
+                    _mutationObserver(ele, function() {});
 
 
                     function jEventHandler(ev) {
@@ -184,7 +184,7 @@ function $typeOfValue(el) {
         return el.checked;
     } else {
         if (el.type) {
-            return el.value;
+            return jSonParser(el.value);
         } else {
             return el.innerHTML;
         }
@@ -231,27 +231,8 @@ function addClass(ele, klass) {
  * @param {*} value 
  */
 function setModelValue(key, model, value) {
-
-    var setKey = $removeWhiteSpace(key).split('.').pop(),
-        deepModel = matchStringWithArray(key, model);
-
-    if (deepModel) {
-        value = $isString(value) ? removeSingleQuote(value) : value;
-        var check = isArrayKey.exec(setKey), //isArrayKey RegExp
-            deepArrayChecker = isArrayType(setKey, model); //isArrayType Function
-        if (check && check.length) {
-            var dKey = check[0].split('[')[0];
-            if (!deepModel.hasOwnProperty(dKey)) {
-                deepModel[dKey] = [];
-            }
-            deepModel[dKey][+check[1]] = value;
-        } else if (deepArrayChecker) {
-            deepArrayChecker(true, value);
-        } else {
-            deepModel[setKey] = value;
-        }
-    }
-
+    value = $isString(value) ? removeSingleQuote(value) : value;
+    deepArrayChecker(true, $removeWhiteSpace(key), model, value);
     return value;
 }
 
@@ -349,6 +330,31 @@ function generateArguments(arg, context, ele) {
     return ret;
 }
 
+/**
+ * 
+ * @param {*} fn 
+ * @param {*} context 
+ * @param {*} ev 
+ */
+function generateFnFromString(fn, context) {
+    var arg = fn.match(/^(?:.*?)\((.*?)\)/),
+        mfn = fn.match(/^(.*?)\(.*?\)/),
+        namespaces = mfn[1].split("."),
+        func = namespaces.pop();
+    //set nameSpaces
+    if (namespaces.length > 0) {
+        for (var i = 0; i < namespaces.length; i++) {
+            context = context[namespaces[i]];
+        }
+    }
+
+    fn = context[func] || function() {};
+    fn.arg = (arg || [])[1];
+    fn.context = context;
+
+    return fn;
+}
+
 //@Function execFnByName
 //@Arguments : FUNCTION,MODEL,ELEMENT,EVENT
 //Initialize the the Function 
@@ -363,8 +369,6 @@ function generateArguments(arg, context, ele) {
  */
 function execFnByName(fn, context, dis, ev) {
     var fn = $removeWhiteSpace(fn),
-        arg = fn.match(/^(?:.*?)\((.*?)\)/),
-        mfn = fn.match(/^(.*?)\(.*?\)/),
         setValuechecker = fn.split(/([=])/ig),
         narg = [];
 
@@ -372,21 +376,10 @@ function execFnByName(fn, context, dis, ev) {
     if (setValuechecker.length > 1) {
         setModelValue(setValuechecker.shift(), context, $logicChecker(setValuechecker.pop(), context, true));
     } else {
-        var namespaces = mfn[1].split("."),
-            func = namespaces.pop();
-        //Check if Arguments is required
-        narg = generateArguments((arg || [])[1], context, ev);
-
-        //set nameSpaces
-        if (namespaces.length > 0) {
-            for (var i = 0; i < namespaces.length; i++) {
-                context = context[namespaces[i]];
-            }
-        }
-
-        var initializer = context[func] || function() {};
-
         //initialize the function returned
-        return initializer.apply(context, narg);
+        fn = generateFnFromString(fn, context);
+        //Check if Arguments is required
+        narg = generateArguments(fn.arg, context, ev);
+        return fn.apply(fn.context, narg);
     }
 }

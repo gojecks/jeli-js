@@ -29,8 +29,9 @@
   /**
    * 
    * @param {*} ele 
+   * @param {*} model 
    */
-  function buildAttributes(ele) {
+  function buildAttributes(ele, model, attachEle) {
       var attr = ele.attributes,
           len = attr.length,
           ret = {
@@ -39,7 +40,16 @@
           };
 
       while (len--) {
-          ret[attr[len].nodeName] = attr[len].nodeValue || attr[len].value;
+          var node = attr[len].nodeName;
+          if (node.indexOf('data-') > -1) {
+              node = node.replace('data-', '');
+          }
+
+          ret[camelCase.call(node)] = $jCompiler(attr[len].nodeValue || attr[len].value)(model);
+      }
+
+      if (attachEle) {
+          ret.$$ele = ele;
       }
 
       return ret;
