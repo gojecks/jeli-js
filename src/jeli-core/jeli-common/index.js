@@ -128,6 +128,10 @@
       return (str && $isString(str) && ("{[".indexOf(str.charAt(0)) > -1) && ("}]".indexOf(str.charAt(str.length - 1)) > -1));
   }
 
+  function noop() {
+      return null;
+  }
+
   /**
    * 
    * @param {*} obj 
@@ -414,6 +418,11 @@
       if (deep) {
           i++;
           deep = arguments[0];
+      }
+
+      // check if source is Array or Object
+      if ($isArray(arguments[i])) {
+          extended = Array(arguments[i].length);
       }
 
       var merger = function(source) {

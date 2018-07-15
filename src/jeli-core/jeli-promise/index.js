@@ -66,7 +66,7 @@
 
   $p.prototype.then = function(success, failure) {
       this.pending.push({
-          resolve: success,
+          resolve: success || function() {},
           reject: failure || function() {}
       });
 
@@ -86,7 +86,8 @@
 
   $p.prototype.complete = function(type, result) {
       while (this.pending[0]) {
-          this.pending.shift()[type].apply(null, result);
+          var fn = this.pending.shift()[type];
+          fn.apply(null, result);
       }
 
       this.$$state.pending = false;

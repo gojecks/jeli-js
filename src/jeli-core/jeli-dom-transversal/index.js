@@ -202,8 +202,9 @@
   function getDefaultDirectives(ele, stack) {
       $defaultDirectiveProvider.forEach(function(obj) {
           var set = obj.selector.split('-')[1],
-              isDefaultDirective = hasAnyAttribute(ele, [obj.selector, ':' + set]) || $isEqual(ele.localName, obj.selector);
-          if (isDefaultDirective) {
+              isAttributeDeclaration = hasAnyAttribute(ele, [obj.selector, ':' + set]) && dirFound(obj, 'a'),
+              isLocaNameDeclaration = $isEqual(ele.localName, obj.selector) && dirFound(obj, 'e');
+          if (isLocaNameDeclaration || isAttributeDeclaration) {
               stack.push(obj);
           }
       });

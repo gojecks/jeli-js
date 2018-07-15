@@ -119,7 +119,6 @@ function defaultBinder(definition) {
 }
 
 function generateArg() {
-    var self = this;
     this.watchListIndex = $directivesProviderWatchList.$get(this.$model.$mId).length;
     this.$unWatch = function() {
         $directivesProviderWatchList.$removeFromArray(this.$model.$mId, this.watchListIndex);

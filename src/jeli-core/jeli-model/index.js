@@ -319,9 +319,10 @@
      * @param {*} expression 
      * @param {*} listener 
      */
-    function $watchCollection(collectionExpression, listener) {
+    function $watchCollection(collectionExpression, listener, ignoreList) {
         this.$watch(collectionExpression, listener, function(newValue, oldValue) {
-            var profile = getDirtySnapShot(customStringify({ watchObj: newValue }, []), { watchObj: oldValue });
+            ignoreList = (ignoreList || []).concat('$$obj:id');
+            var profile = getDirtySnapShot(customStringify({ watchObj: newValue }, []), { watchObj: oldValue }, ignoreList);
             return (profile.changes.length || profile.insert.length || profile.deleted.length);
         });
     }

@@ -4,7 +4,7 @@ $defaultDirectiveProvider.push({
     selector: "j-place",
     priority: 4,
     isDefault: true,
-    $allowType: 'AE'
+    allowType: 'AE'
 });
 defaultElementInitializer.prototype.place = function() {
     /**

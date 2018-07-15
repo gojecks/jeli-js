@@ -24,9 +24,10 @@ function customStringify(obj, ignoreList) {
 }
 
 //Object Checker
-function getDirtySnapShot(watchObj, _currentWatch) {
+function getDirtySnapShot(watchObj, _currentWatch, ignoreList) {
     var cdata,
         cnt = 0;
+    ignoreList = ignoreList || [];
 
     try {
         cdata = JSON.parse(watchObj)
@@ -34,13 +35,36 @@ function getDirtySnapShot(watchObj, _currentWatch) {
         cdata = watchObj;
     }
 
+    var isObjectType = $isObject(cdata);
+
+    function forceout(out) {
+        out.insert.push(cdata);
+        out.$index.insert = Object.keys(cdata);
+        cdata = null;
+        return out;
+    }
+
     function snapshot() {
-        var out = { changes: [], insert: [], deleted: [] };
+        var out = {
+            changes: [],
+            insert: [],
+            deleted: [],
+            $index: {
+                changes: [],
+                insert: [],
+                deleted: []
+            }
+        };
+
         //search through the object
         function profiler(obj1, obj2, reProfile, path) {
             path = path || [];
             var tp;
             expect(obj1).each(function(obj, prop) {
+                if (ignoreList.length && $inArray(prop, ignoreList)) {
+                    return;
+                }
+
                 //addd new path
                 if (obj2 && obj2.hasOwnProperty(prop) && !reProfile) {
                     tp = path.concat(prop);
@@ -56,6 +80,7 @@ function getDirtySnapShot(watchObj, _currentWatch) {
 
                             //set the record
                             obj2[prop] = obj1[prop];
+                            out.$index.changes.push(prop);
                         }
                     }
                 } else {
@@ -68,12 +93,16 @@ function getDirtySnapShot(watchObj, _currentWatch) {
                     });
 
                     if (!reProfile) {
+                        // only insert index of parent object
+                        if (cdata.hasOwnProperty(prop)) {
+                            out.$index.insert.push(prop);
+                        }
                         out.insert.push(pushData);
                         //reset new value on latest object
                         setNewValue(obj2, obj1, prop, path);
                     } else {
                         out.deleted.push(pushData);
-
+                        out.$index.deleted.push(prop);
                         delete obj1[prop];
                     }
                 }
@@ -96,18 +125,43 @@ function getDirtySnapShot(watchObj, _currentWatch) {
 
         }
 
+        // _cache doesn't exists
         if (!_currentWatch) {
-            out.insert.push(watchObj);
-            cdata = null;
-            return out;
+            return forceout(out);
+        }
+
+        // cdata is Array and cache length is greater than cdata
+        // case: when property is removed from ArrayList 
+        //check for deletedObj
+        var cdataLen = Object.keys(cdata),
+            curWtachLen = Object.keys(_currentWatch);
+        if (curWtachLen.length > cdataLen.length) {
+            expect(_currentWatch).each(function(item, prop) {
+                var isdeleted;
+                if (isObjectType) {
+                    isdeleted = !cdata.hasOwnProperty(prop);
+                } else {
+                    isdeleted = watchObj.indexOf(JSON.stringify(item)) < 0;
+                }
+
+                if (isdeleted) {
+                    out.$index.deleted.push(prop);
+                    out.deleted.push(item);
+                }
+            });
+
+            if (curWtachLen.length > (cdataLen.length + out.$index.deleted.length) && !isObjectType.length) {
+                out.deleted = _currentWatch.splice(cdataLen.length);
+                out.$index.deleted = curWtachLen.splice(cdataLen.length);
+            }
+
+            if ($isEqual(curWtachLen.length, out.$index.deleted.length)) {
+                return forceout(out);
+            }
         }
 
         //start profiler
         profiler(cdata, _currentWatch);
-        //check for deletedObj
-        if (JSON.stringify(_currentWatch).length > watchObj.length) {
-            profiler(_currentWatch, cdata, true);
-        }
 
         // free up memory
         cdata = null;

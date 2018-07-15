@@ -5,8 +5,6 @@
  * @Usage :
  * allowed type Attirbute and Element
  */
-var $hashKey = 0
-
 function jDoForDirective() {
     var conf = this.checker.match(/^\s*(.+)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/),
         repeater;
@@ -45,12 +43,13 @@ function jDoForDirective() {
             this.parentNode.removeChild(this.elem);
             this.cache = [];
             this.elem = null;
+            this.$hashKey = 0;
             // set isProcessed status
             this.isProcessed = true;
             this.$debounce = debounce(function($self) {
                 repeater = getRepeaters($self.$model);
                 checkDuplicateRepeater(repeater);
-                var profile = getDirtySnapShot(customStringify({ repeater: repeater }, []), { repeater: $self.lastProcessedValue }),
+                var profile = getDirtySnapShot(customStringify(repeater, []), $self.lastProcessedValue, ['$$obj:id']),
                     changes = ((profile.changes.length || profile.insert.length || profile.deleted.length));
                 if (changes) {
                     $self.lastProcessedValue = copy(repeater, true);
@@ -74,28 +73,27 @@ function jDoForDirective() {
             $index = '$index',
             trackBy = conf[4] || this.$attr.getAttribute(':key'),
             whileExpr = this.$attr.getAttribute('while'),
-            $compilerListFn = [],
-            setTempScope = function(item, i) {
+            setTempScope = function(item, prop) {
                 var temp = $self.$model.$new();
                 temp[name] = item;
                 //set the Object key
                 //trackBy can only be set when its declared in configuration
-                temp[$index] = !isNaN(Number(i)) ? Number(i) : i;
-
-                curHash = getHash(temp, i);
+                temp[$index] = prop;
+                curHash = getHash(temp, prop);
                 if ($isObject(item) && !item.hasOwnProperty('$$obj:id')) {
-                    item['$$obj:id'] = curHash;
+                    item['$$obj:id'] = $self.lastProcessedValue[prop]['$$obj:id'] = curHash;
                 }
 
                 return temp;
             },
             getHash = function(item, prop) {
-                var hash = item['$$obj:id'] || ($hashKey + ":" + prop);
+                var hash;
                 if (trackBy) {
                     hash = item.$evaluate(trackBy) + ":" + prop;
+                } else {
+                    hash = ($self.$hashKey + ":" + prop);
+                    $self.$hashKey++;
                 }
-
-                $hashKey++;
 
                 return hash;
             },
@@ -182,6 +180,8 @@ function jDoForDirective() {
             var curModel = $modelMapping.$get(cache[idx]['$$model']);
             if ($isObject(curModel) && !$isEqual(curModel[$index], prop)) {
                 curModel[$index] = prop;
+                // update hash
+                repeater[prop]['$$obj:id'] = $self.lastProcessedValue[prop]['$$obj:id'] = getHash(curModel, prop);
                 setTimeout(function() {
                     curModel.$consume()
                 }, 0);

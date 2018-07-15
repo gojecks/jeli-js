@@ -10,7 +10,7 @@ function setViewValue(newVal, oldVal) {
         //set the new value
         if (!$isEqual(newVal, oldVal)) {
             this.elem.value = newVal || '';
-            this.isProcessed = false;
+            this.isProcessed = true;
         }
     } else {
         switch (this.elem.localName) {
@@ -41,8 +41,9 @@ function checkType(context, checked) {
 }
 
 function selectType(context, newVal) {
+    newVal = JSON.stringify(newVal).toLowerCase();
     expect(context.elem.options).each(function(options) {
-        if ($isEqual(options.value, newVal)) {
+        if ($isEqual(JSON.stringify(options.value).toLowerCase(), newVal)) {
             options.selected = true;
         }
     });
@@ -68,12 +69,9 @@ function updateViews(elem, checker) {
   @return function
 */
 
-function _onviewModelChanged(checker, didRender) {
+function _onviewModelChanged(directiveModel) {
     return function() {
-        if (!didRender) {
-            didRender = true;
-            updateViews(null, checker);
-        }
+        updateViews(null, directiveModel.checker);
     };
 }
 
@@ -235,7 +233,6 @@ function prepareModel() {
         //set state
         this.isProcessed = true;
     }
-
     _jModelInstance.$$setViewValue($isDefined(cVal) ? cVal : eleVal);
     // perform cleanUp
     // observe the element change
@@ -248,15 +245,14 @@ function prepareModel() {
             _jModelInstance
                 .removeFromView(_self.jModelViewReferenceIndex)
                 .__unregisterEvents(_self, true);
-
+            _self.$unWatch();
         }
 
-        _self.$unWatch();
         _self = _jModelInstance = null;
     });
 
 
-    return _onviewModelChanged(this.checker);
+    return _onviewModelChanged(this);
 }
 
 $defaultDirectiveProvider.push({

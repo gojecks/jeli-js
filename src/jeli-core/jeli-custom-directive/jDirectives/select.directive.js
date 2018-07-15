@@ -1,11 +1,11 @@
 $defaultDirectiveProvider.push({
     selector: "j-select",
-    priority: 4,
+    priority: 7,
     isDefault: true,
-    $allowType: 'AE'
+    allowType: 'A'
 });
 /**
- * query : item.name for item in items
+ * query : item.label for item in items
  */
 defaultElementInitializer.prototype['select'] = function() {
     var collectionExp = this.checker.match(/^\s*(.+)\s+for+\s+(.*?)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/);
@@ -23,8 +23,11 @@ defaultElementInitializer.prototype['select'] = function() {
     if ($inArray("group by", collectionExp[1])) {
         var gby = collectionExp[1].split(/\s+group+\s+by+\s/);
         collectionExp[1] = gby.shift();
+        select = collectionExp[1];
         groupBy = gby.pop();
-    } else if ($inArray(" as ", collectionExp[1])) {
+    }
+
+    if ($inArray(" as ", collectionExp[1])) {
         var lAs = collectionExp[1].split(/\s+as+\s/);
         labelAs = lAs.pop();
         select = lAs.pop();
