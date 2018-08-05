@@ -228,7 +228,7 @@ function prepareModel() {
     /*
       update the viewModel if default value is set
     */
-    if (!cVal && eleVal) {
+    if (!cVal && $isDefined(eleVal)) {
         setModelValue(this.checker, this.$model, eleVal);
         //set state
         this.isProcessed = true;

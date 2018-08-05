@@ -318,13 +318,13 @@
    */
   function unSerialize(par) {
       var ret = {};
-      if (!$isUndefined(par)) {
-          var pairs = par.split("&"),
-              i;
-          for (i in pairs) {
-              var splitPairs = pairs[i].split('=');
-              ret[splitPairs[0]] = splitPairs[1]
-          }
+      if (!$isUndefined(par) && $isString(par)) {
+          expect(par.split("&")).each(function(val, key) {
+              if (val) {
+                  var splitPairs = val.split('=');
+                  ret[splitPairs[0]] = jSonParser(splitPairs[1]);
+              }
+          })
       }
 
       return ret;

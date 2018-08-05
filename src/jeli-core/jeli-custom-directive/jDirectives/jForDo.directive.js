@@ -167,7 +167,7 @@ function jDoForDirective() {
          */
         function checkCacheObj(trackId) {
             return expect(repeater).search(null, function(item) {
-                return trackId === item['$$obj:id'];
+                return item.hasOwnProperty('$$obj:id') && trackId === item['$$obj:id'];
             });
         }
 

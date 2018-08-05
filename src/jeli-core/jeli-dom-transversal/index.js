@@ -283,7 +283,7 @@
       if (filter.filterName.length) {
           for (var i in filter.filterName) {
               //initialize the filters
-              value = $provider.$jFilterProvider.parse(filter.filterName[i], model)((value || filter.filterModel), filter.filterExpression[i]);
+              value = $provider.$jFilterProvider.parse(filter.filterName[i], model)(($isDefined(value) ? value : filter.filterModel), filter.filterExpression[i]);
           }
       }
 

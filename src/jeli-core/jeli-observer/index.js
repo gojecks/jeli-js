@@ -38,9 +38,11 @@ function getDirtySnapShot(watchObj, _currentWatch, ignoreList) {
     var isObjectType = $isObject(cdata);
 
     function forceout(out) {
-        out.insert.push(cdata);
-        out.$index.insert = Object.keys(cdata);
-        cdata = null;
+        if (cdata) {
+            out.insert.push(cdata);
+            out.$index.insert = Object.keys(cdata);
+            cdata = null;
+        }
         return out;
     }
 

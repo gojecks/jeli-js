@@ -31,7 +31,7 @@
       // jsonFilter
       function jsonFilter() {
           return function(value) {
-              return JSON.stringify(value);
+              return $isObject(value) ? JSON.stringify(value) : value;
           }
       });
 

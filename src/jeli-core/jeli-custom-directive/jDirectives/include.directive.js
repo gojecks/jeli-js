@@ -28,13 +28,18 @@ defaultElementInitializer.prototype['include'] = function() {
         if (this.isDetached) {
             resetIncludeTemplate();
             // get the required template
-            $http.get(url).then(function(data) {
-                if ($isString(data.data)) {
-                    var parsedHTML = $sce().trustAsHTML(data.data);
-                    templFac.put(url, parsedHTML);
-                    $includeBuilder(parsedHTML);
-                }
-            }, resetIncludeTemplate);
+            var cache = templFac.get(url);
+            if (cache) {
+                $includeBuilder(cache);
+            } else {
+                $http.get(url).then(function(data) {
+                    if ($isString(data.data)) {
+                        var parsedHTML = $sce().trustAsHTML(data.data);
+                        templFac.put(url, parsedHTML);
+                        $includeBuilder(parsedHTML);
+                    }
+                }, resetIncludeTemplate);
+            }
         }
     } else {
         resetIncludeTemplate();
