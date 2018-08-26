@@ -19,12 +19,12 @@ function jPatternDirectiveFn() {
 
         jModelInstance
         // bind Listener to jModel
-            .$eventListener.register(':input', function(ev, elem) {
+            .$eventListener.register(':input', function(ev, insModel) {
             // trigger the preventDefault 
             // isFailed validation
-            if (!validatePattern(elem)) {
+            if ((self.isInput && insModel.elem.value) && !validatePattern(insModel.elem)) {
                 ev.preventDefault();
-                var _value = getValue(elem);
+                var _value = getValue(insModel.elem);
                 jModelInstance.$$setViewValue(_value.substr(0, _value.length - 1));
                 _value = null;
             }

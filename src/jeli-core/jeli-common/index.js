@@ -247,7 +247,7 @@
    * @param {*} b 
    */
   function $inArray(a, b) {
-      return b.indexOf(a) > -1;
+      return ($isString(b) || $isArray(b)) && b.indexOf(a) > -1;
   }
 
   /**
