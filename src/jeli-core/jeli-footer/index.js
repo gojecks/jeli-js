@@ -107,7 +107,7 @@ __a = {
     $stringToObject: stringToObject,
     $isJsonString: $isJsonString,
     $isNull: $isNull,
-    $jDB: jEliDB,
+    jdb: jEliDB,
     version: BuildVersion("Elizabeth", "1.0.0"),
     bind: binding,
     forEach: domElementProvider.each,
