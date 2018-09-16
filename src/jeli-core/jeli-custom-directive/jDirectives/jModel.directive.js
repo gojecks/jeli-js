@@ -1,10 +1,18 @@
-/*
-Model Processor for j-Model Element
-*/
+/**
+ * jModel Directive
+ * @private Method
+ * _modelBinder holds instance of all created model
+ */
 
 var _modelBinder = new watchBinding();
-
-// set default value
+/**
+ * 
+ * @param {*} newVal 
+ * @param {*} oldVal 
+ * 
+ * Method is triggered each time 
+ * there is an update in model or DOM element
+ */
 function setViewValue(newVal, oldVal) {
     if (this.canSetValue) {
         //set the new value
@@ -27,10 +35,16 @@ function setViewValue(newVal, oldVal) {
     }
 }
 
+/**
+ * 
+ * @param {*} context 
+ * @param {*} checked 
+ */
 function checkType(context, checked) {
     switch (context.elem.type.toLowerCase()) {
         case ('checkbox'):
             context.elem[checked ? 'setAttribute' : 'removeAttribute']('checked', true);
+            context.elem.checked = checked || false;
             break;
         case ('radio'):
             if ($isEqual($typeOfValue(context.elem), checked)) {
@@ -40,6 +54,11 @@ function checkType(context, checked) {
     }
 }
 
+/**
+ * 
+ * @param {*} context 
+ * @param {*} newVal 
+ */
 function selectType(context, newVal) {
     newVal = JSON.stringify(newVal).toLowerCase();
     expect(context.elem.options).each(function(options) {
@@ -49,7 +68,11 @@ function selectType(context, newVal) {
     });
 }
 
-
+/**
+ * 
+ * @param {*} elem 
+ * @param {*} checker 
+ */
 function updateViews(elem, checker) {
     //model was modified
     (_modelBinder.$get(checker).$$views || [])
@@ -65,9 +88,9 @@ function updateViews(elem, checker) {
 }
 
 /*
-  Jmodel _onviewModelChanged
-  @return function
-*/
+ * Jmodel _onviewModelChanged
+ * @return function
+ */
 
 function _onviewModelChanged(directiveModel) {
     return function() {
@@ -76,9 +99,9 @@ function _onviewModelChanged(directiveModel) {
 }
 
 /**
-  jModelInstance Function
-  @return ModelInstance
-**/
+ * jModelInstance Function
+ *  @return ModelInstance
+ **/
 
 function modelInstance() {
     /**
@@ -180,9 +203,9 @@ modelInstance.prototype.__unregisterEvents = function(directiveModel, one) {
 
 
 /*
-  jModel Core Function
-  Directive Name: j-Model
-*/
+ * jModel Core Function
+ * Directive Name: j-Model
+ */
 function prepareModel() {
     // change checker for ArrayCase
     this.checker = generateArrayKeyType(this.checker, this.$model);
@@ -203,8 +226,8 @@ function prepareModel() {
     }, maskedEval(this.$attr['model-options']) || {});
 
     /**
-      set the view to the model instance
-    **/
+     * set the view to the model instance
+     **/
     _jModelInstance.$$views.push(this);
     // set the viewReferenceIndex
     // used to remove Object from the collector when element is removed from DOM
@@ -226,8 +249,8 @@ function prepareModel() {
     }
 
     /*
-      update the viewModel if default value is set
-    */
+     * update the viewModel if default value is set
+     */
     if (!cVal && $isDefined(eleVal)) {
         setModelValue(this.checker, this.$model, eleVal);
         //set state
@@ -250,7 +273,6 @@ function prepareModel() {
 
         _self = _jModelInstance = null;
     });
-
 
     return _onviewModelChanged(this);
 }

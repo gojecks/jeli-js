@@ -29,8 +29,8 @@ defaultElementInitializer.prototype['include'] = function() {
             resetIncludeTemplate();
             // get the required template
             var cache = templFac.get(url);
-            if (cache) {
-                $includeBuilder(cache);
+            if (cache || isPlainHtml(url)) {
+                $includeBuilder(cache || url);
             } else {
                 $http.get(url).then(function(data) {
                     if ($isString(data.data)) {
@@ -61,6 +61,10 @@ defaultElementInitializer.prototype['include'] = function() {
         //transverse the new instance of element with the model
         var nModel = $self.$model.$new();
         $templateCompiler($self.elem, true)(nModel, $self.ref);
+    }
+
+    function isPlainHtml(html) {
+        return (html || '').match(/[<>]/);
     }
     //track  last processed url
     this.lastProcessed = url;

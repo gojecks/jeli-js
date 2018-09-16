@@ -196,20 +196,19 @@ function $templateCompiler($template, attachElementObserver) {
 }
 
 /*
-    createElement Method
-    Creates a VIRTUAL EELEMENT
-    Accepts JSON OBJ and Returns an Element
-    eg : {
-      "element" : "p",
-      "attr" : {
-        "class" : "test"
-      },
-      "children" : [{}], 
-      "text" : "I am a Paragraph"
-  }
-
-  @return DOM Element
-*/
+ * createElement Method
+ * Creates a VIRTUAL EELEMENT
+ * Accepts JSON OBJ and Returns an Element
+ * eg : {
+ *   "element" : "p",
+ *   "attr" : {
+ *       "class" : "test"
+ *   },
+ *   "children" : [{}], 
+ *   "text" : "I am a Paragraph"
+ *   }
+ * @return DOM Element
+ */
 function jElementBuilder(ele, data) {
     var element = document.createElement(ele.element);
     data = data || {};

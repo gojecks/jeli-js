@@ -1,10 +1,9 @@
 /**
-	Directive Name:  j-pattern
-	Set a regular expression to be parsed before setting value to an ELEMENT
-	@Usage: ELEMENT OR ATTR
-
-	Directive doesn't function correctly if jMin or jMax Directive is also binded to element
-**/
+ * Directive Name:  j-pattern
+ * Set a regular expression to be parsed before setting value to an ELEMENT
+ * @Usage: ELEMENT OR ATTR
+ * Directive doesn't function correctly if jMin or jMax Directive is also binded to element
+ **/
 var _patternbindedElem = [];
 
 function jPatternDirectiveFn() {
