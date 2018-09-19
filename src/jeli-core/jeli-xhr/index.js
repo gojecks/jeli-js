@@ -1,5 +1,7 @@
-/*@Function $httpProvider
-@Interceptor : returns promise object*/
+/**
+ * @method xhr()
+ * Generate an XHR request instance
+ */
 function xhr() {
     if (typeof XMLHttpRequest !== 'undefined' && (!window.ActiveXObject)) {
         return new XMLHttpRequest();
@@ -38,7 +40,11 @@ var unsafeHeaders = {
     'Via': true
 };
 
-//@Function Ajax
+/**
+ * 
+ * @param {*} url 
+ * @param {*} options 
+ */
 function ajax(url, options) {
     var request = xhr(),
         xhrPromise = new $d,
