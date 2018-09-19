@@ -2,3 +2,5 @@
 node_modules
 dist
 test
+npm-debug.log
+.npmrc
