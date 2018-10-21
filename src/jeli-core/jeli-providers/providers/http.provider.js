@@ -19,20 +19,25 @@ $provider.registerProvider('$httpProvider', function $httpProvider() {
         }),
         _isRegistered = false;
 
+    /**
+     * 
+     * @param {*} state 
+     * @param {*} options 
+     */
     this.resolveInterceptor = function(state, options) {
-        var $defer = new $p();
         if (!_isRegistered) {
             this.register();
             _isRegistered = true;
         }
 
+        var _stateInterceptor = _resolved[state];
+        if (_stateInterceptor.length) {
+            _stateInterceptor.forEach(function(_intercept) {
+                options = _intercept.apply(_intercept, [options]);
+            });
+        }
 
-        _resolved[state].forEach(function(_intercept, idx) {
-            var callback = _intercept.apply(_intercept, [options]);
-            $defer[callback ? 'resolve' : 'reject'](callback);
-        });
-
-        return $defer;
+        return options;
     };
 
     //register all interceptors

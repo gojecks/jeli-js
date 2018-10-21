@@ -1,53 +1,10 @@
 /**
- * @method xhr()
- * Generate an XHR request instance
- */
-function xhr() {
-    if (typeof XMLHttpRequest !== 'undefined' && (!window.ActiveXObject)) {
-        return new XMLHttpRequest();
-    } else {
-        try {
-            return new ActiveXObject('Msxml2.XMLHTTP.6.0');
-        } catch (e) {}
-        try {
-            return new ActiveXObject('Msxml2.XMLHTTP.3.0');
-        } catch (e) {}
-        try {
-            return new ActiveXObject('Msxml2.XMLHTTP');
-        } catch (e) {}
-    }
-    return false;
-}
-
-var unsafeHeaders = {
-    'Accept-Charset': true,
-    'Accept-Encoding': true,
-    'Connection': true,
-    'Content-Length': true,
-    'Cookie': true,
-    'Cookie2': true,
-    'Content-Transfer-Encoding': true,
-    'Date': true,
-    'Expect': true,
-    'Host': true,
-    'Keep-Alive': true,
-    'Referer': true,
-    'TE': true,
-    'Trailer': true,
-    'Transfer-Encoding': true,
-    'Upgrade': true,
-    'User-Agent': true,
-    'Via': true
-};
-
-/**
  * 
  * @param {*} url 
  * @param {*} options 
  */
 function ajax(url, options) {
-    var request = xhr(),
-        xhrPromise = new $d,
+    var xhrPromise = (new $d),
         response = {},
         interceptor = $provider && $provider.$get('$httpProvider'),
         chain = {},
@@ -63,66 +20,60 @@ function ajax(url, options) {
     options = options || {};
     options.headers = extend({}, _defaultHeader, options.headers);
     options.url = options.url || url;
-    options.type = options.type ? options.type.toLowerCase() : 'get';
+    options.type = (options.type || 'GET').toLowerCase();
     options.asynchronous = options.asynchronous || true;
     options.data = options.data || '';
-
+    var request = options.xhr || xhr();
     if (options.contentType) {
         options.headers['Content-Type'] = options.contentType;
     }
 
-    //$httpProvider Interceptor
-    //Request Interceptor
+    /**
+     * $httpProvider Interceptor
+     * Request Interceptor
+     **/
     if (interceptor) {
-        interceptor.resolveInterceptor('request', {
-                headers: options.headers,
-                url: options.url,
-                type: options.type
-            })
-            .then(function(_opts) {
-                options = extend({}, options, _opts);
-            });
+        options = interceptor.resolveInterceptor('request', options);
+        if (!options) {
+            throw new Error('$HTTP: Interceptor should return a value');
+        }
     }
 
-
-    //Successful Request
-    function successfulRequest(request) {
-        return (request.status >= 200 && request.status < 300) || request.status == 304 || (request.status == 0 && request.responseText);
-    }
-
+    /**
+     * 
+     * @param {*} readyState 
+     */
     function respondToReadyState(readyState) {
         var data;
         if (request.readyState == 4) {
-            var contentType = response.contentType = request.mimeType || request.getResponseHeader('content-type') || '';
+            response.contentType = options.dataType || request.mimeType || request.getResponseHeader('content-type') || '';
             response.status = request.status;
             chain.readyState = request.readyState;
             response.path = options.url;
-            if (/json/.test(options.dataType || response.contentType)) {
+            if (/json/.test(response.contentType)) {
                 try {
                     data = JSON.parse(request.responseText);
                 } catch (e) {
                     data = null;
                 }
 
-            } else if (/xml/.test(options.dataType || response.contentType)) {
+            } else if (/xml/.test(response.contentType)) {
                 data = parseXML(request.responseText);
             } else {
                 data = request.responseText;
             }
 
-            response.success = successfulRequest(request);
-            if (options.callback) {
-                return options.callback(response, request);
-            }
-
+            response.success = (request.status >= 200 && request.status < 300) || request.status == 304 || (request.status == 0 && request.responseText);
             response.data = data;
-
             //intercept response
             if (interceptor) {
                 interceptor
                     .resolveInterceptor(((response.success) ? 'responseSuccess' : 'responseError'), response);
             }
 
+            if (options.callback) {
+                return options.callback(response, request);
+            }
             //resolve our response
             xhrPromise[((response.success) ? 'resolve' : 'reject')](response, request);
 
@@ -134,7 +85,10 @@ function ajax(url, options) {
         }
     }
 
-    //getResponseHeaders
+    /**
+     * @method getResponseHeaders
+     * @param {*} name 
+     */
     function getResponseHeaders(name) {
         if (!$isObject(name)) {
             return request.getResponseHeader(name)
@@ -147,25 +101,9 @@ function ajax(url, options) {
         }
     }
 
-    //check if header requires withCredentials flag
-    if (options.xhrFields && options.xhrFields.withCredentials) {
-        //set the withCredentials Flag
-        request.withCredentials = true;
-    }
-
     /**
-     * check register success and error handler
+     * set Request Headers
      */
-    if (options.success) {
-        xhrPromise.done(options.success);
-    }
-
-    if (options.error) {
-        xhrPromise.fail(options.error);
-    }
-
-
-
     function setHeaders() {
         for (var name in options.headers) {
             if (unsafeHeaders[name] || /^(Sec-|Proxy-)/.test(name)) {
@@ -176,43 +114,64 @@ function ajax(url, options) {
         }
     }
 
-    if (!$isString(options.data)) {
-        switch (options.type) {
-            case ("get"):
-                options.data = serialize(options.data);
-                break;
-            default:
-                options.data = JSON.stringify(options.data);
-                if (!options.contentType) {
-                    options.headers['Content-Type'] = 'application/json';
-                }
-                break;
+    /**
+     * process Request
+     */
+    function processRequest() {
+        //check if header requires withCredentials flag
+        if (options.xhrFields && options.xhrFields.withCredentials) {
+            //set the withCredentials Flag
+            request.withCredentials = true;
         }
 
-    }
-
-    //Set the options data and cache
-    if (options.type === 'get') {
-        if (options.data) {
-            options.url += ((/\?/).test(options.url) ? '&' : '?') + options.data;
+        /**
+         * check register success and error handler
+         */
+        if (options.success) {
+            xhrPromise.done(options.success);
         }
 
-        if (!$isUndefined(options.cache) && !options.cache) {
-            options.url += ((/\?/).test(options.url) ? '&' : '?') + '_=' + (new Date()).getTime();
+        if (options.error) {
+            xhrPromise.fail(options.error);
         }
-    }
 
-    request.onreadystatechange = respondToReadyState;
-    request.open(options.type, options.url, options.asynchronous);
-
-    //handle before send
-    //function recieves the XMLHTTPREQUEST
-    if (options.beforeSend && $isFunction(options.beforeSend)) {
-        options.beforeSend.apply(options.beforeSend, [request]);
-    }
+        if (!options.contentType) {
+            options.headers['Content-Type'] = 'application/json';
+        }
 
 
-    function send() {
+        if (typeof options.data !== 'string') {
+            switch (options.type) {
+                case ("get"):
+                    options.data = serialize(options.data);
+                    break;
+                default:
+                    options.data = JSON.stringify(options.data);
+                    break;
+            }
+        }
+
+        //Set the options data and cache
+        if (options.type === 'get') {
+            if (options.data) {
+                options.url += ((/\?/).test(options.url) ? '&' : '?') + options.data;
+            }
+
+            if (!options.cache) {
+                options.url += ((/\?/).test(options.url) ? '&' : '?') + '_=' + (new Date()).getTime();
+            }
+        }
+
+        request.onreadystatechange = respondToReadyState;
+        request.open(options.type, options.url, options.asynchronous);
+        //handle before send
+        //function recieves the XMLHTTPREQUEST
+        if (options.beforeSend && $isFunction(options.beforeSend)) {
+            options.beforeSend.apply(options.beforeSend, [request]);
+        }
+
+        setHeaders();
+        //send the request
         try {
             var body = $inArray(options.type, ['post', 'put', 'delete']) ? options.data : null;
             request.send(body);
@@ -223,26 +182,8 @@ function ajax(url, options) {
         }
     }
 
-    //set the headers
-    setHeaders();
-    //send the request
-    send();
+    processRequest();
 
-    /**
-     * 
-     * @param {*} callback 
-     */
-    xhrPromise.end = function(callback) {
-        //write callback function
-        //only when options.callback is not defined
-        if (!options.callback && callback) {
-            options.callback = callback;
-        }
-
-        //resend our request
-        send();
-        return this;
-    };
 
     /**
      * 
@@ -261,25 +202,3 @@ function ajax(url, options) {
     return xhrPromise;
 }
 /** End of Ajax**/
-
-//setup $httpProvider
-function $http(url, options) {
-    return ajax.apply(ajax, arguments);
-}
-
-$http.put = generateOptionalHTTP('PUT');
-$http.get = generateOptionalHTTP('GET');
-$http.post = generateOptionalHTTP('POST');
-$http['delete'] = generateOptionalHTTP('DELETE');
-
-
-function generateOptionalHTTP(type) {
-    return function(url, data, headers) {
-        var options = {};
-        options.type = type;
-        options.data = data;
-        options.headers = headers || {};
-
-        return ajax(url, options);
-    };
-}
