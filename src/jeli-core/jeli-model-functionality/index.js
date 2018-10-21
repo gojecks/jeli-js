@@ -124,11 +124,6 @@ function attachEventProviders(ele) {
                         errorBuilder('jChange requires jModel to function');
                     }
 
-                    /**
-                      Register the Events
-                    **/
-
-
                     //Store a reference to the element event
                     nElement
                         .bind(splt, jEventHandler)

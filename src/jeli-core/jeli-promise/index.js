@@ -9,6 +9,11 @@
       };
   }
 
+  /**
+   * 
+   * @param {*} list 
+   * @param {*} args 
+   */
   $d.prototype.execute = function(list, args) {
       var i = this[list].length,
           len = 0,
@@ -30,15 +35,24 @@
       this.execute('_done', arguments);
   };
 
+
   $d.prototype.reject = function() {
       this.execute('_fail', arguments);
   };
 
+  /**
+   * 
+   * @param {*} callback 
+   */
   $d.prototype.done = function(callback) {
       this._done.push(callback);
       $$ProcessComplete.call(this, 'execute');
   };
 
+  /**
+   * 
+   * @param {*} callback 
+   */
   $d.prototype.fail = function(callback) {
       this._fail.push(callback);
       $$ProcessComplete.call(this, 'execute');
@@ -64,6 +78,11 @@
       };
   }
 
+  /**
+   * 
+   * @param {*} success 
+   * @param {*} failure 
+   */
   $p.prototype.then = function(success, failure) {
       this.pending.push({
           resolve: success || function() {},
@@ -75,6 +94,10 @@
       return this;
   };
 
+  /**
+   * 
+   * @param {*} failure 
+   */
   $p.prototype.catch = function(failure) {
       this.pending.push({
           reject: failure || function() {},
@@ -84,6 +107,11 @@
       $$ProcessComplete.call(this, 'complete');
   };
 
+  /**
+   * 
+   * @param {*} type 
+   * @param {*} result 
+   */
   $p.prototype.complete = function(type, result) {
       while (this.pending[0]) {
           var fn = this.pending.shift()[type];
@@ -96,6 +124,10 @@
       consumeModel();
   };
 
+  /**
+   * 
+   * @param {*} resolve 
+   */
   $p.prototype.all = function(resolve) {
       var slice = [].slice,
           resolveValues = arguments.length == 1 && $isArray(resolve) ? resolve : slice.call(arguments),
@@ -104,7 +136,11 @@
           deferred = new $p(),
           failed = 0,
           results = [];
-
+      /**
+       * 
+       * @param {*} idx 
+       * @param {*} err 
+       */
       function updateDefered(idx, err) {
           return function(res) {
               results[idx] = res;
@@ -131,6 +167,10 @@
 
   };
 
+  /**
+   * 
+   * @param {*} type 
+   */
   function $$ProcessComplete(type) {
       if (!this.$$state.pending) {
           this[type](this.$$state.resolvedWith, this.$$state.value);

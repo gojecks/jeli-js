@@ -34,6 +34,7 @@
     $modelGenerator.prototype.$evaluate = function(expr) {
         return $isFunction(expr) ? expr(this) : maskedEval(expr, this);
     };
+
     //$model apply
     $modelGenerator.prototype.$apply = function(fn) {
         try {
@@ -81,11 +82,11 @@
         }
     };
 
-    /* 
-     $rootModel $model {$publish} event
-     Loops through the Model child from top to bottom
-     @Param {string}
-     @return {FUNCTION}-@arguments {Object || String || Array}
+    /**
+     * $rootModel $model {$publish} event
+     * Loops through the Model child from top to bottom
+     * @param {string}
+     * @return {FUNCTION}-@arguments {Object || String || Array}
      */
 
     /**
@@ -95,7 +96,11 @@
      */
     $modelGenerator.prototype.$publish = function(name, once) {
         var self = this;
-        //initialize model subscribers
+        /**
+         * initialize model subscribers
+         * @param {*} current 
+         * @param {*} arg 
+         */
         function broadcastSubscribers(current, arg) {
             var child = $modelChildReferenceList.$get(current.$mId);
             if (name && current.$$subscribers[name]) {
@@ -107,6 +112,7 @@
                     current.$$subscribers[name] = [];
                 }
             }
+
             //loop through the child
             child.forEach(function(cur, idx) {
                 //get the child model and subscribe it
@@ -114,19 +120,19 @@
             });
         }
 
-
         return function() {
             //broadCast the parent before the child
             broadcastSubscribers(self, arguments);
         }
     };
+
     /**
      * 
      * @param {*} name 
      */
     $modelGenerator.prototype.$emit = function(name) {
         var current = this,
-            arg = [].concat.apply([], arguments).filter(function(a, i) { return i > 0; });
+            arg = [].slice.apply(arguments, []).filter(function(a, i) { return i > 0; });
         do {
             if (name && current.$$subscribers[name]) {
                 current.$$subscribers[name].forEach(function(fn) {
@@ -232,87 +238,6 @@
             }
         });
     }
-
-
-    //@Method _MutationObserver
-    // @param : HTMLELEMENT
-    // @param : FUNCTION
-    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver,
-        _mutationObserver = (function() {
-
-            var _regsisteredEvents = [],
-                observer,
-                observerStarted = false;
-
-            function isInPage(node) {
-                return (node === document.body) ? false : !document.body.contains(node);
-            }
-
-            function triggerRemovedNodes() {
-                _regsisteredEvents = _regsisteredEvents.filter(function(event) {
-                    var removed = isInPage(event.node);
-                    if (removed) {
-                        element(event.node)
-                            .clearData()
-                            .off();
-                        event._callback();
-                    }
-
-                    return !removed;
-                });
-            }
-
-            function startObserver() {
-                observer.observe(document.body, {
-                    attributes: true,
-                    childList: true,
-                    characterData: true,
-                    subtree: true
-                });
-
-                observerStarted = true;
-            }
-
-            if (MutationObserver) {
-                observer = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        if (mutation.removedNodes.length) {
-                            triggerRemovedNodes();
-                        }
-                    });
-                });
-
-                if (document.body) {
-                    startObserver();
-                }
-            }
-
-
-
-            return function(ele, CB) {
-                if (!ele) {
-                    return;
-                }
-
-                if (!MutationObserver) {
-                    element(ele)
-                        .bind('remove', CB);
-
-                    return;
-                }
-
-                if (!observerStarted) {
-                    startObserver();
-                }
-
-                if (!_regsisteredEvents.some(function(obj) { return obj.node === ele; })) {
-                    _regsisteredEvents.push({
-                        node: ele,
-                        _callback: CB || noop
-                    });
-                }
-            };
-        })();
 
     /**
      * 
@@ -465,11 +390,26 @@
         })
     };
 
+    /**
+     * Digest the children of a parent tree
+     * @param {*} parentId
+     */
+    $modelMapping.$digestChild = function(parentId) {
+        $modelChildReferenceList.$get(parentId).forEach(function(id) {
+            $modelMapping.$get(id).$consume();
+        });
+    };
+
+    /**
+     * digest parent and child Model tree
+     * @param {*} model
+     */
     $modelMapping.$digestParentAndChild = function(model) {
         digestFromChanges.call(model);
         var parent = model;
         do {
             parent.$consume();
+            $modelMapping.$digestChild(parent.$mId);
         } while (parent = parent.$parent);
         parent = null;
     };

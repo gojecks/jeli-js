@@ -1,4 +1,8 @@
-//customStringify Fn
+/**
+ * 
+ * @param {*} obj 
+ * @param {*} ignoreList 
+ */
 function customStringify(obj, ignoreList) {
     var cache = [],
         _custom = JSON.stringify(obj, function(key, value) {
@@ -23,7 +27,12 @@ function customStringify(obj, ignoreList) {
     return _custom;
 }
 
-//Object Checker
+/**
+ * 
+ * @param {*} watchObj 
+ * @param {*} _currentWatch 
+ * @param {*} ignoreList 
+ */
 function getDirtySnapShot(watchObj, _currentWatch, ignoreList) {
     var cdata,
         cnt = 0;
@@ -58,7 +67,13 @@ function getDirtySnapShot(watchObj, _currentWatch, ignoreList) {
             }
         };
 
-        //search through the object
+        /**
+         * 
+         * @param {*} obj1 
+         * @param {*} obj2 
+         * @param {*} reProfile 
+         * @param {*} path 
+         */
         function profiler(obj1, obj2, reProfile, path) {
             path = path || [];
             var tp;
@@ -111,7 +126,13 @@ function getDirtySnapShot(watchObj, _currentWatch, ignoreList) {
             });
         }
 
-        //Observer Value setter
+        /**
+         * 
+         * @param {*} diff 
+         * @param {*} against 
+         * @param {*} prop 
+         * @param {*} path 
+         */
         function setNewValue(diff, against, prop, path) {
             try {
                 diff[prop] = against[prop];
