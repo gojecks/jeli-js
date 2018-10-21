@@ -1,7 +1,7 @@
 module.exports = {
     jEliJS: {
         files: [
-            '.src/**/*.js'
+            '<%= dir %>src/**/*.js'
         ],
         tasks: ['clean:jDist',
             'concat:jEliJSOnly',

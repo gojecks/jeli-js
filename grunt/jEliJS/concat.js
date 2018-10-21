@@ -1,5 +1,3 @@
-var jDistDirectory = './dist/';
-
 module.exports = {
     options: {
         separator: '\n\n',
