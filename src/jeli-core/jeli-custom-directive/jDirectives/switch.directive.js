@@ -50,7 +50,7 @@ defaultElementInitializer.prototype['switch'] = function() {
         this.elem.innerHTML = "";
         this.elem.appendChild(newEle);
         //transverse the new instance of element with the model
-        transverseTemplate(newEle)(this.$model, this.ref);
+        transverseTemplate(newEle, this.$model, this.ref);
         this.$$compiledWith = null;
         newEle = null;
     }

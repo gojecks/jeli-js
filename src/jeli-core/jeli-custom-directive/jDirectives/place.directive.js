@@ -13,7 +13,7 @@ defaultElementInitializer.prototype.place = function() {
     this.bindOnce = true;
     var ele = element(this.elem);
     ele.parent().data('$replacerFn')(this.$model, function(clone, model) {
-        ele.append(transverseTemplate(clone)(model));
+        ele.append(transverseTemplate(clone, model));
     });
     ele = null;
 };

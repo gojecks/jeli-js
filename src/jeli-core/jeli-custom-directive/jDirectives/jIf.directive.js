@@ -20,7 +20,7 @@
                 this.elemIsDetached = false;
                 this.elem = element(this.$createElement()).data({ ignoreProcess: [this.cSelector] })[0];
                 this.parentNode.insertBefore(this.elem, this.cENode);
-                transverseCompiler(this.elem, true)(this.$model);
+                transverseCompiler(this.elem, this.$model);
                 //addClass(this.elem);
             }
         }
@@ -30,6 +30,6 @@
          */
         if (!this.isProcessed && !this.elemIsDetached) {
             this.isProcessed = true;
-            transverseCompiler(this.elem)(this.$model, this.ref);
+            transverseCompiler(this.elem, this.$model, this.ref);
         }
     };

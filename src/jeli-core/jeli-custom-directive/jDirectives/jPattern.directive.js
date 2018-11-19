@@ -15,15 +15,14 @@ function jPatternDirectiveFn() {
         }
 
         var jModelInstance = _modelBinder.$get(modelAttribute);
-
         jModelInstance
         // bind Listener to jModel
             .$eventListener.register(':input', function(ev, insModel) {
             // trigger the preventDefault 
             // isFailed validation
-            if ((self.isInput && insModel.elem.value) && !validatePattern(insModel.elem)) {
+            var _value = getValue(insModel.elem);
+            if ((self.isInput && insModel.elem.value) && !self._expr_.test(_value)) {
                 ev.preventDefault();
-                var _value = getValue(insModel.elem);
                 jModelInstance.$$setViewValue(_value.substr(0, _value.length - 1));
                 _value = null;
             }
@@ -31,24 +30,17 @@ function jPatternDirectiveFn() {
 
         this.isProcessed = true;
         this.isInput = $isEqual('input', $typeOfModel(this.elem));
-
-        validatePattern(self.elem);
-    }
-
-    function validatePattern(_ele) {
+        // generate and validate Regular Expression
         var rExp;
         try {
-            rExp = maskedEval(self.checker, self.$model);
-        } catch (e) {
-            rExp = self.checker;
+            rExp = maskedEval(this.checker, this.$model);
+        } catch (e) {} finally {
+            this._expr_ = new RegExp(rExp || self.checker);
         }
 
-        var _regx = new RegExp(rExp).exec(getValue(_ele));
-        return _regx && _regx[0].length === _regx.input.length;
-    }
-
-    function getValue(_ele) {
-        return self.isInput ? _ele.value : maskedEval(modelAttribute, self.$model)
+        function getValue(_ele) {
+            return self.isInput ? _ele.value : maskedEval(modelAttribute, self.$model)
+        }
     }
 }
 

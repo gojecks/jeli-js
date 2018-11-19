@@ -6,32 +6,6 @@
  * allowed type Attirbute and Element
  */
 function jDoForDirective() {
-    var conf = this.checker.match(/^\s*(.+)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/),
-        repeater;
-    /**
-     * throw error with invalid configuration
-     */
-    if ($isUndefined(conf[2])) {
-        errorBuilder("invalid condition received in " + this.cSelector + ", expecting _item_ in _condition_ or (_idx_, _item_) in _condition_");
-    }
-
-    function checkDuplicateRepeater(repeater) {
-        if (repeater && !conf[4] && $isArray(repeater)) {
-            if (noDubs(repeater).length < repeater.length) {
-                errorBuilder("Duplicate values are not allowed in repeaters. Use 'track by' expression to specify unique keys");
-            }
-        }
-    }
-
-    function getRepeaters(model) {
-        if (!isNaN(parseInt(conf[2]))) {
-            return element(new Array(parseInt(conf[2]))).map(function(_, idx) { return idx + 1; }).get(0);
-        }
-
-
-        return setTemplateValue(conf[2], model);
-    }
-
     //proceed with the checker
     if (!this.inProgress) {
         this.inProgress = true;
@@ -40,6 +14,32 @@ function jDoForDirective() {
          * usefull when using same obj for multiple repeaters
          */
         if (!this.isProcessed) {
+            var conf = this.checker.match(/^\s*(.+)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/),
+                repeater;
+            /**
+             * throw error with invalid configuration
+             */
+            if ($isUndefined(conf[2])) {
+                errorBuilder("invalid condition received in " + this.cSelector + ", expecting _item_ in _condition_ or (_idx_, _item_) in _condition_");
+            }
+
+            function checkDuplicateRepeater(repeater) {
+                if (repeater && !conf[4] && $isArray(repeater)) {
+                    if (noDubs(repeater).length < repeater.length) {
+                        errorBuilder("Duplicate values are not allowed in repeaters. Use 'track by' expression to specify unique keys");
+                    }
+                }
+            }
+
+            function getRepeaters(model) {
+                if (!isNaN(parseInt(conf[2]))) {
+                    return element(new Array(parseInt(conf[2]))).map(function(_, idx) { return idx + 1; }).get(0);
+                }
+
+
+                return setTemplateValue(conf[2], model);
+            }
+            this.shadowElement = jDOMParser(this.elem);
             this.parentNode.removeChild(this.elem);
             this.cache = [];
             this.elem = null;
@@ -66,7 +66,7 @@ function jDoForDirective() {
     /**
      * inherits model instance
      */
-    function listenerFn() {
+    function listenerFn(profile) {
         var cache = this.cache || [],
             $self = this,
             name,
@@ -108,9 +108,9 @@ function jDoForDirective() {
                 name = nsplit.pop();
             },
             elementAppender = function(nModel, type) {
-                var nElement = element($self.$createElement()).data({ ignoreProcess: [type] })[0];
+                var nElement = element($self.$createElement()).data({ ignoreProcess: [type] }).get(0);
                 $self.parentNode.insertBefore(nElement, $self.cENode);
-                $templateCompiler(nElement, true)(nModel);
+                $templateCompiler(nElement, false)(nModel);
                 /**
                  * store to our cache
                  */
