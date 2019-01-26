@@ -10,11 +10,12 @@ module.exports = {
             './src/jeli-core/jeli-header-nodb/*.js',
             './src/jeli-core/jeli-common/*.js',
             './src/jeli-core/jeli-model-functionality/*.js',
-            './src/jeli-core/jeli-miscellaneous/*.js',
+            '../jeli.helpers/cookie-manager.js',
+            '../jeli.helpers/externalScriptLoader.js',
+            '../jeli.helpers/snapshot.js',
             './src/jeli-core/jeli-model/*.js',
             './src/jeli-core/jeli-providers/**/*.js',
             './src/jeli-core/jeli-observer/*.js',
-            '../Project-jEliDB/src/core/query-taskperformer.js',
             './src/jeli-core/jeli-dom/**/*.js',
             './src/jeli-core/jeli-xhr/*.js',
             './src/jeli-core/jeli-dom-transversal/*.js',
@@ -27,6 +28,7 @@ module.exports = {
             './src/jeli-core/jeli-registry/**/*.js',
             './src/jeli-core/jeli-bootstrap/*.js',
             './src/jeli-core/jeli-footer/*.js',
+            './src/commonModule/**/*.js'
 
         ]
     }
