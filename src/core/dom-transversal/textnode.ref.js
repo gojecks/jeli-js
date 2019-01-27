@@ -36,11 +36,13 @@ TextNodeRef.prototype.observe = function() {
     var self = this;
 
     function compileTemplate() {
-        var value = self.bindings.nodeValue;
-        self.bindings.templates.forEach(function(options) {
-            value = value.replace(options.replacer, getValue(options));
-        });
-        self.nativeNode.nodeValue = value;
+        try {
+            var value = self.bindings.nodeValue;
+            self.bindings.templates.forEach(function(options) {
+                value = value.replace(options.replacer, getValue(options));
+            });
+            self.nativeNode.nodeValue = value;
+        } catch (e) {}
     }
 
     /**
@@ -74,7 +76,12 @@ TextNodeRef.prototype.cleanup = function() {
     this.nativeNode = null;
     this.context = null;
     this.parent = null;
-    this.binding = null;
+    this.bindings = null;
+};
+
+TextNodeRef.prototype.remove = function() {
+    this.nativeNode.remove();
+    this.cleanup();
 };
 
 TextNodeRef.compile = function(ele) {

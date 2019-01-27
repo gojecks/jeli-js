@@ -41,12 +41,8 @@ function ProviderService(provide) {
 /**
  * Register provider
  */
-ProviderService.resolveConfig = function(configs) {
-    configs.forEach(dependencyInjectorMain);
-};
-
-ProviderService.initModule = function(inititalizers) {
-    inititalizers.forEach(dependencyInjectorMain);
+ProviderService.resolver = function(list) {
+    list.forEach(dependencyInjectorMain);
 };
 
 /**
@@ -71,8 +67,5 @@ ProviderService._factories.set('$templateCache', new Map());
 ProviderService._factories.set('$controller', ControllerInitializer);
 ProviderService._factories.set('$resolve', ControllerResolvers);
 ProviderService._factories.set('$filter', filterParser);
-/**
- * static provider Holder
- */
-ProviderService.$isExternalLoader = { status: false };
-ProviderService.jDebugProvider = { $disableDebugMode: false };
+ProviderService._factories.set('jDebugProvider', { $disableDebugMode: false });
+ProviderService._factories.set('$isExternalLoader', { status: false });

@@ -31,18 +31,12 @@ function HtmlParser(html, parent, cb) {
 };
 
 /**
- * NativeElement Compiler
  * @param {*} ele
- * @param {*} componentRef
+ * @param {*} elementRefInstance
  */
-HtmlParser.compile = function(ele, componentRef) {
-    if ((ele.nodeType === Node.TEXT_NODE)) {
-        return new TextNodeRef.compile(ele, componentRef);
-    }
-
+HtmlParser.AttributeExtractor = function(ele, elementRefInstance) {
     var attr = ele.attributes,
-        len = attr.length,
-        elementRefInstance = new ElementRef(ele, componentRef);
+        len = attr.length;
 
     while (len--) {
         var node = attr[len].nodeName,
@@ -58,6 +52,12 @@ HtmlParser.compile = function(ele, componentRef) {
             });
 
             ele.removeAttribute(node);
+        }
+        /**
+         * Remove templateRefId or templateContext
+         */
+        else if ($isEqual('#', node.charAt(0))) {
+            elementRefInstance.attr.set('[[templateRefId]]', node.substring(1, node.length));
         }
         /**
          * remove DataMatchers
@@ -77,12 +77,6 @@ HtmlParser.compile = function(ele, componentRef) {
                 value: getFunctionsFromString(value)
             });
             ele.removeAttribute(node);
-        }
-        /**
-         * Remove templateRefId or templateContext
-         */
-        else if ($isEqual('#', node.charAt(0))) {
-            elementRefInstance.setAttribute('[[templateRefId]]', node.substring(1, node.length));
         } else {
             var hasValueBinding = _defaultTemplateExp.exec(value),
                 hasNameBinding = /\{(.*?)\}/.exec(node);
@@ -99,10 +93,41 @@ HtmlParser.compile = function(ele, componentRef) {
             }
         }
     }
+}
+
+/**
+ * NativeElement Compiler
+ * @param {*} ele
+ * @param {*} componentRef
+ */
+HtmlParser.compile = function(ele, componentRef) {
+    if ((ele.nodeType === Node.TEXT_NODE)) {
+        return new TextNodeRef.compile(ele, componentRef);
+    }
+
+    var elementRefInstance = new ElementRef(ele, componentRef);
+    HtmlParser.AttributeExtractor(ele, elementRefInstance);
+    /**
+     * check if component
+     * extract templates and jPlace and fragments
+     */
+    if (elementRefInstance.customElements.length && ele.children.length) {
+        [].forEach.call(ele.children, function(ele) {
+            HtmlParser.jTemplateCompiler(ele, elementRefInstance);
+        });
+    }
     /**
      * extract component
      */
-    elementRefInstance.customElements = HtmlParser.extractCustomElement(elementRefInstance);
+    /**
+     * get directives
+     */
+    if (elementRefInstance.directives.length) {
+        elementRefInstance.directives.forEach(function(item) {
+            var dir = DependencyInjectorService.getRegisteredElement(item.name);
+            elementRefInstance.customElements = elementRefInstance.customElements.concat.call(elementRefInstance.customElements, dir);
+        });
+    }
 
     return elementRefInstance;
 };
@@ -134,10 +159,57 @@ HtmlParser.tags = {
 /**
  * @param {*} node
  */
+HtmlParser.jTemplateCompiler = function(ele, parent) {
+    var fragment;
+    if (!('content' in ele)) {
+        fragment = document.createDocumentFragment();
+        while (ele.childNodes.length > 0) {
+            fragment.appendChild(ele.childNodes[0]);
+        }
+    } else {
+        fragment = ele.content;
+    }
+
+    var node = ({
+        attr: new Map(),
+        data: []
+    });
+
+    HtmlParser.AttributeExtractor(ele, node);
+    ele.remove();
+    /**
+     * remove element and childNode from tree
+     */
+    parent.templates.set(node.attr.get('[[templateRefId]]'), {
+        context: node.data,
+        content: fragment
+    });
+
+    return null;
+}
+
+/**
+ * @param {*} node
+ */
 HtmlParser.jPlaceCompiler = function(node) {
     // fetch by templateRefId or selector
-    var template = node.parent.getTemplate(node.getAttribute('[[templateRefId]]') || node.getAttribute('selector')),
+    /**
+     * {templateRefId}
+     */
+    var template,
         context;
+    if (node.hasAttribute('[[templateRefId]]')) {
+        template = node.parent.templates.get(node.getAttribute('[[templateRefId]]'));
+    } else if (node.hasAttribute('selector')) {
+        var content = node.parent.templates.get().content.querySelector(node.getAttribute('selector'));
+        if (content) {
+            template = {
+                content: content,
+                context: node.parent.templates.get().context
+            }
+        }
+    }
+
     if (template) {
         // template contains context
         if (template.context.length) {
@@ -157,9 +229,10 @@ HtmlParser.jPlaceCompiler = function(node) {
     /**
      * Parse the child element
      */
-    HtmlParser(node.replaceElement, function(child) {
-        child.parent = node.parent;
-        child.context = context;
+    HtmlParser(node.replaceElement, node, function(child) {
+        if (context) {
+            child.context = context;
+        }
         node.children.push(child);
     });
     /**
@@ -197,8 +270,7 @@ HtmlParser.jFragmentCompiler = function(node) {
     /**
      * Parse the child element
      */
-    HtmlParser(node.replaceElement, function(child) {
-        child.parent = node.parent;
+    HtmlParser(node.replaceElement, node, function(child) {
         child.context = context;
         node.children.push(child);
     });
@@ -220,31 +292,11 @@ HtmlParser.__extractor = function(ele, parent) {
         canCompile = compileAbleElement || isTextNode,
         node = null;
     if (canCompile && !isCommentNode) {
-        node = HtmlParser.compile(ele);
         if (isTemplate) {
-            var fragment;
-            if (!('content' in ele)) {
-                fragment = document.createDocumentFragment();
-                while (ele.childNodes.length > 0) {
-                    fragment.appendChild(ele.childNodes[0]);
-                }
-            } else {
-                fragment = ele.content;
-            }
-
-            ele.parentNode.removeChild(ele);
-            /**
-             * remove element and childNode from tree
-             */
-            parent.templates.push({
-                ref: node.getAttribute('[[templateRefId]]'),
-                context: copy(node.data, true),
-                content: fragment
-            });
-
-            return null;
+            return HtmlParser.jTemplateCompiler(ele, parent);
         }
 
+        node = HtmlParser.compile(ele);
         node.parent = parent;
         node.context = parent ? parent.context : null;
         if (compileAbleElement) {
@@ -378,36 +430,6 @@ HtmlParser.sce = function() {
         escapeHTML: htmlEscape,
         isPlainHtml: /<[a-z][\s\S]*>/i
     };
-};
-
-/**
- * 
- * @param {*} element
- */
-HtmlParser.extractCustomElement = function(element) {
-    var customElement = DependencyInjectorService.getRegisteredElement(element.nativeElement.localName);
-
-    function directiveByPriority(obj) {
-        return obj.sort(function(a, b) {
-            if (a.annotations.priority < b.annotations.priority) {
-                return -1
-            } else {
-                return 1;
-            }
-        });
-    }
-
-    /**
-     * get directives
-     */
-    if (element.directives.length) {
-        element.directives.forEach(function(item) {
-            var dir = DependencyInjectorService.getRegisteredElement(item.name);
-            customElement = customElement.concat.call(customElement, dir);
-        });
-    }
-
-    return customElement;
 };
 
 /**

@@ -145,9 +145,6 @@ function dependencyInjectorMain(factory, initializer, locals) {
     return factory;
 }
 
-function $injectorChecker(fn) {
-    return ($isFunction(fn)) ? fn.toString().match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m)[1].replace(/ /g, '').split(',') : fn;
-}
 
 /**
  * 
@@ -161,7 +158,13 @@ function $inject(factory, name) {
         //other arrays remains the dependencies
         nArg = factory;
     } else if ($isFunction(factory)) {
-        nArg = $injectorChecker(factory);
+        nArg = factory.toString()
+            .match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m)[1]
+            .replace(/ /g, '')
+            .split(',')
+            .filter(function(dep) {
+                return !!dep;
+            });
         fn = factory;
     }
 

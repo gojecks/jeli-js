@@ -2,6 +2,8 @@
  * @class Subject
  */
 function Subject() {
+    this.$notifyInProgress = 0;
+    this.notifyStack = 0;
     this['[[entries]]'] = [];
     var events = {};
     this.get = function(key) {
@@ -42,6 +44,9 @@ function Subject() {
 
 Subject.prototype.unsubscribe = function(idx) {
     this['[[entries]]'].splice(idx, 1);
+    if (this.$notifyInProgress) {
+        this.$notifyInProgress--;
+    }
 };
 
 Subject.prototype.subscribe = function(key, fn, core) {
@@ -60,11 +65,11 @@ Subject.prototype.subscribe = function(key, fn, core) {
     };
 };
 
-Subject.prototype.observeForKey = function(key, fn) {
+Subject.prototype.observeForKey = function(key, fn, core) {
     var keyObserver = this.get(key),
         index = 0;
     if (!keyObserver) {
-        this.subscribe(key, [fn]);
+        this.subscribe(key, [fn], core);
     } else {
         index = keyObserver.length;
         keyObserver.handler.push(fn);
@@ -76,52 +81,90 @@ Subject.prototype.observeForKey = function(key, fn) {
 };
 
 Subject.prototype.observeForCollection = function(key, fn) {
-    var snapshot = new SnapShotHashing();
-    this.subscribe(key, [function() {
-        fn(snapshot.getProfiling());
-    }], function(collection) {
-        return snapshot.compare(collection);
-    });
+    var keyObserver = this.get(key);
+    if (!keyObserver) {
+        var snapshot = new SnapShotHashing(),
+            handler = function() {
+                var value = snapshot.getProfiling();
+                handler.watches.forEach(function(_callback) {
+                    _callback(value);
+                });
+            };
+        handler.watches = [fn];
+        this.subscribe(key, handler, function(collection) {
+            return snapshot.compare(collection);
+        });
+    } else {
+        keyObserver.handler.watches.push(fn);
+    }
 };
 
 Subject.prototype.notifyAllObservers = function(model) {
-    this['[[entries]]'].forEach(function(observer) {
-        if (observer.watchKey) {
-            if (!observer.state) {
-                observer.state = true;
-                if (model) {
-                    var value;
-                    if (typeof observer.watchKey === 'function') {
-                        value = observer.watchKey(model);
-                    } else {
-                        value = maskedEval(observer.watchKey, model);
-                    }
+    if (this.$notifyInProgress) {
+        this.notifyStack++;
+        return;
+    }
 
-                    if (observer.core && typeof observer.core === 'function') {
-                        if (observer.core(value)) {
-                            _trigger(observer.handler, value);
-                        }
-                    } else if (!observer.hasOwnProperty('lastValue') || (value !== observer.lastValue)) {
+    var _self = this;
+    /**
+     * 
+     * @param {*} observer 
+     */
+
+    function _consume(observer, idx) {
+        if (observer.watchKey) {
+            if (model) {
+                var value;
+                if (typeof observer.watchKey === 'function') {
+                    value = observer.watchKey(model);
+                } else {
+                    value = maskedEval(observer.watchKey, model);
+                }
+
+                if (observer.core && typeof observer.core === 'function') {
+                    if (observer.core(value)) {
                         _trigger(observer.handler, value);
-                        observer.lastValue = value;
                     }
+                } else if (!observer.hasOwnProperty('lastValue') || (value !== observer.lastValue)) {
+                    _trigger(observer.handler, value);
+                    observer.lastValue = value;
                 }
             }
-            observer.state = false;
+
         } else {
             observer.handler();
         }
-    });
+
+        /**
+         * change status
+         */
+
+        if ((idx === _self.$notifyInProgress)) {
+            _self.$notifyInProgress = 0;
+            if (_self.notifyStack) {
+                // trigger notification again
+                _self.notifyStack = 0;
+                _self.notifyAllObservers(model);
+            }
+        }
+    }
     /**
      * 
      * @param {*} handlers 
      * @param {*} value 
      */
     function _trigger(handlers, value) {
-        handlers.forEach(function(cb) {
-            cb(value);
-        });
+        if (typeof handlers === 'object') {
+            handlers.forEach(function(cb) {
+                cb(value);
+            });
+        } else {
+            handlers(value);
+        }
     }
+
+    this.$notifyInProgress = this['[[entries]]'].length - 1;
+    this['[[entries]]'].forEach(_consume);
 };
 
 Subject.prototype.destroy = function(value) {

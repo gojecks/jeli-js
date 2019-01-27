@@ -20,7 +20,7 @@ function ElementRef(ele, context) {
     /**
      * to hold content defined using jTemplate component
      */
-    this.templates = [];
+    this.templates = new Map();
     this.parent = null;
 
     this.getDirective = function(name) {
@@ -135,7 +135,9 @@ ElementRef.prototype.replaceWith = function(node) {
 ElementRef.prototype.insertAfter = function(newNode, reference, transverse) {
     if (transverse) {
         HtmlParser.transverse(newNode);
+        newNode.context.tick();
         newNode = newNode.nativeElement;
+
     }
     this.nativeElement.insertBefore(newNode, reference.nextSibling);
 };
@@ -149,17 +151,7 @@ ElementRef.prototype.insertAfter = function(newNode, reference, transverse) {
  * @param {*} onDestroyListener
  */
 ElementRef.prototype.observer = function(onDestroyListener) {
-    if (onDestroyListener) {
-        this
-            .context
-            .observables
-            .on('$destroy', onDestroyListener);
-    }
-
-    var self = this;
-    _mutationObserver(this.nativeElement, function() {
-        self.context.destroy();
-    });
+    _mutationObserver(this.nativeElement, onDestroyListener || noop);
 };
 
 /**
@@ -192,7 +184,6 @@ ElementRef.prototype.remove = function() {
     if (!this.parent) {
         return this.cleanup();
     }
-
     this.parent.removeChild(this);
 };
 
@@ -209,14 +200,6 @@ ElementRef.prototype.removeChild = function(element) {
     element.cleanup();
 };
 
-/**
- * {templateRefId}
- */
-ElementRef.prototype.getTemplate = function(templateRefId) {
-    return templateRefId && this.templates.filter(function(template) {
-        return template.ref === templateRefId || template.content.querySelector(templateRefId);
-    })[0];
-};
 
 /**
  * cloneNode with all reference
@@ -301,7 +284,15 @@ ElementRef.prototype.cleanup = function() {
         self.nativeElement.removeEventListener(event.name, event.handler);
     });
 
-    this.children.forEach(function(child) {
-        child.cleanup();
-    });
+    while (this.children.length) {
+        var child = this.children.pop();
+        child.remove();
+    }
+
+    this.context = null;
+    this.attr = null;
+    this.templates = null;
+    this.nativeElement = null;
+    this.events.length = 0;
+    this.parent = null;
 };

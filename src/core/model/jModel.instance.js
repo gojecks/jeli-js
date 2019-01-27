@@ -39,7 +39,7 @@ function ModelInstance(checker) {
         /*
          * update the viewModel if default value is set
          */
-        if ($isDefined(eleVal) && (cVal !== eleVal)) {
+        if (eleVal && (cVal !== eleVal)) {
             options.element.context.updateModel(checker, eleVal);
             this.modelValue = eleVal;
         }
@@ -129,7 +129,6 @@ ModelInstance.prototype.__unregisterEvents = function(instance, one) {
             self.$eventListener.$destroy($bindingName);
         }
     });
-
     return this;
 };
 

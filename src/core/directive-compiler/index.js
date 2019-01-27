@@ -75,7 +75,12 @@ function ElementCompiler(ctrl, elementRef, next) {
         elementRef.appendChild(definition.template);
         attachComponentStyles(definition.style, ele);
         //Add event Watcher to the ele
-        elementRef.observer(lifeCycle.viewDidDestroy);
+        elementRef.observer(function() {
+            elementRef.context.destroy();
+            if (lifeCycle.viewDidDestroy) {
+                lifeCycle.viewDidDestroy.call(elementRef.context.componentInstance);
+            }
+        });
     }
 
     /**
@@ -128,6 +133,11 @@ function ElementCompiler(ctrl, elementRef, next) {
                  * remove the Attribute from element
                  */
                 next(elementRef.isDetachedElem);
+                if (lifeCycle.viewDidDestroy) {
+                    elementRef.observer(function() {
+                        lifeCycle.viewDidDestroy.call(componentInstance);
+                    });
+                }
             }
             /**
              * register lifeCycle observers
@@ -135,12 +145,6 @@ function ElementCompiler(ctrl, elementRef, next) {
             if (lifeCycle.willObserve) {
                 elementRef.context.observables.subscribe(function() {
                     lifeCycle.willObserve.call(componentInstance);
-                });
-            }
-
-            if (lifeCycle.viewDidDestroy) {
-                elementRef.observer(function() {
-                    lifeCycle.viewDidDestroy.call(componentInstance);
                 });
             }
         });

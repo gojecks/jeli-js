@@ -64,19 +64,13 @@ function ModelDirective(elementRef) {
         this.modelInstance.setView(this.options);
     };
 
-    this.viewWillDestroy = function() {
+    this.viewDidDestroy = function() {
         // perform cleanUp
         // observe the element change
         this.modelInstance.$$totalBinding--;
-        if (!this.modelInstance.$$totalBinding) {
-            elementRef.context.jModelInstance.remove(this.checker);
-            this.modelInstance.__unregisterEvents(this.options);
-        } else {
-            this.modelInstance
-                .removeFromView(this.options.jModelViewReferenceIndex)
-                .__unregisterEvents(this.options, true);
-        }
-
-        this.options = this.jModelInstance = null;
+        this.modelInstance
+            .removeFromView(this.options.jModelViewReferenceIndex)
+            .__unregisterEvents(this.options, !this.modelInstance.$$totalBinding);
+        this.options = this.modelInstance = null;
     };
 }

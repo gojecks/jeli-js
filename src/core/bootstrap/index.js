@@ -7,12 +7,10 @@ function BootStrapApplication(moduleToBootStrap, bootStrapComponent) {
         var _module = ModuleService.get(moduleToBootStrap);
         $compileTracker.bootStrapComponent = bootStrapComponent;
         $compileTracker.compiledModule = [_module];
-        ModuleService.injectRequiredModule(_module.options.requiredModules, function(_mod) {
+        ModuleService.compileModule(_module, function(_mod) {
             $compileTracker.compiledModule.push(_mod);
         });
-        ProviderService.resolveConfig(_module.annotations.config);
         interceptor.register();
-        ProviderService.initModule(_module.annotations.initializers);
         /**
          * Bind to Document EventListener
          * Boostrap Application once document is loaded

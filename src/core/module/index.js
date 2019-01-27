@@ -110,14 +110,13 @@ ModuleService.get = function(moduleName) {
 /**
  * @method injectRequiredModule
  */
-ModuleService.injectRequiredModule = function(required, cb) {
-    required.forEach(function(moduleName) {
+ModuleService.compileModule = function(_module, cb) {
+    _module.options.requiredModules.forEach(function(moduleName) {
         var _module = ModuleService.get(moduleName);
         if (_module) {
-            ProviderService.resolveConfig(_module.annotations.config);
             //add the required Module to the bootstraped App
             if (_module.options.requiredModules) {
-                ModuleService.injectRequiredModule(_module.options.requiredModules);
+                ModuleService.compileModule(_module.options.requiredModules);
             }
 
             if (cb) {
@@ -125,4 +124,6 @@ ModuleService.injectRequiredModule = function(required, cb) {
             }
         }
     });
+    ProviderService.resolver(_module.annotations.config);
+    ProviderService.resolver(_module.annotations.initializers);
 }
