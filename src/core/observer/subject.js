@@ -3,12 +3,12 @@
  */
 function Subject() {
     this.$notifyInProgress = 0;
-    this.notifyStack = 0;
+    this.retry = false;
     this['[[entries]]'] = [];
     var events = {};
     this.get = function(key) {
-        return this['[[entries]]'].filter(function(reg) {
-            return reg.watchKey === key;
+        return this['[[entries]]'].filter(function(instance) {
+            return instance.binding === key;
         })[0];
     };
 
@@ -42,46 +42,56 @@ function Subject() {
     };
 }
 
-Subject.prototype.unsubscribe = function(idx) {
-    this['[[entries]]'].splice(idx, 1);
+Subject.prototype.unsubscribe = function(bindingIdx) {
+    this['[[entries]]'] = this['[[entries]]'].filter(function(instance) {
+        return instance.binding !== bindingIdx;
+    });
+
     if (this.$notifyInProgress) {
         this.$notifyInProgress--;
     }
 };
 
 Subject.prototype.subscribe = function(key, fn, core) {
-    var index = this['[[entries]]'].length,
-        self = this;
-
+    var self = this,
+        bindingIdx = (fn ? key : 'core_' + +new Date);
     this['[[entries]]'].push({
         watchKey: fn ? key : undefined,
         handler: fn || key,
         state: false,
-        core: core
+        core: core,
+        binding: bindingIdx
     });
 
     return function() {
-        self.unsubscribe(index);
+        self.unsubscribe(bindingIdx);
     };
 };
 
 Subject.prototype.observeForKey = function(key, fn, core) {
     var keyObserver = this.get(key),
-        index = 0;
+        index = 0,
+        unsubscribe = null;
     if (!keyObserver) {
-        this.subscribe(key, [fn], core);
+        unsubscribe = this.subscribe(key, [fn], core);
     } else {
         index = keyObserver.length;
         keyObserver.handler.push(fn);
     }
 
     return function() {
-        keyObserver.handler.splice(index, 1);
+        if (!index) {
+            unsubscribe();
+        } else {
+            keyObserver.handler.splice(index, 1);
+        }
     };
 };
 
 Subject.prototype.observeForCollection = function(key, fn) {
-    var keyObserver = this.get(key);
+    var keyObserver = this.get(key),
+        index = 0,
+        unsubscribe;
     if (!keyObserver) {
         var snapshot = new SnapShotHashing(),
             handler = function() {
@@ -91,17 +101,27 @@ Subject.prototype.observeForCollection = function(key, fn) {
                 });
             };
         handler.watches = [fn];
-        this.subscribe(key, handler, function(collection) {
+        unsubscribe = this.subscribe(key, handler, function(collection) {
             return snapshot.compare(collection);
         });
     } else {
+        index = keyObserver.handler.watches.length;
         keyObserver.handler.watches.push(fn);
+    }
+
+    return function() {
+        if (!keyObserver) {
+            // make sure subjects re removed successfully
+            unsubscribe();
+        } else {
+            keyObserver.handler.watches.splice(index, 1);
+        }
     }
 };
 
 Subject.prototype.notifyAllObservers = function(model) {
     if (this.$notifyInProgress) {
-        this.notifyStack++;
+        this.retry = true;
         return;
     }
 
@@ -141,9 +161,9 @@ Subject.prototype.notifyAllObservers = function(model) {
 
         if ((idx === _self.$notifyInProgress)) {
             _self.$notifyInProgress = 0;
-            if (_self.notifyStack) {
+            if (_self.retry) {
                 // trigger notification again
-                _self.notifyStack = 0;
+                _self.retry = false;
                 _self.notifyAllObservers(model);
             }
         }
