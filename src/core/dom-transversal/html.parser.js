@@ -123,11 +123,22 @@ HtmlParser.compile = function(ele, componentRef) {
      * get directives
      */
     if (elementRefInstance.directives.length) {
+        var strDirective = JSON.stringify(elementRefInstance.customElements);
+        HtmlParser.checkStructuralDirective(strDirective, ':for', ':if');
+        HtmlParser.checkStructuralDirective(strDirective, ':if', ':switch');
+        HtmlParser.checkStructuralDirective(strDirective, ':if', ':hide');
+        HtmlParser.checkStructuralDirective(strDirective, ':if', ':show');
+
         elementRefInstance.directives.forEach(function(item) {
             var dir = DependencyInjectorService.getRegisteredElement(item.name);
             elementRefInstance.customElements = elementRefInstance.customElements.concat.call(elementRefInstance.customElements, dir);
         });
     }
+
+    elementRefInstance.customElements.push.apply(
+        elementRefInstance.customElements,
+        DependencyInjectorService.getRegisteredElement(ele.localName)
+    );
 
     return elementRefInstance;
 };
@@ -284,15 +295,20 @@ HtmlParser.jFragmentCompiler = function(node) {
  * extract DIRECTIVES and COMPONENTS FROM ELEMENT
  */
 HtmlParser.__extractor = function(ele, parent) {
+    /**
+     * empty textNode and commentNode
+     */
+    if ((ele.nodeType === Node.TEXT_NODE && !ele.nodeValue.trim()) || (ele.nodeType === Node.COMMENT_NODE)) {
+        return null;
+    }
+
     var tagName = String.prototype.toLowerCase.call(ele.tagName || ''),
         compileAbleElement = (tagName && ["script", "style", "j-skip"].indexOf(tagName) < 0),
         isTextNode = (ele.nodeType === Node.TEXT_NODE),
-        isTemplate = $inArray(tagName, ['j-template', 'template']),
-        isCommentNode = (ele.nodeType === Node.COMMENT_NODE),
         canCompile = compileAbleElement || isTextNode,
         node = null;
-    if (canCompile && !isCommentNode) {
-        if (isTemplate) {
+    if (canCompile) {
+        if ($inArray(tagName, ['j-template', 'template'])) {
             return HtmlParser.jTemplateCompiler(ele, parent);
         }
 
@@ -341,8 +357,6 @@ HtmlParser.checkStructuralDirective = function(dir, restrictA, restrictB) {
 HtmlParser.transverse = function(node) {
     if (node.type === 'element') {
         if (node.customElements.length) {
-            var strDirective = JSON.stringify(node.customElements);
-            HtmlParser.checkStructuralDirective(strDirective, ':for', ':if');
             ElementCompiler.resolve(node, proceedWithCompilation);
         } else {
             proceedWithCompilation(node);

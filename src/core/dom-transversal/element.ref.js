@@ -4,18 +4,20 @@
  * @param {*} context 
  */
 function ElementRef(ele, context) {
+    this.refId = getUID();
     this.events = [];
     this.directives = [];
     this.data = [];
     this.attr = new Map();
     this.attrObservers = [];
+    this.$observers = [];
     this.props = new Map();
     this.children = [];
     this.nativeElement = ele;
     this.context = context;
     this.type = 'element';
     this.tagName = ele.tagName.toLowerCase();
-    this.customElements = DependencyInjectorService.getRegisteredElement(ele.localName);
+    this.customElements = [];
 
     /**
      * to hold content defined using jTemplate component
@@ -129,17 +131,18 @@ ElementRef.prototype.replaceWith = function(node) {
 
 /**
  * @param {*} newNode
- * @param {*} reference
+ * @param {*} targetNode
  * @param {*} transverse
  */
-ElementRef.prototype.insertAfter = function(newNode, reference, transverse) {
+ElementRef.prototype.insertAfter = function(newNode, targetNode, transverse) {
     if (transverse) {
         HtmlParser.transverse(newNode);
         newNode.context.tick();
         newNode = newNode.nativeElement;
 
     }
-    this.nativeElement.insertBefore(newNode, reference.nextSibling);
+
+    targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
 };
 
 /**
@@ -151,7 +154,11 @@ ElementRef.prototype.insertAfter = function(newNode, reference, transverse) {
  * @param {*} onDestroyListener
  */
 ElementRef.prototype.observer = function(onDestroyListener) {
-    _mutationObserver(this.nativeElement, onDestroyListener || noop);
+    if (onDestroyListener) {
+        this.$observers.push(onDestroyListener)
+    }
+
+    return this;
 };
 
 /**
@@ -179,7 +186,7 @@ ElementRef.prototype.text = function(text) {
     this.nativeElement.innerText = text;
 };
 
-ElementRef.prototype.remove = function() {
+ElementRef.prototype.remove = function(keepParent) {
     this.nativeElement.remove();
     if (!this.parent) {
         return this.cleanup();
@@ -284,6 +291,17 @@ ElementRef.prototype.cleanup = function() {
         self.nativeElement.removeEventListener(event.name, event.handler);
     });
 
+    /**
+     * trigger registered listeners
+     */
+    while (this.$observers.length) {
+        var observer = this.$observers.pop();
+        observer();
+    }
+
+    /**
+     * remove children
+     */
     while (this.children.length) {
         var child = this.children.pop();
         child.remove();

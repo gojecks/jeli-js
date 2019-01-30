@@ -15,6 +15,7 @@ function TextNodeRef(ele, componentRef) {
     this.isChild = false;
     this.type = 'text';
     this.unsubscribe = null;
+    this.lastCompiled;
 };
 
 TextNodeRef.prototype.clone = function(context) {
@@ -36,13 +37,19 @@ TextNodeRef.prototype.observe = function() {
     var self = this;
 
     function compileTemplate() {
-        try {
-            var value = self.bindings.nodeValue;
-            self.bindings.templates.forEach(function(options) {
-                value = value.replace(options.replacer, getValue(options));
-            });
+        if (!self.bindings) {
+            return;
+        }
+
+        var value = self.bindings.nodeValue;
+        self.bindings.templates.forEach(function(options) {
+            value = value.replace(options.replacer, getValue(options));
+        });
+
+        if (!$isEqual(self.lastCompiled, value)) {
             self.nativeNode.nodeValue = value;
-        } catch (e) {}
+            self.lastCompiled = value;
+        }
     }
 
     /**
