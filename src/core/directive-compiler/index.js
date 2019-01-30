@@ -63,7 +63,6 @@ function attachComponentStyles(style, ele) {
  */
 function ElementCompiler(ctrl, elementRef, next) {
     var definition = ctrl.annotations,
-        ele = elementRef.nativeElement,
         lifeCycle;
     /**
      * Initialize Component
@@ -71,11 +70,10 @@ function ElementCompiler(ctrl, elementRef, next) {
     function _componentCompiler() {
         lifeCycle.viewDidLoad();
         //set the refID of the directive
-        ele['$object:id'] = getUID();
         elementRef.appendChild(definition.template);
-        attachComponentStyles(definition.style, ele);
+        attachComponentStyles(definition.style, elementRef.nativeElement);
         //Add event Watcher to the ele
-        elementRef.observer(function() {
+        _mutationObserver(elementRef.nativeElement, function() {
             elementRef.context.destroy();
             if (lifeCycle.viewDidDestroy) {
                 lifeCycle.viewDidDestroy.call(elementRef.context.componentInstance);
