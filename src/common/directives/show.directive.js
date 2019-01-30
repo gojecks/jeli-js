@@ -9,7 +9,6 @@
 commonModule
     .directive({
         selector: ':show',
-        priority: 10,
         DI: ['ElementRef', 'Observables'],
         props: [{
             name: 'binding',

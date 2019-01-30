@@ -9,7 +9,6 @@
 commonModule
     .directive({
         selector: ':html',
-        priority: 10,
         DI: ['ElementRef', 'Observables', '$sce'],
         props: [{
             name: 'binding',

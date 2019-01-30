@@ -4,7 +4,6 @@
 commonModule
     .directive({
         selector: ':init',
-        priority: 10,
         DI: ['ElementRef'],
         props: [{
             name: 'initValue',

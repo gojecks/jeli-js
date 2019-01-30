@@ -18,8 +18,7 @@ commonModule
                 name: 'trackBy',
                 value: 'key'
             }
-        ],
-        priority: 1,
+        ]
     }, ForDirective);
 
 function ForDirective(elementRef, Observables) {
@@ -29,6 +28,7 @@ function ForDirective(elementRef, Observables) {
     this.$index = '$index';
     this.cache = [];
     this.fragment = document.createDocumentFragment();
+    this.unsubscribe = null;
     this.didInit = function() {
         /**
          * removed bind from unprocessed obj
@@ -54,7 +54,7 @@ function ForDirective(elementRef, Observables) {
         /**
          * register listener
          */
-        Observables
+        this.unsubscribe = Observables
             .observeForCollection(this.conf[2], this.listenerFn.bind(this));
     };
 
@@ -74,7 +74,7 @@ function ForDirective(elementRef, Observables) {
         /**
          * Insert our element
          */
-        elementRef.parent.insertAfter(this.fragment, this.getLastCompiledElement(cacheLen));
+        elementRef.insertAfter(this.fragment, this.getLastCompiledElement(cacheLen));
     };
 
     this.getLastCompiledElement = function(cacheLen) {
@@ -141,5 +141,17 @@ function ForDirective(elementRef, Observables) {
                 cacheElementRef.context.tick();
             }
         });
+    };
+
+    /**
+     * viewDidDestroy
+     */
+    this.viewDidDestroy = function() {
+        this.unsubscribe && this.unsubscribe();
+        while (this.cache.length) {
+            var cacheItem = this.cache.pop();
+            cacheItem.context.destroy();
+            cacheItem.remove();
+        }
     };
 }

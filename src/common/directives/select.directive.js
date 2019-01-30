@@ -4,7 +4,6 @@
 commonModule
     .directive({
         selector: ':select',
-        priority: 4,
         DI: ['ElementRef'],
         props: [{
             name: 'binding',

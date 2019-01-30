@@ -5,7 +5,6 @@
 commonModule
     .directive({
         selector: ':model',
-        priority: 2,
         DI: ['ElementRef'],
         props: [{
             name: 'binding',
@@ -62,6 +61,7 @@ function ModelDirective(elementRef) {
          * used to remove Object from the collector when element is removed from DOM
          **/
         this.modelInstance.setView(this.options);
+        modelOptions = null;
     };
 
     this.viewDidDestroy = function() {
@@ -71,6 +71,9 @@ function ModelDirective(elementRef) {
         this.modelInstance
             .removeFromView(this.options.jModelViewReferenceIndex)
             .__unregisterEvents(this.options, !this.modelInstance.$$totalBinding);
+        if (!this.modelInstance.$$totalBinding) {
+            elementRef.context.jModelInstance.delete(this.checker);
+        }
         this.options = this.modelInstance = null;
     };
 }

@@ -7,7 +7,6 @@
 commonModule
     .directive({
         selector: ':readonly',
-        priority: 10,
         DI: ['ElementRef', 'Observables'],
         props: [{
             name: 'binding',

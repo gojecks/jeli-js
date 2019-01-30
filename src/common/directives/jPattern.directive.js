@@ -7,7 +7,6 @@
 commonModule
     .directive({
         selector: ':pattern',
-        priority: 10,
         DI: ['ElementRef'],
         props: [{
             name: 'binding',

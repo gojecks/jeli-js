@@ -1,7 +1,6 @@
 commonModule
     .directive({
         selector: ':switch',
-        priority: 3,
         DI: ['ElementRef', 'Observables'],
         props: [{
             name: 'binding',

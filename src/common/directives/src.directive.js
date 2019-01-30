@@ -1,7 +1,6 @@
 commonModule
     .directive({
         selector: ':src',
-        priority: 10,
         DI: ['ElementRef', 'Observables'],
         props: [{
             name: 'binding',

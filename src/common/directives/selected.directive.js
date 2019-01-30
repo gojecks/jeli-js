@@ -12,8 +12,7 @@ commonModule
         props: [{
             name: 'binding',
             value: ':selected'
-        }],
-        priority: 100
+        }]
     }, SelectedDirective);
 
 function SelectedDirective(elementRef, Observables) {

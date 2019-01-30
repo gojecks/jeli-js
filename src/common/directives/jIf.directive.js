@@ -8,7 +8,6 @@ commonModule
     .directive({
         selector: ':if',
         transplace: 'element',
-        priority: -100,
         DI: ['ElementRef', 'Observables'],
         props: [{
             name: 'binding',
@@ -26,7 +25,7 @@ function IfDirective(elementRef, Observables) {
 
     this.process = function(changes) {
         if (!changes) {
-            this.compiledElement && this.compiledElement.remove();
+            this.compiledElement && this.compiledElement.remove(true);
             this.compiledElement = null;
         } else {
             this.compiledElement = elementRef.clone(null, true);

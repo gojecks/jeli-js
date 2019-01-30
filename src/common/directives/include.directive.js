@@ -9,7 +9,6 @@
 commonModule
     .directive({
         selector: 'j-include',
-        priority: 2,
         transplace: 'element',
         props: [{
             name: 'binding',

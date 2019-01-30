@@ -7,7 +7,6 @@
 commonModule
     .directive({
         selector: ':hide',
-        priority: 10,
         DI: ['ElementRef', 'Observables'],
         props: [{
             name: 'binding',
