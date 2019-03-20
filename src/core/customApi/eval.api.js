@@ -1,11 +1,11 @@
 /**
  * 
- * @param {*} scr 
+ * @param {*} src
  * @param {*} useScope 
  */
-function maskedEval(scr, useScope) {
+function maskedEval(src, useScope) {
     // execute script in private context
-    return (new Function("with(this) { try{ return " + scr + " }catch(e){ return undefined; } }")).call(useScope || {});
+    return (new Function("with(this) { try{ return " + src + " }catch(e){ return undefined; } }")).call(useScope || {});
 }
 
 //@function simpleBooleanParser

@@ -35,9 +35,10 @@ function Subject() {
         if (events.hasOwnProperty(eventName)) {
             var arg = [].splice.call(arguments);
             arg.shift();
-            events[eventName].forEach(function(fn) {
+            while (events[eventName].length) {
+                var fn = events[eventName].pop();
                 fn.apply(fn, arg);
-            });
+            }
         }
     };
 }
@@ -46,7 +47,6 @@ Subject.prototype.unsubscribe = function(bindingIdx) {
     this['[[entries]]'] = this['[[entries]]'].filter(function(instance) {
         return instance.binding !== bindingIdx;
     });
-
     if (this.$notifyInProgress) {
         this.$notifyInProgress--;
     }
@@ -118,8 +118,11 @@ Subject.prototype.observeForCollection = function(key, fn) {
         }
     }
 };
-
-Subject.prototype.notifyAllObservers = function(model) {
+/**
+ * @param {*} model
+ * @param {*} ignoreCheck
+ */
+Subject.prototype.notifyAllObservers = function(model, ignoreCheck) {
     if (this.$notifyInProgress) {
         this.retry = true;
         return;
@@ -130,8 +133,14 @@ Subject.prototype.notifyAllObservers = function(model) {
      * 
      * @param {*} observer 
      */
-
     function _consume(observer, idx) {
+        /**
+         * check if observer is destroyed
+         */
+        if (!_self.$notifyInProgress) {
+            return;
+        }
+
         if (observer.watchKey) {
             if (model) {
                 var value;
@@ -145,21 +154,21 @@ Subject.prototype.notifyAllObservers = function(model) {
                     if (observer.core(value)) {
                         _trigger(observer.handler, value);
                     }
-                } else if (!observer.hasOwnProperty('lastValue') || (value !== observer.lastValue)) {
+                } else if (!observer.hasOwnProperty('lastValue') || (value !== observer.lastValue) || ignoreCheck) {
                     _trigger(observer.handler, value);
                     observer.lastValue = value;
                 }
             }
 
         } else {
-            observer.handler();
+            observer.handler(model);
         }
 
         /**
          * change status
          */
 
-        if ((idx === _self.$notifyInProgress)) {
+        if (((idx + 1) === _self.$notifyInProgress)) {
             _self.$notifyInProgress = 0;
             if (_self.retry) {
                 // trigger notification again
@@ -183,11 +192,13 @@ Subject.prototype.notifyAllObservers = function(model) {
         }
     }
 
-    this.$notifyInProgress = this['[[entries]]'].length - 1;
+    this.$notifyInProgress = this['[[entries]]'].length;
     this['[[entries]]'].forEach(_consume);
 };
 
 Subject.prototype.destroy = function(value) {
-    this.emit('$destroy', value);
     this['[[entries]]'].length = 0;
+    this.emit('$destroy', value);
+    this.notifyAllObservers = 0;
+    this.retry = false;
 };

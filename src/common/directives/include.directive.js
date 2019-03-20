@@ -25,7 +25,7 @@ function IncludeDirective(elementRef, $templateCache, Observables, $sce) {
             this.process(this.binding);
         } else {
             Observables
-                .observeForKey(this.binding, process);
+                .observeForKey(this.binding, this.process.bind(this));
         }
     };
 
@@ -39,7 +39,8 @@ function IncludeDirective(elementRef, $templateCache, Observables, $sce) {
         var html = $templateCache.get(url);
         var child = HtmlParser(html, elementRef);
         elementRef.children.forEach(HtmlParser.transverse);
-        elementRef.parent.insertAfter(child, elementRef.nativeElement);
+        elementRef.parent.insertAfter(child, elementRef.nativeNode);
+        elementRef.context.tick();
     };
 
     /**
@@ -47,6 +48,9 @@ function IncludeDirective(elementRef, $templateCache, Observables, $sce) {
      * @param {*} url 
      */
     this.process = function(url) {
+        if (!url) {
+            return;
+        }
         var self = this;
         /**
          * Resolve the URL
@@ -56,13 +60,20 @@ function IncludeDirective(elementRef, $templateCache, Observables, $sce) {
         if ($templateCache.has(url)) {
             self.compileHtml(url);
         } else {
-            $http.get(url, null, {
-                    'Content-Type': 'text/html'
-                })
-                .then(function(template) {
-                    $templateCache.set(url, $sce.trustAsHTML(template));
-                    self.compileHtml(url);
-                }, self.resetIncludeTemplate);
+            $http({
+                url: url,
+                headers: {
+                    'Content-Type': 'text/html',
+                },
+                callback: function(response) {
+                    if (response.success) {
+                        $templateCache.set(url, $sce.trustAsHTML(response.data));
+                        self.compileHtml(url);
+                    } else {
+                        self.resetIncludeTemplate();
+                    }
+                }
+            });
         }
     }
 }

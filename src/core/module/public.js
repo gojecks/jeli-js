@@ -4,26 +4,29 @@
  * @param {*} options 
  */
 function JModule(name, options) {
-    var _module = ModuleService.get(name);
+    var _module = ModuleService._factories.has(name);
     if (!_module && !options) {
         errorBuilder('Module ' + name + ' was not found')
     }
 
-    if ($isCompiled) {
+    if ($compileTracker.$isCompiled) {
         return null;
     }
 
     if (!_module) {
         _module = new Function();
+        _module._factories = new Map();
         _module.moduleName = name;
         _module.options = options;
-        ModuleService['[[entries]]'].push(_module);
+        options.requiredModules = options.requiredModules || [];
+        options.exports = options.exports || [];
+        ModuleService._factories.set(name, _module);
 
         // process Options
         ModuleService.delimiterProcessor(options);
     }
 
-    return new ModuleService(_module);
+    return new ModuleService(ModuleService._factories.get(name));
 }
 /**
  * Attach static methods
@@ -81,6 +84,7 @@ JModule.$copy = copy;
 JModule.$copyFrom = copyFrom;
 JModule.$isEmpty = $isEmpty;
 JModule.$isEqual = $isEqual;
+JModule.$unSerialize = unSerialize;
 JModule.$stringToObject = stringToObject;
 JModule.$isJsonString = $isJsonString;
 JModule.$isNull = $isNull;
@@ -93,8 +97,4 @@ window.jeli = JModule;
 /**
  * register Listener
  */
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', BootStrapApplication, false);
-} else {
-    BootStrapApplication();
-}
+document.addEventListener('DOMContentLoaded', BootStrapApplication.onDocumentReadyFn, false);

@@ -3,9 +3,9 @@
  * @param {*} ctrl 
  * @param {*} resolvers 
  * @param {*} locals 
+ * @param {*} CB 
  */
-function ControllerInitializer(ctrl, resolvers, locals) {
-    var $defer = new Defer();
+function ControllerInitializer(ctrl, resolvers, locals, CB) {
     if ($isString(ctrl)) {
         return DependencyInjectorService.get(ctrl, locals);
     }
@@ -25,11 +25,9 @@ function ControllerInitializer(ctrl, resolvers, locals) {
     function initialize(locals) {
         dependencyInjectorMain(ctrl, function(args) {
             var instance = dependencyFnWrapper(ctrl, args);
-            $defer.resolve(instance);
+            CB(instance);
         }, locals);
     }
-
-    return $defer;
 };
 
 /**
@@ -42,18 +40,18 @@ function ControllerResolvers(resolvers, locals) {
         promiseResolvers = [],
         resolversKey = Object.keys(resolvers);
     for (var resolve in resolvers) {
-        promiseResolvers.push(dependencyInjectorMain($inject(resolvers[resolve])));
+        promiseResolvers.push(resolvers[resolve].resolve());
     }
 
     //pass all request to our resolver
-    $q.all(promiseResolvers).then(function(results) {
+    $q.all(promiseResolvers).done(function(results) {
         //wrap our response in locals
         results.forEach(function(res, idx) {
             locals[resolversKey[idx]] = res;
         });
 
         $q.resolve(locals);
-    });
+    }).fail($q.reject);
 
     return $q;
 };

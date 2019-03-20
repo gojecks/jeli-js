@@ -101,7 +101,6 @@ function $logicChecker($logic, elementModel, ignore) {
         return _evaluate;
     }
 
-    //get Function Arg
     /**
      * 
      * @param {*} key 
@@ -215,8 +214,14 @@ function execFnByName(fn, elementRef, ev) {
 
     //check if Operation is set value
     if (setValuechecker.length > 1) {
-        var value = elementRef.context.evaluate(setValuechecker.pop());
-        setModelValue(setValuechecker.shift(), elementRef.context.context, value);
+        var value = elementRef.context.evaluate(setValuechecker.pop()),
+            key = setValuechecker.shift();
+        if (!elementRef.context.context.hasOwnProperty(key) && elementRef.context.componentInstance.hasOwnProperty(key)) {
+            setModelValue(key, elementRef.context.componentInstance, value);
+        } else {
+            setModelValue(key, elementRef.context.context, value);
+        }
+
     } else {
         //initialize the function returned
         fn = generateFnFromString(fn, elementRef.context.componentInstance);

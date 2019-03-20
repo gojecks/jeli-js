@@ -4,28 +4,31 @@
  */
 function BootStrapApplication(moduleToBootStrap, bootStrapComponent) {
     if (moduleToBootStrap && !$compileTracker.bootStrapComponent) {
-        var _module = ModuleService.get(moduleToBootStrap);
         $compileTracker.bootStrapComponent = bootStrapComponent;
-        $compileTracker.compiledModule = [_module];
-        ModuleService.compileModule(_module, function(_mod) {
-            $compileTracker.compiledModule.push(_mod);
-        });
-        interceptor.register();
+        $compileTracker.compiledModule = ModuleService._factories.get(moduleToBootStrap);
         /**
          * Bind to Document EventListener
          * Boostrap Application once document is loaded
          */
-        BootStrapApplication.onDocumentReadyFn = function() {
-            $isDomLoaded = true;
-            if (!$isCompiled) {
-                // BootStrap Entry Component
-                $isCompiled = true;
-                HtmlParser.transverse(HtmlParser.__extractor(document.querySelector(bootStrapComponent)), null);
-                $isAfterBootStrap = true;
-            }
-        };
-    } else if (BootStrapApplication.onDocumentReadyFn) {
-        BootStrapApplication.onDocumentReadyFn();
-        BootStrapApplication.onDocumentReadyFn = null;
+        // BootStrapApplication.onDocumentReadyFn();
+    }
+
+    return {
+        onInit: function(registry) {
+            $compileTracker.compiledModule.annotations.initializers.push($inject(registry));
+        }
     }
 }
+
+BootStrapApplication.onDocumentReadyFn = function() {
+    if (!$compileTracker.$isCompiled && $compileTracker.compiledModule) {
+        ModuleService.compileModule($compileTracker.compiledModule);
+        interceptor.register();
+        // BootStrap Entry Component
+        $compileTracker.$isCompiled = true;
+        HtmlParser.transverse(HtmlParser.__extractor(document.querySelector($compileTracker.bootStrapComponent)), null);
+    }
+
+    // unregister listener
+    document.removeEventListener('DOMContentLoaded', BootStrapApplication.onDocumentReadyFn);
+};

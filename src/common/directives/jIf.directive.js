@@ -28,7 +28,7 @@ function IfDirective(elementRef, Observables) {
             this.compiledElement && this.compiledElement.remove(true);
             this.compiledElement = null;
         } else {
-            this.compiledElement = elementRef.clone(null, true);
+            this.compiledElement = elementRef.clone(null, elementRef.parent);
             elementRef.parent.insertAfter(this.compiledElement, elementRef.nativeNode, true);
         }
     };

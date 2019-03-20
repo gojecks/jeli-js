@@ -15,7 +15,10 @@ function ModelInstance(checker) {
     this.key = checker;
     this.$eventListener = new CustomEventHandler('register', function(ev, instance) {
         // instance.isValid();
-        instance.element.context.updateModel(checker, self.modelValue);
+        if (instance.element.nativeElement.checkValidity()) {
+            instance.element.context.updateModel(checker, self.modelValue);
+        }
+        ev.value = self.modelValue;
         self.update.notifyAllObservers(ev);
         instance.element.context.tick();
     });
@@ -39,7 +42,7 @@ function ModelInstance(checker) {
         /*
          * update the viewModel if default value is set
          */
-        if (eleVal && (cVal !== eleVal)) {
+        if (eleVal && !$isEqual(cVal, eleVal)) {
             options.element.context.updateModel(checker, eleVal);
             this.modelValue = eleVal;
         }

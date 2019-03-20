@@ -17,6 +17,10 @@ commonModule
             {
                 name: 'trackBy',
                 value: 'key'
+            },
+            {
+                name: "filter",
+                value: 'filter'
             }
         ]
     }, ForDirective);
@@ -25,6 +29,7 @@ function ForDirective(elementRef, Observables) {
     this.binding = '';
     this.name = '';
     this.trackBy;
+    this.filter;
     this.$index = '$index';
     this.cache = [];
     this.fragment = document.createDocumentFragment();
@@ -63,12 +68,26 @@ function ForDirective(elementRef, Observables) {
         this.removeCacheElement(result.deleted);
         // update cache
         this.updateCacheModel(result.changes);
+
+        /**
+         * trigger filter
+         * large data might be slow for filter
+         */
+        var data = result.insert;
+        if (this.filter) {
+            if ($isObject(this.filter)) {
+                data = this._filter(data);
+            } else if ($isFunction(this.filter)) {
+                data = this.filter(data);
+            }
+        }
+
         //render
-        var len = result.insert.length,
+        var len = data.length,
             inc = 0,
             cacheLen = this.cache.length;
         while (len > inc) {
-            this.elementAppender(result.insert[inc]);
+            this.elementAppender(data[inc], inc);
             inc++;
         }
         /**
@@ -85,9 +104,9 @@ function ForDirective(elementRef, Observables) {
         }
     }
 
-    this.elementAppender = function(item) {
-        var context = elementRef.context.new({}),
-            clone = elementRef.clone(context, true);
+    this.elementAppender = function(item, idx) {
+        var context = elementRef.context.new(Object.create(elementRef.parent.context.context)),
+            clone = elementRef.clone(context, elementRef.parent);
 
         //set the Object key
         //trackBy can only be set when its declared in configuration
@@ -136,12 +155,25 @@ function ForDirective(elementRef, Observables) {
         var self = this;
         changes.forEach(function(key) {
             var cacheElementRef = self.cache[key];
-            if (!$isEqual(cacheElementRef.context.evaluate(self.$index), key)) {
+            if (cacheElementRef && !$isEqual(cacheElementRef.context.evaluate(self.$index), key)) {
                 cacheElementRef.context.updateModel(self.$index, key);
                 cacheElementRef.context.tick();
             }
         });
     };
+
+    /**
+     * @param {*} data
+     */
+    this._filter = function(data) {
+        var keys = Object.keys(this.filter),
+            _this = this;
+        return data.filter(function(item) {
+            return keys.filter(function(key) {
+                return _this.filter[key] == item.value[key];
+            }).length === keys.length;
+        });
+    }
 
     /**
      * viewDidDestroy

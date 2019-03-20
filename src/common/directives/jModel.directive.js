@@ -5,28 +5,35 @@
 commonModule
     .directive({
         selector: ':model',
-        DI: ['ElementRef'],
+        DI: ['ElementRef', 'Observables'],
         props: [{
             name: 'binding',
             value: ":model"
         }]
     }, ModelDirective);
 
-function ModelDirective(elementRef) {
+function ModelDirective(elementRef, observables) {
     this.binding = '';
     this.checker = '';
     this.options;
     this.modelInstance;
+    this.unSubscription = null;
     this.didInit = function() {
+        var _this = this;
         // change checker for ArrayCase
         this.checker = generateArrayKeyType(this.binding, elementRef.context.context);
         var evName = EventType(elementRef.nativeElement);
         if (!elementRef.context.jModelInstance.has(this.checker)) {
             elementRef.context.jModelInstance.set(this.checker, new ModelInstance(this.checker));
+            /**
+             * attach observer
+             */
+            this.unSubscription = observables.observeForKey(this.checker, function() {
+                _this.modelInstance.updateViews(null, {});
+            });
         }
 
         this.modelInstance = elementRef.context.jModelInstance.get(this.checker);
-
         var modelOptions = extend(true, {
             $events: 'default',
             debounce: {
@@ -73,6 +80,7 @@ function ModelDirective(elementRef) {
             .__unregisterEvents(this.options, !this.modelInstance.$$totalBinding);
         if (!this.modelInstance.$$totalBinding) {
             elementRef.context.jModelInstance.delete(this.checker);
+            this.unSubscription && this.unSubscription();
         }
         this.options = this.modelInstance = null;
     };

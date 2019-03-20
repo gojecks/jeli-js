@@ -18,10 +18,16 @@ commonModule
 
 function ShowDirective(elementRef, Observables) {
     this.binding;
-    this.didInit = function() {
-        Observables
-            .observeForKey(this.binding, function(show) {
-                elementRef.nativeElement.style.display = show ? 'block' : 'none';
-            });
+    this.lastValue;
+    this.process = function(show) {
+        elementRef.nativeElement.style.display = show ? 'block' : 'none';
+    };
+
+    this.willObserve = function() {
+        var value = elementRef.context.evaluate(this.binding);
+        if (!$isEqual(value, this.lastValue)) {
+            this.process(value);
+            this.lastValue = value;
+        }
     };
 }

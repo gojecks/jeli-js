@@ -4,11 +4,15 @@
 var OBJ_REF = '$object:ref',
     eliBindedClass = 'j-binded',
     // jEli WatchBinding holders
-    $compileTracker = { bootStrapComponent: null, compiledModule: null },
+    $compileTracker = {
+        bootStrapComponent: null,
+        compiledModule: null,
+        $isCompiled: false,
+        $isAfterBootStrap: false
+    },
     // jEli Constant
     COMMENT_NODE = 8,
     TEXT_NODE = 3,
-    $isCompiled = $isDomLoaded = $isAfterBootStrap = false,
     _defaultTemplateExp = /\{\%(.*?)\%\}/g,
     attrExpr = /\{(.*?)\}/,
     $eUID = 1,

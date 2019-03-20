@@ -11,15 +11,7 @@ commonModule
             name: 'binding',
             value: ':class'
         }]
-    }, ClassDirective)
-    .directive({
-        selector: ':style',
-        DI: ['ElementRef'],
-        props: [{
-            name: 'binding',
-            value: ':style'
-        }]
-    }, StyleDirective);
+    }, ClassDirective);
 
 function ClassDirective(elementRef) {
     this.binding = '';
@@ -30,7 +22,9 @@ function ClassDirective(elementRef) {
     };
 
     this.updateClass = function(name, value) {
-        elementRef.nativeElement.classList[value ? 'add' : 'remove'](removeSingleQuote(name));
+        if (name) {
+            elementRef.nativeElement.classList[value ? 'add' : 'remove'](removeSingleQuote(name));
+        }
         this.lastAddedClass = name;
     };
 
@@ -50,10 +44,16 @@ function ClassDirective(elementRef) {
     };
 
     this.processStringWatch = function() {
-        this.class(this.lastAddedClass, false);
-        var value = elementRef.context.evaluate(this.binding);
-        if (value && !$isEqual(this.lastAddedClass, value)) {
-            this.class(value, true);
+        if (elementRef.context) {
+            var value = elementRef.context.evaluate(this.binding);
+            if (!$isEqual(this.lastAddedClass, value)) {
+                this.updateClass(this.lastAddedClass, false);
+                if (value) {
+                    this.updateClass(value, true);
+                }
+
+                this.lastAddedClass = value;
+            }
         }
     };
 
@@ -62,42 +62,6 @@ function ClassDirective(elementRef) {
             this.processObjectWatch();
         } else {
             this.processStringWatch();
-        }
-    };
-}
-
-/**
- * 
- * @param {*} elementRef 
- */
-function StyleDirective(elementRef) {
-    this.binding = '';
-    this.didInit = function() {
-        this.match = attrExpr.test(this.binding);
-    };
-
-    this.updateStyle = function(name, value) {
-        elementRef.nativeElement.style[name] = value;
-    };
-
-    this.processObjectWatch = function() {
-        var cmatch = stringToObject(this.binding, elementRef.context.context);
-        var newHash = $hashCode(JSON.stringify(cmatch));
-        // return when lastProcessed are equal
-        if ($isEqual(this.lastProcessed, newHash)) {
-            return;
-        }
-
-        for (var prop in cmatch) {
-            this.updateStyle(prop, cmatch[prop]);
-        }
-
-        this.lastProcessed = newHash;
-    };
-
-    this.willObserve = function() {
-        if (this.match) {
-            this.processObjectWatch();
         }
     };
 }

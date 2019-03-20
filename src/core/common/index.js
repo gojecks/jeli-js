@@ -200,7 +200,7 @@
    */
   function jSonParser(str) {
       try {
-          str = JSON.parse(str);
+          str = new Function("return " + str)();
       } catch (e) {}
 
       return str;

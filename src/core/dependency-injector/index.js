@@ -13,7 +13,7 @@ function DependencyInjectorService(restricted) {
  * @param {*} di
  * @param {*} resolver 
  */
-DependencyInjectorService.get = function(di, resolver) {
+DependencyInjectorService.get = function(di, resolver, moduleName) {
     if (resolver && resolver[di]) {
         return resolver[di];
     }
@@ -23,19 +23,18 @@ DependencyInjectorService.get = function(di, resolver) {
     }
 
     var dependency = null,
-        inc = 0;
-    /**
-     * 
-     * @param {*} _module 
-     */
+        inc = 0,
+        compileModule = $compileTracker.compiledModule;
+    if (moduleName && !$isEqual(moduleName, compileModule.moduleName)) {
+        compileModule = ModuleService._factories.get(moduleName);
+    }
+
+    var requiredModule = compileModule.options.requiredModules;
+
     function getDependencyFromQueue() {
-        dependency = $compileTracker.compiledModule[inc].annotations.service.filter(function(fn) {
+        dependency = compileModule.annotations.service.filter(function(fn) {
             return fn.annotations.name === di;
         })[0];
-        /**
-         * instance already exists
-         */
-        inc++;
         if (dependency) {
             //set provider when its found
             //only inject dependency
@@ -43,17 +42,15 @@ DependencyInjectorService.get = function(di, resolver) {
             if (!dependency.annotations.instance) {
                 dependency.annotations.instance = dependencyInjectorMain(dependency, null, resolver);
             }
-
             dependency = dependency.annotations.instance;
-        } else {
-            if ($compileTracker.compiledModule.length > inc) {
-                getDependencyFromQueue()
-            }
+        } else if (requiredModule.length > inc) {
+            compileModule = ModuleService._factories.get(requiredModule[inc]);
+            inc++;
+            getDependencyFromQueue();
         }
     }
 
     getDependencyFromQueue();
-
     return dependency;
 };
 
@@ -69,9 +66,9 @@ DependencyInjectorService.inject = function(fn, locals) {
             //Try and catch injectors
             if (doInject) {
                 try {
-                    injectedArgument = DependencyInjectorService.get(doInject, locals);
-                } catch (e) {} finally {
-                    if ($isNull(injectedArgument)) {
+                    injectedArgument = DependencyInjectorService.get(doInject, locals, fn.moduleName);
+                } catch (e) { console.log(e) } finally {
+                    if (!injectedArgument) {
                         throw new Error('Unable to resolve provider ' + doInject);
                     }
                 }
@@ -86,7 +83,12 @@ DependencyInjectorService.inject = function(fn, locals) {
 
 DependencyInjectorService.getRegisteredElement = function(name) {
     var dir = [];
-    $compileTracker.compiledModule.forEach(getElement);
+    getElement($compileTracker.compiledModule);
+    if ($compileTracker.compiledModule.options.requiredModules) {
+        $compileTracker.compiledModule.options.requiredModules.forEach(function(moduleName) {
+            getElement(ModuleService._factories.get(moduleName))
+        });
+    }
 
     function getElement(_module) {
         dir = dir.concat(_module.annotations.elements.filter(function(reg) {

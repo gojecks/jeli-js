@@ -12,6 +12,7 @@ var commonModule = JModule('jeli', {})
     .service('currency', ['number', CurrencyFilter])
     .service('orderBy', orderByFilterFn)
     .service('where', whereFilterFn)
-    .service('$timeout', $timeoutService)
+    .service('$timeout', TimeoutService)
+    .service('$interval', IntervalService)
     .service('Event', CustomEventHandler)
     .service('query', QueryFactory);

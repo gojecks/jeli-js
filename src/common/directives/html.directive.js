@@ -18,22 +18,30 @@ commonModule
 
 function HtmlDirective(elementRef, Observables, $sce) {
     this.binding;
+    this.lastValue = "";
+    this.isPlainHtml = "";
+    this.trustAsHTML = "";
     this.didInit = function() {
-        var trustAsHTML = elementRef.hasAttribute('trustHtml');
-        if ($sce.isPlainHtml.test(this.binding)) {
-            process(this.binding);
-        } else {
-            Observables
-                .observeForKey(this.binding, process);
-        }
-
-        /**
-         * 
-         * @param {*} html 
-         */
-        function process(html) {
-            html = $sce[trustAsHTML ? 'trustAsHTML' : 'escapeHTML'](html);
-            elementRef.nativeElement.innerHTML = html;
+        this.isPlainHtml = $sce.isPlainHtml.test(this.binding);
+        this.trustAsHTML = elementRef.hasAttribute('trustHtml');
+        if (this.isPlainHtml) {
+            this.lastValue = this.binding;
+            this.process();
         }
     };
+
+    this.willObserve = function() {
+        if (!this.isPlainHtml) {
+            var value = elementRef.context.evaluate(this.binding);
+            if (!$isEqual(this.lastValue, value)) {
+                this.lastValue = value;
+                this.process();
+            }
+        }
+    };
+
+    this.process = function() {
+        var html = $sce[this.trustAsHTML ? 'trustAsHTML' : 'escapeHTML'](this.lastValue);
+        elementRef.nativeElement.innerHTML = html;
+    }
 }

@@ -6,7 +6,6 @@
  */
 function structureModel(componentInstance, element, props) {
     if ($isArray(props) && props.length) {
-        var replacerModel = (element.context || {}).context;
         props.forEach(processAttributeBinding);
         /**
          * 
@@ -16,13 +15,13 @@ function structureModel(componentInstance, element, props) {
             var cmpBinding = element.props.get(item.name);
             if (cmpBinding) {
                 if (/\((.*?)\)/.test(cmpBinding)) {
-                    var fn = generateFnFromString(cmpBinding, replacerModel);
+                    var fn = generateFnFromString(cmpBinding, element.context.context);
                     componentInstance[item.name] = function(props) {
                         var arg = generateArguments(fn.arg, props);
                         return fn.apply(fn.context, arg);
                     };
                 } else {
-                    componentInstance[item.name] = replacerModel.evaluate(cmpBinding);
+                    componentInstance[item.name] = element.context.evaluate(cmpBinding);
                 }
             } else {
                 var value = element.getAttribute(item.value);
@@ -33,7 +32,8 @@ function structureModel(componentInstance, element, props) {
                 if (item.value === 'jModel') {
                     value = element.context.jModelInstance.get(element.getAttribute(':model'));
                 }
-                componentInstance[item.name] = value;
+
+                componentInstance[item.name] = jSonParser(value);
             }
 
         }
@@ -63,20 +63,29 @@ function attachComponentStyles(style, ele) {
  */
 function ElementCompiler(ctrl, elementRef, next) {
     var definition = ctrl.annotations,
+        hasTwoWayBinding = (elementRef.props.size && definition.props),
         lifeCycle;
     /**
      * Initialize Component
      */
     function _componentCompiler() {
-        lifeCycle.viewDidLoad();
-        //set the refID of the directive
-        elementRef.appendChild(definition.template);
-        attachComponentStyles(definition.style, elementRef.nativeElement);
+        if (definition.template) {
+            //set the refID of the directive
+            elementRef.appendChild(definition.template);
+            attachComponentStyles(definition.style, elementRef.nativeElement);
+            lifeCycle.viewDidLoad();
+        }
         //Add event Watcher to the ele
-        _mutationObserver(elementRef.nativeElement, function() {
-            elementRef.context.destroy();
+        elementRef.observer(function() {
             if (lifeCycle.viewDidDestroy) {
                 lifeCycle.viewDidDestroy.call(elementRef.context.componentInstance);
+            }
+            elementRef.context.destroy();
+        });
+
+        _mutationObserver(elementRef.nativeNode || elementRef.nativeElement, function() {
+            if (elementRef.nativeElement) {
+                elementRef.remove();
             }
         });
     }
@@ -85,67 +94,92 @@ function ElementCompiler(ctrl, elementRef, next) {
      * Resolve Component Template
      */
     function componentTemplateBuilder() {
-        if (definition.template) {
-            //resolve our template
-            _componentCompiler();
-        } else if (definition.templateUrl) {
+        if (definition.templateUrl && !definition.template) {
             //get resource from server
             $http({
-                    url: definition.templateUrl,
-                    headers: {
-                        'Content-Type': 'text/html'
+                url: definition.templateUrl,
+                headers: {
+                    'Content-Type': 'text/html'
+                },
+                callback: function(response) {
+                    if (response.success) {
+                        definition.template = HtmlParser.sce().trustAsHTML(response.data);
+                        _componentCompiler();
                     }
-                })
-                .then(function(template) {
-                    definition.template = HtmlParser.sce().trustAsHTML(template);
-                    _componentCompiler();
-                });
+                }
+            });
         } else {
-            //element is having children
             _componentCompiler();
         }
     }
 
-    ControllerInitializer(ctrl, null, {
-            ElementRef: elementRef,
-            Observables: (elementRef.context || {}).observables
-        })
-        .done(function(componentInstance) {
-            lifeCycle = new ElementCompiler.LifeCycle(componentInstance);
-            structureModel(componentInstance, elementRef, definition.props);
-            /**
-             * remove transplaced element if defined
-             */
-            if (definition.transplace) {
-                elementRef.transplace(definition.transplace, componentInstance.binding);
-            }
+    /**
+     * 
+     * @param {*} componentInstance 
+     */
+    function triggerInstance(componentInstance) {
+        lifeCycle = new ElementCompiler.LifeCycle(componentInstance);
+        structureModel(componentInstance, elementRef, definition.props);
+        /**
+         * remove transplaced element if defined
+         */
+        if (definition.transplace) {
+            elementRef.transplace(definition.transplace, componentInstance.binding || definition.selector);
+        }
 
-            lifeCycle.didInit();
-            if (definition.$isComponent) {
-                var componentRef = new ComponentRef(componentInstance);
-                elementRef.context = componentRef;
-                next(definition.isDetachedElem);
-                componentTemplateBuilder();
-            } else {
-                /**
-                 * remove the Attribute from element
-                 */
-                next(elementRef.isDetachedElem);
-                if (lifeCycle.viewDidDestroy) {
-                    elementRef.observer(function() {
-                        lifeCycle.viewDidDestroy.call(componentInstance);
+        if (definition.registry) {
+            definition.registry.forEach(function(option) {
+                if ($isEqual(option.type, 'event')) {
+                    elementRef.events.push({
+                        name: option.name,
+                        handler: maskedEval(option.handler, componentInstance)
                     });
                 }
-            }
+            });
+        }
+
+        lifeCycle.didInit();
+        next(componentInstance);
+        if (definition.$isComponent) {
+            var componentRef = new ComponentRef(componentInstance);
             /**
-             * register lifeCycle observers
+             * add two way binding between components 
              */
-            if (lifeCycle.willObserve) {
-                elementRef.context.observables.subscribe(function() {
-                    lifeCycle.willObserve.call(componentInstance);
+            if (hasTwoWayBinding) {
+                componentRef.parent = elementRef.context;
+                elementRef.context.child.push(componentRef);
+                componentRef.parent.enableTwoWayDataBinding(elementRef.props, definition.props, componentInstance);
+            }
+            elementRef.context = componentRef;
+            componentTemplateBuilder();
+        } else {
+            /**
+             * remove the Attribute from element
+             */
+            if (lifeCycle.viewDidDestroy) {
+                elementRef.observer(function() {
+                    lifeCycle.viewDidDestroy.call(componentInstance);
                 });
             }
-        });
+        }
+        /**
+         * register lifeCycle observers
+         */
+        if (lifeCycle.willObserve) {
+            var unsubscribe = elementRef.context.observables.subscribe(function() {
+                lifeCycle.willObserve.call(componentInstance);
+            });
+            /**
+             * register unsubscription
+             */
+            elementRef.observer(unsubscribe);
+        }
+    }
+
+    ControllerInitializer(ctrl, null, {
+        ElementRef: elementRef,
+        Observables: (elementRef.context || {}).observables
+    }, triggerInstance);
 }
 
 ElementCompiler.LifeCycle = function(componentInstance) {
@@ -166,8 +200,8 @@ ElementCompiler.resolve = function(node, nextTick) {
      * 
      * @param {*} isDetachedElement 
      */
-    function next(isDetachedElement) {
-        if (!isDetachedElement) {
+    function next() {
+        if (!node.isDetachedElem) {
             var customElement = node.customElements.shift();
             if (customElement) {
                 ElementCompiler(customElement, node, next);

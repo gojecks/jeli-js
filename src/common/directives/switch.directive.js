@@ -1,12 +1,12 @@
 commonModule
     .directive({
-        selector: ':switch',
+        selector: 'j-switch',
         DI: ['ElementRef', 'Observables'],
         props: [{
             name: 'binding',
-            value: ':switch'
+            value: 'on'
         }],
-        transplace: true
+        transplace: 'element'
     }, SwitchDirective);
 
 function SwitchDirective(elementRef, Observables) {
@@ -17,6 +17,7 @@ function SwitchDirective(elementRef, Observables) {
     };
 
     this.binding = '';
+    this.compiledWith = null;
     this.didInit = function() {
         Observables
             .observeForKey(this.binding, this.process.bind(this));
@@ -26,16 +27,18 @@ function SwitchDirective(elementRef, Observables) {
      * @param {*} value 
      */
     this.process = function(value) {
+        if (this.compiledWith) {
+            this.compiledWith.remove();
+        }
         // only process when the lastProcess !== value
         // loop through the elem
         var compiledWith = this.getCase(value);
         // if No match found in the case
         // fallback to default if defined
         if (compiledWith) {
+            this.compiledWith = compiledWith.clone(null, compiledWith.parent);
             //empty the elem
-            elementRef.nativeElement.innerHTML = "";
-            elementRef.appendChild(compiledWith);
-            compiledWith = null;
+            elementRef.appendChild(this.compiledWith);
         }
     }
 }

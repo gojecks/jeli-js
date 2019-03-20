@@ -13,8 +13,8 @@ commonModule
     }, CheckedDirective);
 
 function CheckedDirective(elementRef, Observables) {
-    this.init = function() {
-        Observables
+    this.didInit = function() {
+        this.unSubscribe = Observables
             .observeForKey(this.binding, function(value) {
                 if (value) {
                     elementRef.setAttribute('checked', 'true', true);

@@ -11,25 +11,21 @@ commonModule
         props: [{
             name: 'binding',
             value: ':pattern'
-        }, {
-            name: 'jModelInstance',
-            value: 'jModel'
         }]
     }, PatternDirective);
 
 function PatternDirective(elementRef) {
     this.binding = '';
     this.didInit = function() {
-        if (!('pattern' in elementRef.nativeElement)) {
-            var self = this;
-            this
-                .jModelInstance
-                // bind Listener to jModel
-                .$eventListener.register(':input', function(ev, insModel) {
-                    insModel.error.pattern = !self.binding.test(insModel.element.nativeElement[isInput ? 'value' : 'innerText']);
-                });
-        } else {
-            elementRef.setProp('pattern', this.binding);
+        /**
+         * Attach validityCheck to Element if not exists
+         */
+        if (!'checkValidity' in elementRef.nativeElement) {
+            elementRef.nativeElement.checkValidity = function() {
+                return !this.pattern.test(this.value);
+            }
         }
+
+        elementRef.setProp('pattern', this.binding);
     };
 }
