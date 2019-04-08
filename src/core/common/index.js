@@ -200,7 +200,10 @@
    */
   function jSonParser(str) {
       try {
-          str = new Function("return " + str)();
+          if ($inArray("[", str) || $inArray('{', str)) {
+              str = str.replace(/[\']/g, '"');
+          }
+          str = JSON.parse(str);
       } catch (e) {}
 
       return str;

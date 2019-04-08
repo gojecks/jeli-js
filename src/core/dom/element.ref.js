@@ -33,9 +33,18 @@ function ElementRef(ele, context) {
 
     this.getEvent = function(eventName) {
         return this.events.filter(function(event) {
-            return event.name === eventName;
+            return $inArray(eventName, event.name);
         })[0]
     };
+
+    /**
+     * styling
+     */
+    Object.defineProperty(this, 'class', {
+        get: function() {
+            return this.nativeElement.classList;
+        }
+    });
 }
 
 ElementRef.prototype.transplace = function(transplace, transplaceText) {
@@ -262,17 +271,18 @@ ElementRef.prototype.addEventListener = function(event) {
      * j-change requires j-model
      * check if j-model is defined when this event is used
      */
-    if ($isEqual('change', event.name) && !event.handler) {
+    if ($inArray('change', event.name) && !event.handler) {
         if (this.getDirective(':model')) {
             return;
         }
         errorBuilder('jChange requires jModel to function');
     }
 
-    if (!event.handler) {
-        event.handler = jEventHandler;
-    }
-
+    /**
+     * overWrite the original EventHandler
+     */
+    var originalHandler = event.handler;
+    event.handler = jEventHandler;
     /**
      * @method jEventHandler
      * @param {*} ev 
@@ -286,7 +296,11 @@ ElementRef.prototype.addEventListener = function(event) {
         }
 
         try {
-            triggerArrayFnWithParams(event.value, [null, node, ev]);
+            if (originalHandler) {
+                originalHandler(ev);
+            } else {
+                triggerArrayFnWithParams(event.value, [null, node, ev]);
+            }
         } catch (e) {
             errorBuilder(e);
         } finally {
@@ -295,14 +309,18 @@ ElementRef.prototype.addEventListener = function(event) {
     }
 
     //Store a reference to the element event
-    this.nativeElement.addEventListener(event.name, event.handler, false);
+    event.name.split(" ").forEach(function(eventName) {
+        node.nativeElement.addEventListener(eventName, event.handler, false);
+    });
 };
 
 ElementRef.prototype.cleanup = function() {
     var self = this;
     while (this.events.length) {
         var event = this.events.pop();
-        self.nativeElement.removeEventListener(event.name, event.handler);
+        event.name.split(' ').forEach(function(eventName) {
+            self.nativeElement.removeEventListener(eventName, event.handler);
+        });
     }
 
     /**

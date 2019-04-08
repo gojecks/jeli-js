@@ -17,8 +17,7 @@ function structureModel(componentInstance, element, props) {
                 if (/\((.*?)\)/.test(cmpBinding)) {
                     var fn = generateFnFromString(cmpBinding, element.context.context);
                     componentInstance[item.name] = function(props) {
-                        var arg = generateArguments(fn.arg, props);
-                        return fn.apply(fn.context, arg);
+                        return fn.apply(fn.context, arguments);
                     };
                 } else {
                     componentInstance[item.name] = element.context.evaluate(cmpBinding);
@@ -30,10 +29,10 @@ function structureModel(componentInstance, element, props) {
                  * only include if the element has directive of jModel
                  */
                 if (item.value === 'jModel') {
-                    value = element.context.jModelInstance.get(element.getAttribute(':model'));
+                    componentInstance[item.name] = element.context.jModelInstance.get(element.getAttribute(':model'));
+                } else {
+                    componentInstance[item.name] = jSonParser(value);
                 }
-
-                componentInstance[item.name] = jSonParser(value);
             }
 
         }

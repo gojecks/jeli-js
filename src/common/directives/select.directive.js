@@ -48,7 +48,6 @@ function SelectDirective(elementRef) {
 
         this.selectObserver(elementRef.context.evaluate(collectionExp[3]));
     };
-
     /**
      * auto Select an option 
      * only if modelInstance is defined

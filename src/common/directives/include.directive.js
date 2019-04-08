@@ -13,6 +13,9 @@ commonModule
         props: [{
             name: 'binding',
             value: 'src'
+        }, {
+            name: 'content',
+            value: 'content'
         }],
         DI: ['ElementRef', '$templateCache', 'Observables', '$sce']
     }, IncludeDirective);
@@ -21,11 +24,15 @@ function IncludeDirective(elementRef, $templateCache, Observables, $sce) {
     this.binding;
     this.compiledElem;
     this.didInit = function() {
-        if ($inArray('/', this.binding)) {
-            this.process(this.binding);
+        if (this.content) {
+            this.compileHtml();
         } else {
-            Observables
-                .observeForKey(this.binding, this.process.bind(this));
+            if ($inArray('/', this.binding)) {
+                this.process(this.binding);
+            } else {
+                Observables
+                    .observeForKey(this.binding, this.process.bind(this));
+            }
         }
     };
 
@@ -35,9 +42,8 @@ function IncludeDirective(elementRef, $templateCache, Observables, $sce) {
         }
     };
 
-    this.compileHtml = function(url) {
-        var html = $templateCache.get(url);
-        var child = HtmlParser(html, elementRef);
+    this.compileHtml = function() {
+        var child = HtmlParser(this.content, elementRef);
         elementRef.children.forEach(HtmlParser.transverse);
         elementRef.parent.insertAfter(child, elementRef.nativeNode);
         elementRef.context.tick();
@@ -58,7 +64,8 @@ function IncludeDirective(elementRef, $templateCache, Observables, $sce) {
         this.resetIncludeTemplate();
         // get the required template
         if ($templateCache.has(url)) {
-            self.compileHtml(url);
+            self.content = $templateCache.get(url);
+            self.compileHtml();
         } else {
             $http({
                 url: url,
@@ -67,8 +74,9 @@ function IncludeDirective(elementRef, $templateCache, Observables, $sce) {
                 },
                 callback: function(response) {
                     if (response.success) {
-                        $templateCache.set(url, $sce.trustAsHTML(response.data));
-                        self.compileHtml(url);
+                        self.content = $sce.trustAsHTML(response.data);
+                        $templateCache.set(url, self.content);
+                        self.compileHtml();
                     } else {
                         self.resetIncludeTemplate();
                     }

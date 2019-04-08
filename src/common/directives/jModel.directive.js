@@ -29,7 +29,7 @@ function ModelDirective(elementRef, observables) {
              * attach observer
              */
             this.unSubscription = observables.observeForKey(this.checker, function() {
-                _this.modelInstance.updateViews(null, {});
+                _this.modelInstance && _this.modelInstance.updateViews(null, {});
             });
         }
 

@@ -42,7 +42,7 @@ function ModelInstance(checker) {
         /*
          * update the viewModel if default value is set
          */
-        if (eleVal && !$isEqual(cVal, eleVal)) {
+        if (eleVal && !$isEqual(cVal, eleVal) && !cVal) {
             options.element.context.updateModel(checker, eleVal);
             this.modelValue = eleVal;
         }
@@ -227,11 +227,14 @@ ModelInstance.checkType = function(context, checked) {
  * @param {*} context 
  * @param {*} newVal 
  */
-ModelInstance.selectType = function(context, newVal, oldVal) {
-    newVal = JSON.stringify(newVal).toLowerCase();
-    [].forEach.call(context.element.nativeElement.options, function(options) {
-        if ($isEqual(JSON.stringify(options.value).toLowerCase(), newVal)) {
-            options.selected = true;
-        }
-    });
+ModelInstance.selectType = function(context, newVal) {
+    newVal = JSON.stringify(newVal);
+    if (newVal) {
+        newVal = newVal.toLowerCase();
+        [].forEach.call(context.element.nativeElement.options, function(options) {
+            if ($isEqual(options.value.toLowerCase(), newVal)) {
+                options.selected = true;
+            }
+        });
+    }
 };
