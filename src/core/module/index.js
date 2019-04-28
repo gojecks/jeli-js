@@ -14,6 +14,7 @@ function ModuleService(_module) {
 
     //directive Provider caller
     this.directive = function(options, controller) {
+        controller = controller || function() {};
         controller.provider = '$jElementProvider';
         controller.annotations = options;
         _module.annotations.elements.push(controller);

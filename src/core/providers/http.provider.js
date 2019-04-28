@@ -43,7 +43,7 @@ function HttpProvider() {
     //register all interceptors
     this.register = function() {
         //loop through all list of interceptors
-        findInList.call(_interceptors, function(idx, _intercept) {
+        _interceptors.forEach(function(_intercept) {
             //get a factory interceptor
             if ($isString(_intercept)) {
                 _intercept = DependencyInjectorService.get(_intercept);

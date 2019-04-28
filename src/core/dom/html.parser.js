@@ -403,15 +403,6 @@ HtmlParser.transverse = function(node) {
 
                     instance.context = node.context;
                     instance.observe();
-                } else {
-                    // console.log(instance);
-                    // node.context.observables.subscribe(function() {
-                    //     var value = getTemplateValue(instance.templates[0].templateModel, node.context.context);
-                    //     if (!$isEqual(value, instance.componentInstance[instance.modelBinding])) {
-                    //         instance.componentInstance[instance.modelBinding] = value;
-                    //         (instance.didChange || noop)();
-                    //     }
-                    // });
                 }
             });
         }

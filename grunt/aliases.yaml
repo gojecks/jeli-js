@@ -2,8 +2,8 @@ test:
   - 'karma'
 default:
   #clear and generate common libraries
-  - 'clean:jDist'
-  - 'concat:jEliJSOnly'
-  - 'uglify:jEliJSOnly'
+  - 'clean'
+  - 'jeli-template-loader'
+  - 'uglify'
   - 'clean:jAfterBuild'
-  - 'watch:jEliJS'
+  - 'watch'

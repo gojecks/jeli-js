@@ -47,10 +47,10 @@ function structureModel(componentInstance, element, props) {
 function attachComponentStyles(style, ele) {
     if (style && ele) {
         if ($isString(style)) {
-            customStyleSheetAppender(style, ele[0]);
+            return customStyleSheetAppender(style, ele[0]);
         } else {
             var externalLoader = new loadExternalScript(ele[0]);
-            externalLoader.css(style);
+            return externalLoader.css(style);
         }
     }
 }
@@ -68,16 +68,23 @@ function ElementCompiler(ctrl, elementRef, next) {
      * Initialize Component
      */
     function _componentCompiler() {
+        var style;
         if (definition.template) {
             //set the refID of the directive
             elementRef.appendChild(definition.template);
-            attachComponentStyles(definition.style, elementRef.nativeElement);
+            style = attachComponentStyles(definition.style, elementRef.nativeElement);
             lifeCycle.viewDidLoad();
         }
         //Add event Watcher to the ele
         elementRef.observer(function() {
             if (lifeCycle.viewDidDestroy) {
                 lifeCycle.viewDidDestroy.call(elementRef.context.componentInstance);
+            }
+            /**
+             * remove the styles
+             */
+            if (style) {
+                style.parentNode.removeChild(style);
             }
             elementRef.context.destroy();
         });

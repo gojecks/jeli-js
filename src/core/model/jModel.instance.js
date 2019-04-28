@@ -42,7 +42,7 @@ function ModelInstance(checker) {
         /*
          * update the viewModel if default value is set
          */
-        if (eleVal && !$isEqual(cVal, eleVal) && !cVal) {
+        if ($isDefined(eleVal) && !$isEqual(cVal, eleVal) && !cVal) {
             options.element.context.updateModel(checker, eleVal);
             this.modelValue = eleVal;
         }
@@ -232,7 +232,7 @@ ModelInstance.selectType = function(context, newVal) {
     if (newVal) {
         newVal = newVal.toLowerCase();
         [].forEach.call(context.element.nativeElement.options, function(options) {
-            if ($isEqual(options.value.toLowerCase(), newVal)) {
+            if ($isEqual(JSON.stringify(options.value).toLowerCase(), newVal)) {
                 options.selected = true;
             }
         });

@@ -3,9 +3,9 @@ module.exports = {
         files: [
             '<%= dir %>src/**/*.js'
         ],
-        tasks: ['clean:jDist',
-            'concat:jEliJSOnly',
-            'uglify:jEliJSOnly',
+        tasks: ['clean',
+            'jeli-template-loader',
+            'uglify',
             'clean:jAfterBuild'
         ]
     }

@@ -1,4 +1,4 @@
-var license = ['MIT License \n\nCopyright (c) [2016] [jEliJS]\n\n',
+var license = ['MIT License \n\nCopyright (c) [2016] [<%= pkg.name %>]\n\n',
     'Permission is hereby granted, free of charge, to any person obtaining a copy\n',
     'of this software and associated documentation files (the "Software"), to deal\n',
     'in the Software without restriction, including without limitation the rights\n',
@@ -31,20 +31,30 @@ module.exports = {
             unused: true,
             if_return: true,
             join_vars: true,
-            drop_console: false,
-            warnings: false
+            drop_console: false
         },
         maxLineLen: 500,
         wrap: true,
         sourceMap: true
     },
-    jEliJSOnly: {
+    jEli: {
         options: {
-            banner: '\n/**\n@license jElijs\nAuthor : Gojecks Joseph\n' + license.join('') + '\nVersion 1.0.0\n**/\n\n',
+            banner: '\n/**\n@license jElijs\nAuthor : Gojecks Joseph\n' + license.join('') + '\nVersion <%= pkg.version %>\n**/\n\n',
             footer: ''
         },
         files: {
-            './dist/jeli.min.js': ['./dist/jeli.js']
+            './dist/jeli.min.js': [
+                '../jeli.helpers/common/*.js',
+                '../jeli.helpers/customApi/*.js',
+                '../jeli.helpers/promise/*.js',
+                '../jeli.helpers/expect.js',
+                '../jeli.helpers/events/stack.js',
+                '../jeli.helpers/externalScriptLoader.js',
+                '../jeli.helpers/snapshot_hash.js',
+                '../jeli.helpers/serializer.js',
+                '../jeli.helpers/xhr/*.js',
+                './dist/jeli.js'
+            ]
         }
     }
 }

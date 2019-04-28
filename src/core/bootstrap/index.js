@@ -6,11 +6,7 @@ function BootStrapApplication(moduleToBootStrap, bootStrapComponent) {
     if (moduleToBootStrap && !$compileTracker.bootStrapComponent) {
         $compileTracker.bootStrapComponent = bootStrapComponent;
         $compileTracker.compiledModule = ModuleService._factories.get(moduleToBootStrap);
-        /**
-         * Bind to Document EventListener
-         * Boostrap Application once document is loaded
-         */
-        // BootStrapApplication.onDocumentReadyFn();
+
     }
 
     return {

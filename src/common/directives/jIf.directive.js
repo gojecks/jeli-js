@@ -19,8 +19,12 @@ function IfDirective(elementRef, Observables) {
     this.binding = '';
     this.compiledElement = null;
     this.didInit = function() {
-        Observables
-            .observeForKey(this.binding, this.process.bind(this));
+        if ($isString(this.binding)) {
+            Observables
+                .observeForKey(this.binding, this.process.bind(this));
+        } else {
+            this.process(this.binding);
+        }
     };
 
     this.process = function(changes) {
