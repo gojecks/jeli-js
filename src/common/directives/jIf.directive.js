@@ -9,10 +9,7 @@ commonModule
         selector: ':if',
         transplace: 'element',
         DI: ['ElementRef', 'Observables'],
-        props: [{
-            name: 'binding',
-            value: ':if'
-        }]
+        props: ['binding=:if']
     }, IfDirective);
 
 function IfDirective(elementRef, Observables) {

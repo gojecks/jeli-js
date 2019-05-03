@@ -8,10 +8,7 @@ commonModule
     .directive({
         selector: ':readonly',
         DI: ['ElementRef', 'Observables'],
-        props: [{
-            name: 'binding',
-            value: ':readonly'
-        }]
+        props: ['binding=:readonly']
     }, ReadonlyDirective);
 
 function ReadonlyDirective(elementRef, Observables) {

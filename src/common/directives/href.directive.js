@@ -2,10 +2,7 @@ commonModule
     .directive({
         selector: ':href',
         DI: ['ElementRef', 'Observables'],
-        props: [{
-            name: 'binding',
-            value: ':href'
-        }]
+        props: ['binding=:href']
     }, HrefDirective);
 
 function HrefDirective(elementRef, Observables) {

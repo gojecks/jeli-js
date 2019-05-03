@@ -11,10 +11,7 @@
       .directive({
           selector: ':value',
           DI: ['ElementRef', 'Observables'],
-          props: [{
-              name: 'binding',
-              value: ':value'
-          }]
+          props: ['binding=:value']
       }, ValueDirective);
 
   function ValueDirective(elementRef, Observables) {

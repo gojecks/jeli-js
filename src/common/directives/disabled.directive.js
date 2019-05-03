@@ -9,10 +9,7 @@ commonModule
     .directive({
         selector: ':disabled',
         DI: ['ElementRef', 'Observables'],
-        props: [{
-            name: 'binding',
-            value: ':disabled'
-        }]
+        props: ['binding=:disabled']
     }, DisabledDirective);
 
 function DisabledDirective(elementRef, Observables) {

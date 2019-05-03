@@ -6,10 +6,7 @@ commonModule
     .directive({
         selector: ':model',
         DI: ['ElementRef', 'Observables'],
-        props: [{
-            name: 'binding',
-            value: ":model"
-        }]
+        props: ['binding=:model']
     }, ModelDirective);
 
 function ModelDirective(elementRef, observables) {

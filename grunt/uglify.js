@@ -44,15 +44,6 @@ module.exports = {
         },
         files: {
             './dist/jeli.min.js': [
-                '../jeli.helpers/common/*.js',
-                '../jeli.helpers/customApi/*.js',
-                '../jeli.helpers/promise/*.js',
-                '../jeli.helpers/expect.js',
-                '../jeli.helpers/events/stack.js',
-                '../jeli.helpers/externalScriptLoader.js',
-                '../jeli.helpers/snapshot_hash.js',
-                '../jeli.helpers/serializer.js',
-                '../jeli.helpers/xhr/*.js',
                 './dist/jeli.js'
             ]
         }

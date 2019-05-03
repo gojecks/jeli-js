@@ -5,13 +5,7 @@ commonModule
     .directive({
         selector: ':select',
         DI: ['ElementRef'],
-        props: [{
-            name: 'binding',
-            value: ':select'
-        }, {
-            name: 'modelInstance',
-            value: 'jModel'
-        }]
+        props: ['binding=:select', 'modelInstance=jModel']
     }, SelectDirective);
 
 function SelectDirective(elementRef) {

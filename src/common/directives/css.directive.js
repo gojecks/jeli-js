@@ -7,10 +7,7 @@ commonModule
     .directive({
         selector: ':class',
         DI: ['ElementRef'],
-        props: [{
-            name: 'binding',
-            value: ':class'
-        }]
+        props: ['binding=:class']
     }, ClassDirective);
 
 function ClassDirective(elementRef) {

@@ -2,10 +2,7 @@ commonModule
     .directive({
         selector: ':src',
         DI: ['ElementRef', 'Observables'],
-        props: [{
-            name: 'binding',
-            value: ':src'
-        }]
+        props: ['binding=:src']
     }, SrcDirective);
 
 function SrcDirective(elementRef, Observables) {

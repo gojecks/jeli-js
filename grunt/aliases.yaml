@@ -7,3 +7,8 @@ default:
   - 'uglify'
   - 'clean:jAfterBuild'
   - 'watch'
+build-pack:
+  - 'clean'
+  - 'jeli-template-loader'
+  - 'uglify'
+  - 'clean:jAfterBuild'

@@ -5,10 +5,7 @@ commonModule
     .directive({
         selector: ':init',
         DI: ['ElementRef'],
-        props: [{
-            name: 'initValue',
-            value: ':init'
-        }]
+        props: ['initValue=:init']
     }, InitDirective);
 
 function InitDirective(elementRef) {

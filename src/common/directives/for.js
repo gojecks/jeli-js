@@ -10,19 +10,7 @@ commonModule
         selector: ':for',
         transplace: "element",
         DI: ['ElementRef', 'Observables'],
-        props: [{
-                name: 'binding',
-                value: ':for'
-            },
-            {
-                name: 'trackBy',
-                value: 'key'
-            },
-            {
-                name: "filter",
-                value: 'filter'
-            }
-        ]
+        props: ['binding=:for', 'trackBy=key', 'filter=filter']
     }, ForDirective);
 
 function ForDirective(elementRef, Observables) {

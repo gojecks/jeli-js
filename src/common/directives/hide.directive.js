@@ -8,10 +8,7 @@ commonModule
     .directive({
         selector: ':hide',
         DI: ['ElementRef', 'Observables'],
-        props: [{
-            name: 'binding',
-            value: ':hide'
-        }]
+        props: ['binding=:hide']
     }, HideDirective);
 
 function HideDirective(elementRef, Observables) {

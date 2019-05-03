@@ -9,10 +9,7 @@ commonModule
     .directive({
         selector: ':selected',
         DI: ['ElementRef', 'Observables'],
-        props: [{
-            name: 'binding',
-            value: ':selected'
-        }]
+        props: ['binding=:selected']
     }, SelectedDirective);
 
 function SelectedDirective(elementRef, Observables) {

@@ -12,11 +12,30 @@ function ModuleService(_module) {
         };
     }
 
+    /**
+     * 
+     * @param {*} controller 
+     * @param {*} props 
+     */
+    function _writeInputs(controller, props) {
+        if (controller && props && props.length) {
+            controller.annotations.props = [];
+            props.forEach(function(prop) {
+                var inp = prop.split(/=/);
+                controller.annotations.props.push({
+                    name: inp[0],
+                    value: (inp[1] || inp[0])
+                });
+            });
+        }
+    }
+
     //directive Provider caller
     this.directive = function(options, controller) {
         controller = controller || function() {};
         controller.provider = '$jElementProvider';
         controller.annotations = options;
+        _writeInputs(controller, options.props);
         _module.annotations.elements.push(controller);
 
         return this;
@@ -39,6 +58,7 @@ function ModuleService(_module) {
     this.element = function(options, controller) {
         options.$isComponent = true;
         controller.annotations = options;
+        _writeInputs(controller, options.props);
         controller.provider = '$jElementProvider';
         _module.annotations.elements.push(controller);
 

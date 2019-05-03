@@ -10,10 +10,7 @@ commonModule
     .directive({
         selector: ':html',
         DI: ['ElementRef', 'Observables', '$sce'],
-        props: [{
-            name: 'binding',
-            value: ':html'
-        }]
+        props: ['binding=:html']
     }, HtmlDirective);
 
 function HtmlDirective(elementRef, Observables, $sce) {

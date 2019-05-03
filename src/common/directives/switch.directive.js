@@ -2,10 +2,7 @@ commonModule
     .directive({
         selector: 'j-switch',
         DI: ['ElementRef', 'Observables'],
-        props: [{
-            name: 'binding',
-            value: 'on'
-        }],
+        props: ['binding=on'],
         transplace: 'element'
     }, SwitchDirective);
 

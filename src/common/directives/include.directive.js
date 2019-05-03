@@ -10,13 +10,7 @@ commonModule
     .directive({
         selector: 'j-include',
         transplace: 'element',
-        props: [{
-            name: 'binding',
-            value: 'src'
-        }, {
-            name: 'content',
-            value: 'content'
-        }],
+        props: ['binding=src', 'content=content'],
         DI: ['ElementRef', '$templateCache', 'Observables', '$sce']
     }, IncludeDirective);
 

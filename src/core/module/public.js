@@ -93,7 +93,6 @@ JModule.buildTime = Date.now();
 /*jEli css styleSheet
 Appended to the head of the HTML*/
 customStyleSheetAppender('.j-hide,.j-cloak{display:none} .j-show{display:""}', document.getElementsByTagName('head')[0]);
-window.jeli = JModule;
 /**
  * register Listener
  */

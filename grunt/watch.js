@@ -1,7 +1,7 @@
 module.exports = {
     jEliJS: {
         files: [
-            '<%= dir %>src/**/*.js'
+            'src/**/*.js'
         ],
         tasks: ['clean',
             'jeli-template-loader',

@@ -62,6 +62,7 @@
     },
     "scripts": {
         "testjdb": "mocha './test/**/*.spec.js'",
-        "jeli": "grunt"
+        "jeli": "grunt",
+        "build:pack": "grunt build-pack && npm pack"
     }
 }

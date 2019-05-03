@@ -8,10 +8,7 @@ commonModule
     .directive({
         selector: ':pattern',
         DI: ['ElementRef'],
-        props: [{
-            name: 'binding',
-            value: ':pattern'
-        }]
+        props: ['binding=:pattern']
     }, PatternDirective);
 
 function PatternDirective(elementRef) {

@@ -2,10 +2,7 @@ commonModule
     .directive({
         selector: ':style',
         DI: ['ElementRef'],
-        props: [{
-            name: 'binding',
-            value: ':style'
-        }]
+        props: ['binding=:style']
     }, StyleDirective);
 /**
  * 

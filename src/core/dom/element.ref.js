@@ -54,7 +54,8 @@ ElementRef.prototype.transplace = function(transplace, transplaceText) {
      */
     if ($isEqual(transplace, 'element')) {
         this.nativeNode = document.createComment(transplaceText || '');
-        this.nativeElement.replaceWith(this.nativeNode);
+        this.nativeElement.parentNode.insertBefore(this.nativeNode, this.nativeElement);
+        this.nativeElement.remove();
         if (this.replaceElement) {
             this.nativeElement = this.replaceElement;
             this.replaceElement = null;
@@ -158,7 +159,6 @@ ElementRef.prototype.insertAfter = function(newNode, targetNode, transverse) {
     } else {
         this.context && this.context.tick();
     }
-
     targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
 };
 

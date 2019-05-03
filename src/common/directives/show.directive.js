@@ -10,10 +10,7 @@ commonModule
     .directive({
         selector: ':show',
         DI: ['ElementRef', 'Observables'],
-        props: [{
-            name: 'binding',
-            value: ':show'
-        }]
+        props: ['binding=:show']
     }, ShowDirective);
 
 function ShowDirective(elementRef, Observables) {

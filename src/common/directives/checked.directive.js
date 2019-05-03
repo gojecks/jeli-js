@@ -6,10 +6,7 @@ commonModule
     .directive({
         selector: ':checked',
         DI: ['ElementRef', 'Observables'],
-        props: [{
-            name: 'binding',
-            value: ':checked'
-        }]
+        props: ['binding=:checked']
     }, CheckedDirective);
 
 function CheckedDirective(elementRef, Observables) {
