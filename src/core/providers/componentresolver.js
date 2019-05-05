@@ -18,7 +18,7 @@ function ComponentFactoryResolver(selector, element, callback) {
         controller = $compileTracker.compiledModule._factories.get(selector);
     }
 
-    if (controller) {
+    if (controller && element) {
         component = new ElementRef(document.createElement(selector));
         ElementCompiler(controller, component, function(componentInstance) {
             if (element.isDetachedElem) {
