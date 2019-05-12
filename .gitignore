@@ -5,3 +5,4 @@ test
 npm-debug.log
 .npmrc
 *.tgz
+package-lock.json
