@@ -1,0 +1,113 @@
+<nav class="navbar navbar-inverse navbar-static-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">
+                Todo Application
+              </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-6 col-sm-offset-3">
+            <button @click="todos.push({'description':+new Date})">Dynamic Add</button> <button @click="todos = [];removeItemCount=0">Empty</button>
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <form @submit="addTodo()">
+                        <!-- :min="10" :pattern="^\d+$" -->
+                        <input type="text" :min="2" :max="5" :pattern="/^\d+$/" :model="todoDescription" class="form-control">
+                    </form>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item"><strong>Todo Items: ${todos.length -  removeItemCount}</strong>
+                        <div class="pull-right"><strong>Marked as done: ${removeItemCount}</strong></div>
+                    </li>
+                    <li :for="(idx,todo) in todos" class="list-group-item">
+                        <div class="row">
+                            <div class="col-sm-1">
+                                <input type="checkbox" :model="todo.done" @change="markAsRemoved(todo.done)">
+                            </div>
+                            <div class="col-sm-8">
+                                <span :style="{text-decoration: todo.done ? 'line-through' : 'none'}">
+                                        ${:todo.description}
+                                    </span>
+                            </div>
+                            <div class="col-sm-3">
+                                <button class="btn btn-primary btn-sm pull-right" @click="todo.addDescription = !todo.addDescription">
+                                      ${(todo.addDescription?'Done':'Edit')}
+                                    </button>
+                                <button @click="removeTodo(idx)">Remove</button>
+                            </div>
+
+                        </div>
+                        <h5>
+                            <p class="alert alert-info" :show="!todo.addDescription"> ${todo.details} </p>
+                            <div :show="todo.addDescription" class="form-group">
+                                <textarea :model="todo.details" class="form-control"></textarea>
+                            </div>
+                        </h5>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <h5>
+                <input type="checkbox" :model="error"> Button Control
+                <div :style="{text-decoration: error ? 'line-through': 'none'}">UnderlineText with style Directive</div>
+                <div :class="{'alert-info':!error, 'alert-danger':error}" class="alert">Add dynamic using class directive</div>
+                <div>
+                    <input type="text" :disabled="error" :model="twoWayBinding" placeholder="Test Disabled Directive" class="form-control">
+                </div>
+                <div :hide="error">
+                    <h6>Text will be hidden when button control is checked </h6>
+                </div>
+                <!-- <div :if="error">
+                    This is an error field and triggered by jIf directive
+                    <test-element user-id='jecks' {click-event}="range(start, end)">
+                    </test-element>
+                </div> -->
+                <h5>Test Switch</h5>
+                <div :switch="error">
+                    <div .case="true">
+                        Button control is checked
+                    </div>
+                    <div .default>
+                        I am Default from switch
+                    </div>
+                </div>
+                <img :src="test.png">
+                <a :href="http://google.com">Google</a>
+                <!-- <j-include src="./test.html"></j-include> -->
+                <span>${:'Quick TEst' | lowercase}</span>
+                <test-place>
+                    <j-template #testContent data-todos="todos">
+                        <div :for="alpha in todos">${alpha}</div>
+                    </j-template>
+                    <j-template #testContent2 data-text="'The Quick brown fox jumped over the lazy dog.'">
+                        ${text}
+                    </j-template>
+                </test-place>
+            </h5>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <j-fragment context="Test" :if="error">
+                <h3>I am a jPlace with controller</h3>
+                <input :model="placeController"> ${placeController}
+            </j-fragment>
+            <j-fragment :hide="error">
+                <p>jPlace without controller</p>
+                <div>Its nice to use place controller to hold multiple content</div>
+            </j-fragment>
+
+        </div>
+    </div>
+</div>
