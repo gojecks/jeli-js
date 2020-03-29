@@ -1,0 +1,51 @@
+{
+    "projectName": "jeli",
+    "build": {
+        "common": {
+            "src": ["./src/common/module.js"],
+            "dest": "./dist/modules/common.js"
+        },
+        "form": {
+            "src": ["./src/form/module.js"],
+            "dest": "./dist/modules/form.js"
+        },
+        "http": {
+            "src": ["./src/http/module.js"],
+            "dest": "./dist/modules/http.js"
+        },
+        "route": {
+            "src": ["../jeli.web.route/src/module.js"],
+            "dest": "./dist/modules/route.js"
+        },
+        "stroage": {
+            "src": "../jeli.storage/src/module.js",
+            "dest": "./dist/modules/storage.js"
+        },
+        "datetime": {
+            "src": ["../jeli.date.time/src/module.js"],
+            "dest": "./dist/modules/datetime.js"
+        },
+        "core": {
+            "dest": "./dist/jeli.js",
+            "src": [
+                "../jeli.helpers/common/*.js",
+                "../jeli.helpers/eval.js",
+                "../jeli.helpers/copy.js",
+                "../jeli.helpers/promise/*.js",
+                "../jeli.helpers/events/emitter.js",
+                "../jeli.helpers/externalScriptLoader.js",
+                "../jeli.helpers/serializer.js",
+                "../jeli.helpers/xhr/*.js",
+                "./src/core/**/*.js"
+            ]
+        },
+        "test": {
+            "dest": "./docs/examples/Todo/app.js",
+            "src": "./docs/examples/Todo/scripts/main.js",
+            "options": {
+                "parseModule": true
+            }
+        }
+    }
+
+}

@@ -2,29 +2,41 @@
  * Static Bootstrap Options
  * @param {*} moduleToBootStrap
  */
-function BootStrapApplication(moduleToBootStrap, bootStrapComponent) {
-    if (moduleToBootStrap && !$compileTracker.bootStrapComponent) {
-        $compileTracker.bootStrapComponent = bootStrapComponent;
-        $compileTracker.compiledModule = ModuleService._factories.get(moduleToBootStrap);
+function bootStrapApplication(moduleToBootStrap) {
+    CoreBootstrapContext.compiledModule = moduleToBootStrap;
+    InitializeModule(moduleToBootStrap);
+    // BootStrap Entry Component
+    CoreBootstrapContext.$isCompiled = true;
+    bootStrapElement();
 
-    }
-
-    return {
-        onInit: function(registry) {
-            $compileTracker.compiledModule.annotations.initializers.push($inject(registry));
+    function bootStrapElement() {
+        if (moduleToBootStrap.annotations.rootElement) {
+            var selector = moduleToBootStrap.annotations.rootElement.annotations.selector;
+            CoreBootstrapContext.bootStrapComponent = new ElementRef({
+                name: selector,
+                isc: true,
+                type: 'element',
+                fromDOM: true
+            }, null);
+            ElementCompiler(moduleToBootStrap.annotations.rootElement, CoreBootstrapContext.bootStrapComponent, function() {});
         }
+    }
+};
+
+var INITIALIZERS = new ProviderToken('AppInitializers');
+/**
+ * 
+ * @param {*} moduleFn 
+ */
+function InitializeModule(moduleFn) {
+    console.log(INITIALIZERS);
+    moduleFn.annotations.initializers.forEach(Depene);
+    if (moduleFn.annotations.requiredModules) {
+        moduleFn.annotations.requiredModules.forEach(InitializeModule);
     }
 }
 
-BootStrapApplication.onDocumentReadyFn = function() {
-    if (!$compileTracker.$isCompiled && $compileTracker.compiledModule) {
-        ModuleService.compileModule($compileTracker.compiledModule);
-        interceptor.register();
-        // BootStrap Entry Component
-        $compileTracker.$isCompiled = true;
-        HtmlParser.transverse(HtmlParser.__extractor(document.querySelector($compileTracker.bootStrapComponent)), null);
-    }
-
-    // unregister listener
-    document.removeEventListener('DOMContentLoaded', BootStrapApplication.onDocumentReadyFn);
+export {
+    INITIALIZERS,
+    bootStrapApplication
 };

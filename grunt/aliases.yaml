@@ -3,12 +3,17 @@ test:
 default:
   #clear and generate common libraries
   - 'clean'
-  - 'jeli-template-loader'
+  #- 'eslint'
+  - 'jeli-template-loader:jeli'
+  - 'concat'
   - 'uglify'
   - 'clean:jAfterBuild'
   - 'watch'
 build-pack:
   - 'clean'
-  - 'jeli-template-loader'
+  - 'jeli-template-loader:jeli'
   - 'uglify'
   - 'clean:jAfterBuild'
+build-test:
+  - 'clean:testFile'
+  - 'jeli-template-loader:test'

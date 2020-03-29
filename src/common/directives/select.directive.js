@@ -1,71 +1,35 @@
 /**
  * query : item.label for item in items
  */
-commonModule
-    .directive({
-        selector: ':select',
-        DI: ['ElementRef'],
-        props: ['binding=:select', 'modelInstance=jModel']
-    }, SelectDirective);
+Directive({
+    selector: 'select',
+    DI: ['ElementRef?'],
+    props: ['select', 'optionsLabel']
+}, SelectDirective);
 
 function SelectDirective(elementRef) {
     var valueRef, valueKey, select, groupBy, labelAs;
     this.cacheValue = [];
-    this.binding = '';
+    this.optionsLabel = null;
+    this.optionsData = [];
+
     this.didInit = function() {
-        var collectionExp = this.binding.match(/^\s*(.+)\s+for+\s+(.*?)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/);
-        if ($isUndefined(collectionExp[3])) {
-            errorBuilder("invalid condition received in j-select, expecting _item_ in _condition_ or (_idx_, _item_) in _condition_");
-        }
-
-        var _spltValue = collectionExp[2].split(/\W/g).filter(function(key) { return key.length > 1; });
-        valueRef = _spltValue.pop();
-        valueKey = _spltValue.pop();
-        select = collectionExp[1];
-        groupBy;
-        labelAs;
-
-        if ($inArray("group by", collectionExp[1])) {
-            var gby = collectionExp[1].split(/\s+group+\s+by+\s/);
-            collectionExp[1] = gby.shift();
-            select = collectionExp[1];
-            groupBy = gby.pop();
-        }
-
-        if ($inArray(" as ", collectionExp[1])) {
-            var lAs = collectionExp[1].split(/\s+as+\s/);
-            labelAs = lAs.pop();
-            select = lAs.pop();
-        } else {
-            labelAs = select;
-        }
-
-        this.selectObserver(elementRef.context.evaluate(collectionExp[3]));
+        this.createSelectOptions();
     };
-    /**
-     * auto Select an option 
-     * only if modelInstance is defined
-     */
-    this.isSelected = function(optValue) {
-        if (this.modelInstance && this.modelInstance.modelValue) {
-            if ($isObject(optValue)) {
-                return JSON.stringify(optValue) === JSON.stringify(this.modelInstance.modelValue);
-            } else {
-                return $isEqual(optValue, this.modelInstance.modelValue);
-            }
-        }
-    };
-
-
     /**
      * 
      * @param {*} collection 
      */
-    this.selectObserver = function(collection) {
+    this.createSelectOptions = function() {
         var fragment = document.createDocumentFragment(),
             nCollection = new Map(),
-            self = this;
-        collection.forEach(function(value, key) {
+            _this = this;
+        /**
+         * 
+         * @param {*} value 
+         * @param {*} key 
+         */
+        function createCollection(value, key) {
             var nModel = {};
             nModel[valueRef] = value;
             if (valueKey) {
@@ -74,16 +38,15 @@ function SelectDirective(elementRef) {
 
             var optValue = ModelSetterGetter(select, nModel),
                 label = ModelSetterGetter(labelAs, nModel);
-            var opt = new ElementRef(document.createElement('option'));
+            // check for optionsLabel
+            if (_this.optionsLabel) {
+                label = _this.optionsLabel[label];
+            }
+
+            var opt = new ElementRef(document.createElement('option'), elementRef, {});
             opt.setProp('value', optValue);
             opt.text(label);
-            if (self.isSelected(optValue)) {
-                opt.setProp('selected', true);
-            }
-            /**
-             * attach child to parent
-             */
-            elementRef.children.push(opt);
+
             if (groupBy) {
                 var ref = ModelSetterGetter(groupBy, nModel);
                 if (!nCollection.has(ref)) {
@@ -96,11 +59,54 @@ function SelectDirective(elementRef) {
             } else {
                 fragment.appendChild(opt.nativeElement);
             }
-        });
+
+            /**
+             * attach child to parent
+             */
+            elementRef.children.add(opt);
+        }
+
         /**
+         * create collection
          * append the content
          */
+        this.optionsData.forEach(createCollection);
         elementRef.html(fragment);
         nCollection = null;
     }
+
+    Object.defineProperties(this, {
+        select: {
+            set: function(binding) {
+                var collectionExp = binding.match(/^\s*(.+)\s+for+\s+(.*?)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/);
+                if ($isUndefined(collectionExp[3])) {
+                    errorBuilder("invalid condition received in select, expecting _item_ in iteratable or (_idx_, _item_) in iteratable");
+                }
+
+                var _spltValue = collectionExp[2].split(/\W/g).filter(function(key) { return key.length > 1; });
+                valueRef = _spltValue.pop();
+                valueKey = _spltValue.pop();
+                select = collectionExp[1];
+                groupBy;
+                labelAs;
+
+                if ($inArray("group by", collectionExp[1])) {
+                    var gby = collectionExp[1].split(/\s+group+\s+by+\s/);
+                    collectionExp[1] = gby.shift();
+                    select = collectionExp[1];
+                    groupBy = gby.pop();
+                }
+
+                if ($inArray(" as ", collectionExp[1])) {
+                    var lAs = collectionExp[1].split(/\s+as+\s/);
+                    labelAs = lAs.pop();
+                    select = lAs.pop();
+                } else {
+                    labelAs = select;
+                }
+
+                this.optionsData = elementRef.context.evaluate(collectionExp[3]);
+            }
+        }
+    });
 }

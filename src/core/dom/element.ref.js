@@ -1,87 +1,195 @@
 /**
  * 
  * @param {*} ele 
- * @param {*} context 
+ * @param {*} parent 
+ * @param {*} definition 
  */
-function ElementRef(ele, context) {
-    this.refId = getUID();
-    this.events = [];
-    this.directives = [];
-    this.data = [];
-    this.attr = new Map();
-    this.attrObservers = [];
-    this.$observers = [];
-    this.props = new Map();
-    this.children = [];
-    this.nativeElement = ele;
-    this.context = context;
-    this.type = 'element';
-    this.tagName = ele.tagName.toLowerCase();
-    this.customElements = [];
-
+function ElementRef(definition, parent) {
+    var viewQuery = null;
+    var _this = this;
     /**
-     * to hold content defined using jTemplate component
+     * extend the definition
      */
-    this.templates = new Map();
-    this.parent = null;
+    definition.events = definition.events || [];
+    definition.attr = definition.attr || {};
+
+    this.nativeElement = HtmlDOM.createElementByType(definition.name, definition.text, definition.fromDOM);
+    this.refId = getUID();
+    this.customElements = [];
+    this.$observers = [];
+    this.children = new QueryList();
+    this._canSetValue = $isEqual('input', EventHandler.getEventType(this.nativeElement));
+    this.parent = parent;
+    /**
+     * check if element is custom element
+     */
+    if (definition.isc) {
+        /**
+         * create the element Observer
+         */
+        ComponentRef.create(this.refId, parent && parent.refId);
+        viewQuery = Object.create({
+            ϕelements: [],
+            add: function(option, element) {
+                if (!$isEqual(option[1], _this.tagName)) {
+                    return _this.parent && _this.parent.hostRef.viewQuery.add(option, element);
+                }
+
+                this.ϕelements.push({
+                    key: option[0],
+                    value: element
+                });
+            },
+            render: function(callback) {
+                while (this.ϕelements.length) {
+                    callback(this.ϕelements.pop());
+                }
+                this.ϕelements.length = 0;
+            }
+        });
+    }
+
+    this.nodes = new Map();
+    this.events = new EventHandler(this, definition.events);
 
     this.getDirective = function(name) {
-        return this.directives.filter(function(dir) {
+        return definition.directives && definition.directives.filter(function(dir) {
             return dir.name === name;
         })[0]
     };
 
-    this.getEvent = function(eventName) {
-        return this.events.filter(function(event) {
-            return $inArray(eventName, event.name);
-        })[0]
+    Object.defineProperties(this, {
+        index: {
+            get: function() {
+                return definition.index;
+            }
+        },
+        value: {
+            get: function() {
+                return ElementRefGetValue(this);
+            },
+            set: function(value) {
+                ElementRefSetValue(this, value);
+            }
+        },
+        nativeNode: {
+            get: function() {
+                return $isEqual(this.nativeElement.nodeType, 8) ? ele : null;
+            }
+        },
+        type: {
+            get: function() {
+                return definition.type
+            }
+        },
+        tagName: {
+            get: function() {
+                return definition.name.toLowerCase();
+            }
+        },
+        attr: {
+            get: function() {
+                return definition.attr;
+            }
+        },
+        props: {
+            get: function() {
+                return definition.props;
+            }
+        },
+        context: {
+            get: function() {
+                if (componentDebugContext.has(this.refId)) {
+                    return componentDebugContext.get(this.refId).context;
+                }
+
+                return this.parent && this.parent.context;
+            }
+        },
+        componentInstance: {
+            get: function() {
+                if (componentDebugContext.has(this.refId)) {
+                    return componentDebugContext.get(this.refId).componentInstance;
+                }
+
+                return this.parent && this.parent.componentInstance;
+            }
+        },
+        hostRef: {
+            get: function() {
+                if (definition.isc) {
+                    return this;
+                }
+
+                return this.parent.hostRef;
+            }
+        },
+        viewQuery: {
+            get: function() {
+                return viewQuery || this.parent.viewQuery;
+            }
+        },
+        isc: {
+            get: function() {
+                return definition.isc;
+            }
+        },
+        changeDetector: {
+            get: function() {
+                if (componentDebugContext.has(this.refId)) {
+                    return componentDebugContext.get(this.refId).changeDetector;
+                }
+
+                return this.parent && this.parent.changeDetector;
+            }
+        }
+    });
+
+    this.getTemplateRef = function(templateId) {
+        return getTemplateRef(definition.templates, templateId);
     };
 
     /**
-     * styling
+     * definition.attrObservers
      */
-    Object.defineProperty(this, 'class', {
-        get: function() {
-            return this.nativeElement.classList;
-        }
-    });
+    if (definition.attrObservers) {
+        setupAttributeObservers(this, definition.attrObservers);
+    }
 }
 
-ElementRef.prototype.transplace = function(transplace, transplaceText) {
-    /**
-     * replace : 'element'
-     * remove the element from the DOM
-     */
-    if ($isEqual(transplace, 'element')) {
-        this.nativeNode = document.createComment(transplaceText || '');
-        this.nativeElement.parentNode.insertBefore(this.nativeNode, this.nativeElement);
-        this.nativeElement.remove();
-        if (this.replaceElement) {
-            this.nativeElement = this.replaceElement;
-            this.replaceElement = null;
-        }
-        this.isDetachedElem = true;
-    } else {
-        this.nativeElement.innerHTML = "";
-    }
+
+
+ElementRef.prototype.getChildByRef = function(refId) {
+    return this.children.find(function(element) {
+        return $isEqual(element.refId, refId);
+    });
+};
+
+ElementRef.prototype.nextSibling = function() {
+    return this.parent && this.parent.children.findByIndex(this.index + 1);
+};
+
+ElementRef.prototype.prevSibling = function() {
+    return this.parent && this.parent.children.findByIndex(this.index - 1);
 };
 
 ElementRef.prototype.setProp = function(propName, propValue) {
     this.nativeElement[propName] = propValue;
-    this.attr.set(propName, propValue);
+    this.setAttribute.apply(this, arguments);
     return this;
 };
 
 ElementRef.prototype.hasAttribute = function(name) {
-    return this.attr.has(name)
+    return this.attr.hasOwnProperty(name)
 };
 
 ElementRef.prototype.getAttribute = function(name) {
-    if (this.attr.has(name)) {
-        return this.attr.get(name);
+    var dir = this.getDirective(name);
+    if (dir) {
+        return generateArrayKeyType(dir.checker, this.context);
     }
 
-    return (this.getDirective(name) || {}).checker;
+    return this.attr && this.attr[name];
 };
 
 /**
@@ -102,7 +210,7 @@ ElementRef.prototype.hasAnyAttribute = function(list, force) {
 };
 
 ElementRef.prototype.setAttribute = function(name, value, attachInElement) {
-    this.attr.set(name, value);
+    this.attr[name] = value;
     if (attachInElement && this.nativeElement) {
         this.nativeElement.setAttribute(name, value);
     }
@@ -112,54 +220,84 @@ ElementRef.prototype.setAttribute = function(name, value, attachInElement) {
 
 ElementRef.prototype.removeAttribute = function(name) {
     this.nativeElement && this.nativeElement.removeAttribute(name);
-    this.attr.delete(name);
+    delete this.attr[name];
 };
 
 /**
  * @param {*} element
  * @return self;
  */
-ElementRef.prototype.appendChild = function(element) {
+ElementRef.prototype.appendChild = function(template) {
     var child;
-    if ($isString(element)) {
-        child = HtmlParser(element, this);
-        this.children.forEach(HtmlParser.transverse);
-    } else {
-        HtmlParser.transverse(element);
-        child = element.nativeElement;
-    }
-    if (this.nativeNode) {
-        this.insertAfter(child, this.nativeNode);
-    } else {
-        this.nativeElement.appendChild(child);
+    if ($isFunction(template)) {
+        child = template(this);
+    } else if (template instanceof ElementRef) {
+        HtmlParser.transverse(template);
+        child = template.nativeElement;
+    } else if (template instanceof HTMLElement || template instanceof DocumentFragment) {
+        child = template;
     }
 
-    this.context.tick();
+    this.nativeElement.appendChild(child);
     child = null;
 };
 
-/**
- * @param {*} node
- */
-ElementRef.prototype.replaceWith = function(node) {
-    this.nativeElement.replaceWith(node);
-    this.nativeElement = node;
-};
 
 /**
  * @param {*} newNode
  * @param {*} targetNode
  * @param {*} transverse
  */
-ElementRef.prototype.insertAfter = function(newNode, targetNode, transverse) {
-    if (transverse) {
+ElementRef.prototype.insertAfter = function(newNode, targetNode) {
+    if (!targetNode.parentNode) {
+        return;
+    }
+
+    targetNode = targetNode || this.nativeElement;
+    if (newNode instanceof ElementRef) {
+        this.children.add(newNode);
         HtmlParser.transverse(newNode);
-        newNode.context.tick();
+        newNode.changeDetector.detectChanges();
         newNode = newNode.nativeElement;
     } else {
-        this.context && this.context.tick();
+        this.changeDetector.detectChanges();
     }
     targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
+};
+
+/**
+ * @param {*} content
+ */
+ElementRef.prototype.html = function(content) {
+    if (content instanceof ElementRef) {
+        HtmlParser.transverse(content);
+        content = content.nativeElement;
+    } else if ($isString(content)) {
+        content = HtmlParser.parseFromString(content);
+    }
+
+    this.nativeElement.innerHTML = '';
+    this.nativeElement.appendChild(content);
+};
+
+ElementRef.prototype.remove = function(removeFromParent) {
+    if (this.nativeElement && this.nativeElement.nodeType != 11) {
+        this.nativeElement.remove();
+    }
+
+    if (removeFromParent && this.parent) {
+        this.children.remove(this);
+    }
+
+    cleanupElementRef(this);
+};
+
+/**
+ * @param {*} ele
+ */
+ElementRef.prototype.removeChild = function(element) {
+    this.children.remove(element);
+    cleanupElementRef(element);
 };
 
 /**
@@ -179,178 +317,167 @@ ElementRef.prototype.observer = function(onDestroyListener) {
 };
 
 /**
- * @param {*} content
+ * Attach listners to element
  */
-ElementRef.prototype.html = function(content) {
-    if (content instanceof ElementRef) {
-        HtmlParser.transverse(content);
-        content = content.nativeElement;
-    } else if ($isString(content)) {
-        content = HtmlParser.parseFromString(content);
-    }
+ElementRef.prototype.listen = function(listeners) {
+    var ele = this.nativeElement;
+    Object.keys(listeners).forEach(_listen);
 
-    this.nativeElement.innerHTML = '';
-    this.nativeElement.appendChild(content);
-};
-
-/**
- * @param {*} text
- */
-ElementRef.prototype.text = function(text) {
-    if (!text) {
-        return this.nativeElement.innerText;
-    }
-    this.nativeElement.innerText = text;
-};
-
-ElementRef.prototype.remove = function(keepParent) {
-    this.nativeElement && this.nativeElement.remove();
-    if (!this.parent) {
-        return this.cleanup();
-    }
-    this.parent.removeChild(this);
-};
-
-/**
- * @param {*} ele
- */
-ElementRef.prototype.removeChild = function(element) {
-    if (this.children.length) {
-        this.children = this.children.filter(function(elementRef) {
-            return elementRef.nativeElement !== element.nativeElement;
-        });
-    }
-
-    element.cleanup();
-};
-
-
-/**
- * cloneNode with all reference
- * @param {*} context
- */
-ElementRef.prototype.clone = function(context, parent) {
-    var element = document.createElement(this.tagName);
-    this.attr.forEach(function(value, key) {
-        if (!(~key.indexOf('.')) && value) {
-            element.setAttribute(key, value);
+    function _listen(event) {
+        if (event in ele) {
+            ele[event] = function(ev) {
+                listeners[event](ev);
+            };
         }
-    });
-
-    var clone = new ElementRef(element, (context || this.context));
-    /**
-     * create a copy of the object
-     */
-    clone.data = copy(this.data, true);
-    clone.attrObservers = TextNodeRef.copy(this.attrObservers, clone);
-    clone.events = copy(this.events, true);
-    clone.attr = new Map(this.attr);
-    clone.props = new Map(this.props);
-    clone.directives = this.directives.slice();
-    clone.customElements = this.customElements.slice();
-    if (parent) {
-        clone.parent = parent;
     }
-
-    this.children.forEach(function(child) {
-        var _child = child.clone(context || child.context, clone);
-        element.appendChild(_child.nativeElement || _child.nativeNode);
-        clone.children.push(_child);
-    });
-
-    return clone;
 };
-
 
 /**
  * 
- * @param {*} event 
+ * @param {*} element 
  */
-ElementRef.prototype.addEventListener = function(event) {
-    /**
-     * j-change requires j-model
-     * check if j-model is defined when this event is used
-     */
-    if ($inArray('change', event.name) && !event.handler) {
-        if (this.getDirective(':model')) {
-            return;
-        }
-        errorBuilder('jChange requires jModel to function');
-    }
-
-    /**
-     * overWrite the original EventHandler
-     */
-    var originalHandler = event.handler;
-    event.handler = jEventHandler;
-    /**
-     * @method jEventHandler
-     * @param {*} ev 
-     */
-    var node = this;
-
-    function jEventHandler(ev) {
-        // prevent the default only when its a submit event
-        if (expect(['submit', 'touchstart', 'touchend', 'touchmove']).contains(ev.type)) {
-            ev.preventDefault();
-        }
-
-        try {
-            if (originalHandler) {
-                originalHandler(ev);
-            } else {
-                triggerArrayFnWithParams(event.value, [null, node, ev]);
-            }
-        } catch (e) {
-            errorBuilder(e);
-        } finally {
-            node.context && node.context.tick();
-        }
-    }
-
-    //Store a reference to the element event
-    event.name.split(" ").forEach(function(eventName) {
-        node.nativeElement.addEventListener(eventName, event.handler, false);
-    });
-};
-
-ElementRef.prototype.cleanup = function() {
-    var self = this;
-    while (this.events.length) {
-        var event = this.events.pop();
-        event.name.split(' ').forEach(function(eventName) {
-            self.nativeElement.removeEventListener(eventName, event.handler);
-        });
-    }
-
+function cleanupElementRef(elementRef) {
+    elementRef.events.destroy();
     /**
      * trigger registered listeners
      */
-    while (this.$observers.length) {
-        var observer = this.$observers.pop();
-        observer();
+    while (elementRef.$observers.length) {
+        elementRef.$observers.pop()();
     }
 
     /**
      * remove children
      */
-    while (this.children.length) {
-        var child = this.children.pop();
-        child.remove();
+    elementRef.children.destroy();
+    elementRef.nativeElement = null;
+    elementRef.parent = null;
+    elementRef.nodes.clear();
+};
+
+/**
+ * 
+ * @param {*} element 
+ * @param {*} observers 
+ */
+function setupAttributeObservers(element, attrObservers) {
+    element.observer(SubscribeObservables(element.hostRef.refId, observe));
+
+    function observe() {
+        for (var propName in attrObservers) {
+            attributeEvaluator(propName, attrObservers[propName]);
+        }
+
+        /**
+         * 
+         * @param {*} propName 
+         * @param {*} template 
+         */
+        function attributeEvaluator(propName, template) {
+            compileTemplate(template, element.context, function(value) {
+                if (AttributeAppender[propName]) {
+                    AttributeAppender[propName](element.nativeElement, value, template);
+                } else {
+                    element.setProp(propName, value, true);
+                }
+
+                /**
+                 * remove the config
+                 */
+                if (template.once) {
+                    delete attrObservers[propName];
+                }
+            });
+        }
+    }
+}
+
+/**
+ * 
+ * @param {*} value 
+ * @param {*} oldVal 
+ * 
+ * Method is triggered each time 
+ * there is an update in model or DOM element
+ */
+function ElementRefSetValue(element, value, force) {
+    if (!$isEqual(element.value, value) || force) {
+        switch (element.tagName.toLowerCase()) {
+            case ('select'):
+                setSelectOptionsType();
+                break;
+            case ('input'):
+                if (element._canSetValue) {
+                    //set the new value
+                    element.setProp('value', value);
+                } else {
+                    var isChecked = (element.value == value);
+                    if ($isEqual(element.nativeElement.type.toLowerCase(), 'checkbox')) {
+                        isChecked = value;
+                    }
+                    AttributeAppender.checked(element.nativeElement, isChecked, element.value);
+                }
+                break;
+            default:
+                element.setProp('innerHTML', value);
+                break;
+        }
     }
 
-    /**
-     * attrObservers
-     */
-    while (this.attrObservers.length) {
-        var attr = this.attrObservers.pop();
-        attr.cleanup();
-    }
 
-    this.context = null;
-    this.attr.clear();
-    this.templates.clear();
-    this.nativeElement = null;
-    this.parent = null;
-    this.props.clear();
+
+    function setSelectOptionsType() {
+        var isObject = $isObject(value);
+        element.children.forEach(setOptionsValue);
+        /**
+         * 
+         * @param {*} options 
+         */
+        function setOptionsValue(options) {
+            var optionValue = options.getAttribute('value'),
+                isSelected;
+            /**
+             * logic to set current selected
+             */
+            if (isObject) {
+                isSelected = $isEqual(JSON.stringify(optionValue).toLowerCase(), value);
+            } else {
+                isSelected = $isEqual(optionValue, value);
+            }
+
+            if (isSelected) {
+                options.setProp('selected', true);
+            }
+
+            return false;
+        }
+    };
+};
+
+/**
+ * 
+ * @param {*} element 
+ */
+function ElementRefGetValue(element) {
+    if ($isEqual(element.nativeElement.type, "checkbox")) {
+        return element.nativeElement.checked;
+    } else if ($isEqual(element.nativeElement.localName, 'select')) {
+        if (!element.children.length || element.nativeElement.options.length > element.children.length) {
+            return element.nativeElement.value;
+        }
+
+        if (element.hasAttribute('multiple')) {
+            var optionsValue = [];
+            for (var i = 0; i < element.nativeElement.selectedOptions.length; i++) {
+                var option = element.nativeElement.selectedOptions[i];
+                var value = element.children.findByIndex(option.index).getAttribute('value');
+                optionsValue.push(value);
+            }
+
+            return optionsValue;
+        }
+
+        return element.children.findByIndex(element.nativeElement.selectedIndex).getAttribute('value');
+    } else if (element.nativeElement.type) {
+        return simpleArgumentParser(element.nativeElement.value);
+    }
 };

@@ -1,27 +1,63 @@
-function TimeoutService() {
-    //timeout functionality
-    return function(fn, timer) {
-        var timeout = setTimeout(function() {
-            fn();
-            ComponentRef.detectChanges();
-        }, timer);
+var nativeTimeout = window.setTimeout;
+var nativeClearTimeout = window.clearTimeout;
+var nativeInterval = window.setInterval;
+var nativeClearInterval = window.clearInterval;
 
-        return function() {
-            clearTimeout(timeout);
+window.setTimeout = function(fn, timer, detectChanges) {
+    return nativeTimeout(trigger(fn, detectChanges), timer);
+};
+
+window.clearTimeout = function(timeoutID) {
+    nativeClearTimeout(timeoutID);
+};
+
+window.clearInterval = function(intervalID) {
+    nativeClearInterval(intervalID);
+};
+
+window.setInterval = function(fn, interval, detectChanges) {
+    return nativeInterval(trigger(fn, detectChanges), interval);
+};
+
+
+/**
+ * 
+ * @param {*} fn 
+ * @param {*} detectChanges 
+ */
+function trigger(fn, detectChanges) {
+    return function() {
+        fn();
+        if (detectChanges) {
+            CoreBootstrapContext.detectChanges();
         }
     };
+};
+
+Service({
+    name: '$timeout'
+}, TimeoutService);
+
+function TimeoutService() {
+    //timeout functionality
+    return function(cb, timer) {
+        var timeout = nativeTimeout(trigger(cb, true), timer);
+        return function() {
+            clearTimeout(timeout);
+        };
+    }
 }
 
+
+Service({
+    name: '$interval'
+}, IntervalService);
+
 function IntervalService() {
-
-    return function(fn, interval) {
-        var currentIterVal = setInterval(function() {
-            fn();
-            ComponentRef.detectChanges();
-        }, interval);
-
+    return function(cb, timer) {
+        var interval = nativeInterval(trigger(cb, true), timer);
         return function() {
-            clearInterval(currentIterVal);
-        }
-    }
+            clearInterval(interval);
+        };
+    };
 }

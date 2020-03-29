@@ -1,0 +1,1 @@
+var browserModule = JModule('browser', {});

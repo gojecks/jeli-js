@@ -24,6 +24,12 @@
     },
     "homepage": "https://github.com/gojecks/jEliJS#readme",
     "devDependencies": {
+        "eslint": "^6.8.0",
+        "eslint-config-standard": "^14.1.0",
+        "eslint-plugin-import": "^2.20.1",
+        "eslint-plugin-node": "^11.0.0",
+        "eslint-plugin-promise": "^4.2.1",
+        "eslint-plugin-standard": "^4.0.1",
         "grunt": "^0.4.5",
         "grunt-cli": "^0.1.13",
         "grunt-concurrent": "1.0.0",
@@ -36,11 +42,13 @@
         "grunt-contrib-less": "^1.0.0",
         "grunt-contrib-uglify": "^2.0.0",
         "grunt-contrib-watch": "^0.5.3",
+        "grunt-eslint": "^22.0.0",
         "grunt-jsdoc": "2.1.0",
         "grunt-karma": "0.6.2",
         "grunt-newer": "1.1.2",
         "jasmine": "2.4.1",
         "jasmine-node": "1.3.1",
+        "jeli-template-loader": "file:../jeli-template-loader",
         "jit-grunt": "0.9.1",
         "karma": "0.10.10",
         "karma-chrome-launcher": "0.1.12",
@@ -57,12 +65,12 @@
         "load-grunt-config": "0.16.0",
         "load-grunt-tasks": "3.1.0",
         "mocha": "^5.2.0",
-        "time-grunt": "1.3.0",
-        "jeli-template-loader": "../jeli-template-loader/jeli-template-loader-0.1.0.tgz"
+        "time-grunt": "1.3.0"
     },
     "scripts": {
         "testjdb": "mocha './test/**/*.spec.js'",
         "jeli": "grunt",
-        "build:pack": "grunt build-pack && npm pack"
+        "build:pack": "grunt build-pack && npm pack",
+        "build:test": "grunt build-test"
     }
 }

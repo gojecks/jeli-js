@@ -4,33 +4,63 @@
 /*@Usage :
     allowed type Attirbute and Element
 */
-commonModule
-    .directive({
-        selector: ':if',
-        transplace: 'element',
-        DI: ['ElementRef', 'Observables'],
-        props: ['binding=:if']
-    }, IfDirective);
+Directive({
+    selector: 'if',
+    DI: ['ViewRef?', 'TemplateRef?'],
+    props: [
+        'if',
+        'ifElse:TemplateRef',
+        'ifThen:TemplateRef'
+    ]
+}, IfDirective);
 
-function IfDirective(elementRef, Observables) {
-    this.binding = '';
-    this.compiledElement = null;
-    this.didInit = function() {
-        if ($isString(this.binding)) {
-            Observables
-                .observeForKey(this.binding, this.process.bind(this));
+function IfDirective(viewRef, templateRef) {
+    this._jIfValue = false;
+    this._thenTemplateRef = templateRef;
+    this._elseTemplateRef = null;
+    this._thenView = null;
+    this._elseView = null;
+
+    this.createView = function() {
+        if (this._jIfValue) {
+            if (!this._thenView) {
+                viewRef.clearView();
+                this._elseView = null;
+                if (this._thenTemplateRef) {
+                    this._thenView = viewRef.createEmbededView(this._thenTemplateRef);
+                }
+            }
         } else {
-            this.process(this.binding);
+            if (!this._elseView) {
+                viewRef.clearView();
+                this._thenView = null;
+                if (this._elseTemplateRef) {
+                    this._elseView = viewRef.createEmbededView(this._elseTemplateRef);
+                }
+            }
         }
     };
 
-    this.process = function(changes) {
-        if (!changes) {
-            this.compiledElement && this.compiledElement.remove(true);
-            this.compiledElement = null;
-        } else {
-            this.compiledElement = elementRef.clone(null, elementRef.parent);
-            elementRef.parent.insertAfter(this.compiledElement, elementRef.nativeNode, true);
+    Object.defineProperties(this, {
+        if: {
+            set: function(value) {
+                this._jIfValue = value;
+                this.createView();
+            }
+        },
+        ifElse: {
+            set: function(templateRef) {
+                this._elseTemplateRef = templateRef;
+                this.createView();
+            }
+        },
+        ifThen: {
+            set: function(templateRef) {
+                if (templateRef) {
+                    this._thenTemplateRef = templateRef;
+                    this.createView();
+                }
+            }
         }
-    };
+    });
 }

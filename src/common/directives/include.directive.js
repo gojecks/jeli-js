@@ -6,76 +6,58 @@
  * element <j-include source="/ui-template.html">
  *  attr <any j-include="/ui-template.html">
  */
-commonModule
-    .directive({
-        selector: 'j-include',
-        transplace: 'element',
-        props: ['binding=src', 'content=content'],
-        DI: ['ElementRef', '$templateCache', 'Observables', '$sce']
-    }, IncludeDirective);
+Directive({
+    selector: 'include',
+    props: [
+        'include',
+        'template:TemplateRef'
+    ],
+    DI: ['ViewRef?', '$sce?']
+}, IncludeDirective);
 
-function IncludeDirective(elementRef, $templateCache, Observables, $sce) {
-    this.binding;
-    this.compiledElem;
-    this.didInit = function() {
-        if (this.content) {
-            this.compileHtml();
-        } else {
-            if ($inArray('/', this.binding)) {
-                this.process(this.binding);
-            } else {
-                Observables
-                    .observeForKey(this.binding, this.process.bind(this));
+function IncludeDirective(viewRef, $sce) {
+    this._jInclude = undefined;
+    this.compileView = function() {
+        if (this._jInclude) {
+            if (!this._isCompiled) {
+                if ($isFunction(this._jInclude)) {
+                    template = content(elementRef);
+                } else {
+                    template = HtmlParser.parseFromString(content);
+                }
+
+                elementRef.parent.insertAfter(template, elementRef.nativeNode);
             }
         }
     };
-
     this.resetIncludeTemplate = function() {
         if (this.compiledElem) {
             this.compiledElem.remove();
         }
     };
 
-    this.compileHtml = function() {
-        var child = HtmlParser(this.content, elementRef);
-        elementRef.children.forEach(HtmlParser.transverse);
-        elementRef.parent.insertAfter(child, elementRef.nativeNode);
-        elementRef.context.tick();
-    };
-
     /**
      * 
      * @param {*} url 
      */
-    this.process = function(url) {
-        if (!url) {
+    this.process = function(value) {
+        if (!value) {
             return;
         }
-        var self = this;
         /**
          * Resolve the URL
          */
         this.resetIncludeTemplate();
         // get the required template
-        if ($templateCache.has(url)) {
-            self.content = $templateCache.get(url);
-            self.compileHtml();
-        } else {
-            $http({
-                url: url,
-                headers: {
-                    'Content-Type': 'text/html',
-                },
-                callback: function(response) {
-                    if (response.success) {
-                        self.content = $sce.trustAsHTML(response.data);
-                        $templateCache.set(url, self.content);
-                        self.compileHtml();
-                    } else {
-                        self.resetIncludeTemplate();
-                    }
-                }
-            });
-        }
+        this.compileHtml(value);
     }
+
+    Object.defineProperties(this, {
+        include: {
+            set: function() {
+                this._jInclude = value;
+                this.compileView();
+            }
+        }
+    });
 }

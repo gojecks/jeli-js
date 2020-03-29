@@ -1,0 +1,102 @@
+<nav class="navbar navbar-inverse navbar-static-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">
+                Todo Application
+              </a>
+    </div>
+  </div>
+</nav>
+
+<!-- <div class="container">
+  <div class="row">
+    <div class="col-sm-6 col-sm-offset-3">
+      <button @click='todos.push({"description":"Quick Test " + +new Date})'>Dynamic Add</button> <button @click="todos = [];removeItemCount=0">Empty</button> <button @click="todos = []; generateMock(10)">AddMore</button>
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <form @submit="addTodo()">
+            <input type="text" pattern="^\d+$" :model="todoDescription" class="form-control">
+          </form>
+        </div>
+        <ul class="list-group">
+          <li class="list-group-item"><strong>Todo Items: ${todos.length -  removeItemCount}</strong>
+            <div class="pull-right"><strong>Marked as done: ${removeItemCount}</strong></div>
+          </li>
+          <li *for="(idx,todo) in todos" class="list-group-item">
+            <div class="row">
+              <div class="col-sm-1">
+                <input type="checkbox" :model="todo.done" @change="markAsRemoved(todo.done)">
+              </div>
+              <div class="col-sm-8">
+                <span :style="{'text-decoration': todo.done ? 'line-through' : 'none'}">
+                                        ${todo.description}
+                                    </span>
+              </div>
+              <div class="col-sm-3">
+                <button class="btn btn-primary btn-sm pull-right" @click="todo.addDescription = !todo.addDescription">
+                                      ${(todo.addDescription?'Done':'Edit')}
+                                    </button>
+                <button @click="removeTodo(idx)">Remove</button>
+              </div>
+
+            </div>
+            <h5>
+              <p class="alert alert-info" :show="!todo.addDescription"> ${todo.details} </p>
+              <div :show="todo.addDescription" class="form-group">
+                <textarea :model="todo.details" class="form-control"></textarea>
+              </div>
+            </h5>
+          </li>
+          <li *if="!todos.length" class="list-group-item">No todos.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div> -->
+<div>
+  <h5>Attr-Selected</h5>
+  <select>
+    <option *for="i in [0,1,2,4]" attr-selected="i===1">${i}</option>
+  </select>
+</div>
+<test-place #test-place>
+  <input type="checkbox" :model="test" checked="true">
+  <div>
+    <h5>Attr-Value</h5>
+    <input type="text" {attr-value}="test" attr-readonly="true">
+  </div>
+  <h5>Attr-Style (background & display)</h5>
+  <div {attr-style}="{'display':test?'block':'none', background:'#000'}">I am a test</div>
+  <div>
+    <h5>Attr-innerHTML</h5>
+    <textarea :model="html"></textarea>
+    <div {innerHTML}="html"></div>
+  </div>
+  <div {:switch}="test">
+    <h5 *switch-case="true">I am ${test} case</h5>
+    <h4 *switch-default>I am default switch element</h4>
+  </div>
+</test-place>
+<input type="checkbox" :model="test" attr-checked="true">
+<div *if="test; else as fallback">I am Test Condition</div>
+<j-template #fallback>
+  <div *for="i in [0,1,2,3]">Testing_${i}</div>
+</j-template>
+<div {:class}="test?'visible':'hidden'">Class test</div>
+
+<!-- <div {:form-control}="testForm">
+  <input type="radio" :form-field="radio" value="0" #form-field/><br/>
+  <input type="radio" :form-field="radio" value="1" /><br/>
+  <input type="checkbox" :form-field="checkbox"><br/>
+  <textarea :form-field="textarea"></textarea><br/>
+  <input type="text" :form-field="input" value="Quick test" minlength="5" maxlength="10" required="true"><br/>
+  <input type="file" :form-field="file"><br/>
+  <input type="range" id="a" value="50" :form-field="range"><br>
+  <input type="number" id="b" value="50" :form-field="number"><br/>
+  <select :form-field="select" multiple>
+    <option value="select_1">Select 1</option>
+    <option value="select_2">Select 2</option>
+    <option value="select_3">Select 3</option>
+  </select>
+  <button {disabled}="!testForm.valid || false">Submit</button> <br/> ${testForm.error | json}
+</div> -->

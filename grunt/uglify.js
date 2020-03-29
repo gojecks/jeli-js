@@ -43,8 +43,8 @@ module.exports = {
             footer: ''
         },
         files: {
-            './dist/jeli.min.js': [
-                './dist/jeli.js'
+            './dist/jeli_umd.min.js': [
+                './dist/jeli_umd.js'
             ]
         }
     }

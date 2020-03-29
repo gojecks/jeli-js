@@ -3,11 +3,12 @@
  */
 function Subject() {
     this.$notifyInProgress = 0;
+    this.bindingIdx = 0;
     this.retry = false;
-    this['[[entries]]'] = [];
-    var events = {};
+    this._entries = [];
+    this._events = {};
     this.get = function(key) {
-        return this['[[entries]]'].filter(function(instance) {
+        return this._entries.filter(function(instance) {
             return instance.binding === key;
         })[0];
     };
@@ -17,13 +18,13 @@ function Subject() {
      * @param {*} listener
      */
     this.on = function(eventName, listener) {
-        if (!events.hasOwnProperty(eventName)) {
-            events[eventName] = [];
+        if (!this._events.hasOwnProperty(eventName)) {
+            this._events[eventName] = [];
         }
         /**
          * push the listener
          */
-        events[eventName].push(listener);
+        this._events[eventName].push(listener);
         return this;
     };
 
@@ -32,11 +33,12 @@ function Subject() {
      * @param {*} listener
      */
     this.emit = function(eventName) {
-        if (events.hasOwnProperty(eventName)) {
+        if (this._events.hasOwnProperty(eventName)) {
+            var events = this._events[eventName];
             var arg = [].splice.call(arguments);
             arg.shift();
-            while (events[eventName].length) {
-                var fn = events[eventName].pop();
+            while (events.length) {
+                var fn = this._events[eventName].pop();
                 fn.apply(fn, arg);
             }
         }
@@ -44,7 +46,7 @@ function Subject() {
 }
 
 Subject.prototype.unsubscribe = function(bindingIdx) {
-    this['[[entries]]'] = this['[[entries]]'].filter(function(instance) {
+    this._entries = this._entries.filter(function(instance) {
         return instance.binding !== bindingIdx;
     });
     if (this.$notifyInProgress) {
@@ -54,9 +56,11 @@ Subject.prototype.unsubscribe = function(bindingIdx) {
 
 Subject.prototype.subscribe = function(key, fn, core) {
     var self = this,
-        bindingIdx = (fn ? key : 'core_' + +new Date);
-    this['[[entries]]'].push({
-        watchKey: fn ? key : undefined,
+        bindingIdx = (fn ? key : 'core_' + ++this.bindingIdx);
+
+    this.retry = true;
+    this._entries.push({
+        watchKey: fn ? getValueFromModel(key) : undefined,
         handler: fn || key,
         state: false,
         core: core,
@@ -93,7 +97,7 @@ Subject.prototype.observeForCollection = function(key, fn) {
         index = 0,
         unsubscribe;
     if (!keyObserver) {
-        var snapshot = new SnapShotHashing(),
+        var snapshot = new IterableProfiler(),
             handler = function() {
                 var value = snapshot.getProfiling();
                 handler.watches.forEach(function(_callback) {
@@ -102,7 +106,7 @@ Subject.prototype.observeForCollection = function(key, fn) {
             };
         handler.watches = [fn];
         unsubscribe = this.subscribe(key, handler, function(collection) {
-            return snapshot.compare(collection);
+            return snapshot.hasChanges(collection);
         });
     } else {
         index = keyObserver.handler.watches.length;
@@ -144,19 +148,18 @@ Subject.prototype.notifyAllObservers = function(model, ignoreCheck) {
         if (observer.watchKey) {
             if (model) {
                 var value;
-                if (typeof observer.watchKey === 'function') {
+                if ($isFunction(observer.watchKey)) {
                     value = observer.watchKey(model);
                 } else {
-                    value = maskedEval(observer.watchKey, model);
+                    value = resolveValueFromContext(observer.watchKey, model);
                 }
 
-                if (observer.core && typeof observer.core === 'function') {
+                if (observer.core && $isFunction(observer.core)) {
                     if (observer.core(value)) {
                         _trigger(observer.handler, value);
                     }
-                } else if (!observer.hasOwnProperty('lastValue') || (value !== observer.lastValue) || ignoreCheck) {
+                } else if (ignoreCheck || _comparison(value, observer)) {
                     _trigger(observer.handler, value);
-                    observer.lastValue = value;
                 }
             }
 
@@ -168,7 +171,7 @@ Subject.prototype.notifyAllObservers = function(model, ignoreCheck) {
          * change status
          */
 
-        if (((idx + 1) === _self.$notifyInProgress)) {
+        if ($isEqual((idx + 1), _self.$notifyInProgress)) {
             _self.$notifyInProgress = 0;
             if (_self.retry) {
                 // trigger notification again
@@ -192,13 +195,25 @@ Subject.prototype.notifyAllObservers = function(model, ignoreCheck) {
         }
     }
 
-    this.$notifyInProgress = this['[[entries]]'].length;
-    this['[[entries]]'].forEach(_consume);
+    function _comparison(value, subject) {
+        if ($isObject(value)) {
+            value = $hashCode(JSON.stringify(value));
+        }
+        var noChanges = !$isEqual(value, subject.lastValue);
+        subject.lastValue = value;
+        return noChanges;
+    }
+
+    this.$notifyInProgress = this._entries.length;
+    for (var i = 0; i < this.$notifyInProgress; i++) {
+        _consume(this._entries[i], i);
+    }
 };
 
 Subject.prototype.destroy = function(value) {
-    this['[[entries]]'].length = 0;
+    this._entries.length = 0;
     this.emit('$destroy', value);
     this.notifyAllObservers = 0;
     this.retry = false;
+    this._events = null;
 };

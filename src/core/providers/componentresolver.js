@@ -7,29 +7,25 @@
 function ComponentFactoryResolver(selector, element, callback) {
     var component,
         controller;
-    if (!$compileTracker.compiledModule._factories.has(selector)) {
-        $compileTracker.compiledModule.options.requiredModules.forEach(function(moduleName) {
+    if (!CoreBootstrapContext.compiledModule.annotations.exports.has(selector)) {
+        CoreBootstrapContext.compiledModule.requiredModules.forEach(function(moduleName) {
             var _module = ModuleService._factories.get(moduleName);
-            if (_module._factories.has(selector)) {
-                controller = _module._factories.get(selector);
+            if (_module.annotations.exports.has(selector)) {
+                controller = _module.annotations.exports.get(selector);
             }
         });
     } else {
-        controller = $compileTracker.compiledModule._factories.get(selector);
+        controller = CoreBootstrapContext.compiledModule.annotations.exports.get(selector);
     }
 
     if (controller && element) {
-        component = new ElementRef(document.createElement(selector));
+        component = new ElementRef(document.createElement(selector), element, {
+            name: selector,
+            type: 'element',
+            isc: true
+        });
         ElementCompiler(controller, component, function(componentInstance) {
-            if (element.isDetachedElem) {
-                component.parent = element.parent;
-                component.insertAfter(component.nativeElement, element.nativeNode);
-            } else {
-                component.parent = element;
-                element.nativeElement.appendChild(component.nativeElement);
-            }
-
-            component.parent.children.push(component);
+            component.parent.children.add(component);
             callback(component, componentInstance);
         });
     } else {

@@ -1,6 +1,5 @@
-
 module.exports = {
-    all: ['Gruntfile.js', 'library/**/*.js'],
+    all: ['Gruntfile.js', 'src/**/*.js'],
     allInApp: ['library/**/*.js'],
     options: {
         force: true,
