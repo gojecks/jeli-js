@@ -11,7 +11,7 @@ module.exports = function(grunt) {
         jitGrunt: true,
         configPath: path.join(process.cwd(), 'grunt/'),
         data: {
-            pkg: grunt.file.readJSON('package.json')
+            jeliJSON: grunt.file.read(path.join(process.cwd(), 'jeli.json'))
         }
     });
 };

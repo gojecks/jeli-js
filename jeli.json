@@ -2,32 +2,35 @@
     "projectName": "jeli",
     "build": {
         "common": {
-            "src": ["./src/common/module.js"],
-            "dest": "./dist/modules/common.js"
+            "folder": "common",
+            "entry": "module",
+            "dest": "./dist/common/"
         },
         "form": {
-            "src": ["./src/form/module.js"],
-            "dest": "./dist/modules/form.js"
+            "entry": "module",
+            "folder": "form",
+            "dest": "./dist/form/"
         },
         "http": {
-            "src": ["./src/http/module.js"],
-            "dest": "./dist/modules/http.js"
+            "entry": "module",
+            "folder": "http",
+            "dest": "./dist/http/"
         },
         "route": {
-            "src": ["../jeli.web.route/src/module.js"],
-            "dest": "./dist/modules/route.js"
-        },
-        "stroage": {
-            "src": "../jeli.storage/src/module.js",
-            "dest": "./dist/modules/storage.js"
+            "entry": "module",
+            "folder": "route",
+            "dest": "./dist/route/"
         },
         "datetime": {
-            "src": ["../jeli.date.time/src/module.js"],
-            "dest": "./dist/modules/datetime.js"
+            "entry": "module",
+            "folder": "datetime",
+            "dest": "./dist/datetime/"
         },
         "core": {
-            "dest": "./dist/jeli.js",
-            "src": [
+            "dest": "./dist/",
+            "folder": "core",
+            "entry": "core",
+            "concat": [
                 "../jeli.helpers/common/*.js",
                 "../jeli.helpers/eval.js",
                 "../jeli.helpers/copy.js",
@@ -35,8 +38,7 @@
                 "../jeli.helpers/events/emitter.js",
                 "../jeli.helpers/externalScriptLoader.js",
                 "../jeli.helpers/serializer.js",
-                "../jeli.helpers/xhr/*.js",
-                "./src/core/**/*.js"
+                "../jeli.helpers/xhr/*.js"
             ]
         },
         "test": {

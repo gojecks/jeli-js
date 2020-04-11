@@ -1,15 +1,11 @@
 module.exports = {
     core: {
         files: [
-            'src/**/*.js',
-            '../jeli.helpers/**/*.js',
-            '../jeli.web.route/src/**/*.js',
-            '../jeli.storage/src/**/*.js',
-            '../jeli.date.time/src/**/*.js'
+            'packages/**/*.js',
         ],
         tasks: ['clean',
             'jeli-template-loader:jeli',
-            'uglify',
+            // 'uglify',
             'clean:jAfterBuild'
         ]
     },

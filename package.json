@@ -72,5 +72,8 @@
         "jeli": "grunt",
         "build:pack": "grunt build-pack && npm pack",
         "build:test": "grunt build-test"
+    },
+    "dependencies": {
+        "js.helpers": "file:../js.helpers/js.helpers-0.0.1.tgz"
     }
 }

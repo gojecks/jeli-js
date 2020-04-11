@@ -5,8 +5,6 @@ default:
   - 'clean'
   #- 'eslint'
   - 'jeli-template-loader:jeli'
-  - 'concat'
-  - 'uglify'
   - 'clean:jAfterBuild'
   - 'watch'
 build-pack:
