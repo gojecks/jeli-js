@@ -2,12 +2,6 @@
     "name": "jeli",
     "version": "2.0.0-beta",
     "description": "Javascript Framework for front-end development",
-    "main": "dist/jeli.min.js",
-    "files": [
-        "dist",
-        "@types"
-    ],
-    "types": "@types/index.d.ts",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/gojecks/jeli-js.git"
