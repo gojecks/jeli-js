@@ -54,12 +54,17 @@ module.exports = function(grunt) {
             //     }
             // ]
         },
-        test: {
-            dest: './docs/examples/Todo/app.js',
-            src: './docs/examples/Todo/scripts/main.js',
+        examples: {
             options: {
-                parseModule: true,
-                generateMap: false
+                library: false,
+                sourceRoot: 'docs/examples/Todo/src/',
+                output: {
+                    generateMeta: false,
+                    folder: './docs/examples/Todo/',
+                    files: {
+                        'main': './main.js'
+                    }
+                }
             }
         }
     };

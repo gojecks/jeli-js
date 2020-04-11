@@ -63,6 +63,7 @@
     "scripts": {
         "testjdb": "mocha './test/**/*.spec.js'",
         "jeli": "grunt",
+        "build:example": "grunt jeli-template-loader:examples",
         "build:pack": "grunt build-pack && npm pack",
         "build:test": "grunt build-test"
     }
