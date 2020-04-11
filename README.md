@@ -6,7 +6,7 @@ jEliJS is a javaScript library for front-end developers, it helps build interact
 npm install jelijs
 ```
 
-[Api documentation ](https://gojecks.github.io/jeli)
+[Api documentation ](https://gojecks.github.io/jeli.js/)
 
 Become a contributor
 email:[gojeckskenwood@gmail.com](gojeckskenwood@gmail.com)
