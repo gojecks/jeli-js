@@ -10,7 +10,7 @@
     "types": "@types/index.d.ts",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/gojecks/jEliJS.git"
+        "url": "git+https://github.com/gojecks/jeli-js.git"
     },
     "keywords": [
         "jelijs",
@@ -20,9 +20,9 @@
     "author": "Joseph Gojecks Kadiri",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/gojecks/jEliJS/issues"
+        "url": "https://github.com/gojecks/jeli-js/issues"
     },
-    "homepage": "https://github.com/gojecks/jEliJS#readme",
+    "homepage": "https://github.com/gojecks/jeli-js#readme",
     "devDependencies": {
         "eslint": "^6.8.0",
         "eslint-config-standard": "^14.1.0",
@@ -48,7 +48,6 @@
         "grunt-newer": "1.1.2",
         "jasmine": "2.4.1",
         "jasmine-node": "1.3.1",
-        "jeli-template-loader": "file:../jeli-template-loader",
         "jit-grunt": "0.9.1",
         "karma": "0.10.10",
         "karma-chrome-launcher": "0.1.12",
@@ -72,8 +71,5 @@
         "jeli": "grunt",
         "build:pack": "grunt build-pack && npm pack",
         "build:test": "grunt build-test"
-    },
-    "dependencies": {
-        "js.helpers": "file:../js.helpers/js.helpers-0.0.1.tgz"
     }
 }
