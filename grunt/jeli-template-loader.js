@@ -56,13 +56,13 @@ module.exports = function(grunt) {
         },
         examples: {
             options: {
-                library: false,
-                sourceRoot: 'docs/examples/Todo/src/',
+                library: true,
+                sourceRoot: 'viewers/',
                 output: {
                     generateMeta: false,
-                    folder: './docs/examples/Todo/',
+                    folder: './docs/examples/',
                     files: {
-                        'main': './main.js'
+                        'main': './*/src/main.js'
                     }
                 }
             }

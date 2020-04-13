@@ -3,10 +3,8 @@ Element({
     templateUrl: './app-root.html',
     DI: ['formControlService'],
     viewChild: ["testPlace=#testPlace", "model=:model"]
-}, AppRootElement);
-
-
-function AppRootElement(formControlService) {
+})
+export function AppRootElement(formControlService) {
     this.testForm = new formControlService({
         radio: {
             value: 1,
