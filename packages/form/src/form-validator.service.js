@@ -1,6 +1,6 @@
 import './form-validator-current-instance';
 import './validator.stack';
-import { isobject, isfunction, isequal } from 'js.helpers/helpers';
+import { isobject, isfunction, isequal } from 'js-helpers/helpers';
 
 
 Service({

@@ -1,5 +1,6 @@
+import { HttpInterceptor } from './http.interceptor'
 Service({
-    DI: ['__httpInterceptor__']
+    DI: [HttpInterceptor]
 })
 
 export function RegisterInterceptors(httpInterceptors) {

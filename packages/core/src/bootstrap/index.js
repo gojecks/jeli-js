@@ -1,9 +1,11 @@
 import './constants';
+
+export var INITIALIZERS = new ProviderToken('AppInitializers', true);
 /**
  * Static Bootstrap Options
  * @param {*} moduleToBootStrap
  */
-function bootStrapApplication(moduleToBootStrap) {
+export function bootStrapApplication(moduleToBootStrap) {
     CoreBootstrapContext.compiledModule = moduleToBootStrap;
     InitializeModule(moduleToBootStrap);
     // BootStrap Entry Component
@@ -17,9 +19,16 @@ function bootStrapApplication(moduleToBootStrap) {
                 name: selector,
                 isc: true,
                 type: 'element',
-                fromDOM: true
+                fromDOM: true,
+                providers: [
+                    moduleToBootStrap.annotations.rootElement
+                ]
             }, null);
-            ElementCompiler(moduleToBootStrap.annotations.rootElement, CoreBootstrapContext.bootStrapComponent, function() {});
+
+            /**
+             * bootstrap application
+             */
+            ElementCompiler.resolve(CoreBootstrapContext.bootStrapComponent, function() {});
         }
     }
 
@@ -28,16 +37,10 @@ function bootStrapApplication(moduleToBootStrap) {
      * @param {*} moduleFn 
      */
     function InitializeModule(moduleFn) {
-        moduleFn.annotations.initializers.forEach(Depene);
+        // trigger the moduleFn
+        moduleFn();
         if (moduleFn.annotations.requiredModules) {
             moduleFn.annotations.requiredModules.forEach(InitializeModule);
         }
     }
-};
-
-var INITIALIZERS = new ProviderToken('AppInitializers');
-
-export {
-    INITIALIZERS,
-    bootStrapApplication
 };

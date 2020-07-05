@@ -1,5 +1,6 @@
-import { isobject, isequal, isundefined, isnull, isstring } from 'js.helpers/helpers';
-import { simpleBooleanParser } from 'js.helpers/utils';
+import { isobject, isequal, isboolean, isundefined, isnull, isstring, isarray, isnumber } from 'js-helpers/helpers';
+import { simpleBooleanParser } from 'js-helpers/utils';
+import { filterParser } from '../providers/filter.provider';
 /**
  * 
  * @param {*} templateModel 
@@ -54,20 +55,23 @@ function compileTemplate(definition, context, cb) {
             return accum.replace(options.replace, evaluateExpression(options.exp, context));
         }, definition.rawValue);
     } else {
-        value = evaluateExpression(definition, context);
+        value = getTemplateValue(definition, context);
     }
 
-    if (!isequal(definition.lastCompiled, value)) {
-        definition.lastCompiled = value;
-        cb(value);
-    }
+    cb(value);
 }
 
+/**
+ * 
+ * @param {*} expr 
+ * @param {*} context 
+ */
 function evaluateExpression(expr, context) {
-    if (isobject(expr)) {
+    /**
+     * expression with filter
+     */
+    if (isobject(expr) && expr.hasOwnProperty('prop')) {
         return getTemplateValue(expr, context);
-    } else if (isstring(expr)) {
-        return expr;
     }
 
     return resolveValueFromContext(expr, context);
@@ -113,11 +117,12 @@ function simpleArgumentParser(arg) {
  */
 function generateArguments(args, context, event) {
     return args.map(function(arg) {
-        if (arg[0] === "$event") {
-            return event;
+        if (isarray(arg)) {
+            var isEvent = isequal(arg[0], '$event');
+            return resolveContext(arg.slice(isEvent ? 1 : 0), isEvent ? event : context);
         } else {
             if (isstring(arg)) {
-                return arg;
+                return isequal(arg, '$event') ? event : arg;
             }
 
             arg = arg.join('.');
@@ -131,22 +136,18 @@ function generateArguments(args, context, event) {
  * 
  * @param {*} expression 
  * @param {*} context 
+ * @param {*} event 
  */
 function resolveValueFromContext(expression, context) {
-    if (isundefined(expression) || isnull(expression) || isboolean(expression)) {
+    if (isundefined(expression) || isnull(expression) || isboolean(expression) || isnumber(expression) || /(#|rgb)/.test(expression)) {
         return expression;
     } else if (isobject(expression)) {
-        return parseObjectExpression(expression, context);
+        return parseObjectExpression.apply(null, arguments);
     } else if (isarray(expression)) {
         return expression;
     }
 
-    var value = simpleArgumentParser(expression);
-    if (isequal(value, expression)) {
-        value = maskedEval(expression, context);
-    }
-
-    return value;
+    return resolveContext(generateArrayKeyType(expression, context).split("."), context);
 }
 
 /**
@@ -154,55 +155,60 @@ function resolveValueFromContext(expression, context) {
  * @param {*} expression 
  * @param {*} context 
  */
-function parseObjectExpression(expression, context) {
-    var _localParser_ = {
-        ite: function(obj) {
-            return maskedEval(obj.test, context) ? obj.cons : obj.alt;
+function parseObjectExpression(expression, context, event) {
+    var internalParser = {
+        ite: function() {
+            return resolveValueFromContext(expression.test, context) ? expression.cons : expression.alt;
+        },
+        call: function() {
+            var dcontext = context;
+            if (expression.namespaces) {
+                dcontext = resolveContext(expression.namespaces, context);
+            }
+
+            if (dcontext && dcontext[expression.fn]) {
+                var args = generateArguments(expression.args, context, event);
+                return dcontext[expression.fn].apply(dcontext, args);
+            }
+
+            return null;
+        },
+        obj: function() {
+            if (expression.expr) {
+                return Object.keys(expression.expr).reduce(function(accum, key) {
+                    accum[key] = resolveValueFromContext(expression.expr[key], context);
+                    return accum;
+                }, {});
+            }
+        },
+        ant: function() {
+            var value = generateArguments([expression.right], context, event)[0];
+            return setModelValue(expression.left, context, value);
         }
     };
 
-
-    return Object.keys(expression).reduce(function(accum, key) {
-        var obj = expression[key];
-        /**
-         * itenary type
-         */
-        if (isobject(obj) && obj.test) {
-            accum[key] = _localParser_[obj.type](obj);
-        } else {
-            var value = maskedEval(obj, context);
-            accum[key] = isundefined(value) ? obj : value;
-        }
-        return accum;
-    }, {});
+    return internalParser[expression.type] && internalParser[expression.type]();
 }
 
 /**
- * 
+ * Get and Set the value of a given key to a model
  * @param {*} key 
- * @param {*} context 
+ * @param {*} model 
+ * @param {*} value 
  */
-function simpleContextMapper(key, context) {
-    key = generateArrayKeyType(key, context).split(".");
-    var last = key.pop(),
-        dContext = context;
-
-    if (key.length) {
-        dContext = resolveContext(key, context);
+function setModelValue(key, model, value) {
+    if (isarray(key)) {
+        model = resolveContext(key.slice(1, key.length - 1), model);
+        key = key[key.length - 1];
     }
 
-    if (dContext) {
-        var fnString = generateFnFromString(last);
-        if (fnString) {
-            var args = generateArguments(fnString.arg, context);
-            var fn = context[fnString.fn] || function() {};
-            return fn.apply(context, args);
-        }
-        return dContext[last];
+    if (model) {
+        model[key] = value;
     }
 
-    return dContext;
+    return value;
 }
+
 
 /**
  * 
@@ -245,4 +251,25 @@ function createNewInstance(model, key, create, nextIsArrayKey) {
     }
 
     return model && model[key] || objectType;
+}
+
+/**
+ * 
+ * @param {*} key 
+ * @param {*} model 
+ */
+function generateArrayKeyType(key, model) {
+    if (-1 < key.indexOf("[")) {
+        model = model || {};
+        return key.split('[').map(function(current) {
+            if (current.indexOf(']') > -1) {
+                var _key = current.split(']')[0];
+                return ((model.hasOwnProperty(_key)) ? model[_key] : _key);
+            }
+
+            return current;
+        }).join('.');
+    }
+
+    return key
 }

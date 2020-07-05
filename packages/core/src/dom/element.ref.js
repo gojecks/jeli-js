@@ -1,11 +1,11 @@
-import { isobject, isarray, isequal, isfunction } from 'js.helpers/helpers';
+import { isobject, isequal, isfunction } from 'js-helpers/helpers';
 /**
  * 
  * @param {*} ele 
  * @param {*} parent 
  * @param {*} definition 
  */
-function ElementRef(definition, parent) {
+export function ElementRef(definition, parent) {
     var viewQuery = null;
     var _this = this;
     /**
@@ -16,10 +16,8 @@ function ElementRef(definition, parent) {
 
     this.nativeElement = ElementRef.createElementByType(definition.name, definition.text, definition.fromDOM);
     this.refId = getUID();
-    this.customElements = [];
     this.$observers = [];
     this.children = new QueryList();
-    this._canSetValue = isequal('input', EventHandler.getEventType(this.nativeElement));
     this.parent = parent;
     /**
      * check if element is custom element
@@ -52,13 +50,6 @@ function ElementRef(definition, parent) {
 
     this.nodes = new Map();
     this.events = new EventHandler(this, definition.events);
-
-    this.getDirective = function(name) {
-        return definition.directives && definition.directives.filter(function(dir) {
-            return dir.name === name;
-        })[0]
-    };
-
     Object.defineProperties(this, {
         index: {
             get: function() {
@@ -68,9 +59,6 @@ function ElementRef(definition, parent) {
         value: {
             get: function() {
                 return ElementRefGetValue(this);
-            },
-            set: function(value) {
-                ElementRefSetValue(this, value);
             }
         },
         nativeNode: {
@@ -143,11 +131,16 @@ function ElementRef(definition, parent) {
 
                 return this.parent && this.parent.changeDetector;
             }
+        },
+        providers: {
+            get: function() {
+                return definition.providers;
+            }
         }
     });
 
     this.getTemplateRef = function(templateId) {
-        return getTemplateRef(definition.templates, templateId);
+        return new TemplateRef(definition.templates, templateId);
     };
 
     /**
@@ -175,6 +168,7 @@ ElementRef.prototype.prevSibling = function() {
 };
 
 ElementRef.prototype.setProp = function(propName, propValue) {
+    if (propValue === undefined) return;
     this.nativeElement[propName] = propValue;
     this.setAttribute.apply(this, arguments);
     return this;
@@ -185,9 +179,8 @@ ElementRef.prototype.hasAttribute = function(name) {
 };
 
 ElementRef.prototype.getAttribute = function(name) {
-    var dir = this.getDirective(name);
-    if (dir) {
-        return generateArrayKeyType(dir.checker, this.context);
+    if (this.prop && this.prop.hasOwnProperty(name)) {
+        return this.prop[name];
     }
 
     return this.attr && this.attr[name];
@@ -229,56 +222,39 @@ ElementRef.prototype.removeAttribute = function(name) {
  * @return self;
  */
 ElementRef.prototype.appendChild = function(template) {
-    var child;
-    if (isfunction(template)) {
-        child = template(this);
-    } else if (template instanceof ElementRef) {
-        HtmlParser.transverse(template);
-        child = template.nativeElement;
+    if (template instanceof ElementRef) {
+        template = template.nativeElement;
     } else if (template instanceof HTMLElement || template instanceof DocumentFragment) {
-        child = template;
+        template = template;
     }
 
-    this.nativeElement.appendChild(child);
-    child = null;
+    this.nativeElement.appendChild(template);
+    this.changeDetector.detectChanges();
 };
 
 
 /**
  * @param {*} newNode
  * @param {*} targetNode
- * @param {*} transverse
  */
 ElementRef.prototype.insertAfter = function(newNode, targetNode) {
-    if (!targetNode.parentNode) {
-        return;
-    }
-
     targetNode = targetNode || this.nativeElement;
-    if (newNode instanceof ElementRef) {
-        this.children.add(newNode);
-        HtmlParser.transverse(newNode);
-        newNode.changeDetector.detectChanges();
-        newNode = newNode.nativeElement;
-    } else {
-        this.changeDetector.detectChanges();
-    }
     targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
+    this.changeDetector.detectChanges();
 };
 
 /**
- * @param {*} content
+ * @param {*} newContent
  */
-ElementRef.prototype.html = function(content) {
-    if (content instanceof ElementRef) {
-        HtmlParser.transverse(content);
-        content = content.nativeElement;
-    } else if (isstring(content)) {
-        content = HtmlParser.parseFromString(content);
+ElementRef.prototype.html = function(newContent) {
+    if (newContent instanceof ElementRef) {
+        newContent = newContent.nativeElement;
+    } else if (isstring(newContent)) {
+        newContent = document.createRange().createContextualFragment(newContent);
     }
 
     this.nativeElement.innerHTML = '';
-    this.nativeElement.appendChild(content);
+    this.nativeElement.appendChild(newContent);
 };
 
 ElementRef.prototype.remove = function(removeFromParent) {
@@ -317,21 +293,6 @@ ElementRef.prototype.observer = function(onDestroyListener) {
     return this;
 };
 
-/**
- * Attach listners to element
- */
-ElementRef.prototype.listen = function(listeners) {
-    var ele = this.nativeElement;
-    Object.keys(listeners).forEach(_listen);
-
-    function _listen(event) {
-        if (event in ele) {
-            ele[event] = function(ev) {
-                listeners[event](ev);
-            };
-        }
-    }
-};
 
 /**
  * 
@@ -353,105 +314,6 @@ function cleanupElementRef(elementRef) {
     elementRef.nativeElement = null;
     elementRef.parent = null;
     elementRef.nodes.clear();
-};
-
-/**
- * 
- * @param {*} element 
- * @param {*} observers 
- */
-function setupAttributeObservers(element, attrObservers) {
-    element.observer(SubscribeObservables(element.hostRef.refId, observe));
-
-    function observe() {
-        for (var propName in attrObservers) {
-            attributeEvaluator(propName, attrObservers[propName]);
-        }
-
-        /**
-         * 
-         * @param {*} propName 
-         * @param {*} template 
-         */
-        function attributeEvaluator(propName, template) {
-            compileTemplate(template, element.context, function(value) {
-                if (AttributeAppender[propName]) {
-                    AttributeAppender[propName](element.nativeElement, value, template);
-                } else {
-                    element.setProp(propName, value, true);
-                }
-
-                /**
-                 * remove the config
-                 */
-                if (template.once) {
-                    delete attrObservers[propName];
-                }
-            });
-        }
-    }
-}
-
-/**
- * 
- * @param {*} value 
- * @param {*} oldVal 
- * 
- * Method is triggered each time 
- * there is an update in model or DOM element
- */
-function ElementRefSetValue(element, value, force) {
-    if (!isequal(element.value, value) || force) {
-        switch (element.tagName.toLowerCase()) {
-            case ('select'):
-                setSelectOptionsType();
-                break;
-            case ('input'):
-                if (element._canSetValue) {
-                    //set the new value
-                    element.setProp('value', value);
-                } else {
-                    var isChecked = (element.value == value);
-                    if (isequal(element.nativeElement.type.toLowerCase(), 'checkbox')) {
-                        isChecked = value;
-                    }
-                    AttributeAppender.checked(element.nativeElement, isChecked, element.value);
-                }
-                break;
-            default:
-                element.setProp('innerHTML', value);
-                break;
-        }
-    }
-
-
-
-    function setSelectOptionsType() {
-        var isObject = isobject(value);
-        element.children.forEach(setOptionsValue);
-        /**
-         * 
-         * @param {*} options 
-         */
-        function setOptionsValue(options) {
-            var optionValue = options.getAttribute('value'),
-                isSelected;
-            /**
-             * logic to set current selected
-             */
-            if (isObject) {
-                isSelected = isequal(JSON.stringify(optionValue).toLowerCase(), value);
-            } else {
-                isSelected = isequal(optionValue, value);
-            }
-
-            if (isSelected) {
-                options.setProp('selected', true);
-            }
-
-            return false;
-        }
-    };
 };
 
 /**

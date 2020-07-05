@@ -1,4 +1,4 @@
-import { isobject, isstring, inarray } from 'js.helpers/helpers';
+import { isobject, isstring, inarray } from 'js-helpers/helpers';
 /**
  * 
  * @param {*} nativeElement 
@@ -6,7 +6,7 @@ import { isobject, isstring, inarray } from 'js.helpers/helpers';
  * @param {*} value 
  * @param {*} suffix
  */
-function ElementStyle(nativeElement, name, value) {
+export function ElementStyle(nativeElement, name, value) {
     if ((name && !value) && isstring(name)) {
         if (!!(window.getComputedStyle)) {
             var ret = window.getComputedStyle(nativeElement)[name];

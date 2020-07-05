@@ -1,3 +1,3 @@
-import './customevent.registry';
 import './filter.provider';
-import './registry';
+import './componentresolver';
+import './iterable_profiler';

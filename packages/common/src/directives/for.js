@@ -1,3 +1,4 @@
+import { IterableProfiler } from '@jeli/core';
 /**
  * @Directive <j-for> <j-do>
  * Compiles the required element based on the item provided

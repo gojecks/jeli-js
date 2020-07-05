@@ -3,11 +3,11 @@ import { jViewFn } from './components/jview.element';
 import { OpenIntent } from './components/open.directive';
 import { JIntentContainer } from './components/view-container.element';
 
-import { ViewIntentService } from './intent.service';
-import { jViewInitFn } from './jWebRoute.init';
-import { jViewHandlerFn } from './jWebViewHandler.service';
-import { WebStateProvider } from './jwebstate.provider';
-import { WebStateService } from './jwebstate.service';
+import { ViewIntentService } from './services/intent.service';
+import { ViewInit } from './services/jWebRoute.init';
+import { ViewHandler } from './services/jWebViewHandler.service';
+import { WebStateProvider } from './services/jwebstate.provider';
+import { WebStateService } from './services/jwebstate.service';
 import { INITIALIZERS } from '@jeli/core';
 
 // jeli route manager
@@ -16,14 +16,14 @@ import { INITIALIZERS } from '@jeli/core';
 
 jModule({
     services: [
-        jViewHandlerFn,
+        ViewHandler,
         WebStateService,
         WebStateProvider,
         ViewIntentService,
         {
             name: INITIALIZERS,
-            DI: ["$jeliWebStateProvider", "$webState"],
-            factory: jViewInitFn
+            DI: [WebStateProvider, WebStateService],
+            factory: ViewInit
         }
     ],
     selectors: [
@@ -33,4 +33,4 @@ jModule({
         OpenIntent
     ]
 })
-export function jEliWebRouteModule() {}
+export function RouterModule() {}

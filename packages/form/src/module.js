@@ -5,6 +5,10 @@ import { FormFieldControlService } from './form-field-control.service';
 import { FormFieldDirective } from './form-field.directive';
 import { FormValidatorService } from './form-validator.service';
 import { DefaultEventBinder } from './default.event.accessor';
+import { CheckboxEventBinder } from './checkbox.event.accessor';
+import { RadioEventBinder } from './radio.event.accessor';
+import { SelectEventBinder } from './select.event.accessor';
+import { ModelDirective } from './model.directive';
 import './utils';
 
 /**
@@ -20,8 +24,12 @@ jModule({
         FormControlDirective,
         FormFieldControlDirective,
         FormFieldDirective,
-        DefaultEventBinder
+        DefaultEventBinder,
+        ModelDirective,
+        CheckboxEventBinder,
+        RadioEventBinder,
+        SelectEventBinder
     ]
 })
 
-export function jEliFormModule() {}
+export function FormModule() {}

@@ -1,4 +1,4 @@
-import { isequal } from 'js.helpers/helpers';
+import { isequal } from 'js-helpers/helpers';
 /**
  * 
  * @param {*} viewRef 
@@ -92,7 +92,7 @@ SwitchDirective.prototype._matchCase = function(caseValue) {
 Directive({
     selector: "switchCase",
     props: ["switchCase"],
-    DI: ['ViewRef?', 'TemplateRef?', 'jSwitch?:SwitchDirective']
+    DI: ['ViewRef?', 'TemplateRef?', 'ParentRef?=switch']
 })
 
 export function SwitchCaseDirective(viewRef, templateRef, jSwitch) {
@@ -105,7 +105,7 @@ export function SwitchCaseDirective(viewRef, templateRef, jSwitch) {
 
 Directive({
     selector: "switchDefault",
-    DI: ['ViewRef?', 'TemplateRef?', 'jSwitch?:SwitchDirective'],
+    DI: ['ViewRef?', 'TemplateRef?', 'ParentRef?=switch'],
 })
 export function SwitchDefaultDirective(viewRef, templateRef, jSwitch) {
     jSwitch._addDefaultView(new SwitchViewContext(viewRef, templateRef));

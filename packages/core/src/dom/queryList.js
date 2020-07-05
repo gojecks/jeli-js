@@ -1,3 +1,5 @@
+import { Subject } from '../rx/subject';
+
 function QueryList() {
     this._list = [];
     Object.defineProperties(this, {
@@ -103,4 +105,4 @@ QueryList.prototype.removeByIndex = function(index) {
     return element;
 };
 
-QueryList.prototype.onChanges = new SimpleSubject();
+QueryList.prototype.onChanges = new Subject();

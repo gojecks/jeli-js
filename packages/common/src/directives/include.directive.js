@@ -1,4 +1,4 @@
-import { isfunction } from 'js.helpers/helpers';
+import { isfunction } from 'js-helpers/helpers';
 
 /**
  * @Directive <j-include>
@@ -25,7 +25,7 @@ export function IncludeDirective(viewRef, $sce) {
                 if (isfunction(this._jInclude)) {
                     template = content(elementRef);
                 } else {
-                    template = HtmlParser.parseFromString(content);
+                    template = ViewParser.parseFromString(content);
                 }
 
                 elementRef.parent.insertAfter(template, elementRef.nativeNode);

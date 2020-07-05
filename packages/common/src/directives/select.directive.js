@@ -1,4 +1,4 @@
-import { isundefined, inarray } from 'js.helpers/helpers';
+import { isundefined, inarray } from 'js-helpers/helpers';
 /**
  * query : item.label for item in items
  */

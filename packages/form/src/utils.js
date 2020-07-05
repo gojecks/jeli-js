@@ -1,4 +1,9 @@
-import { isequal, inarray } from 'js.helpers/helpers';
+import { isequal, inarray } from 'js-helpers/helpers';
+import { errorBuilder, ProviderToken } from '@jeli/core';
+import { CheckboxEventBinder } from './checkbox.event.accessor';
+import { SelectEventBinder } from './select.event.accessor';
+import { DefaultEventBinder } from './default.event.accessor';
+import { RadioEventBinder } from './radio.event.accessor';
 
 /**
  * 
@@ -73,18 +78,37 @@ function updateControl(fieldControl, dir) {
     fieldControl._pendingChange = false;
 }
 
+var inbuiltAccessor = [
+    CheckboxEventBinder,
+    DefaultEventBinder,
+    RadioEventBinder,
+    SelectEventBinder
+];
+
 /**
  * 
- * @param {*} binders 
- * @param {*} elementRef 
+ * @param {*} valueAccessors 
  */
-function getEventBinder(binders, elementRef) {
-    return (binders.filter(function(config) {
-        if (config.selector) {
-            return config.selector.some(function(selector) {
-                var isTag = isequal(selector.name, elementRef.tagName.toLowerCase())
-                return isTag && selector.type && inarray(elementRef.getAttribute(selector.type), selector.value) || isTag;
-            });
+export function getValueAccessor(valueAccessors) {
+    var inbuilt = null,
+        custom = null;
+    valueAccessors.forEach(function(accessorInstance) {
+        if (inbuiltAccessor.includes(accessorInstance.constructor)) {
+            if (inbuilt) {
+                errorBuilder('found multiple inbuilt valueAccessor instance.');
+            }
+            inbuilt = accessorInstance;
+        } else {
+            if (custom) {
+                errorBuilder('found multiple custom valueAccessor instance.');
+            }
+            custom = accessorInstance;
         }
-    })[0] || {}).factory;
+    });
+
+    if (custom) {
+        return custom;
+    }
+
+    return inbuilt;
 }

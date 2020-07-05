@@ -1,4 +1,4 @@
-import { isnumber, isstring, isempty, isobject, isfunction, isundefined, isnull } from 'js.helpers/helpers';
+import { isnumber, isstring, isempty, isobject, isfunction, isundefined, isnull } from 'js-helpers/helpers';
 
 /**
  * Core FormvalidationStack

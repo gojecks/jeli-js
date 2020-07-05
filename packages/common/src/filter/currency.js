@@ -1,3 +1,4 @@
+import { NumberFilter } from './number.filter';
 /**
  * Currency Formatting
  *
@@ -6,15 +7,15 @@
  */
 Service({
     name: 'currency',
-    DI: ['number']
+    DI: [NumberFilter]
 })
-export function CurrencyFilter($number) {
+export function CurrencyFilter(numberFilter) {
     this.compile = function(value, style) {
         if (!!window.Intl) {
             var currencyFormat = new Intl.NumberFormat(window.navigator.language, style);
             return currencyFormat.format(value);
         } else {
-            return (style && style.currency) + $number(value);
+            return (style && style.currency) + numberFilter.format(value);
         }
     }
 }

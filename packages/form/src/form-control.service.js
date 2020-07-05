@@ -1,4 +1,5 @@
-import { isemptyobject, isobject, isundefined } from 'js.helpers/helpers';
+import { isempty, isobject, isundefined } from 'js-helpers/helpers';
+import { errorBuilder } from '@jeli/core';
 import { FormControlAbstract } from './form-control.abstract';
 Service({
     name: 'formControlService',
@@ -16,7 +17,7 @@ export function FormControlService(formFields, validators) {
     /**
      * create the formField and validations
      */
-    if (!isemptyobject(formFields)) {
+    if (!isempty(formFields)) {
         for (var field in formFields) {
             this.addField(field, formFields[field]);
         }

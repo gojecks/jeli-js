@@ -1,7 +1,7 @@
 /**
  * Element ViewRef
  */
-function ViewRef(elementRef) {
+export function ViewRef(elementRef) {
     this._destroyed = false;
     /**
      * @param {*} templateRef
@@ -11,7 +11,10 @@ function ViewRef(elementRef) {
         var compiledElement = templateRef.createElement(elementRef);
         var templateContext = templateRef.getContext();
         var _componentRef = null;
-        elementRef.insertAfter(compiledElement, (elementRef.children.last || elementRef).nativeElement);
+        elementRef.children.add(compiledElement);
+        transverse(compiledElement);
+        elementRef.insertAfter(compiledElement.nativeElement, (elementRef.children.last || elementRef).nativeElement);
+        compiledElement.changeDetector.detectChanges();
         /**
          * ViewRef Object
          */

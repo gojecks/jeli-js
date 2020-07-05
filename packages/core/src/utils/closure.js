@@ -1,0 +1,24 @@
+import { isfunction } from 'js-helpers/helpers';
+/**
+ * 
+ * @param {*} closureRefFn 
+ */
+export function closureRef(closureRefFn) {
+    if (isfunction(closureRefFn)) {
+        closureRefFn.__ref__ = closureRef;
+    }
+
+    return closureRefFn;
+}
+
+/**
+ * 
+ * @param {*} ref 
+ */
+export function resolveClosureRef(ref) {
+    if (isfunction(ref) && ref.__ref__ === closureRef) {
+        console.log(ref);
+    } else {
+        return ref;
+    }
+};

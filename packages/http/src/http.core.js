@@ -1,6 +1,7 @@
+import { HttpInterceptor } from './http.interceptor';
+import { ChangeDetector } from '@jeli/core';
 Service({
-    name: '$http',
-    DI: ['__httpInterceptor__', 'changeDetector?']
+    DI: [HttpInterceptor, ChangeDetector]
 })
 
 export function HttpService(interceptor, changeDetector) {

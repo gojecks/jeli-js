@@ -1,10 +1,10 @@
-import { isequal } from 'js.helpers/helpers';
-
+import { isequal } from 'js-helpers/helpers';
+import { errorBuilder } from '@jeli/core';
 Directive({
     selector: 'fieldControl',
     DI: ['ElementRef?', 'formControl?=:formControl'],
     props: ['control=fieldControl'],
-    registry: ["default:event=eventListener($event)"]
+    events: ["default:event=eventListener($event)"]
 })
 
 /**

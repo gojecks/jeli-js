@@ -1,20 +1,21 @@
-import { copy } from 'js.helpers/utils';
+import { copy } from 'js-helpers/utils';
+import { errorBuilder } from '../../utils/errorLogger';
 /**
  * 
  * @param {*} transpiledHTML 
  * @param {*} templates 
  * @param {*} providers 
  */
-function HtmlParser(transpiledHTML, templates, providers) {
+export function ViewParser(transpiledHTML, templates, providers) {
     /**
      * 
      * @param {*} parent 
      * @param {*} viewChild 
      */
     var _viewContainer = [];
-    this.buildView = function(parent) {
+    this.getView = function(parent) {
         for (var i = 0; i < transpiledHTML.length; i++) {
-            var compiled = HtmlDOM[transpiledHTML[i].type](transpiledHTML[i], parent, this);
+            var compiled = ViewParserHelper[transpiledHTML[i].type](transpiledHTML[i], parent, this);
             if (compiled) {
                 _viewContainer.push(compiled);
             }
@@ -46,29 +47,14 @@ function HtmlParser(transpiledHTML, templates, providers) {
  * @param {*} viewContainer
  */
 function element(definition, parent, viewContainer) {
-    var elementRef = new ElementRef(parent, copy(definition));
-    if (definition.isc) {
-        elementRef.customElements.push(viewContainer.getProvider(definition.name));
-    }
-
-    /**
-     * register customElements
-     */
-    if (definition.directives) {
-        for (var i = 0; i < definition.directives.length; i++) {
-            definition.directives[i].providers.forEach(function(dir) {
-                elementRef.customElements.push(viewContainer.getProvider(dir));
-            });
-        }
-    }
-
+    var elementRef = new ElementRef(definition, parent);
     if (definition.attr) {
         AttributeAppender(elementRef.nativeElement, definition.attr);
     }
 
     if (definition.children) {
         for (var i = 0; i < definition.children.length; i++) {
-            var child = HtmlDOM[definition.children[i].type](definition.children[i], elementRef, viewContainer, true);
+            var child = ViewParserHelper[definition.children[i].type](definition.children[i], elementRef, viewContainer, true);
             if (child) {
                 elementRef.children.add(child);
                 elementRef.nativeElement.appendChild(child.nativeElement || child.nativeNode);
@@ -108,7 +94,7 @@ function place(definition, parent, viewContainer, appendToChild) {
     }
 
     templates.forEach(function(template) {
-        var child = HtmlDOM[template.type](template, parent, viewContainer);
+        var child = ViewParserHelper[template.type](template, parent, viewContainer);
         if (appendToChild) {
             parent.children.add(child);
             parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
@@ -132,9 +118,8 @@ function outlet(definition, parent, viewContainer) {
         template = parent.hostRef.templates[definition.templateId];
     }
 
-
     if (template) {
-        var element = HtmlParser.element(template, parent, viewContainer);
+        var element = ViewParserHelper.element(template, parent, viewContainer);
         element.context = context;
         return element;
     }
@@ -142,9 +127,6 @@ function outlet(definition, parent, viewContainer) {
     return null;
 };
 
-function comment(definition, parent) {
-    return new CommentRef(definition, parent);
-};
 
 function toFragment(compiledTemplate, parent) {
     var fragment = document.createDocumentFragment();
@@ -163,19 +145,10 @@ function toFragment(compiledTemplate, parent) {
 
         parent.children.add(compiled);
         fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
-        HtmlParser.transverse(compiled);
+        transverse(compiled);
     }
 
     return fragment;
-};
-
-/**
- * @method parseFromString
- * @param {*} html
- * @return Fragment
- */
-function parseFromString(html) {
-    return document.createRange().createContextualFragment(html);
 };
 
 /**
@@ -184,7 +157,7 @@ function parseFromString(html) {
  */
 function transverse(node) {
     if (node instanceof ElementRef) {
-        if (node.customElements.length) {
+        if (node.providers && node.providers.length) {
             ElementCompiler.resolve(node, proceedWithCompilation);
         } else {
             proceedWithCompilation(node);
@@ -204,60 +177,14 @@ function transverse(node) {
         node.events.registerListener();
         //proceed with the compilation
         //checking child elements
-        node.children.forEach(HtmlParser.transverse);
+        node.children.forEach(transverse);
     }
 }
 
-var sce = (function() {
-    // trustAsHTML
-    // this prevents any overhead from creating the object each time
-    var element = document.createElement('div');
 
-    function htmlEscape(str) {
-        return str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
-    };
-
-    /**
-     * 
-     * @param {*} str 
-     */
-    function decodeHTMLEntities(str) {
-        if (str && typeof str === 'string') {
-            // strip script/html tags
-            str = htmlEscape(str)
-                .replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, '')
-                .replace(/<\/?\w(?:[^"'>]|"[^"]*"|'[^']*')*>/gmi, '')
-                .replace(/^[ \n\r\t\f]+/, '')
-                .replace(/[ \n\r\t\f]+$/, '');
-            element.innerHTML = str;
-            str = element.textContent;
-            element.textContent = '';
-        }
-
-        return str;
-    }
-
-
-
-    return {
-        trustAsHTML: decodeHTMLEntities,
-        escapeHTML: htmlEscape,
-        isPlainHtml: /<[a-z][\s\S]*>/i
-    };
-})();
-
-var HtmlDOM = {
+var ViewParserHelper = {
     element: element,
     text: text,
     place: place,
-    comment: comment,
     outlet: outlet
 };
-
-export {
-    HtmlParser,
-    sce
-}

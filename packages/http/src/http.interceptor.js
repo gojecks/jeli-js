@@ -10,7 +10,6 @@
  */
 
 Service({
-    name: '__httpInterceptor__',
     DI: ['interceptors:Token?'],
 })
 

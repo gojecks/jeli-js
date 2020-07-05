@@ -1,4 +1,5 @@
-import { isequal } from 'js.helpers/helpers';
+import { isequal } from 'js-helpers/helpers';
+import { EventEmitter } from '@jeli/core';
 
 var VALID = 'VALID';
 var INVALID = 'INVALID';
@@ -31,8 +32,8 @@ export function FormControlAbstract(validators) {
     /**
      * create onUpdate listener
      */
-    this.valueChanges = new SimpleEventEmitter();
-    this.statusChanged = new SimpleEventEmitter();
+    this.valueChanges = new EventEmitter();
+    this.statusChanged = new EventEmitter();
     Object.defineProperty(this, 'parent', {
         get: function() {
             return this._parent;

@@ -60,16 +60,16 @@
   </select>
 </div>
 <test-place #test-place>
-  <input type="checkbox" :model="test" checked="true">
+  <input type="checkbox" @{:model}="test">
   <div>
     <h5>Attr-Value</h5>
     <input type="text" {attr-value}="test" attr-readonly="true">
   </div>
-  <h5>Attr-Style (background & display)</h5>
-  <div {attr-style}="{'display':test?'block':'none', background:'#000'}">I am a test</div>
+  <h5>Attr-Style (background)</h5>
+  <div {attr-style}="{background:test?'#fff':'#000'}">I am a test</div>
   <div>
     <h5>Attr-innerHTML</h5>
-    <textarea :model="html"></textarea>
+    <textarea @{:model}="html"></textarea>
     <div {innerHTML}="html"></div>
   </div>
   <div {:switch}="test">
@@ -77,13 +77,15 @@
     <h4 *switch-default>I am default switch element</h4>
   </div>
 </test-place>
-<input type="checkbox" :model="test" attr-checked="true">
+<input type="checkbox" @{:model}="test" attr-checked="true">
 <div *if="test; else as fallback">I am Test Condition</div>
 <j-template #fallback>
   <div *for="i in [0,1,2,3]">Testing_${i}</div>
 </j-template>
 <div {:class}="test?'visible':'hidden'">Class test</div>
+currentValue: ${test}
 
+<app-calculator *if="test"></app-calculator>
 <!-- <div {:form-control}="testForm">
   <input type="radio" :form-field="radio" value="0" #form-field/><br/>
   <input type="radio" :form-field="radio" value="1" /><br/>

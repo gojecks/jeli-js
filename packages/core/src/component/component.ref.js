@@ -1,4 +1,37 @@
-import { inarray } from 'js.helpers/helpers';
+import { inarray } from 'js-helpers/helpers';
+import { Observer } from '../rx/observer';
+
+/**
+ * InternalChangeDetector Class
+ * @param {*} tick 
+ */
+function InternalChangeDetector(tick) {
+    var _changeDetectorState = 3;
+    this.detectChanges = function() {
+        tick.apply(null, arguments);
+    };
+    this.markAsChecked = function() {
+        _changeDetectorState = 1;
+    };
+    this.markAsUnChecked = function() {
+        _changeDetectorState = 3;
+    };
+
+    this.markAsOnce = function() {
+        _changeDetectorState = 2;
+    };
+
+    Object.defineProperty(this, 'status', {
+        get: function() {
+            return _changeDetectorState;
+        }
+    });
+}
+
+/**
+ * Variable for holding Component Context
+ */
+var componentDebugContext = new Map();
 /**
  * 
  * @param {*} refId 
@@ -6,10 +39,10 @@ import { inarray } from 'js.helpers/helpers';
 function ComponentRef(refId) {
     var _this = this;
     this.componentRefId = refId;
-    this.observables = new Subject();
+    this.observables = new Observer();
     this.child = [];
     this.parent = null;
-    this.changeDetector = new ChangeDetector(tick);
+    this.changeDetector = new InternalChangeDetector(tick);
     this.componentInstance = null;
     this._context = null;
     Object.defineProperty(this, 'context', {
@@ -116,51 +149,11 @@ ComponentRef.create = function(refId, parentId) {
 };
 
 /**
- * 
- * @param {*} tick 
+ * Change detector
  */
-function ChangeDetector(tick) {
-    var _changeDetectorState = 3;
-    this.detectChanges = function() {
-        tick.apply(null, arguments);
-    };
-    this.markAsChecked = function() {
-        _changeDetectorState = 1;
-    };
-    this.markAsUnChecked = function() {
-        _changeDetectorState = 3;
-    };
-
-    this.markAsOnce = function() {
-        _changeDetectorState = 2;
-    };
-
-    Object.defineProperty(this, 'status', {
-        get: function() {
-            return _changeDetectorState;
-        }
-    });
-}
-
-/**
- * 
- * @param {*} localVariables 
- * @param {*} componentContext 
- */
-function createLocalVariables(localVariables, componentContext) {
-    var context = {};
-    if (localVariables) {
-        for (var propName in localVariables) {
-            if (localVariables[propName].match(/\s/)) {
-                context[propName] = localVariables[propName];
-            } else if (componentContext) {
-                context[propName] = evaluateExpression(localVariables[propName], componentContext);
-            }
-        }
-    }
-
-    return context;
-}
+export function ChangeDetector() {
+    CoreBootstrapContext.bootStrapComponent.context.tick();
+};
 
 /**
  * 
@@ -181,10 +174,3 @@ function SubscribeObservables(refId, fn, attachDestroy) {
 
     return unsubscribe;
 }
-
-/**
- * Change detector
- */
-ComponentRef.detectChanges = function() {
-    CoreBootstrapContext.bootStrapComponent.context.tick();
-};

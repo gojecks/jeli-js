@@ -1,7 +1,9 @@
+import { errorBuilder } from '@jeli/core';
+
 Directive({
     selector: 'formControl',
     props: ['formControl'],
-    registry: [
+    events: [
         "submit:event=onSubmitHandler($event)"
     ],
     exportAs: "formControl"

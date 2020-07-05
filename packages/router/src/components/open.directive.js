@@ -1,8 +1,9 @@
+import { ViewIntentService } from '../services/intent.service';
 Directive({
     selector: 'open',
-    DI: ['ElementRef?', 'viewIntent'],
+    DI: ['ElementRef?', ViewIntentService],
     props: ['open', "params"],
-    registry: ['event:click=clickHandler()']
+    events: ['event:click=clickHandler()']
 })
 
 /**

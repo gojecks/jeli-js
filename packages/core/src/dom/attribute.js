@@ -1,11 +1,15 @@
-import { isobject, isarray, isequal } from 'js.helpers/helpers';
+import { isobject, isarray, isequal } from 'js-helpers/helpers';
+import { errorBuilder } from '../utils/errorLogger';
+import { sce } from './renderer/sce';
+import { ElementStyle } from './style';
+import { ElementClassList } from './classlist';
 /**
  * 
  * @param {*} nativeElement 
  * @param {*} name 
  * @param {*} value 
  */
-function AttributeAppender(nativeElement, prop, value) {
+export function AttributeAppender(nativeElement, prop, value) {
     if (isobject(prop)) {
         for (var name in prop) {
             nativeElement.setAttribute(name, prop[name]);
@@ -24,7 +28,7 @@ AttributeAppender.style = function(nativeElement, value, template) {
 };
 
 AttributeAppender.innerhtml = function(nativeElement, value) {
-    nativeElement.innerHTML = HtmlParser.sce.trustAsHTML(value);
+    nativeElement.innerHTML = sce.trustAsHTML(value);
 };
 
 AttributeAppender.src = function(nativeElement, value) {

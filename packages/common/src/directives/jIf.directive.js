@@ -1,9 +1,3 @@
-//@Directive <j-if>
-// Compiles the required element based on the logic provided
-//elements are removed from the DOM if condition is not met
-/*@Usage :
-    allowed type Attirbute and Element
-*/
 Directive({
     selector: 'if',
     DI: ['ViewRef?', 'TemplateRef?'],
@@ -14,6 +8,13 @@ Directive({
     ]
 })
 
+/**
+ * Compiles the required element based on the logic provided
+ * elements are removed from the DOM if condition is not met
+ * allowed type Attirbute and Element
+ * @param {*} viewRef 
+ * @param {*} templateRef 
+ */
 export function IfDirective(viewRef, templateRef) {
     this._jIfValue = false;
     this._thenTemplateRef = templateRef;

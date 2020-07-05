@@ -1,50 +1,58 @@
-import { isfunction, isstring } from 'js.helpers/helpers';
+import { isfunction, isstring } from 'js-helpers/helpers';
+import { resolveClosureRef } from './utils/closure';
 
-function DependencyInjectorService() {}
+
+
+/**
+ * 
+ * @param {*} tokenName 
+ * @param {*} defaultValue 
+ * @param {*} multiple 
+ */
+export function ProviderToken(tokenName, multiple) {
+    var _registries = [];
+    this.name = tokenName;
+    this.register = function(value) {
+        _registries.push(value);
+    };
+
+    this.resolve = function() {
+        var token = null
+        if (multiple) {
+            token = _registries;
+        } else {
+            token = _registries.pop();
+        }
+        // reset registries
+        _registries = [];
+        return token;
+    };
+}
+
 /**
  * 
  * @param {*} factory
  * @param {*} resolver 
  */
-DependencyInjectorService.get = function(factory, resolver, moduleName) {
+export function Inject(factory, resolver) {
     if (isstring(factory)) {
-        if (resolver && (factory in resolver)) {
+        if (resolver && resolver.hasOwnProperty(factory)) {
             return resolver[factory];
         }
-
-        if (InternalProviderService.has(factory)) {
-            return InternalProviderService.get(factory);
-        }
-
-        // var entryModule = CoreBootstrapContext.compiledModule;
-        // var requiredModule = entryModule.annotations.requiredModules;
-        // function getDependencyFromQueue() {
-        //     factory = _getService(entryModule, di);
-        //     if (entryModule.annotations.services.has(di)) {
-        //         return entryModule.annotations.services.get(di);
-        //     } else if (requiredModule && requiredModule.length > inc) {
-        //         entryModule = CoreModuleFactory.get(requiredModule[inc]);
-        //         inc++;
-        //         return getDependencyFromQueue();
-        //     }
-        // }
-    }
-
-
-    if (isfunction(factory)) {
-        //set provider when its found
-        //only inject dependency
-        //when its required
-        var dependency = factory.annotations.instance;
-        if (!dependency) {
-            dependency = DependencyInjectorService.inject(factory, resolver);
+    } else if (isfunction(factory)) {
+        var instance = factory.annotations.instance;
+        if (!instance) {
+            instance = AutoWire(resolveClosureRef(factory), resolver);
             if (!factory.annotations.noSingleton) {
-                factory.annotations.instance = dependency;
+                factory.annotations.instance = instance;
             }
         }
 
-        return dependency;
+        return instance;
+    } else if (factory instanceof ProviderToken) {
+        return factory.resolve();
     }
+
 
     return null;
 };
@@ -55,29 +63,29 @@ DependencyInjectorService.get = function(factory, resolver, moduleName) {
  * @param {*} locals 
  * @param {*} callback 
  */
-DependencyInjectorService.inject = function(factory, locals, callback) {
+export function AutoWire(factory, locals, callback) {
     if (isfunction(factory)) {
         var nArg = [];
         if (factory.annotations.DI) {
-            nArg = Object.keys(factory.annotations.DI).map(function(serviceName) {
+            for (var serviceName in factory.annotations.DI) {
                 var doInject = factory.annotations.DI[serviceName];
-                var injectedArgument = null;
+                var injectableParam = null;
                 //Try and catch injectors
                 try {
-                    injectedArgument = DependencyInjectorService.get(doInject.factory || serviceName, locals, factory.module);
+                    injectableParam = Inject(doInject.factory || serviceName, locals, factory.module);
                 } catch (e) { console.error(e); } finally {
-                    if (!injectedArgument && !doInject.optional) {
+                    if (!injectableParam && !doInject.optional) {
                         throw new Error('Unable to resolve provider ' + serviceName);
                     }
                 }
 
-                return injectedArgument;
-            });
+                nArg.push(injectableParam);
+            }
         }
         //initialize the defined function
         //only initializes when its defined
         var protos = Object.create(factory.prototype);
-        var result = factory.apply(protos, args);
+        var result = factory.apply(protos, nArg);
 
         if (isfunction(callback)) {
             return callback(result ? result : protos);
@@ -87,45 +95,4 @@ DependencyInjectorService.inject = function(factory, locals, callback) {
     }
 
     return factory;
-};
-
-/**
- * @param {*} name
- * @param {*} type
- */
-DependencyInjectorService.getRegisteredElement = function(name, type) {
-    var dir = [];
-    getElement(CoreBootstrapContext.compiledModule);
-    if (CoreBootstrapContext.compiledModule.annotations.requiredModules) {
-        CoreBootstrapContext.compiledModule.annotations.requiredModules.forEach(function(moduleName) {
-            getElement(ModuleService._factories.get(moduleName));
-        });
-    }
-
-    function getElement(_module) {
-        if (_module.annotations[type].has(name)) {
-            dir.push(_module.annotations[type].get(name));
-        }
-    }
-
-    return dir;
-};
-
-/*
-  @Function Binding
-  @argument {Function} {ARRAY}
-  @return Function
-*/
-DependencyInjectorService.binding = function(fn, arg) {
-    var Temp = function() {
-        return fn.apply(this, arg);
-    };
-
-    Temp.prototype = fn.prototype;
-    return init;
-};
-
-export var publicDependencyInjector = {
-    get: DependencyInjectorService.get,
-    inject: DependencyInjectorService.inject
 };

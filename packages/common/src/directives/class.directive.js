@@ -1,4 +1,5 @@
-import { isobject } from 'js.helpers/helpers';
+import { isobject } from 'js-helpers/helpers';
+import { ElementClassList } from '@jeli/core';
 /**
  * @Directive :style | :class
  * adds a class or style based on logic provided

@@ -1,11 +1,16 @@
+import { VALUE_ACCESSOR } from "./abstract.event.accessor";
+
 Directive({
     selector: 'input:type!=checkbox|radio:model,input:type!=checkbox|radio:formField,textarea:model,textarea:formField',
-    registry: [
-        "input:event=_handleInput($event)",
+    events: [
+        "input:event=_handleInput($event.target.value)",
         "blur:event=onBlur($event)"
     ],
-    DI: ['ElementRef?'],
-    VALUE_ACCESSOR: true
+    /**
+     * register the instance of this directive to the Value Accessor token
+     */
+    registerAs: VALUE_ACCESSOR,
+    DI: ['ElementRef?']
 })
 
 /**
@@ -16,16 +21,11 @@ export function DefaultEventBinder(elementRef) {
     this.onChange = function() {};
     this.onDisable = function() {};
     this.onBlur = function() {};
-
-    Object.defineProperty(this, 'element', {
-        get: function() {
-            return elementRef;
-        }
-    });
+    this.element = elementRef;
 }
 
 DefaultEventBinder.prototype._handleInput = function(event) {
-    this.onChange(event.target.value);
+    this.onChange(event);
 };
 
 DefaultEventBinder.prototype.registerOnChange = function(onChangeFn) {
@@ -37,7 +37,7 @@ DefaultEventBinder.prototype.registerOnDisable = function(onDisableFn) {
 };
 
 DefaultEventBinder.prototype._registerOnBlur = function(onBlurFn) {
-    this.onBlurFn = onBlurFn;
+    this.onBlur = onBlurFn;
 };
 
 DefaultEventBinder.prototype.writeValue = function(value) {

@@ -1,11 +1,15 @@
-import { isfunction, isarray, isequal } from 'js.helpers/helpers';
+import { isfunction, isarray, isequal } from 'js-helpers/helpers';
+import { errorBuilder } from '../utils/errorLogger';
+import { Inject, AutoWire } from '../dependency.injector';
+
 /**
  * 
  * @param {*} ctrl 
  * @param {*} elementRef 
+ * @param {*} localInjectors 
  * @param {*} next 
  */
-function ElementCompiler(ctrl, elementRef, next) {
+function ElementCompiler(ctrl, elementRef, localInjectors, next) {
     var definition = ctrl.annotations,
         hasTwoWayBinding = (elementRef.props && definition.props),
         lifeCycle;
@@ -17,8 +21,6 @@ function ElementCompiler(ctrl, elementRef, next) {
         if (!elementRef.isc) {
             return;
         }
-
-        var style = null;
         var componentRef = componentDebugContext.get(elementRef.refId);
         /**
          * add two way binding between components 
@@ -28,10 +30,6 @@ function ElementCompiler(ctrl, elementRef, next) {
         if (hasTwoWayBinding) {
             // componentRef.parent = elementRef.context;
             // elementRef.context.child.push(componentRef);
-        }
-
-        if (ctrl.style) {
-            style = AttachComponentStyles(ctrl.style, elementRef.nativeElement);
         }
 
         if (ctrl.view) {
@@ -53,9 +51,6 @@ function ElementCompiler(ctrl, elementRef, next) {
             /**
              * remove the styles
              */
-            if (style) {
-                style.parentNode.removeChild(style);
-            }
             componentRef.destroy();
             lifeCycle = null;
             componentRef = null;
@@ -77,113 +72,113 @@ function ElementCompiler(ctrl, elementRef, next) {
      * 
      * @param {*} componentInstance 
      */
-    function compileRegistry(componentInstance) {
-        if (definition.registry) {
-            definition.registry.forEach(_registry);
+    function compileEventsRegistry(componentInstance) {
+        if (definition.events) {
+            Object.keys(definition.events).forEach(_registry);
         }
 
         /**
          * 
          * @param {*} option 
          */
-        function _registry(option) {
-            switch (option.type) {
+        function _registry(evName) {
+            switch (definition.events[evName].type) {
                 case ('event'):
-                    var evName = option.name;
-                    if (isequal('default', evName)) {
-                        evName = EventHandler.getEventType(elementRef.nativeElement);
-                    }
-
-                    elementRef.events.add({
-                        name: evName,
-                        handler: ComponentEventHandler(option.value)
-                    });
+                    ComponentEventHandler(evName, componentInstance)
                     break;
                 case ('emitter'):
                     /**
                      * attach an instance of emitter to the componentInstance
                      */
-                    AttachEventEmitter(option.name);
+                    AttachEventEmitter(evName, componentInstance);
                     break;
                 case ('dispatcher'):
-                    AttachEventDispatcher(option);
+                    AttachEventDispatcher(evName, componentInstance);
                     break;
 
             }
         }
+    }
 
-        /**
-         * 
-         * @param {*} handler 
-         */
-        function ComponentEventHandler(handler) {
-            return function(event) {
-                return EventHandler._executeEventsTriggers(handler, componentInstance, null, event);
-            };
-        }
-
-        /**
-         * Attach the EventEmitter to the component Instance
-         * @param {*} eventName
-         */
-        function AttachEventEmitter(eventName) {
-            var registeredEvent = elementRef.events.getEvent(eventName.toLowerCase());
-            if (registeredEvent && registeredEvent.value) {
-
-                componentInstance[eventName].subscribe(function(value) {
-                    EventHandler._executeEventsTriggers(
-                        registeredEvent.value,
-                        elementRef.parent.componentInstance,
-                        null,
-                        value
-                    );
-                    elementRef.parent.changeDetector.detectChanges();
-                });
-
-                /**
-                 * destroy the subbscription
-                 */
-                elementRef.observer(function() {
-                    componentInstance[eventName].destroy();
-                });
+    /**
+     * 
+     * @param {*} handler 
+     * @param {*} componentInstance 
+     */
+    function ComponentEventHandler(eventName, componentInstance) {
+        elementRef.events.add({
+            name: eventName,
+            handler: function(event) {
+                return EventHandler._executeEventsTriggers(definition.events[eventName].value, componentInstance, null, event);
             }
-        }
+        });
+    }
 
-        /**
-         * 
-         * @param {*} options 
-         */
-        function AttachEventDispatcher(options) {
-            var registeredEvent = elementRef.getEvent(options.name.toLowerCase());
-            var context = null;
-            if (registeredEvent && registeredEvent.value.length) {
-                context = elementRef.context;
-                if (elementRef.isc) {
-                    context = elementRef.parent.context;
-                }
 
+    /**
+     * 
+     * @param {*} options 
+     * @param {*} componentInstance 
+     */
+    function AttachEventDispatcher(eventName, componentInstance) {
+        var options = definition.events[eventName];
+        var registeredEvent = elementRef.getEvent(options.name.toLowerCase());
+        var context = null;
+        if (registeredEvent && registeredEvent.value.length) {
+            context = elementRef.context;
+            if (elementRef.isc) {
+                context = elementRef.parent.context;
+            }
+
+            /**
+             * get the method Name
+             * and default handlers
+             */
+            var methodName = registeredEvent.value[0].fn;
+            /**
+             * replace the default handler with dispatcher event handler
+             */
+            context[methodName] =
                 /**
-                 * get the method Name
-                 * and default handlers
+                 * 
+                 * @param {*} value 
                  */
-                var methodName = registeredEvent.value[0].fn;
-                /**
-                 * replace the default handler with dispatcher event handler
-                 */
-                context[methodName] =
+                function eventHandler(value) {
                     /**
-                     * 
-                     * @param {*} value 
+                     * dispatch the event to the child view
                      */
-                    function eventHandler(value) {
-                        /**
-                         * dispatch the event to the child view
-                         */
-                        EventHandler._executeEventsTriggers(options.value, componentInstance, null, value);
-                        elementRef.parent.changeDetector.detectChanges();
-                    };
+                    EventHandler._executeEventsTriggers(options.value, componentInstance, null, value);
+                    elementRef.parent.changeDetector.detectChanges();
+                };
 
-            }
+        }
+    }
+
+    /**
+     * Attach the EventEmitter to the component Instance
+     * @param {*} eventName
+     */
+    function AttachEventEmitter(eventName, componentInstance) {
+        var registeredEvent = elementRef.events.getEvent(eventName);
+        if (registeredEvent && registeredEvent.value) {
+            componentInstance[eventName].subscribe(eventHandler);
+
+            /**
+             * destroy the subbscription
+             */
+            elementRef.observer(function() {
+                componentInstance[eventName].destroy();
+            });
+        }
+
+        function eventHandler(value) {
+            EventHandler._executeEventsTriggers(
+                registeredEvent.value,
+                elementRef.parent.componentInstance,
+                null,
+                value
+            );
+            elementRef.parent.changeDetector.detectChanges();
         }
     }
 
@@ -212,7 +207,7 @@ function ElementCompiler(ctrl, elementRef, next) {
      */
     function Linker(componentInstance) {
         var always = false;
-        if (isarray(definition.props) && definition.props.length) {
+        if (definition.props) {
             always = _updateViewBinding();
             if (always) {
                 elementRef.observer(SubscribeObservables(elementRef.parent.refId, _updateViewBinding));
@@ -225,9 +220,10 @@ function ElementCompiler(ctrl, elementRef, next) {
          */
         function _updateViewBinding() {
             var hasBinding = false;
-            for (var i = 0; i < definition.props.length; i++) {
-                var item = definition.props[i];
-                if (elementRef.props && elementRef.props.hasOwnProperty(item.value)) {
+            for (var prop in definition.props) {
+                var item = definition.props[prop];
+                var name = item.value || prop;
+                if (elementRef.props && elementRef.props.hasOwnProperty(name)) {
                     hasBinding = true;
                     if (item.ignoreChanges) {
                         return;
@@ -237,12 +233,11 @@ function ElementCompiler(ctrl, elementRef, next) {
                      */
                     switch (item.type) {
                         case ('TemplateRef'):
-                            item.ignoreChanges = true;
-                            componentInstance[item.name] = elementRef.getTemplateRef(item.value);
+                            componentInstance[prop] = elementRef.getTemplateRef(name);
                             break;
                         default:
-                            var value = evaluateExpression(elementRef.props[item.value], elementRef.context);
-                            componentInstance[item.name] = value;
+                            var value = evaluateExpression(elementRef.props[name], elementRef.context);
+                            componentInstance[prop] = value;
                             break;
                     }
                 } else {
@@ -251,9 +246,9 @@ function ElementCompiler(ctrl, elementRef, next) {
                      * only include if the element has directive of jModel
                      */
                     if (isequal(item.value, 'jModel')) {
-                        componentInstance[item.name] = elementRef.nodes.get('model');
+                        componentInstance[prop] = elementRef.nodes.get('model');
                     } else {
-                        componentInstance[item.name] = elementRef.getAttribute(item.value);
+                        componentInstance[prop] = elementRef.getAttribute(name);
                     }
                 }
             }
@@ -263,29 +258,31 @@ function ElementCompiler(ctrl, elementRef, next) {
         }
     }
 
-    var locals = generatePublicInjectors(ctrl.annotations, elementRef);
-    ControllerInitializer(ctrl, locals,
+    ComponentFactoryInitializer(ctrl, localInjectors,
         /**
          * 
          * @param {*} componentInstance 
          */
         function triggerInstance(componentInstance) {
             /**
+             * register the instance
+             */
+            if (definition.registerAs) {
+                definition.registerAs.register(componentInstance);
+            }
+            /**
              * check for custom registry Types
              * eventListener
              * eventEmitter
              */
-            compileRegistry(componentInstance);
+            compileEventsRegistry(componentInstance);
             lifeCycle = new ElementCompiler.LifeCycle(componentInstance);
             Linker(componentInstance);
             registerDirectiveInstance(componentInstance);
             lifeCycle.trigger('didInit');
             next(componentInstance);
             CoreComponentCompiler(componentInstance);
-            locals.elementRef = null;
-            locals = null;
         });
-
 }
 
 /**
@@ -328,21 +325,47 @@ ElementCompiler.resolve = function(node, nextTick) {
      * 
      * @param {*} isDetachedElement 
      */
-    function next() {
-        if (!node.isDetachedElem) {
-            var customElement = node.customElements.shift();
-            if (customElement) {
-                try {
-                    ElementCompiler(customElement, node, next);
-                } catch (e) {
-                    errorBuilder(e);
-                }
+    var inc = 0;
 
-            } else {
-                nextTick(node);
+    function next() {
+        var factory = node.providers[inc];
+        var localInjectors = generatePublicInjectors(node);
+
+        inc++;
+        if (factory) {
+            try {
+                localInjectors.setAnnotations(factory.annotations);
+                ElementCompiler(factory, node, localInjectors, next);
+            } catch (e) {
+                errorBuilder(e);
             }
+        } else {
+            localInjectors.destroy();
+            nextTick(node);
         }
     }
 
     next();
+};
+
+/**
+ * 
+ * @param {*} ctrl 
+ * @param {*} locals 
+ * @param {*} CB 
+ */
+function ComponentFactoryInitializer(ctrl, injectorInstance, CB) {
+    if (ctrl.annotations.resolvers) {
+        for (var i = 0; i < ctrl.annotations.resolvers.length; i++) {
+            var value = Inject(ctrl.annotations.resolvers[i], injectorInstance.getProviders());
+        }
+    }
+
+    AutoWire(ctrl, injectorInstance.getProviders(), function(instance) {
+        try {
+            CB(instance);
+        } catch (e) {
+            errorBuilder(e);
+        }
+    });
 };

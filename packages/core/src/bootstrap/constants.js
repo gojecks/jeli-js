@@ -9,11 +9,6 @@ var CoreBootstrapContext = ({
     $isAfterBootStrap: false,
     enableDebugger: true
 });
-/**
- * Variable for holding Component Context
- */
-var componentDebugContext = new Map();
-var CoreModuleFactory = new Map();
 
 /**
  * returns random ID

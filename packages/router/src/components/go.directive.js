@@ -1,16 +1,17 @@
+import { WebStateService } from '../services/jwebstate.service';
 Directive({
     selector: 'go',
-    DI: ['$webState', 'ElementRef?'],
+    DI: [WebStateService, 'ElementRef?'],
     props: ['go', "params"],
-    registry: ['event:click=clickHandler()']
+    events: ['event:click=clickHandler()']
 })
 
 /**
  * 
- * @param {*} $webState 
+ * @param {*} webStateService 
  * @param {*} ElementRef 
  */
-export function GoFn($webState, elementRef) {
+export function GoFn(webStateService, elementRef) {
     this.params = {};
     this.clickHandler = function() {
         // state has changed
@@ -20,7 +21,7 @@ export function GoFn($webState, elementRef) {
             this.params = elementRef.context.evaluate(this.splitWhere.join(':'));
         }
 
-        $webState.go(this.pathName, this.params);
+        webStateService.go(this.pathName, this.params);
     };
 
     Object.defineProperty(this, 'go', {

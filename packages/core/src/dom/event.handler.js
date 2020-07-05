@@ -1,4 +1,7 @@
-import { inarray, isnull } from 'js.helpers/helpers';
+import { inarray, isequal } from 'js-helpers/helpers';
+import { errorBuilder } from '../utils/errorLogger';
+
+
 /**
  * 
  * @param {*} elementRef 
@@ -9,7 +12,7 @@ function EventHandler(elementRef, events) {
     this.add = function(_event) {
         this._events.push(_event);
     };
-    this.registeredEvents = [];
+    this.registeredEvents = new Map();
 
     Object.defineProperty(this, 'node', {
         get: function() {
@@ -75,19 +78,11 @@ EventHandler.prototype.registerListener = function() {
         var event = this._events[i];
         if (!event.custom) {
             event.name.split(' ').forEach(function(eventName) {
-                /**
-                 * j-change requires j-model
-                 * check if j-model is defined when this event is used
-                 */
-                if (inarray('change', eventName) && !event.handler) {
-                    if (!_this.node.getDirective('model')) {
-                        errorBuilder('ChangeEventListener requires jModel Directive to perform');
-                    }
-                }
-
-                if (isnull(_this.node.nativeElement['on' + eventName])) {
-                    _this.registeredEvents.push(eventName);
-                    _this.node.nativeElement['on' + eventName] = jEventHandler;
+                if (!_this.registeredEvents.has(eventName)) {
+                    _this.node.nativeElement.addEventListener(eventName, jEventHandler, false);
+                    _this.registeredEvents.set(eventName, function() {
+                        _this.node.nativeElement.removeEventListener(eventName, jEventHandler);
+                    });
                 }
             });
         }
@@ -96,16 +91,16 @@ EventHandler.prototype.registerListener = function() {
 
 
 EventHandler.prototype.destroy = function() {
-    while (this.registeredEvents.length) {
-        var event = this.registeredEvents.pop();
-        this.node.nativeElement['on' + event] = null;
-    }
+    this.registeredEvents.forEach(function(removeListenerFn) {
+        removeListenerFn();
+    });
+    this.registeredEvents.clear();
     this._events.length = [];
 };
 
 EventHandler.getEventsByType = function(events, type) {
     return events.filter(function(event) {
-        return inarray(event.name, type);
+        return isequal(event.name, type);
     });
 };
 
@@ -124,14 +119,13 @@ EventHandler._executeEventsTriggers = function(eventTriggers, componentInstance,
      */
     function _dispatch(event) {
         // check if Operation is set value
-        if (event.key) {
-            var value = resolveValueFromContext(event.value, context || componentInstance);
-            setModelValue(event.key, context || componentInstance, value);
+        if (event.left) {
+            parseObjectExpression(event, context || componentInstance, ev);
         } else if (event.fn) {
             // set nameSpaces
             var fn = EventHandler.getFnFromContext(event, componentInstance);
             // Check if Arguments is required
-            var narg = generateArguments(event.arg, context || componentInstance, ev);
+            var narg = generateArguments(event.args, context || componentInstance, ev);
             var ret = fn.apply(fn.context, narg);
             fn.context = null;
             fn = null;
@@ -147,7 +141,7 @@ EventHandler._executeEventsTriggers = function(eventTriggers, componentInstance,
  */
 EventHandler.getFnFromContext = function(eventInstance, componentInstance) {
     var instance = componentInstance;
-    if (eventInstance.namespaces.length > 0) {
+    if (eventInstance.namespaces) {
         instance = resolveContext(eventInstance.namespaces, componentInstance);
     }
 
@@ -165,19 +159,3 @@ EventHandler.getFnFromContext = function(eventInstance, componentInstance) {
 
     return fn;
 };
-
-EventHandler.types = {
-    change: ['checkbox', 'radio', 'select-one', 'select-multiple', 'select'],
-    input: ['text', 'password', 'textarea', 'email', 'url', 'week', 'time', 'search', 'tel', 'range', 'number', 'month', 'datetime-local', 'date', 'color']
-};
-
-EventHandler.getEventType = function(el) {
-    var type = "input";
-    if (inarray(el.type, EventHandler.types.input)) {
-        type = 'input';
-    } else if (inarray(el.type, EventHandler.types.change)) {
-        type = 'change';
-    }
-
-    return type;
-}

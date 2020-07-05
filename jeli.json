@@ -1,53 +1,104 @@
 {
-    "projectName": "jeli",
-    "build": {
-        "common": {
-            "folder": "common",
-            "entry": "module",
-            "dest": "./dist/common/"
-        },
-        "form": {
-            "entry": "module",
-            "folder": "form",
-            "dest": "./dist/form/"
-        },
-        "http": {
-            "entry": "module",
-            "folder": "http",
-            "dest": "./dist/http/"
-        },
-        "route": {
-            "entry": "module",
-            "folder": "route",
-            "dest": "./dist/route/"
-        },
-        "datetime": {
-            "entry": "module",
-            "folder": "datetime",
-            "dest": "./dist/datetime/"
-        },
+    "name": "jeli",
+    "projects": {
         "core": {
-            "dest": "./dist/",
-            "folder": "core",
-            "entry": "core",
+            "sourceRoot": "packages/core",
+            "type": "library",
+            "output": {
+                "generateMeta": true,
+                "patterns": ["UMD", "MODULE"],
+                "folder": "dist/core",
+                "files": {
+                    "@jeli/core": "./public.api.js"
+                }
+            },
             "concat": [
-                "../jeli.helpers/common/*.js",
-                "../jeli.helpers/eval.js",
-                "../jeli.helpers/copy.js",
-                "../jeli.helpers/promise/*.js",
-                "../jeli.helpers/events/emitter.js",
-                "../jeli.helpers/externalScriptLoader.js",
-                "../jeli.helpers/serializer.js",
-                "../jeli.helpers/xhr/*.js"
+                "../jeli.helpers/eval.js"
             ]
         },
-        "test": {
-            "dest": "./docs/examples/Todo/app.js",
-            "src": "./docs/examples/Todo/scripts/main.js",
-            "options": {
-                "parseModule": true
+        "common": {
+            "type": "library",
+            "sourceRoot": "packages/common",
+            "output": {
+                "generateMeta": true,
+                "patterns": ["UMD", "MODULE"],
+                "folder": "dist/common",
+                "files": {
+                    "@jeli/common": "./public.api.js",
+                    "@jeli/common/*": "./*/public.api.js"
+                }
+            },
+            "resolve": {
+                "alias": {
+                    "@jeli/core": "./dist/core"
+                }
+            }
+        },
+        "form": {
+            "sourceRoot": "packages/form",
+            "type": "library",
+            "output": {
+                "generateMeta": true,
+                "patterns": ["UMD", "MODULE"],
+                "folder": "dist/form",
+                "files": {
+                    "@jeli/form": "./public.api.js"
+                }
+            },
+            "resolve": {
+                "alias": {
+                    "@jeli/core": "./dist/core"
+                }
+            }
+        },
+        "http": {
+            "sourceRoot": "packages/http",
+            "type": "library",
+            "output": {
+                "generateMeta": true,
+                "patterns": ["UMD", "MODULE"],
+                "folder": "dist/http",
+                "files": {
+                    "@jeli/http": "./public.api.js"
+                }
+            },
+            "resolve": {
+                "alias": {
+                    "@jeli/core": "./dist/core"
+                }
+            }
+        },
+        "router": {
+            "sourceRoot": "packages/router",
+            "type": "library",
+            "output": {
+                "generateMeta": true,
+                "patterns": ["UMD", "MODULE"],
+                "folder": "dist/router",
+                "files": {
+                    "@jeli/router": "./public.api.js"
+                }
+            },
+            "resolve": {
+                "alias": {
+                    "@jeli/core": "./dist/core"
+                }
+            }
+        },
+        "examples": {
+            "type": "application",
+            "sourceRoot": "viewers/Todo/src",
+            "output": {
+                "folder": "./docs/examples/Todo/",
+                "view": "index.html",
+                "entryFile": "main.js"
+            },
+            "resolve": {
+                "alias": {
+                    "@jeli/*": "./dist/"
+                }
             }
         }
-    }
-
+    },
+    "default": "core"
 }

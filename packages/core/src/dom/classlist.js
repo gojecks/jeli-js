@@ -1,9 +1,9 @@
-import { isstring, isobject } from 'js.helpers/helpers';
+import { isstring, isobject } from 'js-helpers/helpers';
 /**
  * 
  * @param {*} element 
  */
-function ElementClassList(nativeElement, classList, type) {
+export function ElementClassList(nativeElement, classList, type) {
     if (type) {
         nativeElement.classList[type].apply(nativeElement.classList, classList.split(" "));
     } else if (classList) {

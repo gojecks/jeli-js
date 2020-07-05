@@ -1,5 +1,5 @@
 import { FormControlAbstract } from './form-control.abstract';
-import { isobject, isequal } from 'js.helpers/helpers';
+import { isobject, isequal } from 'js-helpers/helpers';
 
 Service({
     name: 'formFieldService',
