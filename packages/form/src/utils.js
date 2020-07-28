@@ -1,17 +1,19 @@
 import { isequal, inarray } from 'js-helpers/helpers';
 import { errorBuilder, ProviderToken } from '@jeli/core';
-import { CheckboxEventBinder } from './checkbox.event.accessor';
-import { SelectEventBinder } from './select.event.accessor';
-import { DefaultEventBinder } from './default.event.accessor';
-import { RadioEventBinder } from './radio.event.accessor';
+import { CheckboxEventBinder } from './directives/checkbox.event.accessor';
+import { SelectEventBinder } from './directives/select.event.accessor';
+import { DefaultEventBinder } from './directives/default.event.accessor';
+import { RadioEventBinder } from './directives/radio.event.accessor';
+import { NumberEventBinder } from './directives/number.event.accessor';
+import { RangeEventBinder } from './directives/range.event.accessor';
 
 /**
  * 
  * @param {*} fieldControl 
  * @param {*} dir 
  */
-function setUpControl(fieldControl, dir) {
-    if (!fieldControl) errorBuilder('No field control found for ' + dir._fieldName);
+function setupControl(fieldControl, dir) {
+    if (!fieldControl) errorBuilder('No field control found for ' + dir.name);
     if (!dir.eventBinder) errorBuilder('No EventBinder defined');
 
     // set validators
@@ -22,7 +24,7 @@ function setUpControl(fieldControl, dir) {
 
     if (dir.eventBinder.setUpDisableState) {
         fieldControl.registerOnDisabledListener(function(state) {
-            dir.eventBinder.setUpDisableState(state);
+            dir.eventBinder.setDisabledState(state);
         });
     }
 }
@@ -82,7 +84,9 @@ var inbuiltAccessor = [
     CheckboxEventBinder,
     DefaultEventBinder,
     RadioEventBinder,
-    SelectEventBinder
+    SelectEventBinder,
+    NumberEventBinder,
+    RangeEventBinder
 ];
 
 /**

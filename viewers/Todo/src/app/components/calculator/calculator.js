@@ -1,7 +1,7 @@
 Element({
     selector: 'app-calculator',
     templateUrl: './calculator.html',
-    styleUrl: './calculator.css'
+    styleUrl: './calculator.scss'
 })
 export function CalculatorComponent() {
     this.clear();

@@ -1,33 +1,41 @@
-import { isnumber, isstring, isempty, isobject, isfunction, isundefined, isnull } from 'js-helpers/helpers';
+import { isnumber, isstring, isempty, isobject, isfunction, isundefined, isnull, isboolean, isequal } from 'js-helpers/helpers';
 
 /**
  * Core FormvalidationStack
  */
-var formValidationStack = Object.create({
-    minlength: function(value, requiredLength) {
-        if (!isnumber(value) && !isstring(value)) {
-            return false;
+export var formValidationStack = Object.create({
+    MINLENGTH: function(value, requiredLength) {
+        if (isnumber(value)) {
+            return value >= requiredLength
         }
 
-        return String(value).length >= requiredLength;
-    },
-    maxlength: function(value, requiredLength) {
-        if (!isnumber(value) && !isstring(value)) {
-            return false;
+        if (isstring(value)) {
+            return value.length >= requiredLength;
         }
 
-        return String(value).length <= requiredLength;
+        return false;
     },
-    emailvalidation: function(val) {
+    MAXLENGTH: function(value, requiredLength) {
+        if (isnumber(value)) {
+            return value <= requiredLength
+        }
+
+        if (isstring(value)) {
+            return value.length <= requiredLength;
+        }
+
+        return false;
+    },
+    EMAILVALIDATION: function(val) {
         var regExp = /^\w+([\.-]?\w+)*@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
         return regExp.test(val);
     },
-    isempty: function(val, def) {
+    ISEMPTY: function(val, def) {
         return def === isempty(val);
     },
-    boolean: function(bool, val) {
-        return bool === val;
+    BOOLEAN: function(bool, val) {
+        return isboolean(value) && isequal(bool, val);
     },
     // ^	The password string will start this way
     // (?=.*[a-z])	The string must contain at least 1 lowercase alphabetical character
@@ -35,16 +43,16 @@ var formValidationStack = Object.create({
     // (?=.*[0-9])	The string must contain at least 1 numeric character
     // (?=.[!@#\$%\^&])	The string must contain at least one special character, but we are escaping reserved RegEx characters to avoid conflict
     // (?=.{8,})	The string must be eight characters or longer
-    domainvalidation: function(domain) {
+    DOMAINVALIDATION: function(domain) {
         return /[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+/.test(domain);
     },
-    mediumpasswordstrength: function(passwd) {
+    MEDIUMPASSWORDSTREGTH: function(passwd) {
         return new RegExp("^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})").test(passwd);
     },
-    strongpasswordstrength: function(passwd) {
+    STRONGPASSWORDSTRENGTH: function(passwd) {
         return new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})").test(passwd)
     },
-    pattern: function(value, pattern) {
+    PATTERN: function(value, pattern) {
         return new RegExp(pattern).test(value);
     },
     /**
@@ -56,18 +64,24 @@ var formValidationStack = Object.create({
      * 		onerror : <function>
      * 	}
      */
-    $ajax: function(val, def) {
+    ASYNC: function(val, def) {
         if (!isobject(def) || !isfunction(def.resolve)) {
             return false;
         }
 
         return def.resolve(val);
     },
-    required: function(value, required) {
+    REQUIRED: function(value, required) {
         if (required) {
             return !isundefined(value) && !isnull(value) && !isempty(value);
         }
 
         return !required;
+    },
+    /**
+     * validator for strict true value
+     */
+    REQUIREDTRUE: function(value) {
+        return isboolean(value) && value === true;
     }
 });

@@ -2,19 +2,17 @@ import { FormControlAbstract } from './form-control.abstract';
 import { isobject, isequal } from 'js-helpers/helpers';
 
 Service({
-    name: 'formFieldService',
     static: true,
 })
 
 /**
  * 
- * @param {*} checker 
  * @param {*} fieldControl 
  */
-export function FormFieldControlService(checker, fieldControl) {
+export function FormFieldControlService(fieldControl) {
     FormControlAbstract.call(this, fieldControl ? fieldControl.validators : null);
+    this.eventType = 'default';
     this._onChangeEvents = [];
-    this.name = checker;
     this._setInitialState(fieldControl);
     this.updateValueAndStatus({ self: true, emitEvent: false });
 }
@@ -26,6 +24,7 @@ FormFieldControlService.prototype._setInitialState = function(state) {
     if (isobject(state)) {
         this.value = state.value;
         state.disabled ? this.disable({ self: true }) : this.enable({ self: true });
+        this.eventType = state.eventType || this.eventType;
     } else {
         this.value = state;
     }

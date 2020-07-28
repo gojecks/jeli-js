@@ -1,4 +1,4 @@
-import { inarray } from 'js-helpers/helpers';
+import { inarray, isobject } from 'js-helpers/helpers';
 import { Observer } from '../rx/observer';
 
 /**
@@ -43,15 +43,29 @@ function ComponentRef(refId) {
     this.child = [];
     this.parent = null;
     this.changeDetector = new InternalChangeDetector(tick);
-    this.componentInstance = null;
+    this._componentInstance = null;
     this._context = null;
-    Object.defineProperty(this, 'context', {
-        get: function() {
-            if (this._context) {
-                return this._context
-            }
+    Object.defineProperties(this, {
+        context: {
+            get: function() {
+                if (this._context) {
+                    return this._context
+                }
 
-            return this.componentInstance;
+                return this.componentInstance;
+            }
+        },
+        componentInstance: {
+            get: function() {
+                if (!this._componentInstance && this.parent) {
+                    return componentDebugContext.get(this.parent).componentInstance;
+                }
+
+                return this._componentInstance;
+            },
+            set: function(componentInstance) {
+                this._componentInstance = componentInstance;
+            }
         }
     });
 
@@ -104,7 +118,14 @@ ComponentRef.prototype.removeChild = function(refId) {
 };
 
 ComponentRef.prototype.updateModel = function(propName, value) {
-    setModelValue(propName, this.context, value);
+    if (isobject(propName)) {
+        for (var prop in propName) {
+            setModelValue(prop, this.context, propName[name]);
+        }
+    } else {
+        setModelValue(propName, this.context, value);
+    }
+
     this.changeDetector.detectChanges(false, true);
     return this;
 };
@@ -123,6 +144,8 @@ ComponentRef.prototype.new = function(refId) {
 ComponentRef.prototype.destroy = function() {
     // destroy observables
     componentDebugContext.delete(this.componentRefId);
+    this._componentInstance = null;
+    this._context = null;
     this.observables.destroy();
     this.changeDetector = null;
     this.observables = null;
@@ -154,23 +177,3 @@ ComponentRef.create = function(refId, parentId) {
 export function ChangeDetector() {
     CoreBootstrapContext.bootStrapComponent.context.tick();
 };
-
-/**
- * 
- * @param {*} refId 
- * @param {*} fn 
- * @param {*} attachDestroy 
- */
-function SubscribeObservables(refId, fn, attachDestroy) {
-    var componentRef = componentDebugContext.get(refId);
-    var unsubscribe = null;
-    if (componentRef) {
-        unsubscribe = componentRef.observables.subscribe(fn);
-        if (attachDestroy) {
-            componentRef.observables.on('$destroy', unsubscribe);
-        }
-
-    }
-
-    return unsubscribe;
-}

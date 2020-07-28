@@ -1,22 +1,4 @@
-/**
- * 
- * @param {*} localVariables 
- * @param {*} componentContext 
- */
-function createLocalVariables(localVariables, componentContext) {
-    var context = {};
-    if (localVariables) {
-        for (var propName in localVariables) {
-            if (localVariables[propName].match(/\s/)) {
-                context[propName] = localVariables[propName];
-            } else if (componentContext) {
-                context[propName] = evaluateExpression(localVariables[propName], componentContext);
-            }
-        }
-    }
-
-    return context;
-}
+import { AttributeAppender } from '../dom/attribute';
 
 /**
  * 
@@ -44,11 +26,11 @@ function setupAttributeObservers(element, attrObservers) {
          * @param {*} template 
          */
         function attributeEvaluator(propName, template) {
-            compileTemplate(template, element.context, function(value) {
+            compileTemplate(template, element.context, element.componentInstance, function(value) {
                 if (AttributeAppender[propName]) {
                     AttributeAppender[propName](element.nativeElement, value, template);
                 } else {
-                    element.setProp(propName, value, true);
+                    AttributeAppender.setProp(element.nativeElement, propName, value);
                 }
             });
         }

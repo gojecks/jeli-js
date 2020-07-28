@@ -1,15 +1,17 @@
-import { FormControlDirective } from './form-control.directive';
+import { FormControlDirective } from './directives/form-control.directive';
 import { FormControlService } from './form-control.service';
-import { FormFieldControlDirective } from './form-field-control.directive';
+import { FormFieldControlDirective } from './directives/form-field-control.directive';
 import { FormFieldControlService } from './form-field-control.service';
-import { FormFieldDirective } from './form-field.directive';
+import { FormFieldDirective } from './directives/form-field.directive';
 import { FormValidatorService } from './form-validator.service';
-import { DefaultEventBinder } from './default.event.accessor';
-import { CheckboxEventBinder } from './checkbox.event.accessor';
-import { RadioEventBinder } from './radio.event.accessor';
-import { SelectEventBinder } from './select.event.accessor';
-import { ModelDirective } from './model.directive';
+import { DefaultEventBinder } from './directives/default.event.accessor';
+import { CheckboxEventBinder } from './directives/checkbox.event.accessor';
+import { RadioEventBinder, RadioEventContainer } from './directives/radio.event.accessor';
+import { SelectEventBinder } from './directives/select.event.accessor';
+import { ModelDirective } from './directives/model.directive';
 import './utils';
+import { NumberEventBinder } from './directives/number.event.accessor';
+import { RangeEventBinder } from './directives/range.event.accessor';
 
 /**
  * JeliFromModule
@@ -18,7 +20,8 @@ jModule({
     services: [
         FormControlService,
         FormFieldControlService,
-        FormValidatorService
+        FormValidatorService,
+        RadioEventContainer
     ],
     selectors: [
         FormControlDirective,
@@ -28,7 +31,9 @@ jModule({
         ModelDirective,
         CheckboxEventBinder,
         RadioEventBinder,
-        SelectEventBinder
+        SelectEventBinder,
+        NumberEventBinder,
+        RangeEventBinder
     ]
 })
 

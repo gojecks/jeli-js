@@ -18,14 +18,10 @@ export function FormControlAbstract(validators) {
     this.error = null;
     this.touched = false;
     this._pendingValue = null;
-    this._eventType = 'default';
     this._onDisableEvents = [];
     this._onControlChangeListener = function() {};
-    this.validator = FormValidatorService(function(validatorInstance) {
-        _this.error = validatorInstance.failedValidation[_this.name];
-        if (!validatorInstance.validationFailed) {
-            _this.valueChanges.emit(_this.value);
-        }
+    this.validator = FormValidatorService(function(errors) {
+        _this.setError(errors);
     }, validators);
 
 
@@ -34,34 +30,34 @@ export function FormControlAbstract(validators) {
      */
     this.valueChanges = new EventEmitter();
     this.statusChanged = new EventEmitter();
-    Object.defineProperty(this, 'parent', {
-        get: function() {
-            return this._parent;
-        }
-    });
 
     Object.defineProperties(this, {
+        parent: {
+            get: function() {
+                return this._parent;
+            }
+        },
         untouched: {
             get: function() {
                 return !this.touched;
             }
         },
-        'invalid': {
+        invalid: {
             get: function() {
                 return isequal(this.status, INVALID);
             }
         },
-        'enabled': {
+        enabled: {
             get: function() {
                 return !isequal(this.status, DISABLED);
             }
         },
-        'disabled': {
+        disabled: {
             get: function() {
                 return isequal(this.status, DISABLED);
             }
         },
-        'valid': {
+        valid: {
             get: function() {
                 return isequal(this.status, VALID);
             }
@@ -83,8 +79,7 @@ FormControlAbstract.prototype._anyControl = function() {}
 
 FormControlAbstract.prototype.setStatus = function() {
     if (this.disabled) return DISABLED;
-    if (this.error) return INVALID;
-    if (this._anyFieldHasStatus(INVALID)) return INVALID;
+    if (this.error || this._anyFieldHasStatus(INVALID)) return INVALID;
     return VALID;
 };
 
@@ -94,7 +89,7 @@ FormControlAbstract.prototype.destroy = function() {
     }
     this._parent = null;
     this.valueChanges.destroy();
-    this.valueChanges.destroy();
+    this.statusChanges.destroy();
 };
 
 FormControlAbstract.prototype.markAsTouched = function(options) {
@@ -182,12 +177,13 @@ FormControlAbstract.prototype._updateValue = function() {};
  * Set field validators
  */
 FormControlAbstract.prototype.setValidators = function(validator) {
+    if (!validator) return;
     this.validator.addValidators(validator);
-    this.validator();
+    this._runValidators();
 };
 
 FormControlAbstract.prototype._runValidators = function() {
-    this.validator(this.value, this.name);
+    this.validator(this.value);
 };
 
 /**
@@ -228,3 +224,27 @@ FormControlAbstract.prototype.markAllAsUnTouched = function() {
 FormControlAbstract.prototype._registerOnControlChangeListener = function(fn) {
     this._onControlChangeListener = fn;
 };
+
+FormControlAbstract.prototype.setError = function(errors, emitEvent) {
+    this.error = errors;
+    this._updateStatusOnError(emitEvent);
+};
+
+FormControlAbstract.prototype.getError = function(errorType) {
+    return this.error ? this.error[errorType] : null;
+};
+
+FormControlAbstract.prototype.hasError = function(errorType) {
+    return !!this.getError(errorType);
+}
+
+FormControlAbstract.prototype._updateStatusOnError = function(emitEvent) {
+    this.status = this.setStatus();
+    if (emitEvent) {
+        this.statusChanged.emit(this.status);
+    }
+
+    if (this._parent) {
+        this._parent._updateStatusOnError(emitEvent);
+    }
+}

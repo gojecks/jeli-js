@@ -1,5 +1,3 @@
-import { isobject } from "js-helpers/helpers";
-
 /**
  * Method for generating Injectors
  * @param {*} annotations 

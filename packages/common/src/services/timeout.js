@@ -33,29 +33,3 @@ function trigger(fn, detectChanges) {
         }
     };
 };
-
-Service({
-    name: '$timeout'
-})
-export function TimeoutService() {
-    //timeout functionality
-    return function(cb, timer) {
-        var timeout = nativeTimeout(trigger(cb, true), timer);
-        return function() {
-            clearTimeout(timeout);
-        };
-    }
-}
-
-
-Service({
-    name: '$interval'
-})
-export function IntervalService() {
-    return function(cb, timer) {
-        var interval = nativeInterval(trigger(cb, true), timer);
-        return function() {
-            clearInterval(interval);
-        };
-    };
-}

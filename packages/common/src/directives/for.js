@@ -16,45 +16,12 @@ Directive({
     DI: ['ViewRef?', 'TemplateRef?'],
     props: ['forIn', 'trackBy']
 })
-export function ForDirective(viewRef, TemplateRef) {
+export function ForDirective(viewRef, templateRef) {
+    this.viewRef = viewRef;
+    this.templateRef = templateRef;
     this.iterable = new IterableProfiler();
     this._forIn = null;
     this.trackBy;
-    this.queryList = new Map();
-
-    this._listenerFn = function() {
-        var _this = this;
-        // remove cache element and free up memory
-        this.iterable.forEachDeleted(function(index) {
-            var viewRef = _this.queryList.get(index);
-            if (viewRef) {
-                viewRef.removeView();
-            }
-        });
-        /**
-         * update view content
-         */
-        this.iterable.forEachChanges(function(key) {
-            var cacheElementRef = _this.queryList.get(key);
-            if (cacheElementRef) {
-                cacheElementRef.updateContext({
-                    index: key,
-                    count: _this._forIn.length
-                });
-            }
-        });
-
-        /**
-         * trigger filter
-         * large data might be slow for filter
-         */
-        this.iterable.forEachInserted(function(item) {
-            var context = new jForRow(item, null);
-            var view = viewRef.createEmbededView(TemplateRef);
-            view.setContext(context);
-            _this.queryList.set(item.idx, view);
-        });
-    };
 
     /**
      * add new property
@@ -68,6 +35,36 @@ export function ForDirective(viewRef, TemplateRef) {
     });
 }
 
+ForDirective.prototype._listenerFn = function() {
+    var _this = this;
+    // remove cache element and free up memory
+    this.iterable.forEachDeleted(function(index) {
+        _this.viewRef.remove(index);
+    });
+
+    this.iterable.forEachChanges(function(item) {
+        if (item.prev !== item.curr) {
+            _this.viewRef.move(item.prev, item.curr);
+        }
+    });
+
+    /**
+     * trigger filter
+     * large data might be slow for filter
+     */
+    this.iterable.forEachInserted(function(index) {
+        _this.viewRef.createEmbededView(_this.templateRef, new jForRow(_this._forIn[index], index, null), index);
+    });
+
+    for (var i = 0; i < this.viewRef.length; i++) {
+        var view = this.viewRef.get(i);
+        view.updateContext({
+            index: i,
+            count: this._forIn.length
+        });
+    }
+};
+
 ForDirective.prototype.willObserve = function() {
     var changes = this.iterable.diff(this._forIn);
     if (changes) {
@@ -79,31 +76,24 @@ ForDirective.prototype.willObserve = function() {
  * viewDidDestroy
  */
 ForDirective.prototype.viewDidDestroy = function() {
-    this.queryList.forEach(function(viewRef) {
-        viewRef.removeView();
-    });
-    this._forIn = null;
-    this.queryList.clear();
+    this.viewRef.clearView();
     this.iterable.destroy();
+    this.viewRef = null;
+    this.templateRef = null;
 };
 
 /**
  * 
- * @param {*} name 
  * @param {*} context 
  * @param {*} index 
  * @param {*} count 
  */
-function jForRow(context, count) {
+function jForRow(context, index, count) {
     this.count = count;
-    this.index = context.idx;
+    this.index = index;
+    this.$context = context;
 
     Object.defineProperties(this, {
-        $context: {
-            get: function() {
-                return context.value;
-            }
-        },
         first: {
             get: function() {
                 return this.index > 0;

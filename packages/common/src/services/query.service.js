@@ -1,13 +1,14 @@
 import { isarray, isobject } from 'js-helpers/helpers';
 
 Service({
-        name: 'query'
-    })
-    /**
-     * OrderBy filter
-     * @usage: (DEFINITION, 'propertyNames', reverse)
-     * propertyNames can be separated with comma
-     */
+    name: 'query'
+})
+
+/**
+ * OrderBy filter
+ * @usage: (DEFINITION, 'propertyNames', reverse)
+ * propertyNames can be separated with comma
+ */
 export function QueryFactory(data) {
     this.sortBy = function() {
         var sortArguments = arguments;

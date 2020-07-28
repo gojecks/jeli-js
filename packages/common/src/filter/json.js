@@ -1,7 +1,7 @@
 /**
  * JSON Filter FN
  */
-Service({
+Pipe({
     name: 'json'
 })
 export function jsonFilterFn() {

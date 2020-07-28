@@ -11,7 +11,9 @@ export function AppRootElement(formControlService) {
     this.testForm = new formControlService({
         radio: {
             value: 1,
-            required: true
+            validators: {
+                required: true
+            }
         },
         input: {
             value: undefined,
@@ -26,18 +28,18 @@ export function AppRootElement(formControlService) {
             disabled: false,
             validators: {
                 required: true,
-                minlength: 6,
-                maxlength: 100
+                minLength: 6,
+                maxLength: 100
             }
         },
         checkbox: {
             value: true,
             validators: {
-                required: true
+                requiredTrue: true
             }
         },
         select: {
-            value: "select_2",
+            value: ["select_2"],
             validators: {
                 required: true
             }
@@ -48,7 +50,8 @@ export function AppRootElement(formControlService) {
             }
         },
         range: {
-            value: 0,
+            value: 50,
+            eventType: 'blur',
             validators: {
                 maxlength: 90
             }
@@ -91,7 +94,6 @@ export function AppRootElement(formControlService) {
     };
 
     this.didInit = function() {
-        this.generateMock(1);
         this.testForm.patchValue({
             number: 10
         });
@@ -122,7 +124,11 @@ export function AppRootElement(formControlService) {
 
 AppRootElement.prototype.addTodo = function() {
     if (this.todoDescription) {
-        this.todos.push({ description: this.todoDescription, done: false });
+        this.todos.push({
+            description: this.todoDescription,
+            details: "",
+            done: false
+        });
         this.todoDescription = "";
     }
 };
@@ -134,10 +140,11 @@ AppRootElement.prototype.removeTodo = function(index) {
     }
 };
 
-AppRootElement.prototype.markAsRemoved = function(done) {
+AppRootElement.prototype.markAsRemoved = function(done, todo) {
+    todo.done = done;
     if (done) {
         this.removeItemCount++;
-    } else {
+    } else if (this.removeItemCount > 0) {
         this.removeItemCount--;
     }
 };
@@ -145,7 +152,11 @@ AppRootElement.prototype.markAsRemoved = function(done) {
 AppRootElement.prototype.generateMock = function(total) {
     var data = [];
     for (var i = 0; i < total; i++) {
-        data.push({ description: "Test_From_" + this.counter++, done: false });
+        data.push({
+            description: "Test_From_" + this.counter++,
+            done: false,
+            details: ""
+        });
     }
 
     this.todos = data;

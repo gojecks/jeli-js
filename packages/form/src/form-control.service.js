@@ -1,8 +1,7 @@
-import { isempty, isobject, isundefined } from 'js-helpers/helpers';
+import { isempty, isobject, isundefined, isfunction, isarray } from 'js-helpers/helpers';
 import { errorBuilder } from '@jeli/core';
 import { FormControlAbstract } from './form-control.abstract';
 Service({
-    name: 'formControlService',
     static: true,
 })
 
@@ -33,10 +32,10 @@ FormControlService.prototype.constructor = FormControlAbstract;
  * @param fieldControl
  */
 FormControlService.prototype.addField = function(name, fieldControl) {
-    if (fieldControl instanceof FormControlService) {
+    if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
         this.formFieldControls[name] = fieldControl;
     } else {
-        this.formFieldControls[name] = new FormFieldControlService(name, fieldControl);
+        this.formFieldControls[name] = new FormFieldControlService(fieldControl);
     }
 
     this._setupControl(this.formFieldControls[name]);
@@ -48,6 +47,11 @@ FormControlService.prototype.hasField = function(controlName) {
 };
 
 FormControlService.prototype.getField = function(controlName) {
+    if (isarray(controlName)) {
+        return controlName.reduce(function(accum, path) {
+            return accum.getField(path);
+        }, this);
+    }
     return this.formFieldControls[controlName] || null;
 };
 

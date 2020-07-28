@@ -50,21 +50,9 @@ AttributeAppender.class = function(nativeElement, value) {
     ElementClassList.add(nativeElement, value);
 };
 
-AttributeAppender.checked = function(nativeElement, isChecked) {
-    _optionalType(nativeElement, isChecked, 'checked');
+// extend prop types
+AttributeAppender.setProp = function(nativeElement, propName, propValue) {
+    if (propValue === undefined) return;
+    nativeElement[propValue ? 'setAttribute' : 'removeAttribute'](propName, propValue);
+    nativeElement[propName] = propValue;
 };
-
-AttributeAppender.selected = function(nativeElement, isChecked) {
-    _optionalType(nativeElement, isChecked, 'selected');
-};
-
-/**
- * 
- * @param {*} nativeElement 
- * @param {*} isSelected 
- * @param {*} type 
- */
-function _optionalType(nativeElement, isSelected, type) {
-    nativeElement[isSelected ? 'setAttribute' : 'removeAttribute'](type, isSelected);
-    nativeElement[type] = isSelected
-}

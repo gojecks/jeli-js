@@ -1,10 +1,9 @@
 import './form-validator-current-instance';
-import './validator.stack';
 import { isobject, isfunction, isequal } from 'js-helpers/helpers';
-
+import { extend } from 'js-helpers/utils';
+import { formValidationStack } from './validator.stack';
 
 Service({
-    name: 'formValidator',
     static: true
 })
 
@@ -14,41 +13,14 @@ Service({
  * @param {*} validators 
  */
 export function FormValidatorService(callback, validators) {
-    var currentProcess = new CurrentInstance(trigger, ErrorHandler);
-    var validationInstance = null;
-    /**
-     * 
-     * @param {*} key 
-     * @param {*} message 
-     */
-    function ErrorHandler(key, validations) {
-        validationInstance.failedValidation[key] = validations;
-        validationInstance.validationFailed = true;
-    }
-
-    function trigger() {
-        callback(validationInstance);
-    }
-
-    /**
-     * hold the current running process instance
-     */
-    function setValidationInstance() {
-        validationInstance = {
-            requiresValidation: false,
-            emptyFormFields: false,
-            failedValidation: {},
-            validationFailed: false
-        };
-    }
-
+    var currentProcess = new CurrentInstance(callback);
     /**
      * 
      * @param {*} validatorsObj 
      */
     function _throwErrorIfNoValidators(validatorsObj) {
         if (!isobject(validatorsObj)) {
-            throw new Error('Validators are required in other to perform validations');
+            throw new Error('Validators are required in order to perform validations');
         }
     }
 
@@ -56,16 +28,15 @@ export function FormValidatorService(callback, validators) {
      * 
      * @param {*} value 
      * @param {*} criteria 
-     * @param {*} field 
      */
-    function _validateField(value, criteria, field) {
+    function _validate(value, criteria) {
         //iterate through the criteria
         var _criteria = Object.keys(criteria);
-        currentProcess.add(field, _criteria.length);
+        currentProcess.add(_criteria.length);
         for (var i = 0; i < _criteria.length; i++) {
             var validatorName = _criteria[i];
             var passed = false,
-                validatorFn = formValidationStack[validatorName];
+                validatorFn = formValidationStack[validatorName.toUpperCase()];
             if (validatorFn) {
                 passed = validatorFn(value, criteria[validatorName]);
             }
@@ -77,11 +48,11 @@ export function FormValidatorService(callback, validators) {
             /**
              * check if passed && passed is a promise
              */
-            if (isobject(passed) && isequal('$ajax', validatorName)) {
-                return currentProcess.registerAjax(passed, criteria[validatorName], field, validatorName);
+            if (isobject(passed) && isequal('async', validatorName)) {
+                return currentProcess.registerAsyncValidator(passed, criteria[validatorName], validatorName);
             }
 
-            currentProcess.rem(passed, field, validatorName);
+            currentProcess.rem(passed, validatorName);
         }
     }
 
@@ -123,19 +94,13 @@ export function FormValidatorService(callback, validators) {
      * @param {*} formValue 
      * @param {*} field 
      */
-    function formValidator(formValue, field) {
+    function formValidator(formValue) {
         if (!validators) {
-            return trigger();
+            return callback(null);
         }
 
         _throwErrorIfNoValidators(validators);
-        currentProcess.clean();
-        setValidationInstance();
-        if (isobject(formValue)) {
-            _validateObjectTypes(formValue);
-        } else {
-            _validateField(formValue, validators, field);
-        }
+        _validate(formValue, validators);
     }
 
     /**
@@ -150,6 +115,5 @@ export function FormValidatorService(callback, validators) {
         }
     };
 
-    setValidationInstance();
     return formValidator;
 }

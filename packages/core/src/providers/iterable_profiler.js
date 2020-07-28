@@ -10,170 +10,126 @@ import { hashcode } from 'js-helpers/utils';
  * Dependency : HashCode Generator
  * Dependency : expect
  */
-export function IterableProfiler() {
+export function IterableProfiler(trackBy) {
     this._destroyed = false;
-    var cacheHash = [];
-    var out = null;
-
-    /**
-     * 
-     * @param {*} _source 
-     * @param {*} out 
-     */
-    function generateHash(_source, out) {
-        for (var i = 0; i < _source.length; i++) {
-            cacheHash.push(getHash(_source[i]));
-            out.insert.push({
-                value: _source[i],
-                key: i
-            });
-        }
-    }
-
-    /**
-     * 
-     * @param {*} item 
-     * @param {*} key 
-     */
-    function getHash(item, key) {
+    this.cacheHash = [];
+    this.out = null;
+    this.trackBy = trackBy || function(item) {
         if (item && typeof item === "object") {
             item = JSON.stringify(item);
         }
 
         return hashcode(item);
     }
+}
 
-    /**
-     * 
-     * @param {*} source 
-     */
-    function CoreProfiler(source) {
-        if (source && !(source instanceof Array)) {
-            throw new Error('Collection should be an array');
-        }
-        /**
-         * reset out
-         */
-        out = {
-            deleted: [],
-            insert: [],
-            moved: [],
-            changes: []
-        };
-
-        if ((!source || !source.length) && (!cacheHash || !cacheHash.length)) {
-            return out;
-        }
-
-        /**
-         * empty cache and new source Data
-         */
-        if (!cacheHash.length && source.length) {
-            generateHash(source, out);
-            return out;
-        }
-
-        /**
-         * source is empty and cacheHash exists
-         * empty cacheHash and return deleted keys
-         */
-        if (!source.length && cacheHash.length) {
-            out.deleted = Object.keys(cacheHash).map(Number);
-            cacheHash.length = 0;
-            return out;
-        }
-
-        var len = source.length;
-        for (var inc = 0; inc < len; inc++) {
-            var item = source[inc],
-                hash = getHash(item, inc);
-            if (cacheHash.hasOwnProperty(inc)) {
-                /***
-                 * cacheHash[key] changed
-                 */
-                if (cacheHash[inc] !== hash) {
-                    /**
-                     * find the hash in the cacheHash
-                     * if hash exists means the object was moved around
-                     * assign to new position
-                     */
-                    var index = cacheHash.indexOf(hash);
-                    if (index > -1) {
-                        cacheHash[index] = cacheHash[inc];
-                    }
-
-                    out.changes.push(inc);
-                }
-            } else {
-                out.insert.push({
-                    value: item,
-                    key: inc
-                });
-            }
-
-            cacheHash[inc] = hash;
-        }
-
-        /**
-         * Validate cacheHash
-         */
-        if (cacheHash.length > source.length) {
-            out.deleted.push.apply(out.deleted,
-                Object.keys(cacheHash)
-                .splice(source.length, cacheHash.length)
-                .map(Number)
-            );
-            cacheHash.splice(source.length, cacheHash.length);
-        }
-
-        return out;
+IterableProfiler.prototype.diff = function(source) {
+    if (this._destroyed) {
+        return false;
     }
 
-    this.forEachChanges = function(callback) {
-        out.changes.forEach(callback);
+    if (source && !(source instanceof Array)) {
+        throw new Error('Collection should be an array');
+    }
+    /**
+     * reset out
+     */
+    this.out = {
+        deleted: [],
+        insert: [],
+        moved: [],
+        changes: []
     };
 
-    this.forEachDeleted = function(callback) {
-        out.deleted.forEach(callback);
-    };
+    if ((!source || !source.length) && (!this.cacheHash || !this.cacheHash.length)) {
+        return false;
+    }
 
-    this.forEachInserted = function(callback) {
-        out.insert.forEach(callback);
-    };
+    if (source.length === this.cacheHash.length) {
+        return false;
+    }
 
-    this.forEachInsertedAsync = function(callback, afterMapCallback) {
-        out.insert.map(callback).forEach(afterMapCallback);
-    };
+    /**
+     * source is empty and cacheHash exists
+     * empty cacheHash and return deleted keys
+     */
+    if (!source.length && this.cacheHash.length) {
+        this.out.deleted = Object.keys(this.cacheHash).map(Number);
+        this.cacheHash = [];
+        return true;
+    }
 
-    this.forEachChangesAsync = function(callback, afterMapCallback) {
-        out.changes.map(callback).forEach(afterMapCallback);
-    };
-
-    this.forEachDeletedAsync = function(callback, afterMapCallback) {
-        out.deleted.map(callback).forEach(afterMapCallback);
-    };
-
-    this.diff = function(source) {
-        if (this._destroyed) {
-            return false;
-        }
-
-        CoreProfiler(source);
-        return (out.changes.length || out.deleted.length || out.insert.length) > 0;
-    };
-
-
-    this.checkDuplicateRepeater = function(repeater) {
-        if (repeater && isarray(repeater)) {
-            if (noDubs(repeater).length < repeater.length) {
-                errorBuilder("Duplicate values are not allowed in repeaters. Use 'track by' expression to specify unique keys");
+    var len = source.length;
+    var newCacheHash = [];
+    for (var inc = 0; inc < len; inc++) {
+        var item = source[inc],
+            hash = this.trackBy(item, inc);
+        if (this.cacheHash.hasOwnProperty(inc)) {
+            /***
+             * cacheHash[key] changed
+             */
+            if (this.cacheHash[inc] !== hash) {
+                /**
+                 * find the hash in the cacheHash
+                 * if hash exists means the object was moved to different index
+                 * assign to new position
+                 */
+                var index = this.cacheHash.indexOf(hash);
+                /**
+                 * update changes
+                 */
+                this.out.changes.push({
+                    prev: index > -1 ? index : inc,
+                    curr: inc
+                });
             }
+        } else {
+            this.checkDuplicateRepeater(hash);
+            this.out.insert.push(inc);
         }
-    };
 
-    this.destroy = function() {
-        this._destroyed = true;
-        cacheHash.length = 0;
-        out = null;
-    };
-}
+        newCacheHash.push(hash);
+    }
+
+    /**
+     * Validate cacheHash
+     */
+    if (this.cacheHash.length > newCacheHash.length) {
+        var _this = this;
+        this.cacheHash.forEach(function(hash, idx) {
+            if (!newCacheHash.includes(hash)) {
+                _this.out.deleted.push(idx);
+            }
+        });
+    }
+
+    this.cacheHash = newCacheHash;
+    newCacheHash = null;
+
+    return (this.out.changes.length || this.out.deleted.length || this.out.insert.length) > 0;
+};
+
+IterableProfiler.prototype.forEachChanges = function(callback) {
+    this.out.changes.forEach(callback);
+};
+
+IterableProfiler.prototype.forEachDeleted = function(callback) {
+    this.out.deleted.forEach(callback);
+};
+
+IterableProfiler.prototype.forEachInserted = function(callback) {
+    this.out.insert.forEach(callback);
+};
+
+
+IterableProfiler.prototype.checkDuplicateRepeater = function(hash) {
+    if (this.cacheHash.indexOf(hash) > -1) {
+        errorBuilder("Duplicate values are not allowed in repeaters. Use 'track by' expression to specify unique keys");
+    }
+};
+
+IterableProfiler.prototype.destroy = function() {
+    this._destroyed = true;
+    this.cacheHash.length = 0;
+    this.out = null;
+};

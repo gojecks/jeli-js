@@ -1,25 +1,22 @@
 /**
  * 
- * @param {*} type 
- * @param {*} errorHandler 
+ * @param {*} next 
  */
-function CurrentInstance(successHandler, errorHandler) {
-    this.pending = {
-        count: 0,
-        fields: {}
-    };
-    this.hasAjax = false;
+function CurrentInstance(next) {
+    this.pending = null;
+    this.hasAsync = false;
     /**
-     * @param field
      * @param len
      */
-    this.add = function(field, len) {
-        this.pending.fields[field] = {
-            count: len,
-            failed: []
+    this.add = function(totalValidators) {
+        this.pending = {
+            count: totalValidators,
+            errors: {},
+            failed: false
         };
 
-        this.pending.count++;
+        this.hasAsync = false;
+        this.resolve = null;
     };
 
     /**
@@ -27,54 +24,37 @@ function CurrentInstance(successHandler, errorHandler) {
      * @param field
      * @param type
      */
-    this.rem = function(passed, field, type) {
-        this.pending.fields[field].count--;
+    this.rem = function(passed, type) {
+        this.pending.count--;
         if (!passed) {
-            this.pending.fields[field].failed.push(type);
+            this.pending.failed = true;
+            this.pending.errors[type] = true;
         }
 
         /**
          * finished resolving but have some errors
          * push to the error domain
          */
-        if (!this.pending.fields[field].count) {
-            if (this.pending.fields[field].failed.length) {
-                errorHandler(field, this.pending.fields[field].failed);
-            }
-            this.pending.count--;
-        }
-
-        if (!this.pending.count && successHandler) {
-            /**
-             * trigger when no pending status
-             */
-            successHandler();
+        if (!this.pending.count) {
+            next(this.pending.failed ? this.pending.errors : null);
         }
     };
 }
 
-CurrentInstance.prototype.clean = function() {
-    this.pending = {
-        count: 0,
-        fields: {}
-    };
-
-    this.hasAjax = false;
-    this.resolve = null;
-};
-
 /**
- * @param AjaxInstance
+ * @param asyncInstance
  * @param Request
  * @param field
  * @param name
  */
-CurrentInstance.prototype.registerAjax = function(AjaxInstance, Request, field, name) {
-    this.hasAjax = true;
+CurrentInstance.prototype.registerAsyncValidator = function(asyncInstance, Request, name) {
+    this.hasAsync = true;
     var _this = this;
-    AjaxInstance.then(function(res) {
-        _this.rem((Request.onsuccess || function() { return true; })(res), field, name);
-    }, function(res) {
-        _this.rem((Request.onerror || function() { return false; })(res), field, name);
-    });
+    var callback = function(type, ret) {
+        return function(response) {
+            _this.rem((Request[type]) ? Request[type](response) : ret, name);
+        }
+    };
+
+    asyncInstance.then(callback('onsuccess', true), callback('onerror', false));
 };

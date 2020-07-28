@@ -50,15 +50,11 @@ var isfunction = helpers['isfunction'];
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var ElementClassList = core['ElementClassList'];
 var IterableProfiler = core['IterableProfiler'];
-function jForRow(context, count) {
+function jForRow(context, index, count) {
     this.count = count;
-    this.index = context.idx;
+    this.index = index;
+    this.$context = context;
     Object.defineProperties(this, {
-        $context: {
-            get: function () {
-                return context.value;
-            }
-        },
         first: {
             get: function () {
                 return this.index > 0;
@@ -83,35 +79,12 @@ function jForRow(context, count) {
 }
 var ForDirective = function () {
     'use strict';
-    function ForDirective(viewRef, TemplateRef) {
+    function ForDirective(viewRef, templateRef) {
+        this.viewRef = viewRef;
+        this.templateRef = templateRef;
         this.iterable = new IterableProfiler();
         this._forIn = null;
         this.trackBy;
-        this.queryList = new Map();
-        this._listenerFn = function () {
-            var _this = this;
-            this.iterable.forEachDeleted(function (index) {
-                var viewRef = _this.queryList.get(index);
-                if (viewRef) {
-                    viewRef.removeView();
-                }
-            });
-            this.iterable.forEachChanges(function (key) {
-                var cacheElementRef = _this.queryList.get(key);
-                if (cacheElementRef) {
-                    cacheElementRef.updateContext({
-                        index: key,
-                        count: _this._forIn.length
-                    });
-                }
-            });
-            this.iterable.forEachInserted(function (item) {
-                var context = new jForRow(item, null);
-                var view = viewRef.createEmbededView(TemplateRef);
-                view.setContext(context);
-                _this.queryList.set(item.idx, view);
-            });
-        };
         Object.defineProperties(this, {
             forIn: {
                 set: function (value) {
@@ -120,6 +93,27 @@ var ForDirective = function () {
             }
         });
     }
+    ForDirective.prototype._listenerFn = function () {
+        var _this = this;
+        this.iterable.forEachDeleted(function (index) {
+            _this.viewRef.remove(index);
+        });
+        this.iterable.forEachChanges(function (item) {
+            if (item.prev !== item.curr) {
+                _this.viewRef.move(item.prev, item.curr);
+            }
+        });
+        this.iterable.forEachInserted(function (index) {
+            _this.viewRef.createEmbededView(_this.templateRef, new jForRow(_this._forIn[index], index, null), index);
+        });
+        for (var i = 0; i < this.viewRef.length; i++) {
+            var view = this.viewRef.get(i);
+            view.updateContext({
+                index: i,
+                count: this._forIn.length
+            });
+        }
+    };
     ForDirective.prototype.willObserve = function () {
         var changes = this.iterable.diff(this._forIn);
         if (changes) {
@@ -127,12 +121,10 @@ var ForDirective = function () {
         }
     };
     ForDirective.prototype.viewDidDestroy = function () {
-        this.queryList.forEach(function (viewRef) {
-            viewRef.removeView();
-        });
-        this._forIn = null;
-        this.queryList.clear();
+        this.viewRef.clearView();
         this.iterable.destroy();
+        this.viewRef = null;
+        this.templateRef = null;
     };
     ForDirective.annotations = {
         selector: 'for',
@@ -674,32 +666,6 @@ function trigger(fn, detectChanges) {
     };
 }
 ;
-var TimeoutService = function () {
-    'use strict';
-    function TimeoutService() {
-        return function (cb, timer) {
-            var timeout = nativeTimeout(trigger(cb, true), timer);
-            return function () {
-                clearTimeout(timeout);
-            };
-        };
-    }
-    TimeoutService.annotations = { name: '$timeout' };
-    return TimeoutService;
-}();
-var IntervalService = function () {
-    'use strict';
-    function IntervalService() {
-        return function (cb, timer) {
-            var interval = nativeInterval(trigger(cb, true), timer);
-            return function () {
-                clearInterval(interval);
-            };
-        };
-    }
-    IntervalService.annotations = { name: '$interval' };
-    return IntervalService;
-}();
 var CommonModule = function () {
     'use strict';
     function CommonModule() {
@@ -714,8 +680,6 @@ var CommonModule = function () {
             orderByFilterFn,
             whereFilterFn,
             CurrencyFilter,
-            TimeoutService,
-            IntervalService,
             QueryFactory
         ],
         selectors: [
@@ -749,8 +713,6 @@ exports.orderByFilterFn = orderByFilterFn;
 exports.upperCaseFilter = upperCaseFilter;
 exports.whereFilterFn = whereFilterFn;
 exports.QueryFactory = QueryFactory;
-exports.TimeoutService = TimeoutService;
-exports.IntervalService = IntervalService;
 },
 'dist/core/bundles/jeli-core-module.js': function(exports){
 var utils = __required('node_modules/js-helpers/utils.js');
@@ -762,11 +724,11 @@ var isnumber = helpers['isnumber'];
 var isnull = helpers['isnull'];
 var isundefined = helpers['isundefined'];
 var isboolean = helpers['isboolean'];
-var isobject = helpers['isobject'];
-var inarray = helpers['inarray'];
-var isstring = helpers['isstring'];
-var isequal = helpers['isequal'];
 var isarray = helpers['isarray'];
+var inarray = helpers['inarray'];
+var isequal = helpers['isequal'];
+var isobject = helpers['isobject'];
+var isstring = helpers['isstring'];
 var isfunction = helpers['isfunction'];
 function errorBuilder(error, logLevel) {
     var loggerLevel = void 0 == logLevel ? 0 : logLevel;
@@ -870,6 +832,83 @@ function AutoWire(factory, locals, callback) {
     return factory;
 }
 ;
+function Linker(componentInstance, elementRef, lifeCycle, definition) {
+    var propChanges = null;
+    var registeredProperty = [];
+    if (definition.props) {
+        var always = _updateViewBinding(true);
+        if (always) {
+            var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, _updateViewBinding);
+            elementRef.observer(function () {
+                unsubscribe();
+                registeredProperty = [];
+            });
+        }
+    }
+    function _updateViewBinding(initialBinding) {
+        var hasBinding = false;
+        for (var prop in definition.props) {
+            var item = definition.props[prop];
+            var name = item.value || prop;
+            if (elementRef.props && elementRef.props.hasOwnProperty(name)) {
+                var value;
+                if (isobject(elementRef.props[name])) {
+                    hasBinding = true;
+                    value = getFilteredTemplateValue(elementRef.props[name], elementRef.context, elementRef.componentInstance);
+                } else {
+                    value = getPrimitiveValue(item.type, name, elementRef.props[name]);
+                }
+                setValue(prop, value);
+            } else if (elementRef.hasAttribute(name)) {
+                setValue(prop, elementRef.attr[name]);
+            }
+        }
+        if (propChanges) {
+            lifeCycle.trigger('didChange', propChanges);
+            propChanges = null;
+        }
+        lifeCycle.trigger('willObserve');
+        return hasBinding;
+    }
+    function setValue(property, value) {
+        if (isequal(componentInstance[property], value) && registeredProperty.includes(property)) {
+            return;
+        }
+        if (propChanges === null) {
+            propChanges = {};
+        }
+        if (!registeredProperty.includes(property)) {
+            registeredProperty.push(property);
+        }
+        propChanges[property] = value;
+        componentInstance[property] = value;
+    }
+    function getPrimitiveValue(type, name, value) {
+        if (isequal(type, 'TemplateRef')) {
+            return elementRef.getTemplateRef(name);
+        }
+        return value;
+    }
+}
+function LifeCycle(componentInstance) {
+    var _cycleState = {
+        didInit: !!componentInstance.didInit,
+        viewDidLoad: !!componentInstance.viewDidLoad,
+        viewDidMount: !!componentInstance.viewDidMount,
+        viewDidDestroy: !!componentInstance.viewDidDestroy,
+        willObserve: !!componentInstance.willObserve,
+        didChange: !!componentInstance.didChange
+    };
+    this.has = function (cycle) {
+        return _cycleState[cycle] && isfunction(componentInstance[cycle]);
+    };
+    this.trigger = function (cycle, args) {
+        if (this.has(cycle)) {
+            componentInstance[cycle](args);
+        }
+    };
+}
+;
 function ElementCompiler(ctrl, elementRef, localInjectors, next) {
     var definition = ctrl.annotations, hasTwoWayBinding = elementRef.props && definition.props, lifeCycle;
     function CoreComponentCompiler(componentInstance) {
@@ -878,8 +917,6 @@ function ElementCompiler(ctrl, elementRef, localInjectors, next) {
         }
         var componentRef = componentDebugContext.get(elementRef.refId);
         componentRef.componentInstance = componentInstance;
-        if (hasTwoWayBinding) {
-        }
         if (ctrl.view) {
             var template = ctrl.view.getView(elementRef);
             try {
@@ -911,52 +948,15 @@ function ElementCompiler(ctrl, elementRef, localInjectors, next) {
         function _registry(evName) {
             switch (definition.events[evName].type) {
             case 'event':
-                ComponentEventHandler(evName, componentInstance);
+                elementRef.events.attachEventHandler(evName, definition.events[evName].value, componentInstance);
                 break;
             case 'emitter':
-                AttachEventEmitter(evName, componentInstance);
+                elementRef.events.attachEventEmitter(evName, componentInstance);
                 break;
             case 'dispatcher':
-                AttachEventDispatcher(evName, componentInstance);
+                elementRef.events.attachEventDispatcher(evName, componentInstance);
                 break;
             }
-        }
-    }
-    function ComponentEventHandler(eventName, componentInstance) {
-        elementRef.events.add({
-            name: eventName,
-            handler: function (event) {
-                return EventHandler._executeEventsTriggers(definition.events[eventName].value, componentInstance, null, event);
-            }
-        });
-    }
-    function AttachEventDispatcher(eventName, componentInstance) {
-        var options = definition.events[eventName];
-        var registeredEvent = elementRef.getEvent(options.name.toLowerCase());
-        var context = null;
-        if (registeredEvent && registeredEvent.value.length) {
-            context = elementRef.context;
-            if (elementRef.isc) {
-                context = elementRef.parent.context;
-            }
-            var methodName = registeredEvent.value[0].fn;
-            context[methodName] = function eventHandler(value) {
-                EventHandler._executeEventsTriggers(options.value, componentInstance, null, value);
-                elementRef.parent.changeDetector.detectChanges();
-            };
-        }
-    }
-    function AttachEventEmitter(eventName, componentInstance) {
-        var registeredEvent = elementRef.events.getEvent(eventName);
-        if (registeredEvent && registeredEvent.value) {
-            componentInstance[eventName].subscribe(eventHandler);
-            elementRef.observer(function () {
-                componentInstance[eventName].destroy();
-            });
-        }
-        function eventHandler(value) {
-            EventHandler._executeEventsTriggers(registeredEvent.value, elementRef.parent.componentInstance, null, value);
-            elementRef.parent.changeDetector.detectChanges();
         }
     }
     function registerDirectiveInstance(componentInstance) {
@@ -968,81 +968,23 @@ function ElementCompiler(ctrl, elementRef, localInjectors, next) {
             elementRef.observer(function () {
                 lifeCycle.trigger('viewDidDestroy');
                 elementRef.nodes.delete(definition.selector);
-                lifeCycle = null;
                 unsubscribe();
             });
         }
     }
-    function Linker(componentInstance) {
-        var always = false;
-        if (definition.props) {
-            always = _updateViewBinding();
-            if (always) {
-                elementRef.observer(SubscribeObservables(elementRef.parent.refId, _updateViewBinding));
-            }
-        }
-        function _updateViewBinding() {
-            var hasBinding = false;
-            for (var prop in definition.props) {
-                var item = definition.props[prop];
-                var name = item.value || prop;
-                if (elementRef.props && elementRef.props.hasOwnProperty(name)) {
-                    hasBinding = true;
-                    if (item.ignoreChanges) {
-                        return;
-                    }
-                    switch (item.type) {
-                    case 'TemplateRef':
-                        componentInstance[prop] = elementRef.getTemplateRef(name);
-                        break;
-                    default:
-                        var value = evaluateExpression(elementRef.props[name], elementRef.context);
-                        componentInstance[prop] = value;
-                        break;
-                    }
-                } else {
-                    if (isequal(item.value, 'jModel')) {
-                        componentInstance[prop] = elementRef.nodes.get('model');
-                    } else {
-                        componentInstance[prop] = elementRef.getAttribute(name);
-                    }
-                }
-            }
-            lifeCycle.trigger('willObserve');
-            return hasBinding;
-        }
-    }
     ComponentFactoryInitializer(ctrl, localInjectors, function triggerInstance(componentInstance) {
-        if (definition.registerAs) {
+        if (definition.registerAs && definition.registerAs instanceof ProviderToken) {
             definition.registerAs.register(componentInstance);
         }
         compileEventsRegistry(componentInstance);
-        lifeCycle = new ElementCompiler.LifeCycle(componentInstance);
-        Linker(componentInstance);
+        lifeCycle = new LifeCycle(componentInstance);
+        Linker(componentInstance, elementRef, lifeCycle, definition);
         registerDirectiveInstance(componentInstance);
         lifeCycle.trigger('didInit');
         next(componentInstance);
         CoreComponentCompiler(componentInstance);
     });
 }
-ElementCompiler.LifeCycle = function (componentInstance) {
-    var _cycleState = {
-        didInit: !!componentInstance.didInit,
-        viewDidLoad: !!componentInstance.viewDidLoad,
-        viewDidMount: !!componentInstance.viewDidMount,
-        viewDidDestroy: !!componentInstance.viewDidDestroy,
-        willObserve: !!componentInstance.willObserve,
-        didChanged: !!componentInstance.didChanged
-    };
-    this.trigger = function (cycle) {
-        if (this.has(cycle)) {
-            componentInstance[cycle]();
-        }
-    };
-    this.has = function (cycle) {
-        return _cycleState[cycle] && isfunction(componentInstance[cycle]);
-    };
-};
 ElementCompiler.resolve = function (node, nextTick) {
     var inc = 0;
     function next() {
@@ -1078,6 +1020,17 @@ function ComponentFactoryInitializer(ctrl, injectorInstance, CB) {
     });
 }
 ;
+function SubscribeObservables(refId, fn, attachDestroy) {
+    var componentRef = componentDebugContext.get(refId);
+    var unsubscribe = null;
+    if (componentRef) {
+        unsubscribe = componentRef.observables.subscribe(fn);
+        if (attachDestroy) {
+            componentRef.observables.on('$destroy', unsubscribe);
+        }
+    }
+    return unsubscribe;
+}
 function Observer() {
     this.$notifyInProgress = 0;
     this.bindingIdx = 0;
@@ -1240,14 +1193,27 @@ function ComponentRef(refId) {
     this.child = [];
     this.parent = null;
     this.changeDetector = new InternalChangeDetector(tick);
-    this.componentInstance = null;
+    this._componentInstance = null;
     this._context = null;
-    Object.defineProperty(this, 'context', {
-        get: function () {
-            if (this._context) {
-                return this._context;
+    Object.defineProperties(this, {
+        context: {
+            get: function () {
+                if (this._context) {
+                    return this._context;
+                }
+                return this.componentInstance;
             }
-            return this.componentInstance;
+        },
+        componentInstance: {
+            get: function () {
+                if (!this._componentInstance && this.parent) {
+                    return componentDebugContext.get(this.parent).componentInstance;
+                }
+                return this._componentInstance;
+            },
+            set: function (componentInstance) {
+                this._componentInstance = componentInstance;
+            }
         }
     });
     function tick(ignoreChild, ignoreParent) {
@@ -1281,7 +1247,13 @@ ComponentRef.prototype.removeChild = function (refId) {
     componentDebugContext.delete(refId);
 };
 ComponentRef.prototype.updateModel = function (propName, value) {
-    setModelValue(propName, this.context, value);
+    if (isobject(propName)) {
+        for (var prop in propName) {
+            setModelValue(prop, this.context, propName[name]);
+        }
+    } else {
+        setModelValue(propName, this.context, value);
+    }
     this.changeDetector.detectChanges(false, true);
     return this;
 };
@@ -1293,6 +1265,8 @@ ComponentRef.prototype.new = function (refId) {
 };
 ComponentRef.prototype.destroy = function () {
     componentDebugContext.delete(this.componentRefId);
+    this._componentInstance = null;
+    this._context = null;
     this.observables.destroy();
     this.changeDetector = null;
     this.observables = null;
@@ -1314,17 +1288,6 @@ function ChangeDetector() {
     CoreBootstrapContext.bootStrapComponent.context.tick();
 }
 ;
-function SubscribeObservables(refId, fn, attachDestroy) {
-    var componentRef = componentDebugContext.get(refId);
-    var unsubscribe = null;
-    if (componentRef) {
-        unsubscribe = componentRef.observables.subscribe(fn);
-        if (attachDestroy) {
-            componentRef.observables.on('$destroy', unsubscribe);
-        }
-    }
-    return unsubscribe;
-}
 function generatePublicInjectors(elementRef) {
     var injectors = {};
     var currentClassAnnotations = {};
@@ -1414,197 +1377,6 @@ function buildViewChild(componentInstance, elementRef, viewChild) {
         }
     }
 }
-function createLocalVariables(localVariables, componentContext) {
-    var context = {};
-    if (localVariables) {
-        for (var propName in localVariables) {
-            if (localVariables[propName].match(/\s/)) {
-                context[propName] = localVariables[propName];
-            } else if (componentContext) {
-                context[propName] = evaluateExpression(localVariables[propName], componentContext);
-            }
-        }
-    }
-    return context;
-}
-function setupAttributeObservers(element, attrObservers) {
-    var observerStarted = false;
-    element.observer(SubscribeObservables(element.hostRef.refId, observe));
-    function observe() {
-        for (var propName in attrObservers) {
-            if (attrObservers[propName].once && observerStarted) {
-                break;
-            }
-            attributeEvaluator(propName, attrObservers[propName]);
-        }
-        function attributeEvaluator(propName, template) {
-            compileTemplate(template, element.context, function (value) {
-                if (AttributeAppender[propName]) {
-                    AttributeAppender[propName](element.nativeElement, value, template);
-                } else {
-                    element.setProp(propName, value, true);
-                }
-            });
-        }
-        observerStarted = true;
-    }
-}
-var $eUID = 1;
-var CoreBootstrapContext = {
-    bootStrapComponent: null,
-    compiledModule: null,
-    $isCompiled: false,
-    $isAfterBootStrap: false,
-    enableDebugger: true
-};
-function getUID() {
-    return 'jeli:' + +new Date() + ':' + $eUID++;
-}
-var INITIALIZERS = new ProviderToken('AppInitializers', true);
-function bootStrapApplication(moduleToBootStrap) {
-    CoreBootstrapContext.compiledModule = moduleToBootStrap;
-    InitializeModule(moduleToBootStrap);
-    CoreBootstrapContext.$isCompiled = true;
-    bootStrapElement();
-    function bootStrapElement() {
-        if (moduleToBootStrap.annotations.rootElement) {
-            var selector = moduleToBootStrap.annotations.rootElement.annotations.selector;
-            CoreBootstrapContext.bootStrapComponent = new ElementRef({
-                name: selector,
-                isc: true,
-                type: 'element',
-                fromDOM: true,
-                providers: [moduleToBootStrap.annotations.rootElement]
-            }, null);
-            ElementCompiler.resolve(CoreBootstrapContext.bootStrapComponent, function () {
-            });
-        }
-    }
-    function InitializeModule(moduleFn) {
-        moduleFn();
-        if (moduleFn.annotations.requiredModules) {
-            moduleFn.annotations.requiredModules.forEach(InitializeModule);
-        }
-    }
-}
-;
-function ViewParser(transpiledHTML, templates, providers) {
-    var _viewContainer = [];
-    this.getView = function (parent) {
-        for (var i = 0; i < transpiledHTML.length; i++) {
-            var compiled = ViewParserHelper[transpiledHTML[i].type](transpiledHTML[i], parent, this);
-            if (compiled) {
-                _viewContainer.push(compiled);
-            }
-        }
-        return toFragment(_viewContainer, parent);
-    };
-    this.getProvider = function (provide) {
-        return providers[provide];
-    };
-    this.pushToView = function (element) {
-        _viewContainer.push(element);
-    };
-    this.getTemplate = function (templateRefId) {
-        if (templates.hasOwnProperty(templateRefId)) {
-            return templates[templateRefId];
-        }
-        errorBuilder('unable to find template [' + templateRefId + ']');
-    };
-}
-;
-function element(definition, parent, viewContainer) {
-    var elementRef = new ElementRef(definition, parent);
-    if (definition.attr) {
-        AttributeAppender(elementRef.nativeElement, definition.attr);
-    }
-    if (definition.children) {
-        for (var i = 0; i < definition.children.length; i++) {
-            var child = ViewParserHelper[definition.children[i].type](definition.children[i], elementRef, viewContainer, true);
-            if (child) {
-                elementRef.children.add(child);
-                elementRef.nativeElement.appendChild(child.nativeElement || child.nativeNode);
-            }
-        }
-    }
-    if (definition.vc) {
-        elementRef.hostRef.viewQuery.add(definition.vc, elementRef);
-    }
-    return elementRef;
-}
-;
-function text(definition, parent) {
-    return new TextNodeRef(copy(definition), parent);
-}
-;
-function place(definition, parent, viewContainer, appendToChild) {
-    var hostRef = parent.hostRef;
-    var templates = hostRef.getTemplateRef('place');
-    if (definition.selector) {
-        templates = templates.selector(definition.selector);
-    }
-    templates.forEach(function (template) {
-        var child = ViewParserHelper[template.type](template, parent, viewContainer);
-        if (appendToChild) {
-            parent.children.add(child);
-            parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
-        } else {
-            viewContainer.pushToView(child);
-        }
-    });
-    return null;
-}
-;
-function outlet(definition, parent, viewContainer) {
-    var template = definition.template;
-    if (!template && parent.hostRef) {
-        template = parent.hostRef.templates[definition.templateId];
-    }
-    if (template) {
-        var element = ViewParserHelper.element(template, parent, viewContainer);
-        element.context = context;
-        return element;
-    }
-    return null;
-}
-;
-function toFragment(compiledTemplate, parent) {
-    var fragment = document.createDocumentFragment();
-    while (compiledTemplate.length) {
-        processCompiler(compiledTemplate.shift());
-    }
-    function processCompiler(compiled) {
-        if (!compiled) {
-            return;
-        }
-        parent.children.add(compiled);
-        fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
-        transverse(compiled);
-    }
-    return fragment;
-}
-;
-function transverse(node) {
-    if (node instanceof ElementRef) {
-        if (node.providers && node.providers.length) {
-            ElementCompiler.resolve(node, proceedWithCompilation);
-        } else {
-            proceedWithCompilation(node);
-        }
-    } else if (node instanceof TextNodeRef && node.hasBinding) {
-        node.render();
-    }
-    function proceedWithCompilation(node) {
-        node.events.registerListener();
-        node.children.forEach(transverse);
-    }
-}
-var ViewParserHelper = {
-    element: element,
-    text: text,
-    place: place,
-    outlet: outlet
-};
 var sce = function () {
     var element = document.createElement('div');
     function htmlEscape(str) {
@@ -1626,76 +1398,6 @@ var sce = function () {
         isPlainHtml: /<[a-z][\s\S]*>/i
     };
 }();
-function TemplateRef(templates, templateId) {
-    if (!templates || !templates.hasOwnProperty(templateId)) {
-        errorBuilder('No templates Defined #' + templateId);
-    }
-    this.createElement = function (parentNode) {
-        return ViewParserHelper[templates[templateId].type](templates[templateId], parentNode);
-    };
-    this.getContext = function () {
-        return templates[templateId].context;
-    };
-    this.forEach = function (callback) {
-        return templates[templateId].forEach(callback);
-    };
-    this.querySelector = function (selector) {
-        return templates[templateId].filter(_selector);
-        function _selector(template) {
-            switch (selector[0]) {
-            case 'id':
-            case 'class':
-                return template.attr && inarray(template.attr[selector[0]], selector[1]);
-            default:
-                return isequal(selector[1], template.name);
-            }
-        }
-    };
-}
-function ViewRef(elementRef) {
-    this._destroyed = false;
-    this.createEmbededView = function (templateRef) {
-        var compiledElement = templateRef.createElement(elementRef);
-        var templateContext = templateRef.getContext();
-        var _componentRef = null;
-        elementRef.children.add(compiledElement);
-        transverse(compiledElement);
-        elementRef.insertAfter(compiledElement.nativeElement, (elementRef.children.last || elementRef).nativeElement);
-        compiledElement.changeDetector.detectChanges();
-        return {
-            removeView: function () {
-                if (templateContext && _componentRef) {
-                    _componentRef.destroy();
-                    templateContext = null;
-                    _componentRef = null;
-                }
-                compiledElement.remove(true);
-                compiledElement = null;
-            },
-            setContext: function (context) {
-                if (templateContext) {
-                    var localVariables = createLocalVariables(templateContext, context);
-                    ComponentRef.create(compiledElement.refId, compiledElement.parent && compiledElement.parent.refId);
-                    _componentRef = componentDebugContext.get(compiledElement.refId);
-                    _componentRef._context = localVariables;
-                }
-                compiledElement.changeDetector.detectChanges();
-            },
-            updateContext: function (updates) {
-                if (templateContext) {
-                    var componentRef = componentDebugContext.get(compiledElement.refId);
-                    for (var prop in updates) {
-                        componentRef.updateModel(prop, updates[prop]);
-                    }
-                }
-                compiledElement.changeDetector.detectChanges();
-            }
-        };
-    };
-    this.clearView = function () {
-        elementRef.children.destroy();
-    };
-}
 function ElementStyle(nativeElement, name, value) {
     if (name && !value && isstring(name)) {
         if (!!window.getComputedStyle) {
@@ -1789,28 +1491,455 @@ AttributeAppender.href = function (nativeElement, value) {
 AttributeAppender.class = function (nativeElement, value) {
     ElementClassList.add(nativeElement, value);
 };
-AttributeAppender.checked = function (nativeElement, isChecked) {
-    _optionalType(nativeElement, isChecked, 'checked');
+AttributeAppender.setProp = function (nativeElement, propName, propValue) {
+    if (propValue === undefined)
+        return;
+    nativeElement[propValue ? 'setAttribute' : 'removeAttribute'](propName, propValue);
+    nativeElement[propName] = propValue;
 };
-AttributeAppender.selected = function (nativeElement, isChecked) {
-    _optionalType(nativeElement, isChecked, 'selected');
-};
-function _optionalType(nativeElement, isSelected, type) {
-    nativeElement[isSelected ? 'setAttribute' : 'removeAttribute'](type, isSelected);
-    nativeElement[type] = isSelected;
+function setupAttributeObservers(element, attrObservers) {
+    var observerStarted = false;
+    element.observer(SubscribeObservables(element.hostRef.refId, observe));
+    function observe() {
+        for (var propName in attrObservers) {
+            if (attrObservers[propName].once && observerStarted) {
+                break;
+            }
+            attributeEvaluator(propName, attrObservers[propName]);
+        }
+        function attributeEvaluator(propName, template) {
+            compileTemplate(template, element.context, element.componentInstance, function (value) {
+                if (AttributeAppender[propName]) {
+                    AttributeAppender[propName](element.nativeElement, value, template);
+                } else {
+                    AttributeAppender.setProp(element.nativeElement, propName, value);
+                }
+            });
+        }
+        observerStarted = true;
+    }
 }
-function ElementRef(definition, parent) {
-    var viewQuery = null;
-    var _this = this;
-    definition.events = definition.events || [];
-    definition.attr = definition.attr || {};
-    this.nativeElement = ElementRef.createElementByType(definition.name, definition.text, definition.fromDOM);
+var $eUID = 1;
+var CoreBootstrapContext = {
+    bootStrapComponent: null,
+    compiledModule: null,
+    $isCompiled: false,
+    $isAfterBootStrap: false,
+    enableDebugger: true
+};
+function getUID() {
+    return 'jeli:' + +new Date() + ':' + $eUID++;
+}
+var INITIALIZERS = new ProviderToken('AppInitializers', true);
+function bootStrapApplication(moduleToBootStrap) {
+    CoreBootstrapContext.compiledModule = moduleToBootStrap;
+    InitializeModule(moduleToBootStrap);
+    CoreBootstrapContext.$isCompiled = true;
+    bootStrapElement();
+    function bootStrapElement() {
+        if (moduleToBootStrap.annotations.rootElement) {
+            var selector = moduleToBootStrap.annotations.rootElement.annotations.selector;
+            CoreBootstrapContext.bootStrapComponent = new ElementRef({
+                name: selector,
+                isc: true,
+                type: 'element',
+                fromDOM: true,
+                providers: [moduleToBootStrap.annotations.rootElement]
+            }, null);
+            ElementCompiler.resolve(CoreBootstrapContext.bootStrapComponent, function () {
+            });
+        }
+    }
+    function InitializeModule(moduleFn) {
+        moduleFn();
+        if (moduleFn.annotations.requiredModules) {
+            moduleFn.annotations.requiredModules.forEach(InitializeModule);
+        }
+    }
+}
+;
+function ViewParser(transpiledHTML, templates, providers) {
+    var _viewContainer = [];
+    this.getView = function (parent) {
+        for (var i = 0; i < transpiledHTML.length; i++) {
+            var compiled = ViewParserHelper[transpiledHTML[i].type](transpiledHTML[i], parent, this);
+            if (compiled) {
+                _viewContainer.push(compiled);
+            }
+        }
+        return toFragment(_viewContainer, parent);
+    };
+    this.getProvider = function (provide) {
+        return providers[provide];
+    };
+    this.pushToView = function (element) {
+        _viewContainer.push(element);
+    };
+    this.getTemplate = function (templateRefId) {
+        if (templates.hasOwnProperty(templateRefId)) {
+            return templates[templateRefId];
+        }
+        errorBuilder('unable to find template [' + templateRefId + ']');
+    };
+}
+;
+function element(definition, parent, viewContainer) {
+    var elementRef = new ElementRef(definition, parent);
+    if (definition.attr) {
+        AttributeAppender(elementRef.nativeElement, definition.attr);
+    }
+    if (definition.children) {
+        for (var i = 0; i < definition.children.length; i++) {
+            var child = ViewParserHelper[definition.children[i].type](definition.children[i], elementRef, viewContainer, true);
+            if (child) {
+                elementRef.children.add(child);
+                elementRef.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+            }
+        }
+    }
+    if (definition.vc) {
+        elementRef.hostRef.viewQuery.add(definition.vc, elementRef);
+    }
+    return elementRef;
+}
+;
+function comment(definition, parent, viewContainer) {
+    return new AbstractElementRef(definition, parent);
+}
+function text(definition, parent) {
+    return new TextNodeRef(copy(definition), parent);
+}
+;
+function place(definition, parent, viewContainer, appendToChild) {
+    var hostRef = parent.hostRef;
+    var templates = hostRef.getTemplateRef('place');
+    if (definition.selector) {
+        templates = templates.selector(definition.selector);
+    }
+    templates.forEach(function (template) {
+        var child = ViewParserHelper[template.type](template, parent, viewContainer);
+        if (appendToChild) {
+            parent.children.add(child);
+            parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+        } else {
+            viewContainer.pushToView(child);
+        }
+    });
+    return null;
+}
+;
+function outlet(definition, parent, viewContainer) {
+    var template = definition.template;
+    if (!template && parent.hostRef) {
+        template = parent.hostRef.templates[definition.templateId];
+    }
+    if (template) {
+        var element = ViewParserHelper.element(template, parent, viewContainer);
+        element.context = context;
+        return element;
+    }
+    return null;
+}
+;
+function toFragment(compiledTemplate, parent) {
+    var fragment = document.createDocumentFragment();
+    while (compiledTemplate.length) {
+        processCompiler(compiledTemplate.shift());
+    }
+    function processCompiler(compiled) {
+        if (!compiled) {
+            return;
+        }
+        parent.children.add(compiled);
+        fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
+        transverse(compiled);
+    }
+    return fragment;
+}
+;
+function transverse(node) {
+    if (node instanceof AbstractElementRef) {
+        if (node.providers && node.providers.length) {
+            ElementCompiler.resolve(node, proceedWithCompilation);
+        } else {
+            proceedWithCompilation(node);
+        }
+    } else if (node instanceof TextNodeRef && node.hasBinding) {
+        node.registerObserver();
+    }
+    function proceedWithCompilation(node) {
+        if (isequal(node.nativeElement.nodeType, 8)) {
+            return;
+        }
+        ;
+        node.events.registerListener();
+        node.children.forEach(transverse);
+    }
+}
+var ViewParserHelper = {
+    element: element,
+    text: text,
+    place: place,
+    outlet: outlet,
+    comment: comment
+};
+function AbstractElementRef(definition, parentRef) {
+    this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
     this.refId = getUID();
     this.$observers = [];
     this.children = new QueryList();
-    this.parent = parent;
+    this.parent = parentRef;
+    this.type = definition.type;
+    this.tagName = definition.name.toLowerCase();
+    this.isc = definition.isc;
+    this.providers = definition.providers;
+    this.index = definition.index;
+    this.attr = definition.attr;
+    this.props = definition.props;
+    this.nativeNode = this.nativeElement.nodeType === 8 ? this.nativeElement : null;
+    this.nodes = new Map();
+    this.getTemplateRef = function (templateId) {
+        return new TemplateRef(definition.templates, templateId);
+    };
+    Object.defineProperties(this, {
+        context: {
+            get: function () {
+                if (this.isc) {
+                    return componentDebugContext.get(this.refId).context;
+                }
+                return this.hostRef.context;
+            }
+        },
+        componentInstance: {
+            get: function () {
+                if (this.isc) {
+                    return componentDebugContext.get(this.refId).componentInstance;
+                }
+                return this.hostRef.componentInstance;
+            }
+        },
+        changeDetector: {
+            get: function () {
+                if (this.isc) {
+                    return componentDebugContext.get(this.refId).changeDetector;
+                }
+                return this.hostRef.changeDetector;
+            }
+        },
+        hostRef: {
+            get: function () {
+                if (this.isc) {
+                    return this;
+                }
+                return this.parent.hostRef;
+            }
+        }
+    });
+}
+AbstractElementRef.prototype.getAttribute = function (name) {
+    if (this.prop && this.prop.hasOwnProperty(name)) {
+        return this.prop[name];
+    }
+    return this.attr && this.attr[name];
+};
+AbstractElementRef.prototype.insertAfter = function (newNode, targetNode) {
+    if (!targetNode.parentNode)
+        return;
+    targetNode = targetNode || this.nativeElement;
+    targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
+    this.changeDetector.detectChanges();
+};
+AbstractElementRef.prototype.remove = function (removeFromParent) {
+    if (this.nativeElement && this.nativeElement.nodeType != 11) {
+        this.nativeElement.remove();
+    }
+    if (removeFromParent && this.parent) {
+        this.parent.children.remove(this);
+    }
+    cleanupElementRef(this);
+};
+AbstractElementRef.prototype.hasAttribute = function (name) {
+    return this.attr && this.attr.hasOwnProperty(name);
+};
+AbstractElementRef.prototype.removeChild = function (element) {
+    this.children.remove(element);
+    cleanupElementRef(element);
+};
+AbstractElementRef.prototype.observer = function (onDestroyListener) {
+    if (onDestroyListener) {
+        this.$observers.push(onDestroyListener);
+    }
+};
+function cleanupElementRef(elementRef) {
+    elementRef.events && elementRef.events.destroy();
+    while (elementRef.$observers.length) {
+        elementRef.$observers.pop()();
+    }
+    elementRef.children.destroy();
+    elementRef.nativeElement = null;
+    elementRef.parent = null;
+    elementRef.providers = null;
+    elementRef.nodes.clear();
+}
+;
+function createElementByType(tag, text, fromDOM) {
+    if (fromDOM) {
+        return document.querySelector(tag);
+    }
+    switch (tag) {
+    case '#comment':
+        return document.createComment(text);
+    case '#fragment':
+        return document.createDocumentFragment();
+    default:
+        return document.createElement(tag);
+    }
+}
+;
+function TemplateRef(templates, templateId) {
+    if (!templates || !templates.hasOwnProperty(templateId)) {
+        errorBuilder('No templates Defined #' + templateId);
+    }
+    this.createElement = function (parentNode) {
+        return ViewParserHelper[templates[templateId].type](templates[templateId], parentNode);
+    };
+    this.getContext = function () {
+        return templates[templateId].context;
+    };
+    this.forEach = function (callback) {
+        return templates[templateId].forEach(callback);
+    };
+    this.querySelector = function (selector) {
+        return templates[templateId].filter(_selector);
+        function _selector(template) {
+            switch (selector[0]) {
+            case 'id':
+            case 'class':
+                return template.attr && inarray(template.attr[selector[0]], selector[1]);
+            default:
+                return isequal(selector[1], template.name);
+            }
+        }
+    };
+}
+var scheduler = {
+    schedule: function (taskFn, timer) {
+        if (!window.requestAnimationFrame) {
+            var taskId = setTimeout(taskFn, timer === undefined ? 15 : timer);
+            return function () {
+                clearTimeout(taskId);
+            };
+        }
+        var taskId = window.requestAnimationFrame(taskFn);
+        return function () {
+            window.cancelAnimationFrame(taskId);
+        };
+    }
+};
+function ViewRef(elementRef) {
+    var _viewRefs = new Map();
+    this._destroyed = false;
+    this.get = function (index) {
+        return _viewRefs.get(index);
+    };
+    this.createEmbededView = function (templateRef, context, index) {
+        var view = new EmbededViewContext(elementRef, templateRef, context);
+        _viewRefs.set(index, view);
+        return view;
+    };
+    this.remove = function (index) {
+        var view = _viewRefs.get(index);
+        if (view) {
+            view.destroy();
+            _viewRefs.delete(index);
+        }
+    };
+    this.move = function (prev, curr) {
+        _viewRefs.set(curr, _viewRefs.get(prev));
+        _viewRefs.delete(prev);
+    };
+    this.clearView = function () {
+        _viewRefs.forEach(function (view) {
+            view.destroy();
+        });
+        _viewRefs.clear();
+    };
+    Object.defineProperty(this, 'length', {
+        get: function () {
+            return _viewRefs.size;
+        }
+    });
+}
+function EmbededViewContext(parentRef, templateRef, context) {
+    var compiledElement = templateRef.createElement(parentRef);
+    var targetNode = (parentRef.children.last || parentRef).nativeElement;
+    var _componentRef = null;
+    var _this = this;
+    this.context = context;
+    createComponentRef();
+    parentRef.children.add(compiledElement);
+    scheduler.schedule(function () {
+        transverse(compiledElement);
+        parentRef.insertAfter(compiledElement.nativeElement, targetNode);
+        compiledElement.changeDetector.detectChanges();
+    });
+    this.destroy = function () {
+        if (_componentRef) {
+            _componentRef.destroy();
+            _componentRef = null;
+        }
+        compiledElement.remove(true);
+        compiledElement = null;
+        this.context = null;
+    };
+    this.setContext = function (context) {
+        this.context = context;
+        compiledElement.changeDetector.detectChanges();
+    };
+    function createComponentRef() {
+        compiledElement.isc = !!templateRef.getContext();
+        if (compiledElement.isc) {
+            ComponentRef.create(compiledElement.refId, parentRef.hostRef.refId);
+            _componentRef = componentDebugContext.get(compiledElement.refId);
+            _componentRef._context = createLocalVariables(templateRef.getContext());
+        }
+    }
+    function createLocalVariables(localVariables) {
+        var context = {};
+        if (localVariables) {
+            for (var propName in localVariables) {
+                if (localVariables[propName].match(/\s/)) {
+                    context[propName] = localVariables[propName];
+                } else {
+                    writePropertyBinding(propName);
+                }
+            }
+        }
+        function writePropertyBinding(propName) {
+            Object.defineProperty(context, propName, {
+                get: function () {
+                    if (!_this.context)
+                        return;
+                    return _this.context[localVariables[propName]];
+                }
+            });
+        }
+        return context;
+    }
+}
+EmbededViewContext.prototype.updateContext = function (updates) {
+    if (!this.context)
+        return;
+    for (var prop in updates) {
+        this.context[prop] = updates[prop];
+    }
+};
+function ElementRef(definition, parent) {
+    AbstractElementRef.call(this, definition, parent);
+    var viewQuery = null;
+    var _this = this;
     if (definition.isc) {
-        ComponentRef.create(this.refId, parent && parent.refId);
+        ComponentRef.create(this.refId, parent && parent.hostRef.refId);
         viewQuery = Object.create({
             ϕelements: [],
             add: function (option, element) {
@@ -1830,104 +1959,20 @@ function ElementRef(definition, parent) {
             }
         });
     }
-    this.nodes = new Map();
     this.events = new EventHandler(this, definition.events);
     Object.defineProperties(this, {
-        index: {
-            get: function () {
-                return definition.index;
-            }
-        },
-        value: {
-            get: function () {
-                return ElementRefGetValue(this);
-            }
-        },
-        nativeNode: {
-            get: function () {
-                return isequal(this.nativeElement.nodeType, 8) ? ele : null;
-            }
-        },
-        type: {
-            get: function () {
-                return definition.type;
-            }
-        },
-        tagName: {
-            get: function () {
-                return definition.name.toLowerCase();
-            }
-        },
-        attr: {
-            get: function () {
-                return definition.attr;
-            }
-        },
-        props: {
-            get: function () {
-                return definition.props;
-            }
-        },
-        context: {
-            get: function () {
-                if (componentDebugContext.has(this.refId)) {
-                    return componentDebugContext.get(this.refId).context;
-                }
-                return this.parent && this.parent.context;
-            }
-        },
-        componentInstance: {
-            get: function () {
-                if (componentDebugContext.has(this.refId)) {
-                    return componentDebugContext.get(this.refId).componentInstance;
-                }
-                return this.parent && this.parent.componentInstance;
-            }
-        },
-        hostRef: {
-            get: function () {
-                if (definition.isc) {
-                    return this;
-                }
-                return this.parent.hostRef;
-            }
-        },
         viewQuery: {
             get: function () {
                 return viewQuery || this.parent.viewQuery;
             }
-        },
-        isc: {
-            get: function () {
-                return definition.isc;
-            }
-        },
-        changeDetector: {
-            get: function () {
-                if (componentDebugContext.has(this.refId)) {
-                    return componentDebugContext.get(this.refId).changeDetector;
-                }
-                return this.parent && this.parent.changeDetector;
-            }
-        },
-        providers: {
-            get: function () {
-                return definition.providers;
-            }
         }
     });
-    this.getTemplateRef = function (templateId) {
-        return new TemplateRef(definition.templates, templateId);
-    };
     if (definition.attrObservers) {
         setupAttributeObservers(this, definition.attrObservers);
     }
 }
-ElementRef.prototype.getChildByRef = function (refId) {
-    return this.children.find(function (element) {
-        return isequal(element.refId, refId);
-    });
-};
+ElementRef.prototype = Object.create(AbstractElementRef.prototype);
+ElementRef.prototype.constructor = AbstractElementRef;
 ElementRef.prototype.nextSibling = function () {
     return this.parent && this.parent.children.findByIndex(this.index + 1);
 };
@@ -1935,34 +1980,13 @@ ElementRef.prototype.prevSibling = function () {
     return this.parent && this.parent.children.findByIndex(this.index - 1);
 };
 ElementRef.prototype.setProp = function (propName, propValue) {
-    if (propValue === undefined)
-        return;
-    this.nativeElement[propName] = propValue;
-    this.setAttribute.apply(this, arguments);
+    AttributeAppender.setProp(this.nativeElement, propName, propValue);
     return this;
-};
-ElementRef.prototype.hasAttribute = function (name) {
-    return this.attr.hasOwnProperty(name);
-};
-ElementRef.prototype.getAttribute = function (name) {
-    if (this.prop && this.prop.hasOwnProperty(name)) {
-        return this.prop[name];
-    }
-    return this.attr && this.attr[name];
-};
-ElementRef.prototype.hasAnyAttribute = function (list, force) {
-    var found = 0, self = this;
-    list.forEach(function (attr) {
-        if (self.hasAttribute(attr)) {
-            found = simpleArgumentParser(self.getAttribute(attr) || force || true);
-        }
-    });
-    return found;
 };
 ElementRef.prototype.setAttribute = function (name, value, attachInElement) {
     this.attr[name] = value;
     if (attachInElement && this.nativeElement) {
-        this.nativeElement.setAttribute(name, value);
+        AttributeAppender[name](this.nativeElement, value);
     }
     return this;
 };
@@ -1979,11 +2003,6 @@ ElementRef.prototype.appendChild = function (template) {
     this.nativeElement.appendChild(template);
     this.changeDetector.detectChanges();
 };
-ElementRef.prototype.insertAfter = function (newNode, targetNode) {
-    targetNode = targetNode || this.nativeElement;
-    targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
-    this.changeDetector.detectChanges();
-};
 ElementRef.prototype.html = function (newContent) {
     if (newContent instanceof ElementRef) {
         newContent = newContent.nativeElement;
@@ -1993,82 +2012,35 @@ ElementRef.prototype.html = function (newContent) {
     this.nativeElement.innerHTML = '';
     this.nativeElement.appendChild(newContent);
 };
-ElementRef.prototype.remove = function (removeFromParent) {
-    if (this.nativeElement && this.nativeElement.nodeType != 11) {
-        this.nativeElement.remove();
-    }
-    if (removeFromParent && this.parent) {
-        this.children.remove(this);
-    }
-    cleanupElementRef(this);
-};
-ElementRef.prototype.removeChild = function (element) {
-    this.children.remove(element);
-    cleanupElementRef(element);
-};
-ElementRef.prototype.observer = function (onDestroyListener) {
-    if (onDestroyListener) {
-        this.$observers.push(onDestroyListener);
-    }
-    return this;
-};
-function cleanupElementRef(elementRef) {
-    elementRef.events.destroy();
-    while (elementRef.$observers.length) {
-        elementRef.$observers.pop()();
-    }
-    elementRef.children.destroy();
-    elementRef.nativeElement = null;
-    elementRef.parent = null;
-    elementRef.nodes.clear();
-}
-;
-function ElementRefGetValue(element) {
-    if (isequal(element.nativeElement.type, 'checkbox')) {
-        return element.nativeElement.checked;
-    } else if (isequal(element.nativeElement.localName, 'select')) {
-        if (!element.children.length || element.nativeElement.options.length > element.children.length) {
-            return element.nativeElement.value;
+function TextNodeRef(definition, parent) {
+    var _this = this;
+    this.nativeNode = document.createTextNode(definition.ast.rawValue);
+    this.type = 'text';
+    this.hasBinding = !!definition.ast.templates;
+    this.render = function () {
+        compileTemplate(definition.ast, parent.context, parent.componentInstance, function (value) {
+            _this.nativeNode.nodeValue = value;
+        });
+    };
+    this.registerObserver = function () {
+        this.render();
+        if (definition.ast.$) {
+            parent.observer(SubscribeObservables(parent.hostRef.refId, this.render));
         }
-        if (element.hasAttribute('multiple')) {
-            var optionsValue = [];
-            for (var i = 0; i < element.nativeElement.selectedOptions.length; i++) {
-                var option = element.nativeElement.selectedOptions[i];
-                var value = element.children.findByIndex(option.index).getAttribute('value');
-                optionsValue.push(value);
-            }
-            return optionsValue;
-        }
-        return element.children.findByIndex(element.nativeElement.selectedIndex).getAttribute('value');
-    } else if (element.nativeElement.type) {
-        return simpleArgumentParser(element.nativeElement.value);
-    }
+        ;
+    };
 }
-;
-ElementRef.createElementByType = function (tag, text, fromDOM) {
-    if (fromDOM) {
-        return document.querySelector(tag);
-    }
-    switch (tag) {
-    case '#comment':
-        return document.createComment(text);
-    case '#fragment':
-        return document.createDocumentFragment();
-    default:
-        return document.createElement(tag);
-    }
+TextNodeRef.prototype.remove = function () {
+    this.nativeNode.remove();
+    this.nativeNode = null;
 };
 function EventHandler(elementRef, events) {
-    this._events = events || [];
+    this._events = (events || []).slice();
     this.add = function (_event) {
         this._events.push(_event);
     };
     this.registeredEvents = new Map();
-    Object.defineProperty(this, 'node', {
-        get: function () {
-            return elementRef;
-        }
-    });
+    this.element = elementRef;
 }
 EventHandler.prototype.getEvent = function (eventName) {
     return EventHandler.getEventsByType(this._events, eventName)[0];
@@ -2094,27 +2066,57 @@ EventHandler.prototype.registerListener = function () {
         } catch (e) {
             errorBuilder(e);
         } finally {
-            _this.node.changeDetector.detectChanges();
+            _this.element.changeDetector.detectChanges();
         }
     }
     function triggerEvents(registeredEvent, mouseEvent) {
         if (registeredEvent.handler) {
             registeredEvent.handler(mouseEvent);
         } else {
-            EventHandler._executeEventsTriggers(registeredEvent.value, _this.node.hostRef.componentInstance, _this.node.context, mouseEvent);
+            EventHandler._executeEventsTriggers(registeredEvent.value, _this.element.hostRef.componentInstance, _this.element.context, mouseEvent);
+        }
+    }
+    function registerEvent(eventName) {
+        if (!_this.registeredEvents.has(eventName)) {
+            _this.element.nativeElement.addEventListener(eventName, jEventHandler, false);
+            _this.registeredEvents.set(eventName, function () {
+                _this.element.nativeElement.removeEventListener(eventName, jEventHandler);
+            });
         }
     }
     for (var i = 0; i < this._events.length; i++) {
         var event = this._events[i];
         if (!event.custom) {
-            event.name.split(' ').forEach(function (eventName) {
-                if (!_this.registeredEvents.has(eventName)) {
-                    _this.node.nativeElement.addEventListener(eventName, jEventHandler, false);
-                    _this.registeredEvents.set(eventName, function () {
-                        _this.node.nativeElement.removeEventListener(eventName, jEventHandler);
-                    });
-                }
-            });
+            event.name.split(' ').forEach(registerEvent);
+        }
+    }
+};
+EventHandler.prototype.attachEventHandler = function (eventName, eventValue, componentInstance) {
+    this.add({
+        name: eventName,
+        handler: function ($event) {
+            return EventHandler._executeEventsTriggers(eventValue, componentInstance, null, $event);
+        }
+    });
+};
+EventHandler.prototype.attachEventEmitter = function (eventName, componentInstance) {
+    var _this = this;
+    var registeredEvent = this.getEvent(eventName);
+    if (registeredEvent && registeredEvent.value) {
+        var unSubscribe = componentInstance[eventName].subscribe(function (value) {
+            EventHandler._executeEventsTriggers(registeredEvent.value, _this.element.parent.componentInstance, _this.element.context, value);
+            _this.element.parent.changeDetector.detectChanges();
+        });
+        this.registeredEvents.set(eventName, unSubscribe);
+    }
+};
+EventHandler.prototype.attachEventDispatcher = function (eventName, componentInstance) {
+    var registeredEvent = this.getEvent(eventName);
+    var context = null;
+    if (registeredEvent && registeredEvent.value.length) {
+        context = this.element.context;
+        if (this.element.isc) {
+            context = this.element.parent.context;
         }
     }
 };
@@ -2123,7 +2125,8 @@ EventHandler.prototype.destroy = function () {
         removeListenerFn();
     });
     this.registeredEvents.clear();
-    this._events.length = [];
+    this._events = [];
+    this.element = null;
 };
 EventHandler.getEventsByType = function (events, type) {
     return events.filter(function (event) {
@@ -2134,7 +2137,7 @@ EventHandler._executeEventsTriggers = function (eventTriggers, componentInstance
     eventTriggers.forEach(_dispatch);
     function _dispatch(event) {
         if (event.left) {
-            parseObjectExpression(event, context || componentInstance, ev);
+            parseObjectExpression(event, context, componentInstance, ev);
         } else if (event.fn) {
             var fn = EventHandler.getFnFromContext(event, componentInstance);
             var narg = generateArguments(event.args, context || componentInstance, ev);
@@ -2159,64 +2162,43 @@ EventHandler.getFnFromContext = function (eventInstance, componentInstance) {
     instance = null;
     return fn;
 };
-function filterParser(type, context) {
-    var filterFn = Inject(type);
-    if (!filterFn) {
-        errorBuilder(type + 'Provider was not found in FilterProvider');
+function filterParser(filterClass, context) {
+    var filterInstance = Inject(filterClass);
+    if (!filterInstance) {
+        errorBuilder(filterClass + 'Provider was not found in FilterProvider');
     }
-    return filterFn.compile.apply(filterFn, context);
+    return filterInstance.compile.apply(filterInstance, context);
 }
 ;
-function getTemplateValue(templateModel, instance) {
-    var value = resolveValueFromContext(templateModel.prop, instance);
+function getFilteredTemplateValue(templateModel, context, componentInstance) {
+    var value = resolveValueFromContext(templateModel.prop, context, componentInstance);
     if (templateModel.fns) {
-        value = templateModel.fns.reduce(function (accum, filterName, idx) {
-            var filterArgs = (templateModel.args[idx] || []).map(function (key) {
-                return resolveValueFromContext(key, instance) || key;
-            });
+        value = templateModel.fns.reduce(function (accum, filterClass, idx) {
+            var filterArgs = generateArguments(templateModel.args[idx], context, value);
             filterArgs.unshift(accum);
-            return filterParser(filterName, filterArgs);
-        }, !isundefined(value) ? value : templateModel.prop);
+            return filterParser(filterClass, filterArgs);
+        }, value);
     }
     return value;
 }
-function getValueFromModel(key) {
-    if ($inArray('|', key)) {
-        var filteredKey = removeFilters(key);
-        return function (model) {
-            return getTemplateValue(filteredKey, model);
-        };
-    } else {
-        return function (model) {
-            return resolveValueFromContext(key, model);
-        };
-    }
-}
-function compileTemplate(definition, context, cb) {
+function compileTemplate(definition, context, componentInstance, cb) {
     var value = undefined;
     if (definition.templates) {
         value = definition.templates.reduce(function (accum, options) {
-            return accum.replace(options.replace, evaluateExpression(options.exp, context));
+            return accum.replace(options[0], evaluateExpression(options[1], context, componentInstance));
         }, definition.rawValue);
     } else {
-        value = getTemplateValue(definition, context);
+        value = getFilteredTemplateValue(definition, context, componentInstance);
     }
     cb(value);
 }
-function evaluateExpression(expr, context) {
+function evaluateExpression(expr, context, componentInstance) {
     if (isobject(expr) && expr.hasOwnProperty('prop')) {
-        return getTemplateValue(expr, context);
+        return getFilteredTemplateValue(expr, context, componentInstance);
     }
-    return resolveValueFromContext(expr, context);
+    return resolveValueFromContext(expr, context, componentInstance);
 }
 ;
-function maskedEval(expression, context) {
-    if (/([|<>=()\-!*+&\/\/:])/gi.test(expression)) {
-        return new Function('with(this) { try{ return ' + expression + ' }catch(e){ return undefined; } }').call(context || {});
-    } else {
-        return simpleContextMapper(expression, context);
-    }
-}
 function simpleArgumentParser(arg) {
     var booleanMatcher = simpleBooleanParser(arg), isNum = Number(arg);
     if (arg && !isNaN(isNum)) {
@@ -2227,41 +2209,42 @@ function simpleArgumentParser(arg) {
     return arg;
 }
 function generateArguments(args, context, event) {
-    return args.map(function (arg) {
+    return args.map(argumentMapper);
+    function argumentMapper(arg) {
         if (isarray(arg)) {
+            if (!arg.length)
+                return arg;
             var isEvent = isequal(arg[0], '$event');
             return resolveContext(arg.slice(isEvent ? 1 : 0), isEvent ? event : context);
-        } else {
-            if (isstring(arg)) {
-                return isequal(arg, '$event') ? event : arg;
-            }
-            arg = arg.join('.');
-            var param = resolveValueFromContext(arg, context);
-            return !isundefined(param) ? param : simpleArgumentParser(arg);
+        } else if (isstring(arg)) {
+            return isequal(arg, '$event') ? event : context.hasOwnProperty(arg) ? context[arg] : arg;
         }
-    });
+        return resolveValueFromContext(arg, context, null, event);
+    }
 }
-function resolveValueFromContext(expression, context) {
+function resolveValueFromContext(expression, context, componentInstance) {
     if (isundefined(expression) || isnull(expression) || isboolean(expression) || isnumber(expression) || /(#|rgb)/.test(expression)) {
         return expression;
     } else if (isobject(expression)) {
         return parseObjectExpression.apply(null, arguments);
     } else if (isarray(expression)) {
-        return expression;
+        return resolveContext(expression, context, componentInstance);
+    } else if (expression === '$this') {
+        return componentInstance;
     }
-    return resolveContext(generateArrayKeyType(expression, context).split('.'), context);
+    return context && expression in context ? context[expression] : null;
 }
-function parseObjectExpression(expression, context, event) {
+function parseObjectExpression(expression, context, componentInstance, event) {
     var internalParser = {
         ite: function () {
-            return resolveValueFromContext(expression.test, context) ? expression.cons : expression.alt;
+            return resolveValueFromContext(expression.test, context, componentInstance) ? resolveValueFromContext(expression.cons, context, componentInstance) : resolveValueFromContext(expression.alt, context, componentInstance);
         },
         call: function () {
             var dcontext = context;
             if (expression.namespaces) {
-                dcontext = resolveContext(expression.namespaces, context);
+                dcontext = resolveContext(expression.namespaces, context, componentInstance);
             }
-            if (dcontext && dcontext[expression.fn]) {
+            if (dcontext && isfunction(dcontext[expression.fn])) {
                 var args = generateArguments(expression.args, context, event);
                 return dcontext[expression.fn].apply(dcontext, args);
             }
@@ -2270,21 +2253,74 @@ function parseObjectExpression(expression, context, event) {
         obj: function () {
             if (expression.expr) {
                 return Object.keys(expression.expr).reduce(function (accum, key) {
-                    accum[key] = resolveValueFromContext(expression.expr[key], context);
+                    accum[key] = resolveValueFromContext(expression.expr[key], context, componentInstance);
                     return accum;
                 }, {});
             }
         },
-        ant: function () {
+        asg: function () {
             var value = generateArguments([expression.right], context, event)[0];
             return setModelValue(expression.left, context, value);
+        },
+        una: function () {
+            var val = resolveValueFromContext(expression.args, context, componentInstance, event);
+            if (expression.ops === '+')
+                return +val;
+            if (expression.ops === '-')
+                return -val;
+            if (expression.ops === '~')
+                return ~val;
+            if (expression.ops === '!')
+                return !val;
+        },
+        bin: function () {
+            var l = resolveValueFromContext(expression.left, context, componentInstance, event);
+            var r = resolveValueFromContext(expression.right, context, componentInstance, event);
+            if (expression.ops === '==')
+                return l == r;
+            if (expression.ops === '===')
+                return l === r;
+            if (expression.ops === '!=')
+                return l != r;
+            if (expression.ops === '!==')
+                return l !== r;
+            if (expression.ops === '+')
+                return l + r;
+            if (expression.ops === '-')
+                return l - r;
+            if (expression.ops === '*')
+                return l * r;
+            if (expression.ops === '/')
+                return l / r;
+            if (expression.ops === '%')
+                return l % r;
+            if (expression.ops === '<')
+                return l < r;
+            if (expression.ops === '<=')
+                return l <= r;
+            if (expression.ops === '>')
+                return l > r;
+            if (expression.ops === '>=')
+                return l >= r;
+            if (expression.ops === '|')
+                return l | r;
+            if (expression.ops === '&')
+                return l & r;
+            if (expression.ops === '^')
+                return l ^ r;
+        },
+        new: function () {
+            errorBuilder('NewExpression not allowed in template interpolation -> (new ' + expression.fn + ') ');
+        },
+        raw: function () {
+            return expression.value;
         }
     };
     return internalParser[expression.type] && internalParser[expression.type]();
 }
 function setModelValue(key, model, value) {
     if (isarray(key)) {
-        model = resolveContext(key.slice(1, key.length - 1), model);
+        model = resolveContext(key.slice(0, key.length - 1), model);
         key = key[key.length - 1];
     }
     if (model) {
@@ -2292,9 +2328,13 @@ function setModelValue(key, model, value) {
     }
     return value;
 }
-function resolveContext(key, context) {
-    return key.reduce(function (prev, curr) {
-        return prev ? prev[curr] : null;
+function resolveContext(key, context, componentInstance) {
+    var isEventType = context instanceof Event;
+    return key.reduce(function (accum, property) {
+        if (isEventType) {
+            return accum[property];
+        }
+        return resolveValueFromContext(property, accum, componentInstance);
     }, context || {});
 }
 function matchStringWithArray(key, model, create) {
@@ -2432,29 +2472,6 @@ QueryList.prototype.removeByIndex = function (index) {
     return element;
 };
 QueryList.prototype.onChanges = new Subject();
-function TextNodeRef(definition, parent) {
-    var _this = this;
-    this.nativeNode = document.createTextNode(definition.ast.rawValue);
-    this.type = 'text';
-    this.render = function () {
-        compileTemplate(definition.ast, parent.context, function (value) {
-            _this.nativeNode.nodeValue = value;
-        });
-    };
-    Object.defineProperty(this, 'hasBinding', {
-        get: function () {
-            return !!definition.ast.templates;
-        }
-    });
-    if (definition.ast._) {
-        parent.observer(SubscribeObservables(parent.hostRef.refId, this.render));
-    }
-    ;
-}
-TextNodeRef.prototype.remove = function () {
-    this.nativeNode.remove();
-    this.nativeNode = null;
-};
 var _MutationObserver = function () {
     var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
     var _regsisteredListeners = [], observer, observerStarted = false;
@@ -2515,12 +2532,17 @@ var _MutationObserver = function () {
 }();
 function EventEmitter() {
     this._listeners = [];
-    this.subscribe = function (fn) {
-        if (isfunction(fn)) {
-            this._listeners.push(fn);
-        }
-    };
 }
+EventEmitter.prototype.subscribe = function (fn) {
+    var index = this._listeners.length;
+    var _this = this;
+    if (isfunction(fn)) {
+        this._listeners.push(fn);
+    }
+    return function () {
+        _this._listeners.slice(index, 1);
+    };
+};
 EventEmitter.prototype.emit = function (args) {
     this._listeners.forEach(function (fn) {
         fn(args);
@@ -2765,110 +2787,90 @@ function ComponentFactoryResolver(selector, element, callback) {
         throw new Error('Unable to resolve component: ' + selector);
     }
 }
-function IterableProfiler() {
+function IterableProfiler(trackBy) {
     this._destroyed = false;
-    var cacheHash = [];
-    var out = null;
-    function generateHash(_source, out) {
-        for (var i = 0; i < _source.length; i++) {
-            cacheHash.push(getHash(_source[i]));
-            out.insert.push({
-                value: _source[i],
-                key: i
-            });
-        }
-    }
-    function getHash(item, key) {
+    this.cacheHash = [];
+    this.out = null;
+    this.trackBy = trackBy || function (item) {
         if (item && typeof item === 'object') {
             item = JSON.stringify(item);
         }
         return hashcode(item);
-    }
-    function CoreProfiler(source) {
-        if (source && !(source instanceof Array)) {
-            throw new Error('Collection should be an array');
-        }
-        out = {
-            deleted: [],
-            insert: [],
-            moved: [],
-            changes: []
-        };
-        if ((!source || !source.length) && (!cacheHash || !cacheHash.length)) {
-            return out;
-        }
-        if (!cacheHash.length && source.length) {
-            generateHash(source, out);
-            return out;
-        }
-        if (!source.length && cacheHash.length) {
-            out.deleted = Object.keys(cacheHash).map(Number);
-            cacheHash.length = 0;
-            return out;
-        }
-        var len = source.length;
-        for (var inc = 0; inc < len; inc++) {
-            var item = source[inc], hash = getHash(item, inc);
-            if (cacheHash.hasOwnProperty(inc)) {
-                if (cacheHash[inc] !== hash) {
-                    var index = cacheHash.indexOf(hash);
-                    if (index > -1) {
-                        cacheHash[index] = cacheHash[inc];
-                    }
-                    out.changes.push(inc);
-                }
-            } else {
-                out.insert.push({
-                    value: item,
-                    key: inc
-                });
-            }
-            cacheHash[inc] = hash;
-        }
-        if (cacheHash.length > source.length) {
-            out.deleted.push.apply(out.deleted, Object.keys(cacheHash).splice(source.length, cacheHash.length).map(Number));
-            cacheHash.splice(source.length, cacheHash.length);
-        }
-        return out;
-    }
-    this.forEachChanges = function (callback) {
-        out.changes.forEach(callback);
-    };
-    this.forEachDeleted = function (callback) {
-        out.deleted.forEach(callback);
-    };
-    this.forEachInserted = function (callback) {
-        out.insert.forEach(callback);
-    };
-    this.forEachInsertedAsync = function (callback, afterMapCallback) {
-        out.insert.map(callback).forEach(afterMapCallback);
-    };
-    this.forEachChangesAsync = function (callback, afterMapCallback) {
-        out.changes.map(callback).forEach(afterMapCallback);
-    };
-    this.forEachDeletedAsync = function (callback, afterMapCallback) {
-        out.deleted.map(callback).forEach(afterMapCallback);
-    };
-    this.diff = function (source) {
-        if (this._destroyed) {
-            return false;
-        }
-        CoreProfiler(source);
-        return (out.changes.length || out.deleted.length || out.insert.length) > 0;
-    };
-    this.checkDuplicateRepeater = function (repeater) {
-        if (repeater && isarray(repeater)) {
-            if (noDubs(repeater).length < repeater.length) {
-                errorBuilder('Duplicate values are not allowed in repeaters. Use \'track by\' expression to specify unique keys');
-            }
-        }
-    };
-    this.destroy = function () {
-        this._destroyed = true;
-        cacheHash.length = 0;
-        out = null;
     };
 }
+IterableProfiler.prototype.diff = function (source) {
+    if (this._destroyed) {
+        return false;
+    }
+    if (source && !(source instanceof Array)) {
+        throw new Error('Collection should be an array');
+    }
+    this.out = {
+        deleted: [],
+        insert: [],
+        moved: [],
+        changes: []
+    };
+    if ((!source || !source.length) && (!this.cacheHash || !this.cacheHash.length)) {
+        return false;
+    }
+    if (source.length === this.cacheHash.length) {
+        return false;
+    }
+    if (!source.length && this.cacheHash.length) {
+        this.out.deleted = Object.keys(this.cacheHash).map(Number);
+        this.cacheHash = [];
+        return true;
+    }
+    var len = source.length;
+    var newCacheHash = [];
+    for (var inc = 0; inc < len; inc++) {
+        var item = source[inc], hash = this.trackBy(item, inc);
+        if (this.cacheHash.hasOwnProperty(inc)) {
+            if (this.cacheHash[inc] !== hash) {
+                var index = this.cacheHash.indexOf(hash);
+                this.out.changes.push({
+                    prev: index > -1 ? index : inc,
+                    curr: inc
+                });
+            }
+        } else {
+            this.checkDuplicateRepeater(hash);
+            this.out.insert.push(inc);
+        }
+        newCacheHash.push(hash);
+    }
+    if (this.cacheHash.length > newCacheHash.length) {
+        var _this = this;
+        this.cacheHash.forEach(function (hash, idx) {
+            if (!newCacheHash.includes(hash)) {
+                _this.out.deleted.push(idx);
+            }
+        });
+    }
+    this.cacheHash = newCacheHash;
+    newCacheHash = null;
+    return (this.out.changes.length || this.out.deleted.length || this.out.insert.length) > 0;
+};
+IterableProfiler.prototype.forEachChanges = function (callback) {
+    this.out.changes.forEach(callback);
+};
+IterableProfiler.prototype.forEachDeleted = function (callback) {
+    this.out.deleted.forEach(callback);
+};
+IterableProfiler.prototype.forEachInserted = function (callback) {
+    this.out.insert.forEach(callback);
+};
+IterableProfiler.prototype.checkDuplicateRepeater = function (hash) {
+    if (this.cacheHash.indexOf(hash) > -1) {
+        errorBuilder('Duplicate values are not allowed in repeaters. Use \'track by\' expression to specify unique keys');
+    }
+};
+IterableProfiler.prototype.destroy = function () {
+    this._destroyed = true;
+    this.cacheHash.length = 0;
+    this.out = null;
+};
 exports.errorBuilder = errorBuilder;
 exports.ProviderToken = ProviderToken;
 exports.Inject = Inject;
@@ -2877,17 +2879,17 @@ exports.closureRef = closureRef;
 exports.resolveClosureRef = resolveClosureRef;
 exports.ChangeDetector = ChangeDetector;
 exports.Observer = Observer;
+exports.AttributeAppender = AttributeAppender;
+exports.sce = sce;
+exports.ElementStyle = ElementStyle;
+exports.ElementClassList = ElementClassList;
 exports.INITIALIZERS = INITIALIZERS;
 exports.bootStrapApplication = bootStrapApplication;
 exports.ViewParser = ViewParser;
-exports.sce = sce;
 exports.TemplateRef = TemplateRef;
 exports.ViewRef = ViewRef;
-exports.AttributeAppender = AttributeAppender;
-exports.ElementStyle = ElementStyle;
-exports.ElementClassList = ElementClassList;
+exports.scheduler = scheduler;
 exports.ElementRef = ElementRef;
-exports.filterParser = filterParser;
 exports.Subject = Subject;
 exports.EventEmitter = EventEmitter;
 exports._Promise = _Promise;
@@ -3145,10 +3147,8 @@ exports.default = function (item, deep) {
 };
 },
 'node_modules/js-helpers/fns/extend.js': function(exports){
-function extend() {
-    if (Object.assign) {
-        return Object.assign.apply(Object, arguments);
-    }
+
+exports.default = function () {
     var extended = {};
     var deep = typeof arguments[0] === 'boolean';
     var i = 0;
@@ -3156,6 +3156,9 @@ function extend() {
     if (deep) {
         i++;
         deep = arguments[0];
+    }
+    if (!deep && Object.assign) {
+        return Object.assign.apply(Object, arguments);
     }
     if (Object.prototype.toString.call(arguments[i]) === '[object Array]') {
         extended = Array(arguments[i].length);
@@ -3175,8 +3178,7 @@ function extend() {
         merger(arguments[i]);
     }
     return extended;
-}
-exports.extend = extend;
+};
 },
 'node_modules/js-helpers/fns/copyfrom.js': function(exports){
 function copyFrom(to, from) {
@@ -3424,13 +3426,17 @@ exports.default = function ($boolValue) {
 };
 },
 'dist/form/bundles/jeli-form-module.js': function(exports){
+var utils = __required('node_modules/js-helpers/utils.js');
+var extend = utils['extend'];
 var helpers = __required('node_modules/js-helpers/helpers.js');
 var inarray = helpers['inarray'];
+var isboolean = helpers['isboolean'];
 var isnull = helpers['isnull'];
-var isfunction = helpers['isfunction'];
 var isstring = helpers['isstring'];
 var isnumber = helpers['isnumber'];
 var isequal = helpers['isequal'];
+var isarray = helpers['isarray'];
+var isfunction = helpers['isfunction'];
 var isundefined = helpers['isundefined'];
 var isobject = helpers['isobject'];
 var isempty = helpers['isempty'];
@@ -3441,39 +3447,41 @@ var errorBuilder = core['errorBuilder'];
 var FormControlDirective = function () {
     'use strict';
     function FormControlDirective() {
-        this.$context = null;
+        this._formFields = [];
         Object.defineProperty(this, 'formControl', {
             set: function (formControl) {
-                this.$context = formControl;
-                if (!formControl) {
-                    errorBuilder('FormController instance is required to use this directive');
+                this.form = formControl;
+                if (!formControl || !(formControl instanceof FormControlService)) {
+                    errorBuilder('Expected instance of FormControlService but got ' + typeof formControl);
                 }
             }
         });
     }
-    FormControlDirective.prototype.onSubmitHandler = function (event) {
-        event.preventDefault();
+    FormControlDirective.prototype.addField = function (formFieldInstance) {
+        var formControl = this.form.getField(formFieldInstance.name);
+        setupControl(formControl, formFieldInstance);
+        this.form.updateValueAndStatus({ emitEvent: false });
+        this._formFields.push(formFieldInstance);
+        return formControl;
+    };
+    FormControlDirective.prototype.removeField = function (formFieldInstance) {
+        this._formFields.splice(this._formFields.indexOf(formFieldInstance), 1);
+    };
+    FormControlDirective.prototype.getField = function (fieldName) {
+        return this.formControl.getField(fieldName);
+    };
+    FormControlDirective.prototype.resetForm = function (values) {
+        this.form.reset(values);
     };
     FormControlDirective.prototype.viewDidDestroy = function () {
-        if (this.$context) {
-            this.$context.destroy();
-            this.$context = null;
+        if (this.form) {
+            this.form.destroy();
+            this.form = null;
         }
     };
     FormControlDirective.annotations = {
         selector: 'formControl',
         props: { formControl: {} },
-        events: {
-            submit: {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: ['$event'],
-                        fn: 'onSubmitHandler'
-                    }]
-            }
-        },
-        exportAs: 'formControl',
         module: 'FormModule'
     };
     return FormControlDirective;
@@ -3490,45 +3498,41 @@ function FormControlAbstract(validators) {
     this.error = null;
     this.touched = false;
     this._pendingValue = null;
-    this._eventType = 'default';
     this._onDisableEvents = [];
     this._onControlChangeListener = function () {
     };
-    this.validator = FormValidatorService(function (validatorInstance) {
-        _this.error = validatorInstance.failedValidation[_this.name];
-        if (!validatorInstance.validationFailed) {
-            _this.valueChanges.emit(_this.value);
-        }
+    this.validator = FormValidatorService(function (errors) {
+        _this.setError(errors);
     }, validators);
     this.valueChanges = new EventEmitter();
     this.statusChanged = new EventEmitter();
-    Object.defineProperty(this, 'parent', {
-        get: function () {
-            return this._parent;
-        }
-    });
     Object.defineProperties(this, {
+        parent: {
+            get: function () {
+                return this._parent;
+            }
+        },
         untouched: {
             get: function () {
                 return !this.touched;
             }
         },
-        'invalid': {
+        invalid: {
             get: function () {
                 return isequal(this.status, INVALID);
             }
         },
-        'enabled': {
+        enabled: {
             get: function () {
                 return !isequal(this.status, DISABLED);
             }
         },
-        'disabled': {
+        disabled: {
             get: function () {
                 return isequal(this.status, DISABLED);
             }
         },
-        'valid': {
+        valid: {
             get: function () {
                 return isequal(this.status, VALID);
             }
@@ -3548,9 +3552,7 @@ FormControlAbstract.prototype._anyControl = function () {
 FormControlAbstract.prototype.setStatus = function () {
     if (this.disabled)
         return DISABLED;
-    if (this.error)
-        return INVALID;
-    if (this._anyFieldHasStatus(INVALID))
+    if (this.error || this._anyFieldHasStatus(INVALID))
         return INVALID;
     return VALID;
 };
@@ -3560,7 +3562,7 @@ FormControlAbstract.prototype.destroy = function () {
     }
     this._parent = null;
     this.valueChanges.destroy();
-    this.valueChanges.destroy();
+    this.statusChanges.destroy();
 };
 FormControlAbstract.prototype.markAsTouched = function (options) {
     options = options || {};
@@ -3630,11 +3632,13 @@ FormControlAbstract.prototype._setInitialStatus = function () {
 FormControlAbstract.prototype._updateValue = function () {
 };
 FormControlAbstract.prototype.setValidators = function (validator) {
+    if (!validator)
+        return;
     this.validator.addValidators(validator);
-    this.validator();
+    this._runValidators();
 };
 FormControlAbstract.prototype._runValidators = function () {
-    this.validator(this.value, this.name);
+    this.validator(this.value);
 };
 FormControlAbstract.prototype.markAsUntouched = function (options) {
     options = options || {};
@@ -3659,6 +3663,25 @@ FormControlAbstract.prototype.markAllAsUnTouched = function () {
 FormControlAbstract.prototype._registerOnControlChangeListener = function (fn) {
     this._onControlChangeListener = fn;
 };
+FormControlAbstract.prototype.setError = function (errors, emitEvent) {
+    this.error = errors;
+    this._updateStatusOnError(emitEvent);
+};
+FormControlAbstract.prototype.getError = function (errorType) {
+    return this.error ? this.error[errorType] : null;
+};
+FormControlAbstract.prototype.hasError = function (errorType) {
+    return !!this.getError(errorType);
+};
+FormControlAbstract.prototype._updateStatusOnError = function (emitEvent) {
+    this.status = this.setStatus();
+    if (emitEvent) {
+        this.statusChanged.emit(this.status);
+    }
+    if (this._parent) {
+        this._parent._updateStatusOnError(emitEvent);
+    }
+};
 var FormControlService = function () {
     'use strict';
     function FormControlService(formFields, validators) {
@@ -3674,10 +3697,10 @@ var FormControlService = function () {
     FormControlService.prototype = Object.create(FormControlAbstract.prototype);
     FormControlService.prototype.constructor = FormControlAbstract;
     FormControlService.prototype.addField = function (name, fieldControl) {
-        if (fieldControl instanceof FormControlService) {
+        if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
             this.formFieldControls[name] = fieldControl;
         } else {
-            this.formFieldControls[name] = new FormFieldControlService(name, fieldControl);
+            this.formFieldControls[name] = new FormFieldControlService(fieldControl);
         }
         this._setupControl(this.formFieldControls[name]);
     };
@@ -3685,6 +3708,11 @@ var FormControlService = function () {
         return this.formFieldControls.hasOwnProperty(controlName);
     };
     FormControlService.prototype.getField = function (controlName) {
+        if (isarray(controlName)) {
+            return controlName.reduce(function (accum, path) {
+                return accum.getField(path);
+            }, this);
+        }
         return this.formFieldControls[controlName] || null;
     };
     FormControlService.prototype._setupControl = function (control) {
@@ -3795,68 +3823,76 @@ var FormControlService = function () {
         });
         return invalid ? errors : null;
     };
-    FormControlService.annotations = {
-        name: 'formControlService',
-        static: true
-    };
+    FormControlService.annotations = { static: true };
     FormControlService.annotations.instance = FormControlService;
     return FormControlService;
 }();
+var VALUE_ACCESSOR = new ProviderToken('ValueAccessor', true);
+function AbstractValueAccessor(elementRef) {
+    this.onChange = function () {
+    };
+    this.onDisable = function () {
+    };
+    this.onBlur = function () {
+    };
+    this.element = elementRef;
+}
+AbstractValueAccessor.prototype.setDisabledState = function (state) {
+    this.element.setProp('disabled', state);
+};
+AbstractValueAccessor.prototype.registerOnBlur = function (onBlurFn) {
+    this.onBlur = onBlurFn;
+};
+AbstractValueAccessor.prototype.registerOnChange = function (onChangeFn) {
+    this.onChange = onChangeFn;
+};
+AbstractValueAccessor.prototype.registerOnDisable = function (onDisableFn) {
+    this.onDisable = onDisableFn;
+};
 var FormFieldControlDirective = function () {
     'use strict';
-    function FormFieldControlDirective(elementRef, formControl) {
+    function FormFieldControlDirective(eventBinder, validators) {
+        this.eventBinder = getValueAccessor(eventBinder);
         this.control = null;
-        this.didInit = function () {
-            this.control.attachView({
-                element: elementRef,
-                canSetValue: isequal('input', EventHandler.getEventType(elementRef.nativeElement)),
-                viewRef: -1
-            });
-        };
-        Object.defineProperty(this, 'control', {
-            get: function (control) {
-                if (!(control instanceof FormFieldControlService)) {
-                    errorBuilder(new TypeError('Invalid field control'));
-                }
-                if (formControl && formControl instanceof FormControlDirective) {
-                    errorBuilder('use a {:form-field} directive instead.');
-                }
-                this.control = control;
+        this._validators = validators;
+        Object.defineProperty(this, 'disabled', {
+            set: function (disabled) {
+                console.warn('The use of disabled property with a form field control directive will not take effect');
             }
         });
     }
+    FormFieldControlDirective.prototype.didInit = function () {
+        if (!(this.control instanceof FormFieldControlService)) {
+            errorBuilder('Expected instance of FormFieldControlService but got ' + typeof this.control);
+        }
+        setupControl(this.control, this);
+        if (this.control.disabled && this.eventBinder.setDisabledState) {
+            this.eventBinder.setDisabledState(true);
+        }
+        this.control.updateValueAndStatus({ emitEvent: false });
+    };
+    FormFieldControlDirective.prototype.modelToViewUpdate = function () {
+    };
     FormFieldControlDirective.annotations = {
         selector: 'fieldControl',
         DI: {
-            ElementRef: { optional: true },
-            formControl: {
-                optional: true,
-                value: 'formControl',
-                isdir: true
-            }
+            VALUE_ACCESSOR: { factory: VALUE_ACCESSOR },
+            VALIDATORS: { optional: true }
         },
-        props: { control: { value: 'fieldControl' } },
-        events: {
-            default: {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: ['$event'],
-                        fn: 'eventListener'
-                    }]
-            }
+        props: {
+            control: { value: 'fieldControl' },
+            disabled: {}
         },
-        dynamicInjectors: true,
         module: 'FormModule'
     };
     return FormFieldControlDirective;
 }();
 var FormFieldControlService = function () {
     'use strict';
-    function FormFieldControlService(checker, fieldControl) {
+    function FormFieldControlService(fieldControl) {
         FormControlAbstract.call(this, fieldControl ? fieldControl.validators : null);
+        this.eventType = 'default';
         this._onChangeEvents = [];
-        this.name = checker;
         this._setInitialState(fieldControl);
         this.updateValueAndStatus({
             self: true,
@@ -3869,6 +3905,7 @@ var FormFieldControlService = function () {
         if (isobject(state)) {
             this.value = state.value;
             state.disabled ? this.disable({ self: true }) : this.enable({ self: true });
+            this.eventType = state.eventType || this.eventType;
         } else {
             this.value = state;
         }
@@ -3904,196 +3941,166 @@ var FormFieldControlService = function () {
         this._onChangeEvents.length = 0;
         this._onDisableEvents.length = 0;
     };
-    FormFieldControlService.annotations = {
-        name: 'formFieldService',
-        static: true
-    };
+    FormFieldControlService.annotations = { static: true };
     FormFieldControlService.annotations.instance = FormFieldControlService;
     return FormFieldControlService;
 }();
 var FormFieldDirective = function () {
     'use strict';
-    function FormFieldDirective(elementRef, parentControl) {
-        Object.defineProperties(this, {
-            formField: {
-                set: function (formFieldName) {
-                    this._fieldName = formFieldName;
-                    if (parentControl) {
-                        this._control = parentControl.getField(formFieldName);
-                    }
-                    this._setUpControl();
-                }
-            }
-        });
+    function FormFieldDirective(parentContainer, eventBinder, validators) {
+        this.eventBinder = getValueAccessor(eventBinder);
+        this.control = null;
+        this._validators = validators;
+        this.parent = parentContainer;
     }
-    FormFieldDirective.prototype._setUpControl = function () {
-        this._attachView();
-        this._control.registerOnChangeListener(function (value, emitToView) {
-            console.log('value changed:', value, emitToView);
-        });
+    FormFieldDirective.prototype.didInit = function () {
+        if (!(this.parent instanceof FormControlDirective)) {
+            errorBuilder('Expected an instance of FormControlDirective but got ' + typeof this.parent);
+        }
+        this.control = this.parent.addField(this);
+        if (this.control.disabled && this.eventBinder.setDisabledState) {
+            this.eventBinder.setDisabledState(true);
+        }
+    };
+    FormFieldDirective.prototype.modelToViewUpdate = function () {
     };
     FormFieldDirective.prototype.viewDidDestroy = function () {
-        if (this._parentControl) {
-            this._parentControl.removeField(this._fieldName);
-            this._parentControl = null;
+        if (this.parent) {
+            this.parent.removeField(this);
+            this.parent = null;
         }
-        this._control = null;
-        this._viewInstance = null;
+        this.control = null;
     };
     FormFieldDirective.annotations = {
         selector: 'formField',
         DI: {
-            ElementRef: { optional: true },
-            parentControl: {
+            ParentRef: {
                 optional: true,
-                value: 'formControl',
-                isdir: true
-            }
+                value: 'formControl'
+            },
+            VALUE_ACCESSOR: { factory: VALUE_ACCESSOR },
+            VALIDATORS: { optional: true }
         },
-        props: { formField: {} },
+        props: { name: { value: 'formField' } },
         dynamicInjectors: true,
         module: 'FormModule'
     };
     return FormFieldDirective;
 }();
-function CurrentInstance(successHandler, errorHandler) {
-    this.pending = {
-        count: 0,
-        fields: {}
-    };
-    this.hasAjax = false;
-    this.add = function (field, len) {
-        this.pending.fields[field] = {
-            count: len,
-            failed: []
+function CurrentInstance(next) {
+    this.pending = null;
+    this.hasAsync = false;
+    this.add = function (totalValidators) {
+        this.pending = {
+            count: totalValidators,
+            errors: {},
+            failed: false
         };
-        this.pending.count++;
+        this.hasAsync = false;
+        this.resolve = null;
     };
-    this.rem = function (passed, field, type) {
-        this.pending.fields[field].count--;
+    this.rem = function (passed, type) {
+        this.pending.count--;
         if (!passed) {
-            this.pending.fields[field].failed.push(type);
+            this.pending.failed = true;
+            this.pending.errors[type] = true;
         }
-        if (!this.pending.fields[field].count) {
-            if (this.pending.fields[field].failed.length) {
-                errorHandler(field, this.pending.fields[field].failed);
-            }
-            this.pending.count--;
-        }
-        if (!this.pending.count && successHandler) {
-            successHandler();
+        if (!this.pending.count) {
+            next(this.pending.failed ? this.pending.errors : null);
         }
     };
 }
-CurrentInstance.prototype.clean = function () {
-    this.pending = {
-        count: 0,
-        fields: {}
-    };
-    this.hasAjax = false;
-    this.resolve = null;
-};
-CurrentInstance.prototype.registerAjax = function (AjaxInstance, Request, field, name) {
-    this.hasAjax = true;
+CurrentInstance.prototype.registerAsyncValidator = function (asyncInstance, Request, name) {
+    this.hasAsync = true;
     var _this = this;
-    AjaxInstance.then(function (res) {
-        _this.rem((Request.onsuccess || function () {
-            return true;
-        })(res), field, name);
-    }, function (res) {
-        _this.rem((Request.onerror || function () {
-            return false;
-        })(res), field, name);
-    });
+    var callback = function (type, ret) {
+        return function (response) {
+            _this.rem(Request[type] ? Request[type](response) : ret, name);
+        };
+    };
+    asyncInstance.then(callback('onsuccess', true), callback('onerror', false));
 };
 var formValidationStack = Object.create({
-    minlength: function (value, requiredLength) {
-        if (!isnumber(value) && !isstring(value)) {
-            return false;
+    MINLENGTH: function (value, requiredLength) {
+        if (isnumber(value)) {
+            return value >= requiredLength;
         }
-        return String(value).length >= requiredLength;
-    },
-    maxlength: function (value, requiredLength) {
-        if (!isnumber(value) && !isstring(value)) {
-            return false;
+        if (isstring(value)) {
+            return value.length >= requiredLength;
         }
-        return String(value).length <= requiredLength;
+        return false;
     },
-    emailvalidation: function (val) {
+    MAXLENGTH: function (value, requiredLength) {
+        if (isnumber(value)) {
+            return value <= requiredLength;
+        }
+        if (isstring(value)) {
+            return value.length <= requiredLength;
+        }
+        return false;
+    },
+    EMAILVALIDATION: function (val) {
         var regExp = /^\w+([\.-]?\w+)*@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         return regExp.test(val);
     },
-    isempty: function (val, def) {
+    ISEMPTY: function (val, def) {
         return def === isempty(val);
     },
-    boolean: function (bool, val) {
-        return bool === val;
+    BOOLEAN: function (bool, val) {
+        return isboolean(value) && isequal(bool, val);
     },
-    domainvalidation: function (domain) {
+    DOMAINVALIDATION: function (domain) {
         return /[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+/.test(domain);
     },
-    mediumpasswordstrength: function (passwd) {
+    MEDIUMPASSWORDSTREGTH: function (passwd) {
         return new RegExp('^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})').test(passwd);
     },
-    strongpasswordstrength: function (passwd) {
+    STRONGPASSWORDSTRENGTH: function (passwd) {
         return new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})').test(passwd);
     },
-    pattern: function (value, pattern) {
+    PATTERN: function (value, pattern) {
         return new RegExp(pattern).test(value);
     },
-    $ajax: function (val, def) {
+    ASYNC: function (val, def) {
         if (!isobject(def) || !isfunction(def.resolve)) {
             return false;
         }
         return def.resolve(val);
     },
-    required: function (value, required) {
+    REQUIRED: function (value, required) {
         if (required) {
             return !isundefined(value) && !isnull(value) && !isempty(value);
         }
         return !required;
+    },
+    REQUIREDTRUE: function (value) {
+        return isboolean(value) && value === true;
     }
 });
 var FormValidatorService = function () {
     'use strict';
     function FormValidatorService(callback, validators) {
-        var currentProcess = new CurrentInstance(trigger, ErrorHandler);
-        var validationInstance = null;
-        function ErrorHandler(key, validations) {
-            validationInstance.failedValidation[key] = validations;
-            validationInstance.validationFailed = true;
-        }
-        function trigger() {
-            callback(validationInstance);
-        }
-        function setValidationInstance() {
-            validationInstance = {
-                requiresValidation: false,
-                emptyFormFields: false,
-                failedValidation: {},
-                validationFailed: false
-            };
-        }
+        var currentProcess = new CurrentInstance(callback);
         function _throwErrorIfNoValidators(validatorsObj) {
             if (!isobject(validatorsObj)) {
-                throw new Error('Validators are required in other to perform validations');
+                throw new Error('Validators are required in order to perform validations');
             }
         }
-        function _validateField(value, criteria, field) {
+        function _validate(value, criteria) {
             var _criteria = Object.keys(criteria);
-            currentProcess.add(field, _criteria.length);
+            currentProcess.add(_criteria.length);
             for (var i = 0; i < _criteria.length; i++) {
                 var validatorName = _criteria[i];
-                var passed = false, validatorFn = formValidationStack[validatorName];
+                var passed = false, validatorFn = formValidationStack[validatorName.toUpperCase()];
                 if (validatorFn) {
                     passed = validatorFn(value, criteria[validatorName]);
                 } else if (isfunction(criteria[validatorName])) {
                     passed = criteria[validatorName](value);
                 }
-                if (isobject(passed) && isequal('$ajax', validatorName)) {
-                    return currentProcess.registerAjax(passed, criteria[validatorName], field, validatorName);
+                if (isobject(passed) && isequal('async', validatorName)) {
+                    return currentProcess.registerAsyncValidator(passed, criteria[validatorName], validatorName);
                 }
-                currentProcess.rem(passed, field, validatorName);
+                currentProcess.rem(passed, validatorName);
             }
         }
         function _validateObjectTypes(formValues) {
@@ -4119,18 +4126,12 @@ var FormValidatorService = function () {
                 }
             }
         }
-        function formValidator(formValue, field) {
+        function formValidator(formValue) {
             if (!validators) {
-                return trigger();
+                return callback(null);
             }
             _throwErrorIfNoValidators(validators);
-            currentProcess.clean();
-            setValidationInstance();
-            if (isobject(formValue)) {
-                _validateObjectTypes(formValue);
-            } else {
-                _validateField(formValue, validators, field);
-            }
+            _validate(formValue, validators);
         }
         formValidator.addValidators = function (newValidators) {
             _throwErrorIfNoValidators(newValidators);
@@ -4140,56 +4141,25 @@ var FormValidatorService = function () {
                 validators = extend(true, validators, newValidators);
             }
         };
-        setValidationInstance();
         return formValidator;
     }
-    FormValidatorService.annotations = {
-        name: 'formValidator',
-        static: true
-    };
+    FormValidatorService.annotations = { static: true };
     FormValidatorService.annotations.instance = FormValidatorService;
     return FormValidatorService;
 }();
-var VALUE_ACCESSOR = new ProviderToken('ValueAccessor', true);
-function AbstractValueAccessor() {
-    this.onChange = function () {
-    };
-    this.onDisable = function () {
-    };
-    this.onBlur = function () {
-    };
-}
 var DefaultEventBinder = function () {
     'use strict';
     function DefaultEventBinder(elementRef) {
-        this.onChange = function () {
-        };
-        this.onDisable = function () {
-        };
-        this.onBlur = function () {
-        };
-        this.element = elementRef;
+        AbstractValueAccessor.call(this, elementRef);
     }
-    DefaultEventBinder.prototype._handleInput = function (event) {
-        this.onChange(event);
-    };
-    DefaultEventBinder.prototype.registerOnChange = function (onChangeFn) {
-        this.onChange = onChangeFn;
-    };
-    DefaultEventBinder.prototype.registerOnDisable = function (onDisableFn) {
-        this.onDisable = onDisableFn;
-    };
-    DefaultEventBinder.prototype._registerOnBlur = function (onBlurFn) {
-        this.onBlur = onBlurFn;
-    };
+    DefaultEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
+    DefaultEventBinder.prototype.constructor = AbstractValueAccessor;
     DefaultEventBinder.prototype.writeValue = function (value) {
+        value = value === null || value === undefined ? '' : value;
         this.element.setProp('value', value, true);
     };
-    DefaultEventBinder.prototype.setDisableState = function (state) {
-        this.element.setProp('disabled', state);
-    };
     DefaultEventBinder.annotations = {
-        selector: 'input:type!=checkbox|radio:model,input:type!=checkbox|radio:formField,textarea:model,textarea:formField',
+        selector: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl]',
         events: {
             input: {
                 type: 'event',
@@ -4200,7 +4170,7 @@ var DefaultEventBinder = function () {
                                 'target',
                                 'value'
                             ]],
-                        fn: '_handleInput'
+                        fn: 'onChange'
                     }]
             },
             blur: {
@@ -4221,32 +4191,16 @@ var DefaultEventBinder = function () {
 var CheckboxEventBinder = function () {
     'use strict';
     function CheckboxEventBinder(elementRef) {
-        this.onChange = function () {
-        };
-        this.onDisable = function () {
-        };
-        this.onBlur = function () {
-        };
-        this.element = elementRef;
+        AbstractValueAccessor.call(this, elementRef);
     }
     ;
-    CheckboxEventBinder.prototype.registerOnChange = function (onChangeFn) {
-        this.onChange = onChangeFn;
-    };
-    CheckboxEventBinder.prototype.registerOnDisable = function (onDisableFn) {
-        this.onDisable = onDisableFn;
-    };
-    CheckboxEventBinder.prototype._registerOnBlur = function (onBlurFn) {
-        this.onBlur = onBlurFn;
-    };
+    CheckboxEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
+    CheckboxEventBinder.prototype.constructor = AbstractValueAccessor;
     CheckboxEventBinder.prototype.writeValue = function (checked) {
         this.element.setProp('checked', checked, true);
     };
-    CheckboxEventBinder.prototype.setDisableState = function (state) {
-        this.element.setProp('disabled', state);
-    };
     CheckboxEventBinder.annotations = {
-        selector: 'input:type=checkbox:model,input:type=checkbox:formField',
+        selector: 'input:type=checkbox:[model|formField|fieldControl]',
         events: {
             change: {
                 type: 'event',
@@ -4275,46 +4229,84 @@ var CheckboxEventBinder = function () {
     };
     return CheckboxEventBinder;
 }();
+var RadioEventContainer = function () {
+    'use strict';
+    function RadioEventContainer() {
+        var _registry = [];
+        this.register = function (eventBinder) {
+            _registry.push(eventBinder);
+        };
+        this.remove = function (eventBinder) {
+            _registry.splice(_registry.indexOf(eventBinder), 1);
+        };
+        this.selectValue = function (eventBinder) {
+            _registry.forEach(function (registeredBinder) {
+                if (isSameGroup(registeredBinder, eventBinder) && registeredBinder !== eventBinder) {
+                    registeredBinder.writeValue(eventBinder.value);
+                }
+            });
+        };
+        function isSameGroup(a, b) {
+            return a.name === b.name;
+        }
+    }
+    RadioEventContainer.annotations = {};
+    return RadioEventContainer;
+}();
 var RadioEventBinder = function () {
     'use strict';
-    function RadioEventBinder(elementRef) {
-        this.onChange = function () {
-        };
-        this.onDisable = function () {
-        };
-        this.onBlur = function () {
-        };
-        this.element = elementRef;
+    function RadioEventBinder(elementRef, radioEventContainer) {
+        AbstractValueAccessor.call(this, elementRef);
+        this.radioEventContainer = radioEventContainer;
+        this.state = false;
     }
     ;
-    RadioEventBinder.prototype._handleInput = function (event) {
-        this.onChange(event.target.value);
+    RadioEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
+    RadioEventBinder.prototype.constructor = AbstractValueAccessor;
+    RadioEventBinder.prototype.didInit = function () {
+        this._checkFieldName();
+        this.radioEventContainer.register(this);
+    };
+    RadioEventBinder.prototype.didDestroy = function () {
+        this.radioEventContainer.remove(this);
+    };
+    RadioEventBinder.prototype._checkFieldName = function () {
+        if (this.name && this.formField && this.formField !== this.name) {
+            errorBuilder('if you define a name and formField both values must match. <input type=radio name=radio :form-field=radio');
+        }
+        if (!this.name && this.formField)
+            this.name = this.formField;
     };
     RadioEventBinder.prototype.registerOnChange = function (onChangeFn) {
-        this.onChange = onChangeFn;
+        var _this = this;
+        this._onChange = onChangeFn;
+        this.onChange = function (value) {
+            onChangeFn(value);
+            _this.radioEventContainer.selectValue(_this);
+        };
     };
-    RadioEventBinder.prototype.registerOnDisable = function (onDisableFn) {
-        this.onDisable = onDisableFn;
-    };
-    RadioEventBinder.prototype._registerOnBlur = function (onBlurFn) {
-        this.onBlur = onBlurFn;
-    };
-    RadioEventBinder.prototype.writeValue = function (checked) {
-        this.element.setProp('checked', checked, true);
-    };
-    RadioEventBinder.prototype.setDisableState = function (state) {
-        this.element.setProp('disabled', state);
+    RadioEventBinder.prototype.writeValue = function (value) {
+        this.state = value == this.value;
+        this.element.setProp('checked', this.state, true);
     };
     RadioEventBinder.annotations = {
-        selector: 'input:type=radio:model,input:type=radio:formField',
-        props: { name: {} },
+        selector: 'input:type=radio:[model|formField|fieldControl]',
+        props: {
+            name: {},
+            formField: {},
+            value: {}
+        },
         events: {
             change: {
                 type: 'event',
                 value: [{
                         type: 'call',
-                        args: ['$event'],
-                        fn: '_handleInput'
+                        args: [[
+                                '$event',
+                                'target',
+                                'value'
+                            ]],
+                        fn: 'onChange'
                     }]
             },
             blur: {
@@ -4327,7 +4319,10 @@ var RadioEventBinder = function () {
             }
         },
         registerAs: VALUE_ACCESSOR,
-        DI: { ElementRef: { optional: true } },
+        DI: {
+            ElementRef: { optional: true },
+            RadioEventContainer: { factory: RadioEventContainer }
+        },
         module: 'FormModule'
     };
     return RadioEventBinder;
@@ -4335,40 +4330,37 @@ var RadioEventBinder = function () {
 var SelectEventBinder = function () {
     'use strict';
     function SelectEventBinder(elementRef) {
-        this.onChange = function () {
-        };
-        this.onDisable = function () {
-        };
-        this.onBlur = function () {
-        };
-        this.element = elementRef;
+        AbstractValueAccessor.call(this, elementRef);
     }
     ;
-    SelectEventBinder.prototype._handleInput = function (event) {
-        this.onChange(event);
-    };
-    SelectEventBinder.prototype.registerOnChange = function (onChangeFn) {
-        this.onChange = onChangeFn;
-    };
-    SelectEventBinder.prototype.registerOnDisable = function (onDisableFn) {
-        this.onDisable = onDisableFn;
-    };
-    SelectEventBinder.prototype._registerOnBlur = function (onBlurFn) {
-        this.onBlurFn = onBlurFn;
+    SelectEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
+    SelectEventBinder.prototype.constructor = AbstractValueAccessor;
+    SelectEventBinder.prototype._handleSelection = function (target) {
+        var selectedValue = this._getValue(target);
+        this.onChange(selectedValue);
     };
     SelectEventBinder.prototype.writeValue = function (value) {
-        this.element.children.forEach(function setOptionsValue(options) {
-            var optionValue = options.getAttribute('value');
-            if (isequal(optionValue, value)) {
-                options.setProp('selected', true);
-            }
+        this.element.children.forEach(function (options) {
+            options.setProp('selected', (isarray(value) ? inarray : isequal)(options.getAttribute('value'), value));
         });
     };
-    SelectEventBinder.prototype.setDisableState = function (state) {
-        this.element.setProp('disabled', state);
+    SelectEventBinder.prototype._getValue = function (target) {
+        if (!this.element.children.length || target.options.length > this.element.children.length) {
+            return target.value;
+        }
+        if (this.element.hasAttribute('multiple')) {
+            var optionsValue = [];
+            for (var i = 0; i < target.selectedOptions.length; i++) {
+                var option = target.selectedOptions[i];
+                var value = this.element.children.findByIndex(option.index).getAttribute('value');
+                optionsValue.push(value);
+            }
+            return optionsValue;
+        }
+        return this.element.children.findByIndex(target.selectedIndex).getAttribute('value');
     };
     SelectEventBinder.annotations = {
-        selector: 'select:model,select:formField',
+        selector: 'select:[model|formField|fieldControl]',
         events: {
             input: {
                 type: 'event',
@@ -4376,10 +4368,9 @@ var SelectEventBinder = function () {
                         type: 'call',
                         args: [[
                                 '$event',
-                                'target',
-                                'value'
+                                'target'
                             ]],
-                        fn: '_handleInput'
+                        fn: '_handleSelection'
                     }]
             },
             blur: {
@@ -4397,9 +4388,113 @@ var SelectEventBinder = function () {
     };
     return SelectEventBinder;
 }();
-function setUpControl(fieldControl, dir) {
+var NumberEventBinder = function () {
+    'use strict';
+    function NumberEventBinder(elementRef) {
+        AbstractValueAccessor.call(this, elementRef);
+    }
+    NumberEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
+    NumberEventBinder.prototype.constructor = AbstractValueAccessor;
+    NumberEventBinder.prototype.writeValue = function (value) {
+        value = value === null || value === undefined ? '' : value;
+        this.element.setProp('value', value, true);
+    };
+    NumberEventBinder.prototype.registerOnChange = function (onChangeFn) {
+        this.onChange = function (value) {
+            onChangeFn(value == '' ? null : parseFloat(value));
+        };
+    };
+    NumberEventBinder.annotations = {
+        selector: 'input:type=number:[model|formField|fieldControl]',
+        events: {
+            input: {
+                type: 'event',
+                value: [{
+                        type: 'call',
+                        args: [[
+                                '$event',
+                                'target',
+                                'value'
+                            ]],
+                        fn: 'onChange'
+                    }]
+            },
+            blur: {
+                type: 'event',
+                value: [{
+                        type: 'call',
+                        args: ['$event'],
+                        fn: 'onBlur'
+                    }]
+            }
+        },
+        registerAs: VALUE_ACCESSOR,
+        DI: { ElementRef: { optional: true } },
+        module: 'FormModule'
+    };
+    return NumberEventBinder;
+}();
+var RangeEventBinder = function () {
+    'use strict';
+    function RangeEventBinder(elementRef) {
+        AbstractValueAccessor.call(this, elementRef);
+    }
+    RangeEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
+    RangeEventBinder.prototype.constructor = AbstractValueAccessor;
+    RangeEventBinder.prototype.writeValue = function (value) {
+        value = value === null || value === undefined ? '' : value;
+        this.element.setProp('value', parseFloat(value), true);
+    };
+    RangeEventBinder.prototype.registerOnChange = function (onChangeFn) {
+        this.onChange = function (value) {
+            onChangeFn(value == '' ? null : parseFloat(value));
+        };
+    };
+    RangeEventBinder.annotations = {
+        selector: 'input:type=range:[model|formField|fieldControl]',
+        events: {
+            input: {
+                type: 'event',
+                value: [{
+                        type: 'call',
+                        args: [[
+                                '$event',
+                                'target',
+                                'value'
+                            ]],
+                        fn: 'onChange'
+                    }]
+            },
+            change: {
+                type: 'event',
+                value: [{
+                        type: 'call',
+                        args: [[
+                                '$event',
+                                'target',
+                                'value'
+                            ]],
+                        fn: 'onChange'
+                    }]
+            },
+            blur: {
+                type: 'event',
+                value: [{
+                        type: 'call',
+                        args: ['$event'],
+                        fn: 'onBlur'
+                    }]
+            }
+        },
+        registerAs: VALUE_ACCESSOR,
+        DI: { ElementRef: { optional: true } },
+        module: 'FormModule'
+    };
+    return RangeEventBinder;
+}();
+function setupControl(fieldControl, dir) {
     if (!fieldControl)
-        errorBuilder('No field control found for ' + dir._fieldName);
+        errorBuilder('No field control found for ' + dir.name);
     if (!dir.eventBinder)
         errorBuilder('No EventBinder defined');
     fieldControl.setValidators(dir._validators);
@@ -4408,7 +4503,7 @@ function setUpControl(fieldControl, dir) {
     setupBlurEvent(fieldControl, dir);
     if (dir.eventBinder.setUpDisableState) {
         fieldControl.registerOnDisabledListener(function (state) {
-            dir.eventBinder.setUpDisableState(state);
+            dir.eventBinder.setDisabledState(state);
         });
     }
 }
@@ -4445,7 +4540,9 @@ var inbuiltAccessor = [
     CheckboxEventBinder,
     DefaultEventBinder,
     RadioEventBinder,
-    SelectEventBinder
+    SelectEventBinder,
+    NumberEventBinder,
+    RangeEventBinder
 ];
 function getValueAccessor(valueAccessors) {
     var inbuilt = null, custom = null;
@@ -4475,18 +4572,25 @@ var ModelDirective = function () {
         this._parentControl = parentControl;
         this._validators = validators;
         this.modelChange = new EventEmitter();
-        console.log(this);
+        this._model = null;
     }
+    ModelDirective.prototype.didChange = function (changes) {
+        if (this._isViewModelChanged(changes)) {
+            this.fieldControl.setValue(changes.model, { emitToView: false });
+            this._model = changes.model;
+        }
+    };
     ModelDirective.prototype.modelToViewUpdate = function (value) {
-        this.model = value;
         this.modelChange.emit(value);
     };
     ModelDirective.prototype.didInit = function () {
-        setUpControl(this.fieldControl, this);
+        setupControl(this.fieldControl, this);
     };
     ModelDirective.prototype.viewDidDestroy = function () {
-        this.unSubscription();
         this._control = null;
+    };
+    ModelDirective.prototype._isViewModelChanged = function (changes) {
+        return changes.hasOwnProperty('model') && changes.model !== this._model;
     };
     ModelDirective.annotations = {
         selector: 'model',
@@ -4518,7 +4622,8 @@ var FormModule = function () {
         services: [
             FormControlService,
             FormFieldControlService,
-            FormValidatorService
+            FormValidatorService,
+            RadioEventContainer
         ],
         selectors: [
             FormControlDirective,
@@ -4528,7 +4633,9 @@ var FormModule = function () {
             ModelDirective,
             CheckboxEventBinder,
             RadioEventBinder,
-            SelectEventBinder
+            SelectEventBinder,
+            NumberEventBinder,
+            RangeEventBinder
         ]
     };
     return FormModule;
@@ -4538,17 +4645,21 @@ exports.FormControlDirective = FormControlDirective;
 exports.FormControlService = FormControlService;
 exports.FormControlAbstract = FormControlAbstract;
 exports.FormFieldControlDirective = FormFieldControlDirective;
+exports.VALUE_ACCESSOR = VALUE_ACCESSOR;
+exports.AbstractValueAccessor = AbstractValueAccessor;
 exports.FormFieldControlService = FormFieldControlService;
 exports.FormFieldDirective = FormFieldDirective;
 exports.FormValidatorService = FormValidatorService;
+exports.formValidationStack = formValidationStack;
 exports.DefaultEventBinder = DefaultEventBinder;
-exports.VALUE_ACCESSOR = VALUE_ACCESSOR;
-exports.AbstractValueAccessor = AbstractValueAccessor;
 exports.CheckboxEventBinder = CheckboxEventBinder;
+exports.RadioEventContainer = RadioEventContainer;
 exports.RadioEventBinder = RadioEventBinder;
 exports.SelectEventBinder = SelectEventBinder;
 exports.ModelDirective = ModelDirective;
 exports.getValueAccessor = getValueAccessor;
+exports.NumberEventBinder = NumberEventBinder;
+exports.RangeEventBinder = RangeEventBinder;
 },
 'dist/http/bundles/jeli-http-module.js': function(exports){
 var core = __required('dist/core/bundles/jeli-core-module.js');
@@ -4680,21 +4791,9 @@ return ItemList;
 exports.ItemList = ItemList;
 },
 'viewers/Todo/src/app/app.component.js': function(exports){
-var CalculatorComponent = __required('viewers/Todo/src/app/components/calculator/calculator.js')['CalculatorComponent'];
-var TestPlaceElement = __required('viewers/Todo/src/app/components/test-place.js')['TestPlaceElement'];
-var common = __required('dist/common/bundles/jeli-common-module.js');
-var ClassDirective = common['ClassDirective'];
-var IfDirective = common['IfDirective'];
-var SwitchDefaultDirective = common['SwitchDefaultDirective'];
-var SwitchCaseDirective = common['SwitchCaseDirective'];
-var SwitchDirective = common['SwitchDirective'];
-var ForDirective = common['ForDirective'];
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var ViewParser = core['ViewParser'];
 var form = __required('dist/form/bundles/jeli-form-module.js');
-var DefaultEventBinder = form['DefaultEventBinder'];
-var ModelDirective = form['ModelDirective'];
-var CheckboxEventBinder = form['CheckboxEventBinder'];
 var FormControlService = form['FormControlService'];
 /** compiled AppRootElement **/
 var AppRootElement = function(){
@@ -4705,7 +4804,7 @@ function AppRootElement(formControlService) {
     this.testForm = new formControlService({
         radio: {
             value: 1,
-            required: true
+            validators: { required: true }
         },
         input: {
             value: undefined,
@@ -4720,21 +4819,22 @@ function AppRootElement(formControlService) {
             disabled: false,
             validators: {
                 required: true,
-                minlength: 6,
-                maxlength: 100
+                minLength: 6,
+                maxLength: 100
             }
         },
         checkbox: {
             value: true,
-            validators: { required: true }
+            validators: { requiredTrue: true }
         },
         select: {
-            value: 'select_2',
+            value: ['select_2'],
             validators: { required: true }
         },
         file: { validators: { required: true } },
         range: {
-            value: 0,
+            value: 50,
+            eventType: 'blur',
             validators: { maxlength: 90 }
         },
         number: { value: 500 }
@@ -4766,7 +4866,6 @@ function AppRootElement(formControlService) {
         return value;
     };
     this.didInit = function () {
-        this.generateMock(1);
         this.testForm.patchValue({ number: 10 });
         this.testForm.addField('personalInfo', new formControlService({
             firstName: {
@@ -4789,6 +4888,7 @@ AppRootElement.prototype.addTodo = function () {
     if (this.todoDescription) {
         this.todos.push({
             description: this.todoDescription,
+            details: '',
             done: false
         });
         this.todoDescription = '';
@@ -4800,10 +4900,11 @@ AppRootElement.prototype.removeTodo = function (index) {
         this.todos.splice(index, 1);
     }
 };
-AppRootElement.prototype.markAsRemoved = function (done) {
+AppRootElement.prototype.markAsRemoved = function (done, todo) {
+    todo.done = done;
     if (done) {
         this.removeItemCount++;
-    } else {
+    } else if (this.removeItemCount > 0) {
         this.removeItemCount--;
     }
 };
@@ -4812,7 +4913,8 @@ AppRootElement.prototype.generateMock = function (total) {
     for (var i = 0; i < total; i++) {
         data.push({
             description: 'Test_From_' + this.counter++,
-            done: false
+            done: false,
+            details: ''
         });
     }
     this.todos = data;
@@ -4838,7 +4940,7 @@ AppRootElement.annotations = {
     module: 'AppModule'
 };
 
-AppRootElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":{"rawValue":" Todo Application "}}]}]}]}]},{"type":"element","name":"div","index":2,"isc":false,"children":[{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"rawValue":"Attr-Selected"}}]},{"type":"element","name":"select","index":1,"isc":false,"children":[{"type":"element","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"option","index":0,"isc":false,"context":{"i":"$context"},"attrObservers":{"selected":{"prop":{"type":"bin","context":"i","operator":"===","values":1},"once":true}},"children":[{"type":"text","ast":{"rawValue":"${0}","_":1,"templates":[{"replace":"${0}","exp":{"prop":"i"}}]}}]}},"props":{"forIn":[0,1,2,4]},"providers":[ForDirective]}]}]},{"type":"element","name":"test-place","index":3,"isc":true,"refId":"testPlace","providers":[TestPlaceElement],"children":[],"templates":{"place":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"checkbox"},"props":{"model":"test"},"providers":[CheckboxEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"ant","left":"test","right":"$event"}],"custom":true}]},{"type":"element","name":"div","index":1,"isc":false,"children":[{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"rawValue":"Attr-Value"}}]},{"type":"element","name":"input","index":1,"isc":false,"attr":{"type":"text"},"attrObservers":{"value":{"prop":"test","once":false},"readonly":{"prop":true,"once":true}}}]},{"type":"element","name":"h5","index":2,"isc":false,"children":[{"type":"text","ast":{"rawValue":"Attr-Style (background)"}}]},{"type":"element","name":"div","index":3,"isc":false,"attrObservers":{"style":{"prop":{"type":"obj","expr":{"background":{"type":"ite","test":"test","cons":"#fff","alt":"#000"}}},"once":false}},"children":[{"type":"text","ast":{"rawValue":"I am a test"}}]},{"type":"element","name":"div","index":4,"isc":false,"children":[{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"rawValue":"Attr-innerHTML"}}]},{"type":"element","name":"textarea","index":1,"isc":false,"props":{"model":"html"},"providers":[DefaultEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"ant","left":"html","right":"$event"}],"custom":true}]},{"type":"element","name":"div","index":2,"isc":false,"attrObservers":{"innerhtml":{"prop":"html","once":false}}}]},{"type":"element","name":"div","index":5,"isc":false,"props":{"switch":"test"},"providers":[SwitchDirective],"children":[{"type":"element","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"rawValue":"I am ${0} case","_":1,"templates":[{"replace":"${0}","exp":{"prop":"test"}}]}}]}},"props":{"switchCase":true},"providers":[SwitchCaseDirective]},{"type":"element","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"h4","index":1,"isc":false,"children":[{"type":"text","ast":{"rawValue":"I am default switch element"}}]}},"providers":[SwitchDefaultDirective]}]}]}},{"type":"element","name":"input","index":4,"isc":false,"attr":{"type":"checkbox"},"props":{"model":"test"},"providers":[CheckboxEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"ant","left":"test","right":"$event"}],"custom":true}],"attrObservers":{"checked":{"prop":true,"once":true}}},{"type":"element","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"div","index":5,"isc":false,"children":[{"type":"text","ast":{"rawValue":"I am Test Condition"}}]},"ifElse":{"refId":"fallback","type":"element","name":"#fragment","index":6,"isc":false,"children":[{"type":"element","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":0,"isc":false,"context":{"i":"$context"},"children":[{"type":"text","ast":{"rawValue":"Testing_${0}","_":1,"templates":[{"replace":"${0}","exp":{"prop":"i"}}]}}]}},"props":{"forIn":[0,1,2,3]},"providers":[ForDirective]}]}},"props":{"if":"test","ifElse":"fallback"},"providers":[IfDirective]},{"type":"element","name":"div","index":7,"isc":false,"props":{"class":{"type":"ite","test":"test","cons":"visible","alt":"hidden"}},"providers":[ClassDirective],"children":[{"type":"text","ast":{"rawValue":"Class test"}}]},{"type":"text","ast":{"rawValue":"currentValue: ${0}","_":1,"templates":[{"replace":"${0}","exp":{"prop":"test"}}]}},{"type":"element","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"app-calculator","index":9,"isc":true,"providers":[CalculatorComponent]}},"props":{"if":"test"},"providers":[IfDirective]}], {}) /** template loader **/;
+AppRootElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":{"rawValue":" Todo Application "}}]}]}]}]}], {}) /** template loader **/;
 return AppRootElement;
 }();
 
@@ -4905,7 +5007,7 @@ CalculatorComponent.annotations = {
     module: 'AppModule'
 };
 
-CalculatorComponent.view = /** jeli template **/ new ViewParser([{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attrObservers":{"value":{"prop":"currentNumber","once":false}}},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":"element","name":"button","index":0,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"'call'","args":["+"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"+"}}]},{"type":"element","name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"'call'","args":["-"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"-"}}]},{"type":"element","name":"button","index":2,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"'call'","args":["*"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"&times;"}}]},{"type":"element","name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"'call'","args":["/"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"&divide;"}}]},{"type":"element","name":"button","index":4,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"'call'","args":["7"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"7"}}]},{"type":"element","name":"button","index":5,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"'call'","args":["8"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"8"}}]},{"type":"element","name":"button","index":6,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"'call'","args":["9"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"9"}}]},{"type":"element","name":"button","index":7,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"'call'","args":["4"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"4"}}]},{"type":"element","name":"button","index":8,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"'call'","args":["5"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"5"}}]},{"type":"element","name":"button","index":9,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"'call'","args":["6"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"6"}}]},{"type":"element","name":"button","index":10,"isc":false,"attr":{"type":"button","value":true},"events":[{"name":"click","value":[{"type":"'call'","args":["1"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"1"}}]},{"type":"element","name":"button","index":11,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"'call'","args":["2"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"2"}}]},{"type":"element","name":"button","index":12,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"'call'","args":["3"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"3"}}]},{"type":"element","name":"button","index":13,"isc":false,"attr":{"type":"button","value":false},"events":[{"name":"click","value":[{"type":"'call'","args":["0"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"0"}}]},{"type":"element","name":"button","index":14,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"'call'","args":[],"fn":"getDecimal"}]}],"children":[{"type":"text","ast":{"rawValue":"."}}]},{"type":"element","name":"button","index":15,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"'call'","args":[],"fn":"clear"}]}],"children":[{"type":"text","ast":{"rawValue":"AC"}}]},{"type":"element","name":"button","index":16,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"'call'","args":["="],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"="}}]}]}]}], {}) /** template loader **/;
+CalculatorComponent.view = /** jeli template **/ new ViewParser([{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attrObservers":{"value":{"prop":"currentNumber","once":false}}},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":"element","name":"button","index":0,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":["+"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"+"}}]},{"type":"element","name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":["-"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"-"}}]},{"type":"element","name":"button","index":2,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":["*"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"×"}}]},{"type":"element","name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":["/"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"÷"}}]},{"type":"element","name":"button","index":4,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":["7"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"7"}}]},{"type":"element","name":"button","index":5,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":["8"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"8"}}]},{"type":"element","name":"button","index":6,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":["9"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"9"}}]},{"type":"element","name":"button","index":7,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":["4"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"4"}}]},{"type":"element","name":"button","index":8,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":["5"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"5"}}]},{"type":"element","name":"button","index":9,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":["6"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"6"}}]},{"type":"element","name":"button","index":10,"isc":false,"attr":{"type":"button","value":true},"events":[{"name":"click","value":[{"type":"call","args":["1"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"1"}}]},{"type":"element","name":"button","index":11,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":["2"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"2"}}]},{"type":"element","name":"button","index":12,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":["3"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"3"}}]},{"type":"element","name":"button","index":13,"isc":false,"attr":{"type":"button","value":false},"events":[{"name":"click","value":[{"type":"call","args":["0"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"0"}}]},{"type":"element","name":"button","index":14,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":"text","ast":{"rawValue":"."}}]},{"type":"element","name":"button","index":15,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":"text","ast":{"rawValue":"AC"}}]},{"type":"element","name":"button","index":16,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":["="],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"="}}]}]}]}], {}) /** template loader **/;
 return CalculatorComponent;
 }();
 

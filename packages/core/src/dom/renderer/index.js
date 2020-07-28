@@ -1,5 +1,6 @@
 import { copy } from 'js-helpers/utils';
 import { errorBuilder } from '../../utils/errorLogger';
+import { isequal } from 'js-helpers/helpers';
 /**
  * 
  * @param {*} transpiledHTML 
@@ -68,6 +69,10 @@ function element(definition, parent, viewContainer) {
 
     return elementRef;
 };
+
+function comment(definition, parent, viewContainer) {
+    return new AbstractElementRef(definition, parent);
+}
 
 /**
  * 
@@ -156,14 +161,14 @@ function toFragment(compiledTemplate, parent) {
  * @param {*} node
  */
 function transverse(node) {
-    if (node instanceof ElementRef) {
+    if (node instanceof AbstractElementRef) {
         if (node.providers && node.providers.length) {
             ElementCompiler.resolve(node, proceedWithCompilation);
         } else {
             proceedWithCompilation(node);
         }
     } else if (node instanceof TextNodeRef && node.hasBinding) {
-        node.render();
+        node.registerObserver();
     }
 
     /**
@@ -171,6 +176,9 @@ function transverse(node) {
      * @param {*} node 
      */
     function proceedWithCompilation(node) {
+        if (isequal(node.nativeElement.nodeType, 8)) {
+            return;
+        };
         /**
          * Bind Listeners to the Element
          **/
@@ -186,5 +194,6 @@ var ViewParserHelper = {
     element: element,
     text: text,
     place: place,
-    outlet: outlet
+    outlet: outlet,
+    comment: comment
 };

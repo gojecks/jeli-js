@@ -11,24 +11,28 @@
 <!-- <div class="container">
   <div class="row">
     <div class="col-sm-6 col-sm-offset-3">
-      <button @click='todos.push({"description":"Quick Test " + +new Date})'>Dynamic Add</button> <button @click="todos = [];removeItemCount=0">Empty</button> <button @click="todos = []; generateMock(10)">AddMore</button>
+      <div class="btn btn-group">
+        <button @click="generateMock(1)" class="btn btn-primary btn-small">Dynamic Add</button>
+        <button @click="todos = [];removeItemCount=0" class="btn btn-danger btn-small">Empty</button>
+        <button @click="todos = []; generateMock(10)" class="btn btn-primary btn-small">AddMore</button>
+      </div>
       <div class="panel panel-primary">
         <div class="panel-heading">
           <form @submit="addTodo()">
-            <input type="text" pattern="^\d+$" :model="todoDescription" class="form-control">
+            <input type="text" @{:model}="todoDescription" class="form-control">
           </form>
         </div>
         <ul class="list-group">
           <li class="list-group-item"><strong>Todo Items: ${todos.length -  removeItemCount}</strong>
             <div class="pull-right"><strong>Marked as done: ${removeItemCount}</strong></div>
           </li>
-          <li *for="(idx,todo) in todos" class="list-group-item">
+          <li *for="todo in todos; idx=index" class="list-group-item">
             <div class="row">
               <div class="col-sm-1">
-                <input type="checkbox" :model="todo.done" @change="markAsRemoved(todo.done)">
+                <input type="checkbox" {:model}="todo.done" @modelChange="markAsRemoved($event, todo)">
               </div>
               <div class="col-sm-8">
-                <span :style="{'text-decoration': todo.done ? 'line-through' : 'none'}">
+                <span {style}="{'text-decoration': todo.done ? 'line-through' : 'none'}">
                                         ${todo.description}
                                     </span>
               </div>
@@ -40,12 +44,14 @@
               </div>
 
             </div>
-            <h5>
-              <p class="alert alert-info" :show="!todo.addDescription"> ${todo.details} </p>
-              <div :show="todo.addDescription" class="form-group">
-                <textarea :model="todo.details" class="form-control"></textarea>
-              </div>
+            <h5 *if="!todo.addDescription; else as textArea">
+              <p class="alert alert-info"> ${todo.details} </p>
             </h5>
+            <j-template #textArea>
+              <div class="form-group">
+                <textarea @{:model}="todo.details" class="form-control"></textarea>
+              </div>
+            </j-template>
           </li>
           <li *if="!todos.length" class="list-group-item">No todos.</li>
         </ul>
@@ -53,13 +59,14 @@
     </div>
   </div>
 </div> -->
-<div>
+
+<!-- <div>
   <h5>Attr-Selected</h5>
   <select>
-    <option *for="i in [0,1,2,4]" attr-selected="i===1">${i}</option>
+    <option *for="i in [0,1,2,4]" attr-selected="i==1">${i}</option>
   </select>
 </div>
-<test-place #test-place>
+<test-place #testPlace>
   <input type="checkbox" @{:model}="test">
   <div>
     <h5>Attr-Value</h5>
@@ -73,8 +80,8 @@
     <div {innerHTML}="html"></div>
   </div>
   <div {:switch}="test">
-    <h5 *switch-case="true">I am ${test} case</h5>
-    <h4 *switch-default>I am default switch element</h4>
+    <h5 *switchCase="true">I am ${test} case</h5>
+    <h4 *switchDefault>I am default switch element</h4>
   </div>
 </test-place>
 <input type="checkbox" @{:model}="test" attr-checked="true">
@@ -82,23 +89,28 @@
 <j-template #fallback>
   <div *for="i in [0,1,2,3]">Testing_${i}</div>
 </j-template>
-<div {:class}="test?'visible':'hidden'">Class test</div>
-currentValue: ${test}
+<div {:class}="test?'visible':'hidden'">Class test</div> -->
 
-<app-calculator *if="test"></app-calculator>
-<!-- <div {:form-control}="testForm">
-  <input type="radio" :form-field="radio" value="0" #form-field/><br/>
-  <input type="radio" :form-field="radio" value="1" /><br/>
-  <input type="checkbox" :form-field="checkbox"><br/>
-  <textarea :form-field="textarea"></textarea><br/>
-  <input type="text" :form-field="input" value="Quick test" minlength="5" maxlength="10" required="true"><br/>
-  <input type="file" :form-field="file"><br/>
-  <input type="range" id="a" value="50" :form-field="range"><br>
-  <input type="number" id="b" value="50" :form-field="number"><br/>
-  <select :form-field="select" multiple>
+<!-- <div {:formControl}="testForm">
+  <input type="radio" :formField="radio" value="1" /> Yes<br/>
+  <input type="radio" :formField="radio" value="0" /> No<br/>
+  <input type="checkbox" :formField="checkbox"><br/>
+  <textarea :formField="textarea"></textarea><br/>
+  <input type="text" :formField="input" minlength="5" maxlength="10" required="true"><br/>
+  <input type="file" :formField="file"><br/>
+  <input type="range" id="a" :formField="range"><br>
+  <input type="number" id="b" :formField="number"><br/>
+  <select :formField="select" multiple>
     <option value="select_1">Select 1</option>
     <option value="select_2">Select 2</option>
     <option value="select_3">Select 3</option>
   </select>
-  <button {disabled}="!testForm.valid || false">Submit</button> <br/> ${testForm.error | json}
+  <div>
+    <input type="text" class="form-control" {:fieldControl}="testForm.getField('personalInfo').getField('firstName')" />
+    <input type="text" class="form-control" {:fieldControl}="testForm.getField('personalInfo').getField('lastName')" />
+    <input type="number" class="form-control" {:fieldControl}="testForm.getField('personalInfo').getField('age')" />
+  </div>
+  <div><button {disabled}="!testForm.valid" class="btn btn-primary">Submit</button></div>
+  <pre>${testForm.value | json:3}</pre>
 </div> -->
+<!-- <app-calculator></app-calculator> -->
