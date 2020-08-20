@@ -16,6 +16,6 @@ export function jViewFn(viewHandler, webStateService, elementRef) {
         viewHandler
             .setViewReference(elementRef, ref);
         webStateService
-            .events.$broadcast('view.render', ref);
+            .events.dispatch('view.render', ref);
     };
 }

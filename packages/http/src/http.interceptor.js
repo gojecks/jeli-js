@@ -1,3 +1,5 @@
+import { ProviderToken } from '@jeli/core';
+export var INTERCEPTORS = new ProviderToken('interceptors', true);
 /*
  * $httpProvider functionality
  * $interceptor idea was referenced from https://en.wikipedia.org/wiki/Interceptor_pattern
@@ -10,7 +12,7 @@
  */
 
 Service({
-    DI: ['interceptors:Token?'],
+    DI: [INTERCEPTORS],
 })
 
 /**
@@ -20,29 +22,29 @@ Service({
 export function HttpInterceptor(interceptors) {
     /**
      * 
-     * @param {*} state 
      * @param {*} options 
+     * @param {*} next 
      */
-    this.resolveInterceptor = function(state, options) {
-        if (interceptors.length) {
-            interceptors.forEach(function(interceptorInstance) {
-                options = interceptorInstance[state].apply(interceptorInstance, [options]);
-            });
+    this.resolveInterceptor = function(options, callback) {
+        if (!interceptors || !interceptors.length) {
+            return callback(options);
         }
 
-        return options;
-    };
+        var len = 0;
 
-    //register all interceptors
-    this.register = function() {
-        //loop through all list of interceptors
-        interceptors = interceptors.map(function(interceptorFactory) {
-            //get a factory interceptor
-            if ($isString(interceptorFactory)) {
-                return DependencyInjectorService.get(interceptorFactory);
+        /**
+         * iterator method
+         */
+        function next() {
+            var interceptor = interceptors[len];
+            len++;
+            if (interceptor) {
+                interceptor.resolve(options, callback);
             } else {
-                return DependencyInjectorService.inject(interceptorFactory);
+                callback(options);
             }
-        });
+        }
+
+        next();
     };
 }

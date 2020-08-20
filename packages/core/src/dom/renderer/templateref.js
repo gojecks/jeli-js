@@ -5,29 +5,22 @@ import { errorBuilder } from '../../utils/errorLogger';
  * @param {*} templates 
  * @param {*} templateId 
  */
-export function TemplateRef(templates, templateId) {
-    if (!templates || !templates.hasOwnProperty(templateId)) {
-        errorBuilder('No templates Defined #' + templateId);
-    }
-
+export function TemplateRef(templates) {
+    this.hasContext = !!templates.context;
     /**
      * build the required element based on the template definition
      * @param {*} parentNode 
      */
     this.createElement = function(parentNode) {
-        return ViewParserHelper[templates[templateId].type](templates[templateId], parentNode);
+        return ViewParserHelper[templates.type](templates, parentNode);
     };
 
     this.getContext = function() {
-        return templates[templateId].context;
-    };
-
-    this.forEach = function(callback) {
-        return templates[templateId].forEach(callback);
+        return templates.context;
     };
 
     this.querySelector = function(selector) {
-        return templates[templateId].filter(_selector);
+        return templates.filter(_selector);
         /**
          * returns the required template to compile
          */
@@ -41,4 +34,8 @@ export function TemplateRef(templates, templateId) {
             }
         }
     };
+
+    this.forEach = function(callback) {
+        templates.forEach(callback);
+    }
 }

@@ -89,7 +89,7 @@ FormControlAbstract.prototype.destroy = function() {
     }
     this._parent = null;
     this.valueChanges.destroy();
-    this.statusChanges.destroy();
+    this.statusChanged.destroy();
 };
 
 FormControlAbstract.prototype.markAsTouched = function(options) {

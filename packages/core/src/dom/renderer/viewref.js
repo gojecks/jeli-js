@@ -80,7 +80,7 @@ function EmbededViewContext(parentRef, templateRef, context) {
     });
 
     this.destroy = function() {
-        if (_componentRef) {
+        if (_componentRef && !compiledElement.isc) {
             _componentRef.destroy();
             _componentRef = null;
         }
@@ -96,8 +96,7 @@ function EmbededViewContext(parentRef, templateRef, context) {
     };
 
     function createComponentRef() {
-        compiledElement.isc = !!templateRef.getContext();
-        if (compiledElement.isc) {
+        if (templateRef.hasContext) {
             ComponentRef.create(compiledElement.refId, parentRef.hostRef.refId);
             _componentRef = componentDebugContext.get(compiledElement.refId);
             /**

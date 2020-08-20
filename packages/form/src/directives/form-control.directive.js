@@ -6,6 +6,7 @@ Directive({
 })
 export function FormControlDirective() {
     this._formFields = [];
+    this.form = null;
     Object.defineProperty(this, 'formControl', {
         set: function(formControl) {
             this.form = formControl;

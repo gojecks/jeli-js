@@ -1,5 +1,13 @@
 import { isequal, isarray, inarray } from 'js-helpers/helpers';
 import { VALUE_ACCESSOR } from './abstract.event.accessor';
+import { closureRef } from '@jeli/core';
+
+export var ResolveSelectBinder = {
+    name: VALUE_ACCESSOR,
+    reference: closureRef(function() {
+        return SelectEventBinder;
+    })
+};
 
 Directive({
     selector: 'select:[model|formField|fieldControl]',
@@ -10,7 +18,7 @@ Directive({
     /**
      * register the instance of this directive to the Value Accessor token
      */
-    registerAs: VALUE_ACCESSOR,
+    resolve: [ResolveSelectBinder],
     DI: ['ElementRef?']
 })
 

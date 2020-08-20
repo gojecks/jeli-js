@@ -1,23 +1,31 @@
+import { Subscription } from './subscription';
+import { AbstractObserver } from './observable';
 export function Subject() {
-    this._subscribers = [];
+    this._observer = new AbstractObserver();
+    this.subscribe = function(success, error, completed) {
+        var subscription = new Subscription(false);
+        subscription.add(success, error, completed);
+        this._observer.add(subscription);
+        return subscription;
+    };
 
-    this.next = function(value) {
-        this._subscribers.forEach(function(callback) {
-            callback(value);
-        });
+    Subject.prototype.destroy = function() {
+        this._observer.destroy();
     };
 }
 
-Subject.prototype.subscribe = function(callback) {
-    this._subscribers.push(callback);
+Subject.prototype.hasObservers = function() {
+    return this._observer.hasObservers();
 };
 
-Subject.prototype.unsubscribe = function(fn) {
-    this._subscribers = this._subscribers.filter(function(callback) {
-        return callback !== fn;
-    });
+Subject.prototype.next = function(value) {
+    this._observer.next(value);
 };
 
-Subject.prototype.destroy = function() {
-    this._subscribers.length = 0;
+Subject.prototype.error = function(error) {
+    this._observer.error(error);
+};
+
+Subject.prototype.completed = function() {
+    this._observer.completed();
 };

@@ -4,38 +4,41 @@
  * @param {*} $webState 
  */
 export function ViewInit(jeliWebProvider, $webState) {
-    var originalState = location.hash,
-        stateChanged = false,
-        html5Mode = jeliWebProvider.html5Mode;
-
+    var originalState = location.hash;
+    var stateChanged = false;
+    var html5Mode = jeliWebProvider.html5Mode;
     jeliWebProvider.isLoaded = true;
-    //set the hash Functionality
-    //First checked to see if window supports onhashchange Event
-    //@Function window.addEeventListener("haschange",FN,false)
+    /**
+     * set the hash Functionality
+     * First checked to see if window supports onhashchange Event
+     * @Function window.addEeventListener("haschange", callback ,false)
+     */
     if ("onhashchange" in window) {
         /**
          * register Events
          */
         window.addEventListener('$locationReplaceState', locationReplaceState)
         window.addEventListener("hashchange", webRouteChangedFn);
-        //hashChange event doesn't fire on reload
-        //work around was to check if location# is not empty
-        //set location if its empty
+        /**
+         * hashChange event doesn't fire on reload
+         * work around was to check if location# is not empty
+         * fallback if originalState is empty
+         */
         if (!originalState) {
-            var hash = refineHash() || jeliWebProvider.fallback;
-            location.hash = hash;
+            location.hash = refineHash() || jeliWebProvider.fallback;
         } else {
             /**
              * Triggered When user reloads the page
              */
-            $webState.events.$broadcast('go', refineHash());
+            $webState._gotoState(null, refineHash());
         }
     }
 
-    //set the PopState Functionality
-    //First checked to see if window supports onPopChange Event
-    //@Function window.addEventListener("popState",FN,false)
-
+    /**
+     * set the PopState Functionality
+     * First checked to see if window supports onPopChange Event
+     * @Function window.addEventListener("popState", callback ,false)
+     */
     if ("onpopstate" in window) {
         if (html5Mode) {
             window.onpopstate = function(e) {
@@ -47,7 +50,6 @@ export function ViewInit(jeliWebProvider, $webState) {
     function locationReplaceState(e) {
         var state = $webState.currentState();
         $webState.isReplaceState = true;
-
         if ((state.hash !== state.previousHash) || stateChanged) {
             location.replace(state.hash);
             originalState = state.currentLocation;
@@ -62,16 +64,11 @@ export function ViewInit(jeliWebProvider, $webState) {
             return;
         }
         //go to the required hash
-        $webState.events.$broadcast('go', locHash);
+        $webState.go(locHash);
     }
 
     //function refineHash
     function refineHash() {
-        var hash = location.hash;
-        if (hash && hash.indexOf('#') > -1) {
-            return hash.replace('#', '');
-        }
-
-        return hash;
+        return (location.hash || '').replace('#', '');
     }
 }

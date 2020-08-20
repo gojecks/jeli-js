@@ -89,28 +89,15 @@
 <j-template #fallback>
   <div *for="i in [0,1,2,3]">Testing_${i}</div>
 </j-template>
-<div {:class}="test?'visible':'hidden'">Class test</div> -->
+<div {:class}="test?'visible':'hidden'">Class test</div>
 
-<!-- <div {:formControl}="testForm">
-  <input type="radio" :formField="radio" value="1" /> Yes<br/>
-  <input type="radio" :formField="radio" value="0" /> No<br/>
-  <input type="checkbox" :formField="checkbox"><br/>
-  <textarea :formField="textarea"></textarea><br/>
-  <input type="text" :formField="input" minlength="5" maxlength="10" required="true"><br/>
-  <input type="file" :formField="file"><br/>
-  <input type="range" id="a" :formField="range"><br>
-  <input type="number" id="b" :formField="number"><br/>
-  <select :formField="select" multiple>
-    <option value="select_1">Select 1</option>
-    <option value="select_2">Select 2</option>
-    <option value="select_3">Select 3</option>
-  </select>
-  <div>
-    <input type="text" class="form-control" {:fieldControl}="testForm.getField('personalInfo').getField('firstName')" />
-    <input type="text" class="form-control" {:fieldControl}="testForm.getField('personalInfo').getField('lastName')" />
-    <input type="number" class="form-control" {:fieldControl}="testForm.getField('personalInfo').getField('age')" />
-  </div>
-  <div><button {disabled}="!testForm.valid" class="btn btn-primary">Submit</button></div>
-  <pre>${testForm.value | json:3}</pre>
+<div {:switch}="!test">
+  <h5 *switchCase="true">I am ${test} case</h5>
+  <test-place *switchDefault>I am default switch element</test-place>
 </div> -->
-<!-- <app-calculator></app-calculator> -->
+
+
+
+<a :go="welcome">Welcome Page</a> | <a :go="calculator">Calculator</a>
+<j-view ref="content"></j-view>
+<p>&copy; ${'' | dateTime:'YYYY'} FrontendOnly. All Rights Reserved </p>

@@ -17,7 +17,7 @@ export function closureRef(closureRefFn) {
  */
 export function resolveClosureRef(ref) {
     if (isfunction(ref) && ref.__ref__ === closureRef) {
-        console.log(ref);
+        return ref();
     } else {
         return ref;
     }

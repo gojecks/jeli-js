@@ -1,66 +1,13 @@
-import { FormControlService } from '@jeli/form'
+import { HttpService } from '@jeli/http';
 Element({
     selector: 'app-root',
     templateUrl: './app-root.html',
-    DI: [FormControlService],
     styleUrl: './app-root.css',
-    viewChild: ["testPlace=#testPlace", "model=:model"]
+    viewChild: ["testPlace=#testPlace", "model=:model"],
+    DI: [HttpService]
 })
-export function AppRootElement(formControlService) {
+export function AppRootElement(http) {
     this.test = true;
-    this.testForm = new formControlService({
-        radio: {
-            value: 1,
-            validators: {
-                required: true
-            }
-        },
-        input: {
-            value: undefined,
-            disabled: true,
-            validators: {
-                required: true,
-                minlength: 6
-            }
-        },
-        textarea: {
-            value: "Testing the default value",
-            disabled: false,
-            validators: {
-                required: true,
-                minLength: 6,
-                maxLength: 100
-            }
-        },
-        checkbox: {
-            value: true,
-            validators: {
-                requiredTrue: true
-            }
-        },
-        select: {
-            value: ["select_2"],
-            validators: {
-                required: true
-            }
-        },
-        file: {
-            validators: {
-                required: true
-            }
-        },
-        range: {
-            value: 50,
-            eventType: 'blur',
-            validators: {
-                maxlength: 90
-            }
-        },
-        number: {
-            value: 500
-        }
-    });
-
     this.error = false;
     this.keys = [2];
     this.removeKey = function(key) {
@@ -94,31 +41,8 @@ export function AppRootElement(formControlService) {
     };
 
     this.didInit = function() {
-        this.testForm.patchValue({
-            number: 10
-        });
-        this.testForm.addField('personalInfo', new formControlService({
-            firstName: {
-                value: null,
-                validators: {
-                    required: true
-                }
-            },
-            lastName: {
-                value: null,
-                validators: {
-                    required: true
-                }
-            },
-            age: {
-                value: null,
-                validators: {
-                    required: true
-                }
-            }
-        }));
-        // this.testForm.valueChanges.subscribe(console.log)
-        console.log(this.testForm)
+        console.log('started');
+        http.get('/').subscribe(console.log, console.log);
     }
 }
 

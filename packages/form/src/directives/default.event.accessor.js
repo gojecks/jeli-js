@@ -1,5 +1,12 @@
 import { VALUE_ACCESSOR } from "./abstract.event.accessor";
+import { closureRef } from '@jeli/core';
 
+export var ResolveDefaultBinder = {
+    name: VALUE_ACCESSOR,
+    reference: closureRef(function() {
+        return DefaultEventBinder;
+    })
+};
 Directive({
     selector: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl]',
     events: [
@@ -9,7 +16,7 @@ Directive({
     /**
      * register the instance of this directive to the Value Accessor token
      */
-    registerAs: VALUE_ACCESSOR,
+    resolve: [ResolveDefaultBinder],
     DI: ['ElementRef?']
 })
 

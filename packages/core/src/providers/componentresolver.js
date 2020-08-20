@@ -1,34 +1,30 @@
 /**
  * 
- * @param {*} selector 
+ * @param {*} componentFactory 
  * @param {*} element 
  * @param {*} callback 
  */
-export function ComponentFactoryResolver(selector, element, callback) {
-    var component,
-        controller;
-    if (!CoreBootstrapContext.compiledModule.annotations.exports.has(selector)) {
-        CoreBootstrapContext.compiledModule.requiredModules.forEach(function(moduleName) {
-            var _module = ModuleService._factories.get(moduleName);
-            if (_module.annotations.exports.has(selector)) {
-                controller = _module.annotations.exports.get(selector);
-            }
-        });
-    } else {
-        controller = CoreBootstrapContext.compiledModule.annotations.exports.get(selector);
+export function ComponentFactoryResolver(componentFactory, viewComponent, callback) {
+    if (!componentFactory || !componentFactory.annotations.exposeView) {
+        errorBuilder('No exported factory found for <' + componentFactory.annotations.selector + '> in ' + componentFactory.annotations.module);
     }
 
-    if (controller && element) {
-        component = new ElementRef(document.createElement(selector), element, {
-            name: selector,
-            type: 'element',
-            isc: true
-        });
-        ElementCompiler(controller, component, function(componentInstance) {
-            component.parent.children.add(component);
-            callback(component, componentInstance);
-        });
-    } else {
+    if (!viewComponent) {
         throw new Error('Unable to resolve component: ' + selector);
     }
+
+    var viewDefinition = {
+        name: componentFactory.annotations.selector,
+        type: 'element',
+        isc: true,
+        providers: [componentFactory]
+    };
+    var component = new ElementRef(viewDefinition, viewComponent);
+    var localInjectors = new ComponentInjectors(component);
+    ElementCompiler(componentFactory, component, localInjectors, function(componentInstance) {
+        viewComponent.insertAfter(component.nativeElement, viewComponent.nativeElement);
+        callback(component, componentInstance);
+    });
+    localInjectors = null;
+    viewDefinition = null;
 }

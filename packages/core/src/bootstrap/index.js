@@ -1,3 +1,5 @@
+import { Inject } from '../dependency.injector';
+import { _Promise } from '../rx/promise/promise';
 /**
  * JELI LOCAL VARIABLES
  */
@@ -6,16 +8,9 @@ var CoreBootstrapContext = ({
     bootStrapComponent: null,
     compiledModule: null,
     $isCompiled: false,
-    $isAfterBootStrap: false,
+    injector: null,
     enableDebugger: true
 });
-
-/**
- * returns random ID
- */
-function getUID() {
-    return 'jeli:' + +new Date + ":" + $eUID++;
-}
 
 export var INITIALIZERS = new ProviderToken('AppInitializers', true);
 /**
@@ -25,9 +20,20 @@ export var INITIALIZERS = new ProviderToken('AppInitializers', true);
 export function bootStrapApplication(moduleToBootStrap) {
     CoreBootstrapContext.compiledModule = moduleToBootStrap;
     InitializeModule(moduleToBootStrap);
-    // BootStrap Entry Component
-    CoreBootstrapContext.$isCompiled = true;
-    bootStrapElement();
+    /**
+     * trigger INITIALIZERS
+     */
+    CoreBootstrapContext.injector = new AbstractInjectorInstance();
+    _Promise.all(Inject(INITIALIZERS, CoreBootstrapContext.injector)
+        .map(function(callback) {
+            return callback();
+        })).done(function() {
+        // BootStrap Entry Component
+        CoreBootstrapContext.$isCompiled = true;
+        bootStrapElement();
+    }, function(err) {
+        console.log(err);
+    });
 
     function bootStrapElement() {
         if (moduleToBootStrap.annotations.rootElement) {
@@ -36,16 +42,17 @@ export function bootStrapApplication(moduleToBootStrap) {
                 name: selector,
                 isc: true,
                 type: 'element',
-                fromDOM: true,
-                providers: [
-                    moduleToBootStrap.annotations.rootElement
-                ]
+                fromDOM: true
             }, null);
 
             /**
              * bootstrap application
              */
-            ElementCompiler.resolve(CoreBootstrapContext.bootStrapComponent, function() {});
+            ElementCompiler(
+                moduleToBootStrap.annotations.rootElement,
+                CoreBootstrapContext.bootStrapComponent,
+                CoreBootstrapContext.injector,
+                function() {});
         }
     }
 
@@ -54,7 +61,6 @@ export function bootStrapApplication(moduleToBootStrap) {
      * @param {*} moduleFn 
      */
     function InitializeModule(moduleFn) {
-        // trigger the moduleFn
         moduleFn();
         if (moduleFn.annotations.requiredModules) {
             moduleFn.annotations.requiredModules.forEach(InitializeModule);

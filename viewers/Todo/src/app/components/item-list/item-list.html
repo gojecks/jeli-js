@@ -1,0 +1,5 @@
+<j-place></j-place>
+<j-fragment {:switch}="formValue.personalInfo.firstName">
+  <h5 *switchDefault>Invalid form</h5>
+  <h5 *switchCase="'test'">Valid form</h5>
+</j-fragment>

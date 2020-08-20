@@ -1,5 +1,4 @@
 import { ForDirective } from './directives/for';
-import { IncludeDirective } from './directives/include.directive';
 import { IfDirective } from './directives/jIf.directive';
 import { SelectDirective } from './directives/select.directive';
 import { SwitchDirective, SwitchCaseDirective, SwitchDefaultDirective } from './directives/switch.directive';
@@ -33,7 +32,6 @@ jModule({
     ],
     selectors: [
         ForDirective,
-        IncludeDirective,
         IfDirective,
         SelectDirective,
         ClassDirective,

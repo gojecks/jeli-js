@@ -8,7 +8,7 @@ function AbstractElementRef(definition, parentRef) {
      * extend the definition
      */
     this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
-    this.refId = getUID();
+    this.refId = 'jeli:' + +new Date + ":" + $eUID++;
     this.$observers = [];
     this.children = new QueryList();
     this.parent = parentRef;
@@ -21,14 +21,18 @@ function AbstractElementRef(definition, parentRef) {
     this.props = definition.props;
     this.nativeNode = this.nativeElement.nodeType === 8 ? this.nativeElement : null;
     this.nodes = new Map();
+    this._viewQuery = null;
     this.getTemplateRef = function(templateId) {
-        return new TemplateRef(definition.templates, templateId);
+        if (!definition.templates || !definition.templates.hasOwnProperty(templateId)) {
+            errorBuilder('No templates Defined #' + templateId);
+        }
+        return new TemplateRef(definition.templates[templateId]);
     };
 
     Object.defineProperties(this, {
         context: {
             get: function() {
-                if (this.isc) {
+                if (componentDebugContext.has(this.refId)) {
                     return componentDebugContext.get(this.refId).context;
                 }
 
@@ -37,7 +41,7 @@ function AbstractElementRef(definition, parentRef) {
         },
         componentInstance: {
             get: function() {
-                if (this.isc) {
+                if (componentDebugContext.has(this.refId)) {
                     return componentDebugContext.get(this.refId).componentInstance;
                 }
 
@@ -46,7 +50,7 @@ function AbstractElementRef(definition, parentRef) {
         },
         changeDetector: {
             get: function() {
-                if (this.isc) {
+                if (componentDebugContext.has(this.refId)) {
                     return componentDebugContext.get(this.refId).changeDetector;
                 }
 
@@ -143,6 +147,7 @@ function cleanupElementRef(elementRef) {
     elementRef.nativeElement = null;
     elementRef.parent = null;
     elementRef.providers = null;
+    elementRef._viewQuery = null;
     elementRef.nodes.clear();
 };
 

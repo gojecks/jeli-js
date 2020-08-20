@@ -1,23 +1,27 @@
+import { AbstractInjectorInstance } from '../dependency.injector';
+
 /**
  * Method for generating Injectors
  * @param {*} annotations 
  */
-function generatePublicInjectors(elementRef) {
-    var injectors = {};
-    var currentClassAnnotations = {};
-
+function ComponentInjectors(elementRef) {
+    AbstractInjectorInstance.call(this, elementRef);
+    this.injectors.ElementRef = elementRef;
+    this.currentClassAnnotations = {};
+    var _this = this;
     /**
      * generate local injectors
+     * Getter for Dependencies that are set in runTime
+     * see example from jSwitch Directive
+     * Dependencies can also be optional
+     * "provider:TYPE=?Value_To_Map"
+     * ? symbol represents optional Dependency
+     * @param {*} idx 
      */
-    Object.defineProperties(injectors, {
-        ElementRef: {
-            get: function() {
-                return elementRef
-            }
-        },
+    Object.defineProperties(this.injectors, {
         TemplateRef: {
             get: function() {
-                return this.ElementRef.getTemplateRef(currentClassAnnotations.selector);
+                return this.ElementRef.getTemplateRef(_this.currentClassAnnotations.selector);
             }
         },
         changeDetector: {
@@ -30,20 +34,13 @@ function generatePublicInjectors(elementRef) {
                 return new ViewRef(this.ElementRef);
             }
         },
-        /**
-         * Getter for Dependencies that are set in runTime
-         * see example from jSwitch Directive
-         * Dependencies can also be optional
-         * "provider:TYPE=?Value_To_Map"
-         * ? symbol represents optional Dependency
-         * @param {*} idx 
-         */
         ParentRef: {
             get: function() {
-                return (
-                    this.ElementRef.parent.nodes.get(currentClassAnnotations.DI.ParentRef.value) ||
-                    this.ElementRef.parent.componentInstance
-                );
+                if (_this.currentClassAnnotations.DI.ParentRef.value) {
+                    return findParentRef(this.ElementRef.parent, _this.currentClassAnnotations.DI.ParentRef.value);
+                }
+
+                return this.ElementRef.parent.componentInstance;
             }
         },
         VALIDATORS: {
@@ -58,22 +55,33 @@ function generatePublicInjectors(elementRef) {
             }
         }
     });
+}
+ComponentInjectors.prototype = Object.create(AbstractInjectorInstance.prototype);
+ComponentInjectors.prototype.constructor = AbstractInjectorInstance;
+ComponentInjectors.prototype.destroy = function() {
+    this.injectors.ElementRef = null;
+    this.injectors = null;
+    this.currentClassAnnotations = null;
+};
 
+/**
+ * 
+ * @param {*} parentRef 
+ * @param {*} refValue 
+ */
+function findParentRef(parentRef, refValue) {
+    if (parentRef && !parentRef.nodes.has(refValue)) {
+        return findParentRef(parentRef.parent, refValue);
+    }
+    /**
+     * return null if no parentRef value
+     */
+    if (!parentRef) {
+        return null;
+    }
 
-    return {
-        setAnnotations: function(annotations) {
-            currentClassAnnotations = annotations;
-        },
-        getProviders: function() {
-            return injectors;
-        },
-        destroy: function() {
-            injectors = null;
-            currentClassAnnotations = null;
-            elementRef = null
-        },
-        extend: function(token, value) {
-            console.log(token, value);
-        }
-    };
+    /**
+     * return the parentRef instance
+     */
+    return parentRef.nodes.get(refValue);
 }

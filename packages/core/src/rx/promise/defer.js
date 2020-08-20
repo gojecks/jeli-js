@@ -3,12 +3,11 @@ import { CorePromiseHandler } from './core';
  * 
  * @param {*} triggerAfterResolve 
  */
-export default function Defer(triggerAfterResolve) {
+export function Defer(triggerAfterResolve) {
     var core = CorePromiseHandler(triggerAfterResolve);
     this.resolve = function() {
         core.complete('done', arguments);
     };
-
 
     this.reject = function() {
         core.complete('fail', arguments);

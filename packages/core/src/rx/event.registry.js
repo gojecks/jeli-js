@@ -5,7 +5,7 @@
  * @param {*} defaultFn 
  */
 export function CustomEventHandler(type, defaultFn, eventExtension) {
-    if (!type) { type = 'on' };
+    if (!type) { type = 'register' };
     /**
      * check if eventExtension is defined or create fallback
      */

@@ -1,10 +1,17 @@
 import { VALUE_ACCESSOR } from './abstract.event.accessor';
 import { errorBuilder } from '@jeli/core';
+import { closureRef } from '@jeli/core';
 
+export var ResolveRadioBinder = {
+    name: VALUE_ACCESSOR,
+    reference: closureRef(function() {
+        return RadioEventBinder;
+    })
+};
 /**
  * @internal use only
  */
-Service({})
+Service()
 export function RadioEventContainer() {
     var _registry = [];
     this.register = function(eventBinder) {
@@ -39,7 +46,7 @@ Directive({
     /**
      * register the instance of this directive to the Value Accessor token
      */
-    registerAs: VALUE_ACCESSOR,
+    resolve: [ResolveRadioBinder],
     DI: ['ElementRef?', RadioEventContainer]
 })
 
@@ -77,7 +84,7 @@ RadioEventBinder.prototype.registerOnChange = function(onChangeFn) {
     var _this = this;
     this._onChange = onChangeFn;
     this.onChange = function(value) {
-        onChangeFn(value);
+        onChangeFn(_this.value);
         _this.radioEventContainer.selectValue(_this);
     };
 };

@@ -7,7 +7,7 @@ import { isobject, isequal } from 'js-helpers/helpers';
  * @param {*} lifeCycle 
  * @param {*} definition
  */
-function Linker(componentInstance, elementRef, lifeCycle, definition) {
+export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
     var propChanges = null;
     var registeredProperty = [];
     if (definition.props) {
@@ -21,11 +21,7 @@ function Linker(componentInstance, elementRef, lifeCycle, definition) {
         }
     }
 
-    /**
-     * 
-     * @param {*} initialBinding 
-     */
-    function _updateViewBinding(initialBinding) {
+    function _updateViewBinding() {
         var hasBinding = false;
         for (var prop in definition.props) {
             var item = definition.props[prop];
@@ -34,7 +30,11 @@ function Linker(componentInstance, elementRef, lifeCycle, definition) {
                 var value;
                 if (isobject(elementRef.props[name])) {
                     hasBinding = true;
-                    value = getFilteredTemplateValue(elementRef.props[name], elementRef.context, elementRef.componentInstance);
+                    value = getFilteredTemplateValue(
+                        elementRef.props[name],
+                        elementRef.parent.context,
+                        elementRef.parent.componentInstance
+                    );
                 } else {
                     value = getPrimitiveValue(item.type, name, elementRef.props[name])
                 }

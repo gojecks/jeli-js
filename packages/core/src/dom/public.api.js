@@ -11,4 +11,3 @@ import './event.handler';
 import './interpolation';
 import './queryList';
 import './style';
-import './mutationObserver';

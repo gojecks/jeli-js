@@ -1,10 +1,10 @@
 import { VALUE_ACCESSOR } from "./abstract.event.accessor";
-import { FormControlDirective } from "./form-control.directive";
 import { errorBuilder } from "@jeli/core";
+import { FormControlDirective } from "./form-control.directive";
 
 Directive({
     selector: 'formField',
-    DI: ['ParentRef?=formControl', VALUE_ACCESSOR, 'VALIDATORS?'],
+    DI: ["ParentRef?=formControl", VALUE_ACCESSOR, 'VALIDATORS?'],
     props: ['name=formField'],
 })
 
@@ -33,8 +33,6 @@ FormFieldDirective.prototype.didInit = function() {
 }
 
 FormFieldDirective.prototype.modelToViewUpdate = function() {};
-
-
 FormFieldDirective.prototype.viewDidDestroy = function() {
     if (this.parent) {
         this.parent.removeField(this);

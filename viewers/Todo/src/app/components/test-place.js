@@ -1,9 +1,8 @@
 Element({
     selector: "test-place",
-    template: "<j-place></j-place>",
-    DI: ['ElementRef?']
+    template: "<j-place></j-place>"
 })
-export function TestPlaceElement(elementRef) {
+export function TestPlaceElement() {
     this.test = false;
     this.html = '';
 }

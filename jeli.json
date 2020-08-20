@@ -91,11 +91,13 @@
             "output": {
                 "folder": "./docs/examples/Todo/",
                 "view": "index.html",
+                "styles": ["viewers/Todo/src/styles.scss"],
                 "entryFile": "main.js"
             },
             "resolve": {
                 "alias": {
-                    "@jeli/*": "./dist/"
+                    "@jeli/*": "./dist/",
+                    "@jeli/common/datetime": "./dist/common/datetime"
                 }
             }
         }

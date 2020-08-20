@@ -3,158 +3,88 @@
 // created by Gojecks Joseph
 
 // jeliWebState Service
-import { isequal, isundefined } from 'js-helpers/helpers';
+import { isequal } from 'js-helpers/helpers';
+import { CustomEventHandler } from '@jeli/core';
 import { WebStateProvider } from './jwebstate.provider';
 import { ViewHandler } from './jWebViewHandler.service';
-
+import { ResolveRouteInterceptor, ROUTE_INTERCEPTOR } from './utils';
 Service({
-    name: '$webState',
-    DI: [WebStateProvider, ViewHandler, '$resolve?', 'Event?']
+    DI: [WebStateProvider, ViewHandler, ROUTE_INTERCEPTOR, CustomEventHandler]
 })
 
 /**
  * 
  * @param {*} webStateProvider 
- * @param {*} $resolve 
  * @param {*} viewHandler 
- * @param {*} $Events 
+ * @param {*} $resolve 
+ * @param {*} customEventHandler 
  */
-export function WebStateService(webStateProvider, viewHandler, $resolve, $Events) {
-    var locationStates = null,
-        lastState = null,
-        _this = this;
+export function WebStateService(webStateProvider, viewHandler, routerInterceptor, customEventHandler) {
+    var _this = this;
+    this.locationStates = null;
+    this.lastState = null;
     this.isReplaceState = false;
     this.state = {
         route: { params: {} },
     };
+    this.webStateProvider = webStateProvider;
+    this.viewHandler = viewHandler;
 
-
-    /**
-     * trigger method when view load
-     */
-    function viewLoaded(route) {
-        var previousState = extend({}, _this.state.route);
-        //dispatch event for webRoute Success
-        _this.events.$broadcast('$webRouteSuccess', route, previousState);
-        _this.state = route;
-    }
-
-    function updateAllProcess() {
-        /**
-         * change progressState when component is resolved
-         */
-        viewHandler.stateInProgress = false;
-        // set the location hash with the resolved route
-        location.hash = _this.$$baseUrl;
-    }
-
-    //create an Event
-    //Add Default Function to our listener
-    //if Slave Function calls preventDefault
-    //Master FN is not triggered
-    this.events = new $Events('listener', function(e, route, path) {
+    function _routeEventListener(e, route, path) {
         if (isequal('$webRouteStart', e.type)) {
             //set the baseUrl to the $webState Object
             //BaseUrl is neccessary when replace state is in use.
             _this.$$baseUrl = path;
-            //set the current view
-            //get the RouteView Object
-            var locals = {};
-            /*
-             resolve the resolvers if defined
-            */
-            var viewResolver = viewHandler.resolveViews(route, _this.state);
-            if (route.resolver) {
-                $resolve(route.resolver, locals)
-                    .then(function() {
-                        /**
-                         * check if route changed by resolver
-                         */
-                        var lastTransitionQueue = viewHandler.stateQueue.pop();
-                        if (lastTransitionQueue) {
-                            // change route
-                            _this.$$baseUrl = lastTransitionQueue.path;
-                            route = webStateProvider.getRequiredRoute(lastTransitionQueue.path).checkParams(lastTransitionQueue.params);
-                            viewResolver = viewHandler.resolveViews(route, _this.state);
-                            viewHandler.stateQueue.length = 0;
-                        }
+            ResolveRouteInterceptor(routerInterceptor, {
+                name: route.name,
+                path: path,
+                url: route.url
+            }, function() {
+                /**
+                 * check if route changed by resolver
+                 */
+                var lastTransitionQueue = viewHandler.stateQueue.pop();
+                if (lastTransitionQueue) {
+                    // change route
+                    _this.$$baseUrl = lastTransitionQueue.path;
+                    route = getRequiredRoute(lastTransitionQueue.path).checkParams(lastTransitionQueue.params);
+                    viewResolver = viewHandler.resolveViews(route, _this.state);
+                    viewHandler.stateQueue.length = 0;
+                }
 
-                        // check to make sure current state is not same as state to resolve
-                        if (!isequal(_this.$$baseUrl, _this.state.url)) {
-                            viewResolver(viewLoaded);
-                            //set relovers
-                            route.resolvedData = locals;
-                        } else {
-                            // trigger error route state
-                            _this.events.$broadcast('$webRouteError', route);
-                        }
+                // check to make sure current state is not same as state to resolve
+                if (!isequal(_this.$$baseUrl, _this.state.url)) {
+                    //dispatch event for webRoute Success
+                    _this.events.dispatch('$webRouteSuccess', route, _this.state.route);
+                    _this.state = route;
+                    viewHandler.resolveViews(route, _this.state);
+                } else {
+                    // trigger error route state
+                    _this.events.dispatch('$webRouteError', route);
+                }
 
-                        updateAllProcess();
-                    });
-            } else {
-                viewResolver(viewLoaded);
-                updateAllProcess();
-            }
+                /**
+                 * change progressState when component is resolved
+                 */
+                viewHandler.stateInProgress = false;
+                // set the location hash with the resolved route
+                location.hash = _this.$$baseUrl;
+            });
+
         }
-    });
-    //regsister an event
-    this.events.listener('go', function() {
-        gotoState.apply(null, arguments);
-    });
+    }
 
+    /**
+     * create an Event
+     * Add Default Function to our listener
+     * if Slave Function calls preventDefault
+     * Master FN is not triggered
+     */
+    this.events = new customEventHandler('listener', _routeEventListener);
     //register replaceState event
     this.events.listener('replaceState', function(ev) {
         _this.isReplaceState = true;
     });
-
-    //add an event
-    this.events.listener('go.state', gotoState);
-
-    /**
-     * go to path
-     * @param {*} path 
-     * @param {*} params 
-     */
-    function go(path, params) {
-        //set up new events
-        var route = webStateProvider.getRoute(path, params);
-        if (route) {
-            //set stateInProgress to true
-            viewHandler.stateInProgress = true;
-            //initialize state changed 
-            _this.events.$broadcast('$webRouteStart', route, path);
-        }
-    };
-
-    /**
-     * 
-     * @param {*} ev 
-     * @param {*} path 
-     * @param {*} params 
-     */
-    function gotoState(ev, path, params) {
-        //check if state in Progress
-        if (!path) {
-            return false;
-        }
-        //set the current State
-        viewHandler.previousState = viewHandler.currentState;
-        viewHandler.currentState = path;
-        if (viewHandler.stateInProgress) {
-            // check if previous and current state are same
-            if (isequal(viewHandler.currentState, viewHandler.previousState)) {
-                return;
-            }
-            viewHandler.stateQueue.push({
-                path: path,
-                param: params
-            });
-            viewHandler.$stateTransitioned = true;
-        } else {
-            go(path, params);
-        }
-    }
-
     //check for pending view rendering
     this.events.listener('view.render', function(ev, viewName) {
         if (viewHandler._pendingViewStack.has(viewName)) {
@@ -162,77 +92,110 @@ export function WebStateService(webStateProvider, viewHandler, $resolve, $Events
             viewHandler._pendingViewStack.delete(viewName);
         }
     });
+};
 
-
-    /* 
-			Method Name : href
-			Parameter : stateName (STRING) , Params (OBJECT)
-			@returns : Path || Fallback
-		*/
-    this.$href = function(stateName, params) {
-        var state = webStateProvider.getRouteObj(stateName);
-        if (state) {
-            if (state.route.paramsLength && !params) {
-                throw new Error(stateName + " requires parameter, buit none was provided");
-            }
-
-            var href = state.url.replace(/\:(\w)+/g, function(index, key) {
-                var chkr = index.split(":")[1]
-                return chkr in params && params[chkr] ? params[chkr] : index;
-            });
-
-            return href;
-        }
-
-        return webStateProvider.fallback;
-    };
-
-    /**
-     * Method Name : GO
-     * Parameter : stateName (STRING) , Params (OBJECT)
-     * @returns : self
-     */
-    this.go = function(path, params) {
-        path = this.$href(path, params);
-        if (this.$stateChanged(path)) {
-            gotoState(null, path, params);
-        }
-        return this;
-    };
-
-    /*
-    	Webstate.replaceWebState
-    	replaces the browser history state
-    */
-
-    this.replaceWebState = function(hash) {
-        //replace state for jeli webRoute
-        if (!locationStates && !hash) { return; }
-
-        locationStates = ({
-            state: 'replaceState',
-            hash: '#' + (hash || locationStates.previousHash).replace(/^#/, ''),
-            previousHash: lastState,
-            currentLocation: location.hash
-        });
-
-        // Fallback for HTML4 browsers
-        lastState = locationStates.hash;
-    };
-
-    /*Webstate.getRootUrl
-    	@return {String} url
-    */
-    this.currentState = function(set) {
-        if (!isundefined(set)) {
-            locationStates = set;
+/**
+ * 
+ * @param {*} ev 
+ * @param {*} path 
+ * @param {*} params 
+ */
+WebStateService.prototype._gotoState = function(ev, path, params) {
+    //check if state in Progress
+    if (!path) {
+        return false;
+    }
+    //set the current State
+    this.viewHandler.previousState = this.viewHandler.currentState;
+    this.viewHandler.currentState = path;
+    if (this.viewHandler.stateInProgress) {
+        // check if previous and current state are same
+        if (isequal(this.viewHandler.currentState, this.viewHandler.previousState)) {
             return;
         }
+        this.viewHandler.stateQueue.push({
+            path: path,
+            param: params
+        });
+        this.viewHandler.$stateTransitioned = true;
+    } else {
+        //set up new events
+        var route = this.webStateProvider.getRoute(path, params);
+        if (route) {
+            //set stateInProgress to true
+            this.viewHandler.stateInProgress = true;
+            //initialize state changed 
+            this.events.dispatch('$webRouteStart', route, path);
+        }
+    }
+}
 
-        return locationStates;
-    };
-
+/**
+ * Method Name : GO
+ * Parameter : stateName (STRING) , Params (OBJECT)
+ * @returns : self
+ */
+WebStateService.prototype.go = function(path, params) {
+    path = this.$href(path, params);
+    if (this.$stateChanged(path)) {
+        this._gotoState(null, path, params);
+    }
     return this;
+};
+
+/**
+ * Method Name : $href
+ * @param {*} stateName 
+ * @param {*} params 
+ */
+WebStateService.prototype.$href = function(stateName, params) {
+    var state = this.webStateProvider.getRouteObj(stateName);
+    if (state) {
+        if (state.route.paramsLength && !params) {
+            throw new Error(stateName + " requires parameter, buit none was provided");
+        }
+
+        var href = state.url.replace(/\:(\w)+/g, function(index, key) {
+            var chkr = index.split(":")[1]
+            return chkr in params && params[chkr] ? params[chkr] : index;
+        });
+
+        return href;
+    }
+
+    return this.webStateProvider.fallback;
+};
+
+/**
+ * Webstate.replaceWebState
+ * replaces the browser history state
+ * @param {*} hash 
+ */
+WebStateService.prototype.replaceWebState = function(hash) {
+    //replace state for jeli webRoute
+    if (!this.locationStates && !hash) return;
+    this.locationStates = ({
+        state: 'replaceState',
+        hash: '#' + (hash || this.locationStates.previousHash).replace(/^#/, ''),
+        previousHash: this.lastState,
+        currentLocation: location.hash
+    });
+
+    // Fallback for HTML4 browsers
+    this.lastState = this.locationStates.hash;
+};
+
+/**
+ * get or set the currentState
+ * @param {*} state 
+ */
+WebStateService.prototype.currentState = function(state) {
+    if (state) {
+        this.locationStates = state;
+        return;
+    }
+
+    return this.locationStates;
 };
 
 WebStateService.prototype.search = function(query) {

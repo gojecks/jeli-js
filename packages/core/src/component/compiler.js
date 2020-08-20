@@ -1,17 +1,16 @@
 import { errorBuilder } from '../utils/errorLogger';
-import { Inject, AutoWire, ProviderToken } from '../dependency.injector';
-import './linker';
+import { AutoWire, wireResolvers } from '../dependency.injector';
 import './lifecycle';
+import { ϕjeliLinker } from './linker';
 /**
  * 
  * @param {*} ctrl 
  * @param {*} elementRef 
- * @param {*} localInjectors 
+ * @param {*} componentInjectors 
  * @param {*} next 
  */
-function ElementCompiler(ctrl, elementRef, localInjectors, next) {
+function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
     var definition = ctrl.annotations,
-        hasTwoWayBinding = (elementRef.props && definition.props),
         lifeCycle;
     /**
      * 
@@ -27,9 +26,9 @@ function ElementCompiler(ctrl, elementRef, localInjectors, next) {
          */
         componentRef.componentInstance = componentInstance;
         if (ctrl.view) {
-            // set the refID of the directive
-            var template = ctrl.view.getView(elementRef);
             try {
+                // set the refID of the directive
+                var template = ctrl.view.getView(elementRef);
                 elementRef.appendChild(template);
             } catch (e) {
                 errorBuilder(e);
@@ -49,17 +48,10 @@ function ElementCompiler(ctrl, elementRef, localInjectors, next) {
             lifeCycle = null;
             componentRef = null;
         });
-
-        _MutationObserver(elementRef.nativeNode || elementRef.nativeElement, function() {
-            if (elementRef.nativeElement) {
-                elementRef.remove();
-            }
-        });
-
         /**
          * trigger tick
          */
-        componentRef.changeDetector.detectChanges();
+        componentRef.changeDetector.detectChanges(true, true);
     }
 
     /**
@@ -112,18 +104,12 @@ function ElementCompiler(ctrl, elementRef, localInjectors, next) {
         }
     }
 
-    ComponentFactoryInitializer(ctrl, localInjectors,
+    ComponentFactoryInitializer(ctrl, componentInjectors,
         /**
          * 
          * @param {*} componentInstance 
          */
         function triggerInstance(componentInstance) {
-            /**
-             * register the instance
-             */
-            if (definition.registerAs && definition.registerAs instanceof ProviderToken) {
-                definition.registerAs.register(componentInstance);
-            }
             /**
              * check for custom registry Types
              * eventListener
@@ -131,7 +117,7 @@ function ElementCompiler(ctrl, elementRef, localInjectors, next) {
              */
             compileEventsRegistry(componentInstance);
             lifeCycle = new LifeCycle(componentInstance);
-            Linker(componentInstance, elementRef, lifeCycle, definition);
+            ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition);
             registerDirectiveInstance(componentInstance);
             lifeCycle.trigger('didInit');
             next(componentInstance);
@@ -153,23 +139,23 @@ ElementCompiler.resolve = function(node, nextTick) {
 
     function next() {
         var factory = node.providers[inc];
-        var localInjectors = generatePublicInjectors(node);
+        var componentInjectors = new ComponentInjectors(node);
 
         inc++;
         if (factory) {
             try {
-                localInjectors.setAnnotations(factory.annotations);
-                ElementCompiler(factory, node, localInjectors, next);
+                componentInjectors.currentClassAnnotations = factory.annotations;
+                ElementCompiler(factory, node, componentInjectors, next);
             } catch (e) {
                 errorBuilder(e);
             }
         } else {
-            localInjectors.destroy();
+            componentInjectors.destroy();
             nextTick(node);
         }
     }
 
-    next();
+    next(null);
 };
 
 /**
@@ -179,13 +165,8 @@ ElementCompiler.resolve = function(node, nextTick) {
  * @param {*} CB 
  */
 function ComponentFactoryInitializer(ctrl, injectorInstance, CB) {
-    if (ctrl.annotations.resolvers) {
-        for (var i = 0; i < ctrl.annotations.resolvers.length; i++) {
-            var value = Inject(ctrl.annotations.resolvers[i], injectorInstance.getProviders());
-        }
-    }
-
-    AutoWire(ctrl, injectorInstance.getProviders(), function(instance) {
+    wireResolvers(ctrl.annotations.resolve, injectorInstance);
+    AutoWire(ctrl, injectorInstance, function(instance) {
         try {
             CB(instance);
         } catch (e) {

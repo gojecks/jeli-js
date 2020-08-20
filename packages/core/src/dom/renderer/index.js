@@ -1,13 +1,12 @@
 import { copy } from 'js-helpers/utils';
 import { errorBuilder } from '../../utils/errorLogger';
 import { isequal } from 'js-helpers/helpers';
+
 /**
  * 
  * @param {*} transpiledHTML 
- * @param {*} templates 
- * @param {*} providers 
  */
-export function ViewParser(transpiledHTML, templates, providers) {
+export function ViewParser(transpiledHTML) {
     /**
      * 
      * @param {*} parent 
@@ -25,21 +24,10 @@ export function ViewParser(transpiledHTML, templates, providers) {
         return toFragment(_viewContainer, parent);
     };
 
-    this.getProvider = function(provide) {
-        return providers[provide];
-    };
-
     this.pushToView = function(element) {
         _viewContainer.push(element);
     };
 
-    this.getTemplate = function(templateRefId) {
-        if (templates.hasOwnProperty(templateRefId)) {
-            return templates[templateRefId];
-        }
-
-        errorBuilder('unable to find template [' + templateRefId + ']');
-    };
 };
 
 /**
@@ -95,7 +83,7 @@ function place(definition, parent, viewContainer, appendToChild) {
     var hostRef = parent.hostRef;
     var templates = hostRef.getTemplateRef('place');
     if (definition.selector) {
-        templates = templates.selector(definition.selector);
+        templates = templates.querySelector(definition.selector);
     }
 
     templates.forEach(function(template) {
@@ -144,10 +132,6 @@ function toFragment(compiledTemplate, parent) {
      * @param {*} compiled 
      */
     function processCompiler(compiled) {
-        if (!compiled) {
-            return;
-        }
-
         parent.children.add(compiled);
         fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
         transverse(compiled);

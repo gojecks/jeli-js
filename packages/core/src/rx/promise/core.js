@@ -3,7 +3,7 @@
  * this method does the heavy lifting
  * @param {*} triggerAfterResolve 
  */
-export default function CorePromiseHandler(triggerAfterResolve) {
+export function CorePromiseHandler(triggerAfterResolve) {
     var _untilObserver = [];
     var untilStarted = false;
     var state = {

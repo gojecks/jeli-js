@@ -1,5 +1,6 @@
 import { leapYear, DateStringConverter, setText } from '../helpers';
 import { CalendarService } from './calendar.service';
+import { MONTHS_HALF, MONTHS_FULL, DAYS_HALF, DAYS_FULL } from '../tokens';
 /**
  * ELI DateTime Plugins
  * created by Gojecks Joseph
@@ -11,8 +12,7 @@ import { CalendarService } from './calendar.service';
  * @param {*} dateTimeDayFull 
  */
 Service({
-    name: 'dateTimeFactory',
-    DI: ['dateTimeMonthHalf?', 'dateTimeMonthFull?', 'dateTimeDayHalf?', 'dateTimeDayFull?']
+    DI: [MONTHS_HALF, MONTHS_FULL, DAYS_HALF, DAYS_FULL]
 })
 export function DatetimeService(dateTimeMonthHalf, dateTimeMonthFull, dateTimeDayHalf, dateTimeDayFull) {
     var dateFormatRegExp = /D{1,4}|M{1,4}|YY(?:YY)?|([HhMmsTt])\1?|[LloSZ]|"[^"]*"|'[^']*'/g;
@@ -26,13 +26,11 @@ export function DatetimeService(dateTimeMonthHalf, dateTimeMonthFull, dateTimeDa
     //Returned Function accepts parameter date format
     //returns formated date
 
-    this.format = function(date) {
+    this.format = function(date, format) {
         var toFormat = this.timeConverter(date).flags;
-        return function(format) {
-            return String(format).replace(dateFormatRegExp, function($0) {
-                return $0 in toFormat ? toFormat[$0] : $0.slice(1, $0.length - 1);
-            });
-        }
+        return String(format).replace(dateFormatRegExp, function($0) {
+            return $0 in toFormat ? toFormat[$0] : $0.slice(1, $0.length - 1);
+        });
     };
 
 
@@ -168,7 +166,7 @@ DatetimeService.prototype.timeConverter = function(dateToParse) {
     if (currentDateTime.getFullYear() > _dateTimeToParse.getFullYear()) {
         result.date = this.dateTimeMonthHalf[_dateTimeToParse.getMonth()] + ', ' + _dateTimeToParse.getDate() + ' ' + _dateTimeToParse.getFullYear();
     } else {
-        result.date = this.dateTimeDayHalf[_dateTimeToParse.getDay()] + ', ' + _dateTimeToParse.getDate() + ' ' + this.dateTimeMonthHalf[q.getMonth()]
+        result.date = this.dateTimeDayHalf[_dateTimeToParse.getDay()] + ', ' + _dateTimeToParse.getDate() + ' ' + this.dateTimeMonthHalf[_dateTimeToParse.getMonth()]
     }
 
     if (result.time_difference.seconds <= 60) {

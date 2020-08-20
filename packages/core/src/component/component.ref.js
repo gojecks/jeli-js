@@ -6,27 +6,30 @@ import { Observer } from '../rx/observer';
  * @param {*} tick 
  */
 function InternalChangeDetector(tick) {
-    var _changeDetectorState = 3;
-    this.detectChanges = function() {
-        tick.apply(null, arguments);
-    };
-    this.markAsChecked = function() {
-        _changeDetectorState = 1;
-    };
-    this.markAsUnChecked = function() {
-        _changeDetectorState = 3;
-    };
-
-    this.markAsOnce = function() {
-        _changeDetectorState = 2;
-    };
-
+    this._changeDetectorState = 3;
     Object.defineProperty(this, 'status', {
         get: function() {
             return _changeDetectorState;
         }
     });
+
+    this.detectChanges = function() {
+        if (this._changeDetectorState == 3) {
+            tick.apply(null, arguments);
+        }
+    };
 }
+
+InternalChangeDetector.prototype.markAsChecked = function() {
+    this._changeDetectorState = 1;
+};
+InternalChangeDetector.prototype.markAsUnChecked = function() {
+    this._changeDetectorState = 3;
+};
+
+InternalChangeDetector.prototype.markAsOnce = function() {
+    this._changeDetectorState = 2;
+};
 
 /**
  * Variable for holding Component Context
@@ -81,10 +84,6 @@ function ComponentRef(refId) {
         }
 
         _this.inProgress = true;
-        _this.observables.notifyAllObservers(_this.componentInstance);
-        if (!ignoreChild) {
-            triggerChild(_this.child, []);
-        }
 
         /**
          * trigger parent
@@ -95,17 +94,23 @@ function ComponentRef(refId) {
             triggerChild(parent.child, [_this.componentRefId]);
         }
 
+        _this.observables.notifyAllObservers(_this.componentInstance);
+        if (!ignoreChild) {
+            triggerChild(_this.child, []);
+        }
+
         /**
          * 
          * @param {*} children 
          */
         function triggerChild(children, ignore) {
-            children.forEach(function(childRef) {
-                if (!inarray(childRef, ignore)) {
-                    var child = componentDebugContext.get(childRef);
+            for (var i = 0; i < children.length; i++) {
+                var refId = children[i];
+                if (!inarray(refId, ignore) && componentDebugContext.has(refId)) {
+                    var child = componentDebugContext.get(refId);
                     child.changeDetector.detectChanges(false, true);
                 }
-            });
+            }
         }
 
         _this.inProgress = false;
@@ -116,6 +121,7 @@ ComponentRef.prototype.removeChild = function(refId) {
     this.child.slice(this.child.indexOf(refId), 1);
     componentDebugContext.delete(refId);
 };
+
 
 ComponentRef.prototype.updateModel = function(propName, value) {
     if (isobject(propName)) {
@@ -144,6 +150,9 @@ ComponentRef.prototype.new = function(refId) {
 ComponentRef.prototype.destroy = function() {
     // destroy observables
     componentDebugContext.delete(this.componentRefId);
+    if (this.parent && componentDebugContext.has(this.parent)) {
+        componentDebugContext.get(this.parent).removeChild(this.componentRefId);
+    }
     this._componentInstance = null;
     this._context = null;
     this.observables.destroy();
@@ -151,9 +160,6 @@ ComponentRef.prototype.destroy = function() {
     this.observables = null;
     this.parent = null;
     this.child.length = 0;
-    if (this.parent) {
-        this.parent.removeChild(this.componentRefId);
-    }
 };
 
 /**
@@ -163,11 +169,12 @@ ComponentRef.prototype.destroy = function() {
  */
 ComponentRef.create = function(refId, parentId) {
     var componentRef = new ComponentRef(refId);
+    componentDebugContext.set(refId, componentRef);
     if (parentId) {
         componentRef.parent = parentId;
+        // add child to parent
+        componentDebugContext.get(parentId).child.push(refId);
     }
-
-    componentDebugContext.set(refId, componentRef);
     componentRef = null;
 };
 
@@ -175,5 +182,5 @@ ComponentRef.create = function(refId, parentId) {
  * Change detector
  */
 export function ChangeDetector() {
-    CoreBootstrapContext.bootStrapComponent.context.tick();
+    CoreBootstrapContext.bootStrapComponent.changeDetector.detectChanges();
 };

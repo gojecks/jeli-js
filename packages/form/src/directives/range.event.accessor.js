@@ -1,5 +1,12 @@
 import { VALUE_ACCESSOR } from "./abstract.event.accessor";
+import { closureRef } from '@jeli/core';
 
+export var ResolveRangeBinder = {
+    name: VALUE_ACCESSOR,
+    reference: closureRef(function() {
+        return RangeEventBinder;
+    })
+};
 Directive({
     selector: 'input:type=range:[model|formField|fieldControl]',
     events: [
@@ -10,7 +17,7 @@ Directive({
     /**
      * register the instance of this directive to the Value Accessor token
      */
-    registerAs: VALUE_ACCESSOR,
+    resolve: [ResolveRangeBinder],
     DI: ['ElementRef?']
 })
 

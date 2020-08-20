@@ -8,7 +8,6 @@ import { AttributeAppender } from '../attribute';
  */
 export function ElementRef(definition, parent) {
     AbstractElementRef.call(this, definition, parent);
-    var viewQuery = null;
     var _this = this;
     /**
      * check if element is custom element
@@ -18,7 +17,7 @@ export function ElementRef(definition, parent) {
          * create the element Observer
          */
         ComponentRef.create(this.refId, parent && parent.hostRef.refId);
-        viewQuery = Object.create({
+        this._viewQuery = Object.create({
             ϕelements: [],
             add: function(option, element) {
                 if (!isequal(option[1], _this.tagName)) {
@@ -43,7 +42,7 @@ export function ElementRef(definition, parent) {
     Object.defineProperties(this, {
         viewQuery: {
             get: function() {
-                return viewQuery || this.parent.viewQuery;
+                return this._viewQuery || this.parent._viewQuery;
             }
         }
     });
@@ -58,15 +57,6 @@ export function ElementRef(definition, parent) {
 
 ElementRef.prototype = Object.create(AbstractElementRef.prototype);
 ElementRef.prototype.constructor = AbstractElementRef;
-
-ElementRef.prototype.nextSibling = function() {
-    return this.parent && this.parent.children.findByIndex(this.index + 1);
-};
-
-ElementRef.prototype.prevSibling = function() {
-    return this.parent && this.parent.children.findByIndex(this.index - 1);
-};
-
 ElementRef.prototype.setProp = function(propName, propValue) {
     AttributeAppender.setProp(this.nativeElement, propName, propValue);
     return this;
@@ -92,26 +82,6 @@ ElementRef.prototype.removeAttribute = function(name) {
  * @return self;
  */
 ElementRef.prototype.appendChild = function(template) {
-    if (template instanceof ElementRef) {
-        template = template.nativeElement;
-    } else if (template instanceof HTMLElement || template instanceof DocumentFragment) {
-        template = template;
-    }
-
     this.nativeElement.appendChild(template);
     this.changeDetector.detectChanges();
-};
-
-/**
- * @param {*} newContent
- */
-ElementRef.prototype.html = function(newContent) {
-    if (newContent instanceof ElementRef) {
-        newContent = newContent.nativeElement;
-    } else if (isstring(newContent)) {
-        newContent = document.createRange().createContextualFragment(newContent);
-    }
-
-    this.nativeElement.innerHTML = '';
-    this.nativeElement.appendChild(newContent);
 };

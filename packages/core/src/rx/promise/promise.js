@@ -4,7 +4,7 @@
   * 
   * @param {*} triggerAfterResolve 
   */
- export default function _Promise(triggerAfterResolve) {
+ export function _Promise(triggerAfterResolve) {
      var core = CorePromiseHandler(triggerAfterResolve);
      this.resolve = function() {
          core.complete('resolve', arguments);
@@ -48,13 +48,13 @@
   * @param {*} resolve 
   */
  _Promise.all = function(resolve) {
-     var slice = [].slice,
-         resolveValues = arguments.length == 1 && resolve.length ? resolve : slice.call(arguments),
-         length = resolveValues.length,
-         remaining = length,
-         deferred = new Defer(),
-         failed = 0,
-         results = [];
+     var slice = [].slice;
+     var resolveValues = arguments.length == 1 && resolve.length ? resolve : slice.call(arguments);
+     var length = resolveValues.length;
+     var remaining = length;
+     var deferred = new Defer();
+     var failed = 0;
+     var results = [];
      /**
       * 
       * @param {*} idx 
@@ -76,7 +76,7 @@
      for (var i = 0; i < length; i++) {
          var cur = resolveValues[i];
          if (cur instanceof _Promise) {
-             cur.then(updateDefered(i), updateDefered(i, 1))
+             cur.then(updateDefered(i), updateDefered(i, true))
          } else {
              updateDefered(i)(cur);
          }

@@ -1,0 +1,31 @@
+<div {:formControl}="testForm">
+  <div>
+    <input type="radio" :formField="radio" value="1" /> Yes<br/>
+    <input type="radio" :formField="radio" value="0" /> No<br/>
+    <input type="checkbox" :formField="checkbox"><br/>
+  </div>
+
+  <textarea :formField="textarea"></textarea><br/>
+  <input type="text" :formField="input" minlength="5" maxlength="10" required="true"><br/>
+  <input type="file" :formField="file"><br/>
+  <input type="range" id="a" :formField="range"><br>
+  <input type="number" id="b" :formField="number"><br/>
+  <select :formField="select" multiple>
+      <option value="select_1">Select 1</option>
+      <option value="select_2">Select 2</option>
+      <option value="select_3">Select 3</option>
+    </select>
+  <div {:formControl}="testForm.getField('personalInfo')">
+    <div>
+      <input type="text" class="form-control" :formField="firstName" />
+    </div>
+
+    <input type="text" class="form-control" :formField="lastName" />
+    <input type="number" class="form-control" :formField="age" />
+  </div>
+  <div><button {disabled}="!testForm.valid" class="btn btn-primary">Submit</button></div>
+  <item-list value="[1,2,3]" {formValue}="testForm.value">
+    <pre>${value | json}</pre>
+  </item-list>
+  <pre>${testForm.value | json:3}</pre>
+</div>
