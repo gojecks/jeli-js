@@ -34,8 +34,8 @@ export var formValidationStack = Object.create({
     ISEMPTY: function(val, def) {
         return def === isempty(val);
     },
-    BOOLEAN: function(bool, val) {
-        return isboolean(value) && isequal(bool, val);
+    BOOLEAN: function(value, def) {
+        return isboolean(value) && isequal(value, def);
     },
     // ^	The password string will start this way
     // (?=.*[a-z])	The string must contain at least 1 lowercase alphabetical character

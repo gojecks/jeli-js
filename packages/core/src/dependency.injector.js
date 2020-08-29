@@ -14,35 +14,38 @@ var existingInstance = new Map();
  * @param {*} provide 
  */
 export function ProviderToken(tokenName, multiple, provide) {
-    var tokenValue;
+    var tokenRecords = [];
+    var persists = false;
     this.tokenName = tokenName;
-    this.register = function(value) {
+    /**
+     * 
+     * @param {*} value 
+     * @param {*} wireInstant 
+     */
+    this.register = function(value, wireInstant) {
+        value = wireInstant ? AutoWire(value) : value;
         if (multiple) {
-            if (!tokenValue) {
-                tokenValue = [];
-            }
-            tokenValue.push(value);
+            tokenRecords.push(value);
         } else {
-            tokenValue = value;
+            tokenRecords = value;
         }
+        persists = wireInstant;
     };
 
     this.resolve = function() {
         var token;
         try {
             if (multiple) {
-                token = (tokenValue || []).map(function(token) {
-                    return AutoWire(token);
-                });
+                token = tokenRecords.map(getToken);
             } else {
-                token = AutoWire(tokenValue);
+                token = getToken(tokenRecords);
             }
         } catch (e) {
             errorBuilder('error while resolving ' + tokenName);
         }
 
-        // reset registries
-        tokenValue = null;
+        if (!persists) tokenRecords = [];
+
         return token;
     };
 
@@ -50,7 +53,15 @@ export function ProviderToken(tokenName, multiple, provide) {
      * default provide was set
      */
     if (provide) {
-        this.register(provide);
+        this.register(provide, true);
+    }
+
+    /**
+     * 
+     * @param {*} token 
+     */
+    function getToken(token) {
+        return persists ? token : AutoWire(token);
     }
 }
 
@@ -95,7 +106,7 @@ export function Inject(factory, localInjector) {
  */
 export function AutoWire(factory, localInjector, callback) {
     if (isfunction(factory)) {
-        var deps = resolveDeps(factory, localInjector);
+        var deps = resolveDeps(factory.annotations && factory.annotations.DI, localInjector);
         //initialize the defined function
         //only initializes when its defined
         var protos = Object.create(factory.prototype);
@@ -148,17 +159,14 @@ export function wireResolvers(deps, localInjector) {
 function resolveTokenBase(token, localInjector) {
     var tokenValue;
     if (token.factory) {
-        var args = (token.DI || []).map(function(dep) {
-            return Inject(dep, localInjector);
-        });
+        var args = resolveDeps(token.DI, localInjector);
         tokenValue = function() {
             return resolveClosureRef(token.factory).apply(null, args);
         };
     } else if (token.useClass) {
         tokenValue = Inject(token.useClass, localInjector);
     } else if (token.reference) {
-        var reference = Inject(token.reference, localInjector);
-        tokenValue = resolveReference(reference, localInjector);
+        tokenValue = resolveReference(Inject(token.reference, localInjector), localInjector);
     } else if (token.value) {
         tokenValue = token.value;
     }
@@ -168,19 +176,19 @@ function resolveTokenBase(token, localInjector) {
 
 /**
  * 
- * @param {*} factory 
+ * @param {*} DI 
  * @param {*} localInjector 
  */
-function resolveDeps(factory, localInjector) {
+function resolveDeps(DI, localInjector) {
     var deps = [];
-    if (factory.annotations && factory.annotations.DI) {
-        for (var serviceName in factory.annotations.DI) {
-            var doInject = factory.annotations.DI[serviceName];
+    if (DI) {
+        for (var serviceName in DI) {
+            var doInject = DI[serviceName];
             var injectableParam = null;
             var err = false;
             //Try and catch injectors
             try {
-                injectableParam = Inject(doInject.factory || serviceName, localInjector, factory.module);
+                injectableParam = Inject(doInject.factory || serviceName, localInjector);
             } catch (e) { err = true; } finally {
                 if (err && !doInject.optional) {
                     throw new Error('Unable to resolve provider ' + serviceName);
@@ -201,11 +209,11 @@ function resolveReference(reference, localInjector) {
         else if (localInjector.has(reference))
             return localInjector.get(reference);
         /**
-         * at this stage the reference is not resolve
+         * at this stage the reference is not resolved
          * cases apply to directive and component or services that re not registered to a module
          */
         else if (reference.annotations) {
-            existingInstance.set(reference, 'PENDING');
+            existingInstance.set(reference, null);
             return function() {
                 return existingInstance.get(reference);
             };
@@ -220,18 +228,18 @@ function resolveReference(reference, localInjector) {
 
 export function AbstractInjectorInstance() {
     this.injectors = {};
-    this.get = function(injectorToken) {
-        return this.injectors[injectorToken];
-    };
-
     this.has = function(injectorToken) {
         return this.injectors.hasOwnProperty(injectorToken);
     };
-
-    this.set = function(tokenName, value) {
-        this.injectors[tokenName] = value;
-    };
 }
+
+AbstractInjectorInstance.prototype.set = function(tokenName, value) {
+    this.injectors[tokenName] = value;
+};
+
+AbstractInjectorInstance.prototype.get = function(injectorToken) {
+    return this.injectors[injectorToken];
+};
 
 AbstractInjectorInstance.prototype.destroy = function() {
     this.injectors = null;

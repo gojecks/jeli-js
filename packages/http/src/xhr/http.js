@@ -43,6 +43,7 @@ function CoreHttp(url, options, interceptor, changeDetection) {
         }
 
         sendRequest();
+        return xhrPromise;
     });
 
     /**
@@ -59,11 +60,12 @@ function CoreHttp(url, options, interceptor, changeDetection) {
                     xhrInstance.status == 304 ||
                     (xhrInstance.status == 0 && xhrInstance.responseText)
                 );
-                interceptor.resolveInterceptor(response, function(response) {
-                    if (response instanceof HttpResponse) {
 
-                    } else if (response instanceof HttpErrorResponse) {}
-                });
+                // interceptor.resolveInterceptor(response, function(response) {
+                //     if (response instanceof HttpResponse) {
+
+                //     } else if (response instanceof HttpErrorResponse) {}
+                // });
             } catch (e) {
                 xhrPromise.error(e);
             }

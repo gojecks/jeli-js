@@ -23,7 +23,7 @@
     <input type="text" class="form-control" :formField="lastName" />
     <input type="number" class="form-control" :formField="age" />
   </div>
-  <div><button {disabled}="!testForm.valid" class="btn btn-primary">Submit</button></div>
+  <div><button {disabled}="!testForm.valid && true" class="btn btn-primary">Submit</button></div>
   <item-list value="[1,2,3]" {formValue}="testForm.value">
     <pre>${value | json}</pre>
   </item-list>

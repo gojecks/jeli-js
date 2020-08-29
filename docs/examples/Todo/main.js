@@ -3,51 +3,52 @@
  /** trigged factory **/
 factory(__required);
 }(function(__required){
-var bootStrapApplication = __required('dist/core/bundles/jeli-core-module.js', 'bootStrapApplication');
+var core = __required('dist/core/bundles/jeli-core-module.js');
+var bootStrapApplication = core['bootStrapApplication'];
 var AppModule = __required('viewers/Todo/src/app/app.module.js', 'AppModule');
 
 bootStrapApplication(AppModule);
 }, (function(__JELI__DEPENDENCY__HUB__, __resolved__){ 'use strict';
 return function __required(deps, property){
   if(__resolved__[deps]) return getProp();
-/** create a new ref **/__resolved__[deps] = {};
-__JELI__DEPENDENCY__HUB__[deps](__resolved__[deps], __required); return getProp();
+/** create a new ref **/__resolved__[deps] = {exports:true};
+__JELI__DEPENDENCY__HUB__[deps](__resolved__[deps], __resolved__[deps], __required); return getProp();
  function getProp(){ return property ? __resolved__[deps][property]: __resolved__[deps]; }
 };
 })(/** JELI DEPENDECY HUB **/{
-'node_modules/js-helpers/fns/isstring.js': function(exports, __required){
+'node_modules/js-helpers/fns/isstring.js': function(module, exports, __required){
 exports.default = function (str) {
     return typeof str === 'string' && new String(str) instanceof String;
 };
 },
-'node_modules/js-helpers/fns/isarray.js': function(exports, __required){
+'node_modules/js-helpers/fns/isarray.js': function(module, exports, __required){
 exports.default = function (obj) {
     return Object.prototype.toString.call(obj) === '[object Array]';
 };
 },
-'node_modules/js-helpers/fns/inarray.js': function(exports, __required){
+'node_modules/js-helpers/fns/inarray.js': function(module, exports, __required){
 var isarray = __required('node_modules/js-helpers/fns/isarray.js', 'default');
 var isstring = __required('node_modules/js-helpers/fns/isstring.js', 'default');
 exports.default = function (needle, haystack) {
     return (isstring(haystack) || isarray(haystack)) && haystack.indexOf(needle) > -1;
 };
 },
-'node_modules/js-helpers/fns/isboolean.js': function(exports, __required){
+'node_modules/js-helpers/fns/isboolean.js': function(module, exports, __required){
 exports.default = function (bool) {
     return Object.prototype.toString.call(bool) === '[object Boolean]';
 };
 },
-'node_modules/js-helpers/fns/isdefined.js': function(exports, __required){
+'node_modules/js-helpers/fns/isdefined.js': function(module, exports, __required){
 exports.default = function (val) {
     return typeof val !== 'undefined';
 };
 },
-'node_modules/js-helpers/fns/isdouble.js': function(exports, __required){
+'node_modules/js-helpers/fns/isdouble.js': function(module, exports, __required){
 exports.default = function (n) {
     return parseFloat(n) > 0;
 };
 },
-'node_modules/js-helpers/fns/isempty.js': function(exports, __required){
+'node_modules/js-helpers/fns/isempty.js': function(module, exports, __required){
 exports.default = function (val) {
     if (val && typeof val === 'object') {
         return Object.values(val).length < 1;
@@ -55,48 +56,48 @@ exports.default = function (val) {
     return !val || val === '';
 };
 },
-'node_modules/js-helpers/fns/isequal.js': function(exports, __required){
+'node_modules/js-helpers/fns/isequal.js': function(module, exports, __required){
 exports.default = function (a, b) {
     return a === b;
 };
 },
-'node_modules/js-helpers/fns/isfloat.js': function(exports, __required){
+'node_modules/js-helpers/fns/isfloat.js': function(module, exports, __required){
 exports.default = function (n) {
     return Number(n) === n && n % 1 !== 0;
 };
 },
-'node_modules/js-helpers/fns/isfunction.js': function(exports, __required){
+'node_modules/js-helpers/fns/isfunction.js': function(module, exports, __required){
 exports.default = function (fn) {
     return typeof fn === 'function';
 };
 },
-'node_modules/js-helpers/fns/isjsonstring.js': function(exports, __required){
+'node_modules/js-helpers/fns/isjsonstring.js': function(module, exports, __required){
 exports.default = function (str) {
     return str && typeof str === 'string' && '{['.indexOf(str.charAt(0)) > -1 && '}]'.indexOf(str.charAt(str.length - 1)) > -1;
 };
 },
-'node_modules/js-helpers/fns/isnull.js': function(exports, __required){
+'node_modules/js-helpers/fns/isnull.js': function(module, exports, __required){
 exports.default = function (val) {
     return null === val;
 };
 },
-'node_modules/js-helpers/fns/isnumber.js': function(exports, __required){
+'node_modules/js-helpers/fns/isnumber.js': function(module, exports, __required){
 exports.default = function (n) {
     return Number(n) === n && n % 1 === 0;
 };
 },
-'node_modules/js-helpers/fns/isobject.js': function(exports, __required){
+'node_modules/js-helpers/fns/isobject.js': function(module, exports, __required){
 exports.default = function (obj) {
     return typeof obj === 'object' && obj instanceof Object && Object.prototype.toString.call(obj) === '[object Object]';
 }
 ;;
 },
-'node_modules/js-helpers/fns/isundefined.js': function(exports, __required){
+'node_modules/js-helpers/fns/isundefined.js': function(module, exports, __required){
 exports.default = function (val) {
     return typeof val === 'undefined';
 };
 },
-'node_modules/js-helpers/helpers.js': function(exports, __required){
+'node_modules/js-helpers/helpers.js': function(module, exports, __required){
 
 exports.inarray = __required('node_modules/js-helpers/fns/inarray.js', 'default');
 exports.isarray = __required('node_modules/js-helpers/fns/isarray.js', 'default');
@@ -114,7 +115,7 @@ exports.isobject = __required('node_modules/js-helpers/fns/isobject.js', 'defaul
 exports.isstring = __required('node_modules/js-helpers/fns/isstring.js', 'default');
 exports.isundefined = __required('node_modules/js-helpers/fns/isundefined.js', 'default');
 },
-'node_modules/js-helpers/fns/base64.js': function(exports, __required){
+'node_modules/js-helpers/fns/base64.js': function(module, exports, __required){
 exports.default = function () {
     return {
         encode: function (str) {
@@ -130,7 +131,7 @@ exports.default = function () {
     };
 };
 },
-'node_modules/js-helpers/fns/camelcase.js': function(exports, __required){
+'node_modules/js-helpers/fns/camelcase.js': function(module, exports, __required){
 exports.default = function (str) {
     return str(/^([A-Z])|[\s-_](\w)/g, function (match, p1, p2, offset) {
         if (p2) {
@@ -140,7 +141,7 @@ exports.default = function (str) {
     });
 };
 },
-'node_modules/js-helpers/fns/cookie.js': function(exports, __required){
+'node_modules/js-helpers/fns/cookie.js': function(module, exports, __required){
 exports.default = function (name, value) {
     if (typeof value != 'undefined') {
         setCookie.apply(null, arguments);
@@ -194,7 +195,7 @@ function getCookie(name) {
     return cookieValue;
 };
 },
-'node_modules/js-helpers/fns/extend.js': function(exports, __required){
+'node_modules/js-helpers/fns/extend.js': function(module, exports, __required){
 function extend() {
     var extended = {};
     var deep = typeof arguments[0] === 'boolean';
@@ -228,7 +229,7 @@ function extend() {
 }
 exports.default = extend;
 },
-'node_modules/js-helpers/fns/copy.js': function(exports, __required){
+'node_modules/js-helpers/fns/copy.js': function(module, exports, __required){
 var extend = __required('node_modules/js-helpers/fns/extend.js', 'default');
 exports.default = function (item, deep) {
     var type = {};
@@ -257,7 +258,7 @@ exports.default = function (item, deep) {
     return extend(type, item);
 };
 },
-'node_modules/js-helpers/fns/copyfrom.js': function(exports, __required){
+'node_modules/js-helpers/fns/copyfrom.js': function(module, exports, __required){
 function copyFrom(to, from) {
     for (var key in to) {
         if (from.hasOwnProperty(key)) {
@@ -272,12 +273,12 @@ function copyFrom(to, from) {
 }
 exports.default = copyFrom;
 },
-'node_modules/js-helpers/fns/count.js': function(exports, __required){
+'node_modules/js-helpers/fns/count.js': function(module, exports, __required){
 exports.default = function (obj) {
     return Object.keys(obj).length;
 };
 },
-'node_modules/js-helpers/fns/expect.js': function(exports, __required){
+'node_modules/js-helpers/fns/expect.js': function(module, exports, __required){
 var isobject = __required('node_modules/js-helpers/fns/isobject.js', 'default');
 exports.default = function (objToInspect) {
     var isObject = isobject(objToInspect);
@@ -328,7 +329,7 @@ exports.default = function (objToInspect) {
     };
 };
 },
-'node_modules/js-helpers/fns/hashcode.js': function(exports, __required){
+'node_modules/js-helpers/fns/hashcode.js': function(module, exports, __required){
 exports.default = function (code) {
     var hash = 0, i, chr, len;
     if (!code || code.length === 0)
@@ -341,7 +342,7 @@ exports.default = function (code) {
     return hash;
 };
 },
-'node_modules/js-helpers/fns/logger.js': function(exports, __required){
+'node_modules/js-helpers/fns/logger.js': function(module, exports, __required){
 var logLevels = {
     DEBUG: 4,
     LOG: 3,
@@ -391,7 +392,7 @@ var logger = {
 };
 exports.default = logger;
 },
-'node_modules/js-helpers/fns/makeuid.js': function(exports, __required){
+'node_modules/js-helpers/fns/makeuid.js': function(module, exports, __required){
 exports.default = function (e) {
     var uid = '';
     var f = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -401,7 +402,7 @@ exports.default = function (e) {
     return uid;
 };
 },
-'node_modules/js-helpers/fns/nodubs.js': function(exports, __required){
+'node_modules/js-helpers/fns/nodubs.js': function(module, exports, __required){
 exports.default = function (arr) {
     return arr.reduce(function (all, item, index) {
         if (arr.indexOf(arr[index]) === index) {
@@ -411,7 +412,7 @@ exports.default = function (arr) {
     }, []);
 };
 },
-'node_modules/js-helpers/fns/serializer.js': function(exports, __required){
+'node_modules/js-helpers/fns/serializer.js': function(module, exports, __required){
 var isFunction = __required('node_modules/js-helpers/fns/isfunction.js', 'default');
 var isObject = __required('node_modules/js-helpers/fns/isobject.js', 'default');
 var isArray = __required('node_modules/js-helpers/fns/isarray.js', 'default');
@@ -447,14 +448,14 @@ function serialize(obj) {
 }
 exports.default = serialize;
 },
-'node_modules/js-helpers/fns/splitntrim.js': function(exports, __required){
+'node_modules/js-helpers/fns/splitntrim.js': function(module, exports, __required){
 exports.default = function (str, regexp) {
     return (str || '').split(regexp).map(function (val) {
         return val.trim();
     });
 };
 },
-'node_modules/js-helpers/fns/toobject.js': function(exports, __required){
+'node_modules/js-helpers/fns/toobject.js': function(module, exports, __required){
 exports.default = function (str, replacerObj) {
     var newObj;
     var splitedStr = str.match(new RegExp('\\' + str.charAt(0) + '(.*?)' + '\\' + str.charAt(str.length - 1)));
@@ -468,18 +469,25 @@ exports.default = function (str, replacerObj) {
     return newObj;
 };
 },
-'node_modules/js-helpers/fns/unserialize.js': function(exports, __required){
+'node_modules/js-helpers/fns/unserialize.js': function(module, exports, __required){
 exports.default = function (par) {
     return (par || '').split('&').reduce(function (accum, val) {
         if (val) {
             var splitPairs = val.split('=');
-            accum[splitPairs[0]] = JSON.parse(splitPairs[1]);
+            accum[splitPairs[0]] = parseJSON(splitPairs[1]);
         }
         return accum;
     }, {});
+    function parseJSON(str) {
+        try {
+            str = JSON.parse(str);
+        } catch (e) {
+        }
+        return str;
+    }
 };
 },
-'node_modules/js-helpers/fns/simpleBooleanParser.js': function(exports, __required){
+'node_modules/js-helpers/fns/simpleBooleanParser.js': function(module, exports, __required){
 exports.default = function ($boolValue) {
     return {
         'true': true,
@@ -495,7 +503,7 @@ exports.default = function ($boolValue) {
     }[$boolValue];
 };
 },
-'node_modules/js-helpers/utils.js': function(exports, __required){
+'node_modules/js-helpers/utils.js': function(module, exports, __required){
 
 exports.base64 = __required('node_modules/js-helpers/fns/base64.js', 'default');
 exports.cookie = __required('node_modules/js-helpers/fns/cookie.js', 'default');
@@ -515,7 +523,7 @@ exports.unserialize = __required('node_modules/js-helpers/fns/unserialize.js', '
 exports.camelcase = __required('node_modules/js-helpers/fns/camelcase.js', 'default');
 exports.simpleBooleanParser = __required('node_modules/js-helpers/fns/simpleBooleanParser.js', 'default');
 },
-'dist/core/bundles/jeli-core-module.js': function(exports, __required){
+'dist/core/bundles/jeli-core-module.js': function(module, exports, __required){
 var utils = __required('node_modules/js-helpers/utils.js');
 var simpleBooleanParser = utils['simpleBooleanParser'];
 var copy = utils['copy'];
@@ -569,36 +577,38 @@ function resolveClosureRef(ref) {
 ;
 var existingInstance = new Map();
 function ProviderToken(tokenName, multiple, provide) {
-    var tokenValue;
+    var tokenRecords = [];
+    var persists = false;
     this.tokenName = tokenName;
-    this.register = function (value) {
+    this.register = function (value, wireInstant) {
+        value = wireInstant ? AutoWire(value) : value;
         if (multiple) {
-            if (!tokenValue) {
-                tokenValue = [];
-            }
-            tokenValue.push(value);
+            tokenRecords.push(value);
         } else {
-            tokenValue = value;
+            tokenRecords = value;
         }
+        persists = wireInstant;
     };
     this.resolve = function () {
         var token;
         try {
             if (multiple) {
-                token = (tokenValue || []).map(function (token) {
-                    return AutoWire(token);
-                });
+                token = tokenRecords.map(getToken);
             } else {
-                token = AutoWire(tokenValue);
+                token = getToken(tokenRecords);
             }
         } catch (e) {
             errorBuilder('error while resolving ' + tokenName);
         }
-        tokenValue = null;
+        if (!persists)
+            tokenRecords = [];
         return token;
     };
     if (provide) {
-        this.register(provide);
+        this.register(provide, true);
+    }
+    function getToken(token) {
+        return persists ? token : AutoWire(token);
     }
 }
 function Inject(factory, localInjector) {
@@ -624,7 +634,7 @@ function Inject(factory, localInjector) {
 ;
 function AutoWire(factory, localInjector, callback) {
     if (isfunction(factory)) {
-        var deps = resolveDeps(factory, localInjector);
+        var deps = resolveDeps(factory.annotations && factory.annotations.DI, localInjector);
         var protos = Object.create(factory.prototype);
         var result = factory.apply(protos, deps) || protos;
         if (existingInstance.has(factory)) {
@@ -655,31 +665,28 @@ function wireResolvers(deps, localInjector) {
 function resolveTokenBase(token, localInjector) {
     var tokenValue;
     if (token.factory) {
-        var args = (token.DI || []).map(function (dep) {
-            return Inject(dep, localInjector);
-        });
+        var args = resolveDeps(token.DI, localInjector);
         tokenValue = function () {
             return resolveClosureRef(token.factory).apply(null, args);
         };
     } else if (token.useClass) {
         tokenValue = Inject(token.useClass, localInjector);
     } else if (token.reference) {
-        var reference = Inject(token.reference, localInjector);
-        tokenValue = resolveReference(reference, localInjector);
+        tokenValue = resolveReference(Inject(token.reference, localInjector), localInjector);
     } else if (token.value) {
         tokenValue = token.value;
     }
     return tokenValue;
 }
-function resolveDeps(factory, localInjector) {
+function resolveDeps(DI, localInjector) {
     var deps = [];
-    if (factory.annotations && factory.annotations.DI) {
-        for (var serviceName in factory.annotations.DI) {
-            var doInject = factory.annotations.DI[serviceName];
+    if (DI) {
+        for (var serviceName in DI) {
+            var doInject = DI[serviceName];
             var injectableParam = null;
             var err = false;
             try {
-                injectableParam = Inject(doInject.factory || serviceName, localInjector, factory.module);
+                injectableParam = Inject(doInject.factory || serviceName, localInjector);
             } catch (e) {
                 err = true;
             } finally {
@@ -699,7 +706,7 @@ function resolveReference(reference, localInjector) {
         else if (localInjector.has(reference))
             return localInjector.get(reference);
         else if (reference.annotations) {
-            existingInstance.set(reference, 'PENDING');
+            existingInstance.set(reference, null);
             return function () {
                 return existingInstance.get(reference);
             };
@@ -711,16 +718,16 @@ function resolveReference(reference, localInjector) {
 }
 function AbstractInjectorInstance() {
     this.injectors = {};
-    this.get = function (injectorToken) {
-        return this.injectors[injectorToken];
-    };
     this.has = function (injectorToken) {
         return this.injectors.hasOwnProperty(injectorToken);
     };
-    this.set = function (tokenName, value) {
-        this.injectors[tokenName] = value;
-    };
 }
+AbstractInjectorInstance.prototype.set = function (tokenName, value) {
+    this.injectors[tokenName] = value;
+};
+AbstractInjectorInstance.prototype.get = function (injectorToken) {
+    return this.injectors[injectorToken];
+};
 AbstractInjectorInstance.prototype.destroy = function () {
     this.injectors = null;
 };
@@ -1045,7 +1052,7 @@ Observer.prototype.destroy = function (value) {
     this.retry = false;
     this._events = null;
 };
-function InternalChangeDetector(tick) {
+function InternalChangeDetector(context) {
     this._changeDetectorState = 3;
     Object.defineProperty(this, 'status', {
         get: function () {
@@ -1057,6 +1064,32 @@ function InternalChangeDetector(tick) {
             tick.apply(null, arguments);
         }
     };
+    function tick(ignoreChild, ignoreParent) {
+        if (!context.observables || context.inProgress) {
+            return;
+        }
+        context.inProgress = true;
+        if (context.parent && !ignoreParent && componentDebugContext.has(context.parent)) {
+            var parent = componentDebugContext.get(context.parent);
+            parent.changeDetector.detectChanges(true);
+            triggerChild(parent.child, [context.componentRefId]);
+        }
+        context.observables && context.observables.notifyAllObservers(context.componentInstance);
+        if (!ignoreChild) {
+            triggerChild(context.child, []);
+        }
+        function triggerChild(children, ignore) {
+            for (var i = 0; i < children.length; i++) {
+                var refId = children[i];
+                if (!inarray(refId, ignore) && componentDebugContext.has(refId)) {
+                    var child = componentDebugContext.get(refId);
+                    child.changeDetector.detectChanges(false, true);
+                }
+            }
+        }
+        context.inProgress = false;
+    }
+    ;
 }
 InternalChangeDetector.prototype.markAsChecked = function () {
     this._changeDetectorState = 1;
@@ -1069,12 +1102,11 @@ InternalChangeDetector.prototype.markAsOnce = function () {
 };
 var componentDebugContext = new Map();
 function ComponentRef(refId) {
-    var _this = this;
     this.componentRefId = refId;
     this.observables = new Observer();
     this.child = [];
     this.parent = null;
-    this.changeDetector = new InternalChangeDetector(tick);
+    this.changeDetector = new InternalChangeDetector(this);
     this._componentInstance = null;
     this._context = null;
     Object.defineProperties(this, {
@@ -1098,32 +1130,6 @@ function ComponentRef(refId) {
             }
         }
     });
-    function tick(ignoreChild, ignoreParent) {
-        if (!_this.observables || _this.inProgress) {
-            return;
-        }
-        _this.inProgress = true;
-        if (_this.parent && !ignoreParent && componentDebugContext.has(_this.parent)) {
-            var parent = componentDebugContext.get(_this.parent);
-            parent.changeDetector.detectChanges(true);
-            triggerChild(parent.child, [_this.componentRefId]);
-        }
-        _this.observables.notifyAllObservers(_this.componentInstance);
-        if (!ignoreChild) {
-            triggerChild(_this.child, []);
-        }
-        function triggerChild(children, ignore) {
-            for (var i = 0; i < children.length; i++) {
-                var refId = children[i];
-                if (!inarray(refId, ignore) && componentDebugContext.has(refId)) {
-                    var child = componentDebugContext.get(refId);
-                    child.changeDetector.detectChanges(false, true);
-                }
-            }
-        }
-        _this.inProgress = false;
-    }
-    ;
 }
 ComponentRef.prototype.removeChild = function (refId) {
     this.child.slice(this.child.indexOf(refId), 1);
@@ -1147,6 +1153,7 @@ ComponentRef.prototype.new = function (refId) {
     return childInstance;
 };
 ComponentRef.prototype.destroy = function () {
+    this.changeDetector.markAsChecked();
     componentDebugContext.delete(this.componentRefId);
     if (this.parent && componentDebugContext.has(this.parent)) {
         componentDebugContext.get(this.parent).removeChild(this.componentRefId);
@@ -1169,55 +1176,26 @@ ComponentRef.create = function (refId, parentId) {
     componentRef = null;
 };
 function ChangeDetector() {
+    if (!CoreBootstrapContext.bootStrapComponent)
+        return;
     CoreBootstrapContext.bootStrapComponent.changeDetector.detectChanges();
 }
 ;
+var staticInjectionToken = {
+    ElementRef: 'ElementRef',
+    TemplateRef: 'TemplateRef',
+    changeDetector: 'changeDetector',
+    ViewRef: 'ViewRef',
+    ParentRef: 'ParentRef',
+    VALIDATORS: 'VALIDATORS'
+};
 function ComponentInjectors(elementRef) {
     AbstractInjectorInstance.call(this, elementRef);
     this.injectors.ElementRef = elementRef;
     this.currentClassAnnotations = {};
-    var _this = this;
-    Object.defineProperties(this.injectors, {
-        TemplateRef: {
-            get: function () {
-                return this.ElementRef.getTemplateRef(_this.currentClassAnnotations.selector);
-            }
-        },
-        changeDetector: {
-            get: function () {
-                return this.ElementRef.changeDetector;
-            }
-        },
-        ViewRef: {
-            get: function () {
-                return new ViewRef(this.ElementRef);
-            }
-        },
-        ParentRef: {
-            get: function () {
-                if (_this.currentClassAnnotations.DI.ParentRef.value) {
-                    return findParentRef(this.ElementRef.parent, _this.currentClassAnnotations.DI.ParentRef.value);
-                }
-                return this.ElementRef.parent.componentInstance;
-            }
-        },
-        VALIDATORS: {
-            get: function () {
-                var _this = this;
-                return [
-                    'required',
-                    'pattern',
-                    'minlength',
-                    'maxlength'
-                ].reduce(function (accum, key) {
-                    if (_this.ElementRef.hasAttribute(key)) {
-                        accum[key] = _this.ElementRef.getAttribute(key);
-                    }
-                    return accum;
-                }, {});
-            }
-        }
-    });
+    this.has = function (tokenName) {
+        return this.injectors.hasOwnProperty(tokenName) || staticInjectionToken.hasOwnProperty(tokenName);
+    };
 }
 ComponentInjectors.prototype = Object.create(AbstractInjectorInstance.prototype);
 ComponentInjectors.prototype.constructor = AbstractInjectorInstance;
@@ -1226,6 +1204,43 @@ ComponentInjectors.prototype.destroy = function () {
     this.injectors = null;
     this.currentClassAnnotations = null;
 };
+ComponentInjectors.prototype.get = function (tokenName) {
+    if (this.injectors.hasOwnProperty(tokenName))
+        return this.injectors[tokenName];
+    else if (staticInjectionToken[tokenName])
+        return _ComponentInjectionToken(tokenName, this);
+};
+function _ComponentInjectionToken(tokenName, context) {
+    switch (tokenName) {
+    case staticInjectionToken.TemplateRef:
+        return context.injectors.ElementRef.getTemplateRef(context.currentClassAnnotations.selector);
+    case staticInjectionToken.changeDetector:
+        return context.injectors.ElementRef.changeDetector;
+    case staticInjectionToken.ViewRef:
+        return new ViewRef(context.injectors.ElementRef);
+    case staticInjectionToken.ParentRef: {
+            if (context.currentClassAnnotations.DI.ParentRef.value) {
+                return findParentRef(context.injectors.ElementRef.parent, context.currentClassAnnotations.DI.ParentRef.value);
+            }
+            return context.injectors.ElementRef.parent.componentInstance;
+        }
+    case staticInjectionToken.VALIDATORS:
+        return getValidators(context.injectors.ElementRef);
+    }
+}
+function getValidators(elementRef) {
+    return [
+        'required',
+        'pattern',
+        'minlength',
+        'maxlength'
+    ].reduce(function (accum, key) {
+        if (elementRef.hasAttribute(key)) {
+            accum[key] = elementRef.getAttribute(key);
+        }
+        return accum;
+    }, {});
+}
 function findParentRef(parentRef, refValue) {
     if (parentRef && !parentRef.nodes.has(refValue)) {
         return findParentRef(parentRef.parent, refValue);
@@ -1524,7 +1539,7 @@ _Promise.all = function (resolve) {
     }
     for (var i = 0; i < length; i++) {
         var cur = resolveValues[i];
-        if (cur instanceof _Promise) {
+        if (cur instanceof _Promise || cur instanceof Promise) {
             cur.then(updateDefered(i), updateDefered(i, true));
         } else {
             updateDefered(i)(cur);
@@ -1551,7 +1566,7 @@ function bootStrapApplication(moduleToBootStrap) {
         CoreBootstrapContext.$isCompiled = true;
         bootStrapElement();
     }, function (err) {
-        console.log(err);
+        console.error(err);
     });
     function bootStrapElement() {
         if (moduleToBootStrap.annotations.rootElement) {
@@ -1715,7 +1730,7 @@ function AbstractElementRef(definition, parentRef) {
                 if (componentDebugContext.has(this.refId)) {
                     return componentDebugContext.get(this.refId).context;
                 }
-                return this.hostRef.context;
+                return this.parent.context;
             }
         },
         componentInstance: {
@@ -2051,7 +2066,7 @@ EventHandler.prototype.registerListener = function () {
         } catch (e) {
             errorBuilder(e);
         } finally {
-            _this.element.changeDetector.detectChanges();
+            _this.element.changeDetector && _this.element.changeDetector.detectChanges();
         }
     }
     function triggerEvents(registeredEvent, mouseEvent) {
@@ -2259,6 +2274,17 @@ function parseObjectExpression(expression, context, componentInstance, event) {
                 return !val;
         },
         bin: function () {
+            if (expression.ops === '&&') {
+                var l = resolveValueFromContext(expression.left, context, componentInstance, event);
+                if (!l)
+                    return l;
+                return resolveValueFromContext(expression.right, context, componentInstance, event);
+            } else if (expression.ops === '||') {
+                var l = resolveValueFromContext(expression.left, context, componentInstance, event);
+                if (l)
+                    return l;
+                return resolveValueFromContext(expression.right, context, componentInstance, event);
+            }
             var l = resolveValueFromContext(expression.left, context, componentInstance, event);
             var r = resolveValueFromContext(expression.right, context, componentInstance, event);
             if (expression.ops === '==')
@@ -2768,6 +2794,29 @@ IterableProfiler.prototype.destroy = function () {
     this.cacheHash.length = 0;
     this.out = null;
 };
+var nativeTimeout = window.setTimeout;
+var nativeClearTimeout = window.clearTimeout;
+var nativeInterval = window.setInterval;
+var nativeClearInterval = window.clearInterval;
+window.setTimeout = function (fn, timer) {
+    return nativeTimeout(trigger(fn), timer);
+};
+window.clearTimeout = function (timeoutID) {
+    nativeClearTimeout(timeoutID);
+};
+window.clearInterval = function (intervalID) {
+    nativeClearInterval(intervalID);
+};
+window.setInterval = function (fn, interval) {
+    return nativeInterval(trigger(fn), interval);
+};
+function trigger(fn) {
+    return function () {
+        fn();
+        ChangeDetector();
+    };
+}
+;
 exports.errorBuilder = errorBuilder;
 exports.ProviderToken = ProviderToken;
 exports.Inject = Inject;
@@ -2779,6 +2828,7 @@ exports.resolveClosureRef = resolveClosureRef;
 exports.ϕjeliLinker = ϕjeliLinker;
 exports.ChangeDetector = ChangeDetector;
 exports.Observer = Observer;
+exports.staticInjectionToken = staticInjectionToken;
 exports.AttributeAppender = AttributeAppender;
 exports.sce = sce;
 exports.ElementStyle = ElementStyle;
@@ -2799,10 +2849,11 @@ exports.Observable = Observable;
 exports.AbstractObserver = AbstractObserver;
 exports.EventEmitter = EventEmitter;
 exports.CustomEventHandler = CustomEventHandler;
+exports.debounce = debounce;
 exports.ComponentFactoryResolver = ComponentFactoryResolver;
 exports.IterableProfiler = IterableProfiler;
 },
-'dist/common/bundles/jeli-common-module.js': function(exports, __required){
+'dist/common/bundles/jeli-common-module.js': function(module, exports, __required){
 var helpers = __required('node_modules/js-helpers/helpers.js');
 var isarray = helpers['isarray'];
 var isobject = helpers['isobject'];
@@ -3339,7 +3390,7 @@ var QueryFactory = function () {
         return this;
     }
     ;
-    QueryFactory.annotations = { name: 'query' };
+    QueryFactory.annotations = {};
     return QueryFactory;
 }();
 var whereFilterFn = function () {
@@ -3352,31 +3403,6 @@ var whereFilterFn = function () {
     whereFilterFn.annotations = { name: 'whereFilter' };
     return whereFilterFn;
 }();
-var nativeTimeout = window.setTimeout;
-var nativeClearTimeout = window.clearTimeout;
-var nativeInterval = window.setInterval;
-var nativeClearInterval = window.clearInterval;
-window.setTimeout = function (fn, timer, detectChanges) {
-    return nativeTimeout(trigger(fn, detectChanges), timer);
-};
-window.clearTimeout = function (timeoutID) {
-    nativeClearTimeout(timeoutID);
-};
-window.clearInterval = function (intervalID) {
-    nativeClearInterval(intervalID);
-};
-window.setInterval = function (fn, interval, detectChanges) {
-    return nativeInterval(trigger(fn, detectChanges), interval);
-};
-function trigger(fn, detectChanges) {
-    return function () {
-        fn();
-        if (detectChanges) {
-            CoreBootstrapContext.detectChanges();
-        }
-    };
-}
-;
 var CommonModule = function () {
     'use strict';
     function CommonModule() {
@@ -3423,7 +3449,7 @@ exports.upperCaseFilter = upperCaseFilter;
 exports.whereFilterFn = whereFilterFn;
 exports.QueryFactory = QueryFactory;
 },
-'dist/common/bundles/jeli-common-datetime-module.js': function(exports, __required){
+'dist/common/bundles/jeli-common-datetime-module.js': function(module, exports, __required){
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var ProviderToken = core['ProviderToken'];
 var leapYear = function (year) {
@@ -3802,7 +3828,7 @@ exports.DAYS_FULL = DAYS_FULL;
 exports.dateTimeFilterFN = dateTimeFilterFN;
 exports.TimeAgoFilterFn = TimeAgoFilterFn;
 },
-'dist/form/bundles/jeli-form-module.js': function(exports, __required){
+'dist/form/bundles/jeli-form-module.js': function(module, exports, __required){
 var utils = __required('node_modules/js-helpers/utils.js');
 var extend = utils['extend'];
 var helpers = __required('node_modules/js-helpers/helpers.js');
@@ -4428,8 +4454,8 @@ var formValidationStack = Object.create({
     ISEMPTY: function (val, def) {
         return def === isempty(val);
     },
-    BOOLEAN: function (bool, val) {
-        return isboolean(value) && isequal(bool, val);
+    BOOLEAN: function (value, def) {
+        return isboolean(value) && isequal(value, def);
     },
     DOMAINVALIDATION: function (domain) {
         return /[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+/.test(domain);
@@ -5085,7 +5111,7 @@ exports.NumberEventBinder = NumberEventBinder;
 exports.ResolveRangeBinder = ResolveRangeBinder;
 exports.RangeEventBinder = RangeEventBinder;
 },
-'dist/http/bundles/jeli-http-module.js': function(exports, __required){
+'dist/http/bundles/jeli-http-module.js': function(module, exports, __required){
 var utils = __required('node_modules/js-helpers/utils.js');
 var serialize = utils['serialize'];
 var extend = utils['extend'];
@@ -5096,12 +5122,14 @@ var isobject = helpers['isobject'];
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var Subject = core['Subject'];
 var ChangeDetector = core['ChangeDetector'];
+var Inject = core['Inject'];
 var ProviderToken = core['ProviderToken'];
-var INTERCEPTORS = new ProviderToken('interceptors', true);
+var HTTP_INTERCEPTORS = new ProviderToken('interceptors', true);
 var HttpInterceptor = function () {
     'use strict';
-    function HttpInterceptor(interceptors) {
+    function HttpInterceptor() {
         this.resolveInterceptor = function (options, callback) {
+            var interceptors = Inject(HTTP_INTERCEPTORS);
             if (!interceptors || !interceptors.length) {
                 return callback(options);
             }
@@ -5118,7 +5146,7 @@ var HttpInterceptor = function () {
             next();
         };
     }
-    HttpInterceptor.annotations = { DI: { INTERCEPTORS: { factory: INTERCEPTORS } } };
+    HttpInterceptor.annotations = {};
     return HttpInterceptor;
 }();
 var defaultOptions = {
@@ -5230,6 +5258,7 @@ function CoreHttp(url, options, interceptor, changeDetection) {
             processRequest();
         }
         sendRequest();
+        return xhrPromise;
     });
     function respondToReadyState(readyState) {
         var response = new HttpResponse(xhrInstance.status, xhrInstance.readyState, options.url);
@@ -5237,11 +5266,6 @@ function CoreHttp(url, options, interceptor, changeDetection) {
             try {
                 response.data = parseJSON(xhrInstance.responseText, !!xhrInstance.responseText);
                 response.success = xhrInstance.status >= 200 && xhrInstance.status < 300 || xhrInstance.status == 304 || xhrInstance.status == 0 && xhrInstance.responseText;
-                interceptor.resolveInterceptor(response, function (response) {
-                    if (response instanceof HttpResponse) {
-                    } else if (response instanceof HttpErrorResponse) {
-                    }
-                });
             } catch (e) {
                 xhrPromise.error(e);
             }
@@ -5354,14 +5378,15 @@ var HttpModule = function () {
     return HttpModule;
 }();
 exports.HttpModule = HttpModule;
-exports.INTERCEPTORS = INTERCEPTORS;
+exports.HTTP_INTERCEPTORS = HTTP_INTERCEPTORS;
 exports.HttpInterceptor = HttpInterceptor;
 exports.HttpService = HttpService;
 exports.unsafeHeaders = unsafeHeaders;
 exports.HttpResponse = HttpResponse;
 },
-'dist/router/bundles/jeli-router-module.js': function(exports, __required){
+'dist/router/bundles/jeli-router-module.js': function(module, exports, __required){
 var utils = __required('node_modules/js-helpers/utils.js');
+var unserialize = utils['unserialize'];
 var extend = utils['extend'];
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var INITIALIZERS = core['INITIALIZERS'];
@@ -5624,14 +5649,15 @@ function getRequiredRoute(routeName) {
                     });
                 }
                 if (queryParam[1]) {
-                    foundRoute.route.params = extend(foundRoute.route.params, unSerialize(queryParam[1]));
+                    foundRoute.route.params = extend(foundRoute.route.params, unserialize(queryParam[1]));
                 }
             }
             return foundRoute;
         }
     };
 }
-function ResolveRouteInterceptor(interceptors, route, callback) {
+function ResolveRouteInterceptor(route, callback) {
+    var interceptors = Inject(ROUTE_INTERCEPTOR);
     var locals = {};
     if (!interceptors || !interceptors.length) {
         return callback(locals);
@@ -5651,7 +5677,7 @@ function ResolveRouteInterceptor(interceptors, route, callback) {
 ;
 var WebStateService = function () {
     'use strict';
-    function WebStateService(webStateProvider, viewHandler, routerInterceptor, customEventHandler) {
+    function WebStateService(webStateProvider, viewHandler, customEventHandler) {
         var _this = this;
         this.locationStates = null;
         this.lastState = null;
@@ -5662,7 +5688,7 @@ var WebStateService = function () {
         function _routeEventListener(e, route, path) {
             if (isequal('$webRouteStart', e.type)) {
                 _this.$$baseUrl = path;
-                ResolveRouteInterceptor(routerInterceptor, {
+                ResolveRouteInterceptor({
                     name: route.name,
                     path: path,
                     url: route.url
@@ -5671,7 +5697,6 @@ var WebStateService = function () {
                     if (lastTransitionQueue) {
                         _this.$$baseUrl = lastTransitionQueue.path;
                         route = getRequiredRoute(lastTransitionQueue.path).checkParams(lastTransitionQueue.params);
-                        viewResolver = viewHandler.resolveViews(route, _this.state);
                         viewHandler.stateQueue.length = 0;
                     }
                     if (!isequal(_this.$$baseUrl, _this.state.url)) {
@@ -5723,7 +5748,7 @@ var WebStateService = function () {
     };
     WebStateService.prototype.go = function (path, params) {
         path = this.$href(path, params);
-        if (this.$stateChanged(path)) {
+        if (this._stateChanged(path)) {
             this._gotoState(null, path, params);
         }
         return this;
@@ -5766,7 +5791,7 @@ var WebStateService = function () {
     WebStateService.prototype.getParam = function (name) {
         return this.state.route.params[name];
     };
-    WebStateService.prototype.$stateChanged = function (path) {
+    WebStateService.prototype._stateChanged = function (path) {
         return !isequal(this.$$baseUrl, path);
     };
     WebStateService.prototype.getRootUrl = function () {
@@ -5781,7 +5806,6 @@ var WebStateService = function () {
         DI: {
             WebStateProvider: { factory: WebStateProvider },
             ViewHandler: { factory: ViewHandler },
-            ROUTE_INTERCEPTOR: { factory: ROUTE_INTERCEPTOR },
             CustomEventHandler: { factory: CustomEventHandler }
         }
     };
@@ -6005,29 +6029,17 @@ var JIntentContainer = function () {
     };
     return JIntentContainer;
 }();
-function ViewInit(jeliWebProvider, $webState) {
+function ViewInit(jeliWebProvider, webStateService) {
     var originalState = location.hash;
     var stateChanged = false;
-    var html5Mode = jeliWebProvider.html5Mode;
     jeliWebProvider.isLoaded = true;
     if ('onhashchange' in window) {
         window.addEventListener('$locationReplaceState', locationReplaceState);
         window.addEventListener('hashchange', webRouteChangedFn);
-        if (!originalState) {
-            location.hash = refineHash() || jeliWebProvider.fallback;
-        } else {
-            $webState._gotoState(null, refineHash());
-        }
-    }
-    if ('onpopstate' in window) {
-        if (html5Mode) {
-            window.onpopstate = function (e) {
-            };
-        }
     }
     function locationReplaceState(e) {
-        var state = $webState.currentState();
-        $webState.isReplaceState = true;
+        var state = webStateService.currentState();
+        webStateService.isReplaceState = true;
         if (state.hash !== state.previousHash || stateChanged) {
             location.replace(state.hash);
             originalState = state.currentLocation;
@@ -6035,15 +6047,25 @@ function ViewInit(jeliWebProvider, $webState) {
     }
     function webRouteChangedFn(e) {
         var locHash = refineHash();
-        if (!location.hash.length || !$webState.$stateChanged(locHash) || $webState.isReplaceState) {
-            $webState.isReplaceState = false;
+        if (!location.hash.length || !webStateService._stateChanged(locHash) || webStateService.isReplaceState) {
+            webStateService.isReplaceState = false;
             return;
         }
-        $webState.go(locHash);
+        webStateService._gotoState(null, locHash);
     }
     function refineHash() {
         return (location.hash || '').replace('#', '');
     }
+    return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+            if (!originalState) {
+                location.hash = refineHash() || jeliWebProvider.fallback;
+            } else {
+                webStateService._gotoState(null, refineHash());
+            }
+            resolve(true);
+        }, 0);
+    });
 }
 var RouterModule = function () {
     'use strict';
@@ -6051,12 +6073,12 @@ var RouterModule = function () {
     }
     RouterModule.setRoutes = setupRoutes;
     INITIALIZERS.register({
-        DI: [
-            WebStateProvider,
-            WebStateService
-        ],
+        DI: {
+            WebStateProvider: { factory: WebStateProvider },
+            WebStateService: { factory: WebStateService }
+        },
         factory: ViewInit
-    });
+    }, true);
     RouterModule.annotations = {
         services: [
             ViewHandler,
@@ -6086,7 +6108,7 @@ exports.ViewIntentService = ViewIntentService;
 exports.JIntentContainer = JIntentContainer;
 exports.ViewInit = ViewInit;
 },
-'viewers/Todo/src/app/components/calculator/calculator.js': function(exports, __required){
+'viewers/Todo/src/app/components/calculator/calculator.js': function(module, exports, __required){
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var ViewParser = core['ViewParser'];
 /** compiled CalculatorComponent **/
@@ -6148,13 +6170,13 @@ CalculatorComponent.annotations = {
     module: 'AppModule'
 };
 
-CalculatorComponent.view = /** jeli template **/ new ViewParser([{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attrObservers":{"value":{"prop":"currentNumber","once":false}}},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":"element","name":"button","index":0,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":["+"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"+"}}]},{"type":"element","name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":["-"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"-"}}]},{"type":"element","name":"button","index":2,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":["*"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"×"}}]},{"type":"element","name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":["/"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"÷"}}]},{"type":"element","name":"button","index":4,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":["7"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"7"}}]},{"type":"element","name":"button","index":5,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":["8"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"8"}}]},{"type":"element","name":"button","index":6,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":["9"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"9"}}]},{"type":"element","name":"button","index":7,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":["4"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"4"}}]},{"type":"element","name":"button","index":8,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":["5"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"5"}}]},{"type":"element","name":"button","index":9,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":["6"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"6"}}]},{"type":"element","name":"button","index":10,"isc":false,"attr":{"type":"button","value":true},"events":[{"name":"click","value":[{"type":"call","args":["1"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"1"}}]},{"type":"element","name":"button","index":11,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":["2"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"2"}}]},{"type":"element","name":"button","index":12,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":["3"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"3"}}]},{"type":"element","name":"button","index":13,"isc":false,"attr":{"type":"button","value":false},"events":[{"name":"click","value":[{"type":"call","args":["0"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"0"}}]},{"type":"element","name":"button","index":14,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":"text","ast":{"rawValue":"."}}]},{"type":"element","name":"button","index":15,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":"text","ast":{"rawValue":"AC"}}]},{"type":"element","name":"button","index":16,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":["="],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"="}}]}]}]}], {}) /** template loader **/;
+CalculatorComponent.view = /** jeli template **/ new ViewParser([{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attrObservers":{"value":{"prop":"currentNumber","once":false}}},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":"element","name":"button","index":0,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":["+"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"+"}}]},{"type":"element","name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":["-"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"-"}}]},{"type":"element","name":"button","index":2,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":["*"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"×"}}]},{"type":"element","name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":["/"],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"÷"}}]},{"type":"element","name":"button","index":4,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":["7"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"7"}}]},{"type":"element","name":"button","index":5,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":["8"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"8"}}]},{"type":"element","name":"button","index":6,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":["9"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"9"}}]},{"type":"element","name":"button","index":7,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":["4"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"4"}}]},{"type":"element","name":"button","index":8,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":["5"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"5"}}]},{"type":"element","name":"button","index":9,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":["6"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"6"}}]},{"type":"element","name":"button","index":10,"isc":false,"attr":{"type":"button","value":1},"events":[{"name":"click","value":[{"type":"call","args":["1"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"1"}}]},{"type":"element","name":"button","index":11,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":["2"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"2"}}]},{"type":"element","name":"button","index":12,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":["3"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"3"}}]},{"type":"element","name":"button","index":13,"isc":false,"attr":{"type":"button","value":0},"events":[{"name":"click","value":[{"type":"call","args":["0"],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"rawValue":"0"}}]},{"type":"element","name":"button","index":14,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":"text","ast":{"rawValue":"."}}]},{"type":"element","name":"button","index":15,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":"text","ast":{"rawValue":"AC"}}]},{"type":"element","name":"button","index":16,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":["="],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"rawValue":"="}}]}]}]}], {}) /** template loader **/;
 return CalculatorComponent;
 }();
 
 exports.CalculatorComponent = CalculatorComponent;
 },
-'viewers/Todo/src/app/components/route-form-page/route-form-page.element.js': function(exports, __required){
+'viewers/Todo/src/app/components/route-form-page/route-form-page.element.js': function(module, exports, __required){
 var common = __required('dist/common/bundles/jeli-common-module.js');
 var jsonFilterFn = common['jsonFilterFn'];
 var ItemList = __required('viewers/Todo/src/app/components/item-list/item-list.js', 'ItemList');
@@ -6211,7 +6233,9 @@ function RouterPageElement() {
             eventType: 'blur',
             validators: { maxlength: 90 }
         },
-        number: { value: 500 }
+        number: { value: 500 },
+        country: { value: 'Tuvalu' },
+        job: { value: 1 }
     });
 }
 RouterPageElement.prototype.didInit = function () {
@@ -6244,23 +6268,27 @@ RouterPageElement.annotations = {
     module: 'AppModule'
 };
 
-RouterPageElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[FormControlDirective],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":true},"providers":[RadioEventBinder,FormFieldDirective]},{"type":"text","ast":{"rawValue":" Yes"}},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":false},"providers":[RadioEventBinder,FormFieldDirective]},{"type":"text","ast":{"rawValue":" No"}},{"type":"element","name":"br","index":5,"isc":false},{"type":"element","name":"input","index":6,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[CheckboxEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":7,"isc":false}]},{"type":"element","name":"textarea","index":1,"isc":false,"props":{"formField":"textarea"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":4,"isc":false},{"type":"element","name":"input","index":5,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":6,"isc":false},{"type":"element","name":"input","index":7,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[RangeEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":8,"isc":false},{"type":"element","name":"input","index":9,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[NumberEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":10,"isc":false},{"type":"element","name":"select","index":11,"isc":false,"props":{"formField":"select"},"providers":[SelectEventBinder,FormFieldDirective],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":{"rawValue":"Select 1"}}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":{"rawValue":"Select 2"}}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":{"rawValue":"Select 3"}}]}]},{"type":"element","name":"div","index":12,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":["personalInfo"],"fn":"getField","namespaces":["testForm"]}}},"providers":[FormControlDirective],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[DefaultEventBinder,FormFieldDirective]}]},{"type":"element","name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"input","index":2,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[NumberEventBinder,FormFieldDirective]}]},{"type":"element","name":"div","index":13,"isc":false,"children":[{"type":"element","name":"button","index":0,"isc":false,"attrObservers":{"disabled":{"prop":{"type":"una","ops":"!","args":["testForm","valid"]},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":"text","ast":{"rawValue":"Submit"}}]}]},{"type":"element","name":"item-list","index":14,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[ItemList],"children":[],"templates":{"place":[{"type":"element","name":"pre","index":0,"isc":false,"children":[{"type":"text","ast":{"rawValue":"${0}","$":true,"templates":[["${0}",{"prop":"value","args":[[]],"fns":[jsonFilterFn]}]]}}]}]}},{"type":"element","name":"pre","index":15,"isc":false,"children":[{"type":"text","ast":{"rawValue":"${0}","$":true,"templates":[["${0}",{"prop":["testForm","value"],"args":[["3"]],"fns":[jsonFilterFn]}]]}}]}]}], {}) /** template loader **/;
+RouterPageElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[FormControlDirective],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[RadioEventBinder,FormFieldDirective]},{"type":"text","ast":{"rawValue":" Yes"}},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[RadioEventBinder,FormFieldDirective]},{"type":"text","ast":{"rawValue":" No"}},{"type":"element","name":"br","index":5,"isc":false},{"type":"element","name":"input","index":6,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[CheckboxEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":7,"isc":false}]},{"type":"element","name":"textarea","index":1,"isc":false,"props":{"formField":"textarea"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":4,"isc":false},{"type":"element","name":"input","index":5,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":6,"isc":false},{"type":"element","name":"input","index":7,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[RangeEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":8,"isc":false},{"type":"element","name":"input","index":9,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[NumberEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":10,"isc":false},{"type":"element","name":"select","index":11,"isc":false,"props":{"formField":"select"},"providers":[SelectEventBinder,FormFieldDirective],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":{"rawValue":"Select 1"}}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":{"rawValue":"Select 2"}}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":{"rawValue":"Select 3"}}]}]},{"type":"element","name":"div","index":12,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":["personalInfo"],"fn":"getField","namespaces":["testForm"]}}},"providers":[FormControlDirective],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[DefaultEventBinder,FormFieldDirective]}]},{"type":"element","name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"input","index":2,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[NumberEventBinder,FormFieldDirective]}]},{"type":"element","name":"div","index":13,"isc":false,"children":[{"type":"element","name":"button","index":0,"isc":false,"attrObservers":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":true},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":"text","ast":{"rawValue":"Submit"}}]}]},{"type":"element","name":"item-list","index":14,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[ItemList],"children":[],"templates":{"place":[{"type":"element","name":"pre","index":0,"isc":false,"children":[{"type":"text","ast":{"rawValue":"${0}","$":true,"templates":[["${0}",{"prop":"value","args":[[]],"fns":[jsonFilterFn]}]]}}]}]}},{"type":"element","name":"pre","index":15,"isc":false,"children":[{"type":"text","ast":{"rawValue":"${0}","$":true,"templates":[["${0}",{"prop":["testForm","value"],"args":[["3"]],"fns":[jsonFilterFn]}]]}}]}]}], {}) /** template loader **/;
 return RouterPageElement;
 }();
 
 exports.RouterPageElement = RouterPageElement;
 },
-'viewers/Todo/src/app/app.routes.js': function(exports, __required){
+'viewers/Todo/src/app/app.routes.js': function(module, exports, __required){
 var RouterPageElement = __required('viewers/Todo/src/app/components/route-form-page/route-form-page.element.js', 'RouterPageElement');
 var CalculatorComponent = __required('viewers/Todo/src/app/components/calculator/calculator.js', 'CalculatorComponent');
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var INITIALIZERS = core['INITIALIZERS'];
 var router = __required('dist/router/bundles/jeli-router-module.js');
+var WebStateService = router['WebStateService'];
 var WebStateProvider = router['WebStateProvider'];
 var ROUTE_INTERCEPTOR = router['ROUTE_INTERCEPTOR'];
 var RouterModule = router['RouterModule'];
 function configureWebState(webStateProvider) {
     webStateProvider.fallback = '/';
+}
+function InitializeApp(webStateService) {
+    webStateService.events.listener('$webRouteStart', console.log);
 }/** compiled validatorService **/
 var validatorService = function(){
 "use strict";
@@ -6295,9 +6323,11 @@ function AppRouteModule() {
     });
 }
 
-INITIALIZERS.register({factory:configureWebState,DI:[WebStateProvider]});
+INITIALIZERS.register({factory : configureWebState, DI : {WebStateProvider : {factory: WebStateProvider}}}, true);
 
-ROUTE_INTERCEPTOR.register({useClass:validatorService});
+INITIALIZERS.register({factory : InitializeApp, DI : {WebStateService : {factory: WebStateService}}}, true);
+
+ROUTE_INTERCEPTOR.register({useClass : validatorService}, true);
 
 AppRouteModule.annotations = {
     requiredModules: [
@@ -6309,10 +6339,11 @@ return AppRouteModule;
 }();
 
 exports.configureWebState = configureWebState;
+exports.InitializeApp = InitializeApp;
 exports.validatorService = validatorService;
 exports.AppRouteModule = AppRouteModule;
 },
-'viewers/Todo/src/app/components/test-place.js': function(exports, __required){
+'viewers/Todo/src/app/components/test-place.js': function(module, exports, __required){
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var ViewParser = core['ViewParser'];
 /** compiled TestPlaceElement **/
@@ -6335,7 +6366,7 @@ return TestPlaceElement;
 
 exports.TestPlaceElement = TestPlaceElement;
 },
-'viewers/Todo/src/app/components/item-list/item-list.js': function(exports, __required){
+'viewers/Todo/src/app/components/item-list/item-list.js': function(module, exports, __required){
 var common = __required('dist/common/bundles/jeli-common-module.js');
 var SwitchCaseDirective = common['SwitchCaseDirective'];
 var SwitchDefaultDirective = common['SwitchDefaultDirective'];
@@ -6358,18 +6389,25 @@ ItemList.annotations = {
     module: 'AppModule'
 };
 
-ItemList.view = /** jeli template **/ new ViewParser([{"type":"place","name":"#fragment","index":0,"isc":false},{"type":"element","name":"#fragment","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[SwitchDirective],"children":[{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"rawValue":"Invalid form"}}]}},"providers":[SwitchDefaultDirective]},{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":1,"isc":false,"children":[{"type":"text","ast":{"rawValue":"Valid form"}}]}},"props":{"switchCase":{"prop":"test"}},"providers":[SwitchCaseDirective]}]}], {}) /** template loader **/;
+ItemList.view = /** jeli template **/ new ViewParser([{"type":"place","name":"#fragment","index":0,"isc":false},{"type":"element","name":"#fragment","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[SwitchDirective],"children":[{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"rawValue":"Invalid form"}}]}},"providers":[SwitchDefaultDirective]},{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":1,"isc":false,"children":[{"type":"text","ast":{"rawValue":"Valid form"}}]}},"props":{"switchCase":{"prop":{"type":"raw","value":"test"}}},"providers":[SwitchCaseDirective]}]}], {}) /** template loader **/;
 return ItemList;
 }();
 
 exports.ItemList = ItemList;
 },
-'viewers/Todo/src/app/app.component.js': function(exports, __required){
+'viewers/Todo/src/app/app.component.js': function(module, exports, __required){
 var datetime = __required('dist/common/bundles/jeli-common-datetime-module.js');
 var dateTimeFilterFN = datetime['dateTimeFilterFN'];
 var router = __required('dist/router/bundles/jeli-router-module.js');
 var jViewFn = router['jViewFn'];
 var GoFn = router['GoFn'];
+var common = __required('dist/common/bundles/jeli-common-module.js');
+var ForDirective = common['ForDirective'];
+var IfDirective = common['IfDirective'];
+var form = __required('dist/form/bundles/jeli-form-module.js');
+var CheckboxEventBinder = form['CheckboxEventBinder'];
+var ModelDirective = form['ModelDirective'];
+var DefaultEventBinder = form['DefaultEventBinder'];
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var ViewParser = core['ViewParser'];
 var http = __required('dist/http/bundles/jeli-http-module.js');
@@ -6467,13 +6505,13 @@ AppRootElement.annotations = {
     module: 'AppModule'
 };
 
-AppRootElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":{"rawValue":" Todo Application "}}]}]}]}]},{"type":"element","name":"a","index":3,"isc":false,"props":{"go":"welcome"},"providers":[GoFn],"children":[{"type":"text","ast":{"rawValue":"Welcome Page"}}]},{"type":"text","ast":{"rawValue":" | "}},{"type":"element","name":"a","index":5,"isc":false,"props":{"go":"calculator"},"providers":[GoFn],"children":[{"type":"text","ast":{"rawValue":"Calculator"}}]},{"type":"element","name":"j-view","index":6,"isc":true,"attr":{"ref":"content"},"providers":[jViewFn]},{"type":"element","name":"p","index":7,"isc":false,"children":[{"type":"text","ast":{"rawValue":"© ${0} FrontendOnly. All Rights Reserved ","$":true,"templates":[["${0}",{"prop":"","args":[["YYYY"]],"fns":[dateTimeFilterFN]}]]}}]}], {}) /** template loader **/;
+AppRootElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":{"rawValue":" Todo Application "}}]}]}]}]},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"container"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"row"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"col-sm-6 col-sm-offset-3"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"btn btn-group"},"children":[{"type":"element","name":"button","index":0,"isc":false,"events":[{"name":"click","value":[{"type":"call","args":[1],"fn":"generateMock"}]}],"attr":{"class":"btn btn-primary btn-small"},"children":[{"type":"text","ast":{"rawValue":"Dynamic Add"}}]},{"type":"element","name":"button","index":1,"isc":false,"events":[{"name":"click","value":[{"type":"asg","left":"todos","right":[]},{"type":"asg","left":"removeItemCount","right":0}]}],"attr":{"class":"btn btn-danger btn-small"},"children":[{"type":"text","ast":{"rawValue":"Empty"}}]},{"type":"element","name":"button","index":2,"isc":false,"events":[{"name":"click","value":[{"type":"asg","left":"todos","right":[]},{"type":"call","args":[10],"fn":"generateMock"}]}],"attr":{"class":"btn btn-primary btn-small"},"children":[{"type":"text","ast":{"rawValue":"AddMore"}}]}]},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"panel panel-primary"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"panel-heading"},"children":[{"type":"element","name":"form","index":0,"isc":false,"events":[{"name":"submit","value":[{"type":"call","args":[],"fn":"addTodo"}]}],"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"model":{"prop":"todoDescription"}},"providers":[DefaultEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"todoDescription","right":"$event"}],"custom":true}]}]}]},{"type":"element","name":"ul","index":1,"isc":false,"attr":{"class":"list-group"},"children":[{"type":"element","name":"li","index":0,"isc":false,"attr":{"class":"list-group-item"},"children":[{"type":"element","name":"strong","index":0,"isc":false,"children":[{"type":"text","ast":{"rawValue":"Todo Items: ${0}","$":true,"templates":[["${0}",{"prop":{"type":"bin","left":["todos","length"],"ops":"-","right":"removeItemCount"}}]]}}]},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"pull-right"},"children":[{"type":"element","name":"strong","index":0,"isc":false,"children":[{"type":"text","ast":{"rawValue":"Marked as done: ${0}","$":true,"templates":[["${0}",{"prop":"removeItemCount"}]]}}]}]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"li","index":1,"isc":false,"context":{"todo":"$context","idx":"index"},"attr":{"class":"list-group-item"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"row"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"col-sm-1"},"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":["todo","done"]}},"providers":[CheckboxEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"call","args":["$event","todo"],"fn":"markAsRemoved"}]}]}]},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"col-sm-8"},"children":[{"type":"element","name":"span","index":0,"isc":false,"attrObservers":{"style":{"prop":{"type":"obj","expr":{"text-decoration":{"type":"ite","test":["todo","done"],"cons":{"type":"raw","value":"line-through"},"alt":{"type":"raw","value":"none"}}}},"once":false}},"children":[{"type":"text","ast":{"rawValue":" ${0} ","$":true,"templates":[["${0}",{"prop":["todo","description"]}]]}}]}]},{"type":"element","name":"div","index":2,"isc":false,"attr":{"class":"col-sm-3"},"children":[{"type":"element","name":"button","index":0,"isc":false,"attr":{"class":"btn btn-primary btn-sm pull-right"},"events":[{"name":"click","value":[{"type":"asg","left":["todo","addDescription"],"right":{"type":"una","ops":"!","args":["todo","addDescription"]}}]}],"children":[{"type":"text","ast":{"rawValue":" ${0} ","$":true,"templates":[["${0}",{"prop":{"type":"ite","test":["todo","addDescription"],"cons":{"type":"raw","value":"Done"},"alt":{"type":"raw","value":"Edit"}}}]]}}]},{"type":"element","name":"button","index":1,"isc":false,"events":[{"name":"click","value":[{"type":"call","args":["idx"],"fn":"removeTodo"}]}],"children":[{"type":"text","ast":{"rawValue":"Remove"}}]}]}]},{"type":"comment","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"h5","index":1,"isc":false,"children":[{"type":"element","name":"p","index":0,"isc":false,"attr":{"class":"alert alert-info"},"children":[{"type":"text","ast":{"rawValue":" ${0} ","$":true,"templates":[["${0}",{"prop":["todo","details"]}]]}}]}]},"ifElse":{"refId":"textArea","type":"element","name":"#fragment","index":2,"isc":false,"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"form-group"},"children":[{"type":"element","name":"textarea","index":0,"isc":false,"props":{"model":{"prop":["todo","details"]}},"providers":[DefaultEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":["todo","details"],"right":"$event"}],"custom":true}],"attr":{"class":"form-control"}}]}]}},"props":{"if":{"prop":{"type":"una","ops":"!","args":["todo","addDescription"]}},"ifElse":"textArea"},"providers":[IfDirective]}]}},"props":{"forIn":{"prop":"todos"}},"providers":[ForDirective]},{"type":"comment","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"li","index":2,"isc":false,"attr":{"class":"list-group-item"},"children":[{"type":"text","ast":{"rawValue":"No todos."}}]}},"props":{"if":{"prop":{"type":"una","ops":"!","args":["todos","length"]}}},"providers":[IfDirective]}]}]}]}]}]},{"type":"element","name":"a","index":3,"isc":false,"props":{"go":"welcome"},"providers":[GoFn],"children":[{"type":"text","ast":{"rawValue":"Welcome Page"}}]},{"type":"text","ast":{"rawValue":" | "}},{"type":"element","name":"a","index":5,"isc":false,"props":{"go":"calculator"},"providers":[GoFn],"children":[{"type":"text","ast":{"rawValue":"Calculator"}}]},{"type":"element","name":"j-view","index":6,"isc":true,"attr":{"ref":"content"},"providers":[jViewFn]},{"type":"element","name":"p","index":7,"isc":false,"children":[{"type":"text","ast":{"rawValue":"© ${0} FrontendOnly. All Rights Reserved ","$":true,"templates":[["${0}",{"prop":{"type":"raw","value":""},"args":[["YYYY"]],"fns":[dateTimeFilterFN]}]]}}]}], {}) /** template loader **/;
 return AppRootElement;
 }();
 
 exports.AppRootElement = AppRootElement;
 },
-'viewers/Todo/src/app/app.module.js': function(exports, __required){
+'viewers/Todo/src/app/app.module.js': function(module, exports, __required){
 var RouterPageElement = __required('viewers/Todo/src/app/components/route-form-page/route-form-page.element.js', 'RouterPageElement');
 var CalculatorComponent = __required('viewers/Todo/src/app/components/calculator/calculator.js', 'CalculatorComponent');
 var AppRootElement = __required('viewers/Todo/src/app/app.component.js', 'AppRootElement');

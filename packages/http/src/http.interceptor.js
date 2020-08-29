@@ -1,5 +1,5 @@
-import { ProviderToken } from '@jeli/core';
-export var INTERCEPTORS = new ProviderToken('interceptors', true);
+import { ProviderToken, Inject } from '@jeli/core';
+export var HTTP_INTERCEPTORS = new ProviderToken('interceptors', true);
 /*
  * $httpProvider functionality
  * $interceptor idea was referenced from https://en.wikipedia.org/wiki/Interceptor_pattern
@@ -11,21 +11,15 @@ export var INTERCEPTORS = new ProviderToken('interceptors', true);
  *   - $get
  */
 
-Service({
-    DI: [INTERCEPTORS],
-})
-
-/**
- * 
- * @param {*} interceptors 
- */
-export function HttpInterceptor(interceptors) {
+Service()
+export function HttpInterceptor() {
     /**
      * 
      * @param {*} options 
      * @param {*} next 
      */
     this.resolveInterceptor = function(options, callback) {
+        var interceptors = Inject(HTTP_INTERCEPTORS);
         if (!interceptors || !interceptors.length) {
             return callback(options);
         }

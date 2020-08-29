@@ -32,7 +32,7 @@ export function bootStrapApplication(moduleToBootStrap) {
         CoreBootstrapContext.$isCompiled = true;
         bootStrapElement();
     }, function(err) {
-        console.log(err);
+        console.error(err);
     });
 
     function bootStrapElement() {

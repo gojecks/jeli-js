@@ -1,11 +1,15 @@
 import { RouterModule, ROUTE_INTERCEPTOR } from '@jeli/router';
 import { INITIALIZERS } from '@jeli/core';
-import { WebStateProvider } from '@jeli/router';
+import { WebStateProvider, WebStateService } from '@jeli/router';
 import { CalculatorComponent } from './components/calculator/calculator';
 import { RouterPageElement } from './components/route-form-page/route-form-page.element';
 
 export function configureWebState(webStateProvider) {
     webStateProvider.fallback = '/';
+}
+
+export function InitializeApp(webStateService) {
+    webStateService.events.listener('$webRouteStart', console.log);
 }
 
 Service({})
@@ -23,6 +27,11 @@ jModule({
             name: INITIALIZERS,
             factory: configureWebState,
             DI: [WebStateProvider]
+        },
+        {
+            name: INITIALIZERS,
+            factory: InitializeApp,
+            DI: [WebStateService]
         },
         {
             name: ROUTE_INTERCEPTOR,

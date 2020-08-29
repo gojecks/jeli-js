@@ -3,9 +3,9 @@ import { Observer } from '../rx/observer';
 
 /**
  * InternalChangeDetector Class
- * @param {*} tick 
+ * @param {*} context
  */
-function InternalChangeDetector(tick) {
+function InternalChangeDetector(context) {
     this._changeDetectorState = 3;
     Object.defineProperty(this, 'status', {
         get: function() {
@@ -17,6 +17,50 @@ function InternalChangeDetector(tick) {
         if (this._changeDetectorState == 3) {
             tick.apply(null, arguments);
         }
+    };
+
+    /**
+     * @method tick
+     * @param {*} ignoreChild
+     * @param {*} ignoreParent
+     * trigger all subscribers
+     */
+    function tick(ignoreChild, ignoreParent) {
+        if (!context.observables || context.inProgress) {
+            return;
+        }
+
+        context.inProgress = true;
+
+        /**
+         * trigger parent
+         */
+        if (context.parent && !ignoreParent && componentDebugContext.has(context.parent)) {
+            var parent = componentDebugContext.get(context.parent);
+            parent.changeDetector.detectChanges(true);
+            triggerChild(parent.child, [context.componentRefId]);
+        }
+
+        context.observables && context.observables.notifyAllObservers(context.componentInstance);
+        if (!ignoreChild) {
+            triggerChild(context.child, []);
+        }
+
+        /**
+         * 
+         * @param {*} children 
+         */
+        function triggerChild(children, ignore) {
+            for (var i = 0; i < children.length; i++) {
+                var refId = children[i];
+                if (!inarray(refId, ignore) && componentDebugContext.has(refId)) {
+                    var child = componentDebugContext.get(refId);
+                    child.changeDetector.detectChanges(false, true);
+                }
+            }
+        }
+
+        context.inProgress = false;
     };
 }
 
@@ -40,12 +84,11 @@ var componentDebugContext = new Map();
  * @param {*} refId 
  */
 function ComponentRef(refId) {
-    var _this = this;
     this.componentRefId = refId;
     this.observables = new Observer();
     this.child = [];
     this.parent = null;
-    this.changeDetector = new InternalChangeDetector(tick);
+    this.changeDetector = new InternalChangeDetector(this);
     this._componentInstance = null;
     this._context = null;
     Object.defineProperties(this, {
@@ -71,50 +114,6 @@ function ComponentRef(refId) {
             }
         }
     });
-
-    /**
-     * @method tick
-     * @param {*} ignoreChild
-     * @param {*} ignoreParent
-     * trigger all subscribers
-     */
-    function tick(ignoreChild, ignoreParent) {
-        if (!_this.observables || _this.inProgress) {
-            return;
-        }
-
-        _this.inProgress = true;
-
-        /**
-         * trigger parent
-         */
-        if (_this.parent && !ignoreParent && componentDebugContext.has(_this.parent)) {
-            var parent = componentDebugContext.get(_this.parent);
-            parent.changeDetector.detectChanges(true);
-            triggerChild(parent.child, [_this.componentRefId]);
-        }
-
-        _this.observables.notifyAllObservers(_this.componentInstance);
-        if (!ignoreChild) {
-            triggerChild(_this.child, []);
-        }
-
-        /**
-         * 
-         * @param {*} children 
-         */
-        function triggerChild(children, ignore) {
-            for (var i = 0; i < children.length; i++) {
-                var refId = children[i];
-                if (!inarray(refId, ignore) && componentDebugContext.has(refId)) {
-                    var child = componentDebugContext.get(refId);
-                    child.changeDetector.detectChanges(false, true);
-                }
-            }
-        }
-
-        _this.inProgress = false;
-    };
 }
 
 ComponentRef.prototype.removeChild = function(refId) {
@@ -148,6 +147,7 @@ ComponentRef.prototype.new = function(refId) {
 
 
 ComponentRef.prototype.destroy = function() {
+    this.changeDetector.markAsChecked();
     // destroy observables
     componentDebugContext.delete(this.componentRefId);
     if (this.parent && componentDebugContext.has(this.parent)) {
@@ -182,5 +182,6 @@ ComponentRef.create = function(refId, parentId) {
  * Change detector
  */
 export function ChangeDetector() {
+    if (!CoreBootstrapContext.bootStrapComponent) return;
     CoreBootstrapContext.bootStrapComponent.changeDetector.detectChanges();
 };

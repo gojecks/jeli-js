@@ -3,8 +3,8 @@ var nativeClearTimeout = window.clearTimeout;
 var nativeInterval = window.setInterval;
 var nativeClearInterval = window.clearInterval;
 
-window.setTimeout = function(fn, timer, detectChanges) {
-    return nativeTimeout(trigger(fn, detectChanges), timer);
+window.setTimeout = function(fn, timer) {
+    return nativeTimeout(trigger(fn), timer);
 };
 
 window.clearTimeout = function(timeoutID) {
@@ -15,21 +15,18 @@ window.clearInterval = function(intervalID) {
     nativeClearInterval(intervalID);
 };
 
-window.setInterval = function(fn, interval, detectChanges) {
-    return nativeInterval(trigger(fn, detectChanges), interval);
+window.setInterval = function(fn, interval) {
+    return nativeInterval(trigger(fn), interval);
 };
 
 
 /**
  * 
  * @param {*} fn 
- * @param {*} detectChanges 
  */
-function trigger(fn, detectChanges) {
+function trigger(fn) {
     return function() {
         fn();
-        if (detectChanges) {
-            CoreBootstrapContext.detectChanges();
-        }
+        ChangeDetector();
     };
 };

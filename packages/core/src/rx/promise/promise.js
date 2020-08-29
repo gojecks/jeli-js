@@ -75,7 +75,7 @@
 
      for (var i = 0; i < length; i++) {
          var cur = resolveValues[i];
-         if (cur instanceof _Promise) {
+         if (cur instanceof _Promise || cur instanceof Promise) {
              cur.then(updateDefered(i), updateDefered(i, true))
          } else {
              updateDefered(i)(cur);

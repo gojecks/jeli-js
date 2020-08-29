@@ -7,9 +7,9 @@ import { isequal } from 'js-helpers/helpers';
 import { CustomEventHandler } from '@jeli/core';
 import { WebStateProvider } from './jwebstate.provider';
 import { ViewHandler } from './jWebViewHandler.service';
-import { ResolveRouteInterceptor, ROUTE_INTERCEPTOR } from './utils';
+import { ResolveRouteInterceptor } from './utils';
 Service({
-    DI: [WebStateProvider, ViewHandler, ROUTE_INTERCEPTOR, CustomEventHandler]
+    DI: [WebStateProvider, ViewHandler, CustomEventHandler]
 })
 
 /**
@@ -19,7 +19,7 @@ Service({
  * @param {*} $resolve 
  * @param {*} customEventHandler 
  */
-export function WebStateService(webStateProvider, viewHandler, routerInterceptor, customEventHandler) {
+export function WebStateService(webStateProvider, viewHandler, customEventHandler) {
     var _this = this;
     this.locationStates = null;
     this.lastState = null;
@@ -35,7 +35,7 @@ export function WebStateService(webStateProvider, viewHandler, routerInterceptor
             //set the baseUrl to the $webState Object
             //BaseUrl is neccessary when replace state is in use.
             _this.$$baseUrl = path;
-            ResolveRouteInterceptor(routerInterceptor, {
+            ResolveRouteInterceptor({
                 name: route.name,
                 path: path,
                 url: route.url
@@ -48,7 +48,6 @@ export function WebStateService(webStateProvider, viewHandler, routerInterceptor
                     // change route
                     _this.$$baseUrl = lastTransitionQueue.path;
                     route = getRequiredRoute(lastTransitionQueue.path).checkParams(lastTransitionQueue.params);
-                    viewResolver = viewHandler.resolveViews(route, _this.state);
                     viewHandler.stateQueue.length = 0;
                 }
 
@@ -137,7 +136,7 @@ WebStateService.prototype._gotoState = function(ev, path, params) {
  */
 WebStateService.prototype.go = function(path, params) {
     path = this.$href(path, params);
-    if (this.$stateChanged(path)) {
+    if (this._stateChanged(path)) {
         this._gotoState(null, path, params);
     }
     return this;
@@ -209,7 +208,7 @@ WebStateService.prototype.getParam = function(name) {
     return this.state.route.params[name];
 };
 
-WebStateService.prototype.$stateChanged = function(path) {
+WebStateService.prototype._stateChanged = function(path) {
     return !isequal(this.$$baseUrl, path);
 };
 

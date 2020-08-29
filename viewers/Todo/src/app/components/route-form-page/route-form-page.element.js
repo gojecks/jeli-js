@@ -56,6 +56,12 @@ export function RouterPageElement() {
         },
         number: {
             value: 500
+        },
+        country: {
+            value: "Tuvalu"
+        },
+        job: {
+            value: 1
         }
     });
 }

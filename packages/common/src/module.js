@@ -12,7 +12,6 @@ import { orderByFilterFn } from './filter/orderby.filter.service';
 import { upperCaseFilter } from './filter/uppercase';
 import { whereFilterFn } from './filter/where.filter';
 import { QueryFactory } from './services/query.service';
-import './services/timeout';
 /**
  * set up common Module
  * that other Module could inject

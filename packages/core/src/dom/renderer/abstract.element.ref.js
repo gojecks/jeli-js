@@ -36,7 +36,7 @@ function AbstractElementRef(definition, parentRef) {
                     return componentDebugContext.get(this.refId).context;
                 }
 
-                return this.hostRef.context;
+                return this.parent.context;
             }
         },
         componentInstance: {

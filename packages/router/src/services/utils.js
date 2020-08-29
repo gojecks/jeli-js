@@ -1,4 +1,4 @@
-import { extend } from 'js-helpers/utils';
+import { extend, unserialize } from 'js-helpers/utils';
 import { ProviderToken, _Promise, Inject } from '@jeli/core';
 export var ROUTE_INTERCEPTOR = new ProviderToken('RouteInterceptor', true);
 /**
@@ -206,7 +206,7 @@ function getRequiredRoute(routeName) {
                 if (queryParam[1]) {
                     foundRoute.route.params = extend(
                         foundRoute.route.params,
-                        unSerialize(queryParam[1])
+                        unserialize(queryParam[1])
                     );
                 }
             }
@@ -218,11 +218,11 @@ function getRequiredRoute(routeName) {
 
 /**
  * 
- * @param {*} interceptors 
  * @param {*} route 
  * @param {*} callback 
  */
-export function ResolveRouteInterceptor(interceptors, route, callback) {
+export function ResolveRouteInterceptor(route, callback) {
+    var interceptors = Inject(ROUTE_INTERCEPTOR);
     var locals = {};
     if (!interceptors || !interceptors.length) {
         return callback(locals);

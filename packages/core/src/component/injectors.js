@@ -1,4 +1,12 @@
 import { AbstractInjectorInstance } from '../dependency.injector';
+export var staticInjectionToken = {
+    ElementRef: 'ElementRef',
+    TemplateRef: 'TemplateRef',
+    changeDetector: 'changeDetector',
+    ViewRef: 'ViewRef',
+    ParentRef: 'ParentRef',
+    VALIDATORS: 'VALIDATORS'
+};
 
 /**
  * Method for generating Injectors
@@ -8,7 +16,30 @@ function ComponentInjectors(elementRef) {
     AbstractInjectorInstance.call(this, elementRef);
     this.injectors.ElementRef = elementRef;
     this.currentClassAnnotations = {};
-    var _this = this;
+    this.has = function(tokenName) {
+        return this.injectors.hasOwnProperty(tokenName) || staticInjectionToken.hasOwnProperty(tokenName);
+    };
+}
+ComponentInjectors.prototype = Object.create(AbstractInjectorInstance.prototype);
+ComponentInjectors.prototype.constructor = AbstractInjectorInstance;
+ComponentInjectors.prototype.destroy = function() {
+    this.injectors.ElementRef = null;
+    this.injectors = null;
+    this.currentClassAnnotations = null;
+};
+
+ComponentInjectors.prototype.get = function(tokenName) {
+    if (this.injectors.hasOwnProperty(tokenName))
+        return this.injectors[tokenName];
+    else if (staticInjectionToken[tokenName])
+        return _ComponentInjectionToken(tokenName, this);
+}
+
+/**
+ * 
+ * @param {*} context 
+ */
+function _ComponentInjectionToken(tokenName, context) {
     /**
      * generate local injectors
      * Getter for Dependencies that are set in runTime
@@ -18,51 +49,37 @@ function ComponentInjectors(elementRef) {
      * ? symbol represents optional Dependency
      * @param {*} idx 
      */
-    Object.defineProperties(this.injectors, {
-        TemplateRef: {
-            get: function() {
-                return this.ElementRef.getTemplateRef(_this.currentClassAnnotations.selector);
-            }
-        },
-        changeDetector: {
-            get: function() {
-                return this.ElementRef.changeDetector;
-            }
-        },
-        ViewRef: {
-            get: function() {
-                return new ViewRef(this.ElementRef);
-            }
-        },
-        ParentRef: {
-            get: function() {
-                if (_this.currentClassAnnotations.DI.ParentRef.value) {
-                    return findParentRef(this.ElementRef.parent, _this.currentClassAnnotations.DI.ParentRef.value);
+    switch (tokenName) {
+        case (staticInjectionToken.TemplateRef):
+            return context.injectors.ElementRef.getTemplateRef(context.currentClassAnnotations.selector);
+        case (staticInjectionToken.changeDetector):
+            return context.injectors.ElementRef.changeDetector;
+        case (staticInjectionToken.ViewRef):
+            return new ViewRef(context.injectors.ElementRef);
+        case (staticInjectionToken.ParentRef):
+            {
+                if (context.currentClassAnnotations.DI.ParentRef.value) {
+                    return findParentRef(context.injectors.ElementRef.parent, context.currentClassAnnotations.DI.ParentRef.value);
                 }
-
-                return this.ElementRef.parent.componentInstance;
+                return context.injectors.ElementRef.parent.componentInstance;
             }
-        },
-        VALIDATORS: {
-            get: function() {
-                var _this = this;
-                return ['required', 'pattern', 'minlength', 'maxlength'].reduce(function(accum, key) {
-                    if (_this.ElementRef.hasAttribute(key)) {
-                        accum[key] = _this.ElementRef.getAttribute(key);
-                    }
-                    return accum;
-                }, {});
-            }
-        }
-    });
+        case (staticInjectionToken.VALIDATORS):
+            return getValidators(context.injectors.ElementRef);
+    }
 }
-ComponentInjectors.prototype = Object.create(AbstractInjectorInstance.prototype);
-ComponentInjectors.prototype.constructor = AbstractInjectorInstance;
-ComponentInjectors.prototype.destroy = function() {
-    this.injectors.ElementRef = null;
-    this.injectors = null;
-    this.currentClassAnnotations = null;
-};
+
+/**
+ * 
+ * @param {*} elementRef 
+ */
+function getValidators(elementRef) {
+    return ['required', 'pattern', 'minlength', 'maxlength'].reduce(function(accum, key) {
+        if (elementRef.hasAttribute(key)) {
+            accum[key] = elementRef.getAttribute(key);
+        }
+        return accum;
+    }, {});
+}
 
 /**
  * 

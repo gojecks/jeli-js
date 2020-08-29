@@ -208,6 +208,16 @@ function parseObjectExpression(expression, context, componentInstance, event) {
          * BinaryExpression Method
          */
         bin: function() {
+            if (expression.ops === '&&') {
+                var l = resolveValueFromContext(expression.left, context, componentInstance, event);
+                if (!l) return l;
+                return resolveValueFromContext(expression.right, context, componentInstance, event);
+            } else if (expression.ops === '||') {
+                var l = resolveValueFromContext(expression.left, context, componentInstance, event);
+                if (l) return l;
+                return resolveValueFromContext(expression.right, context, componentInstance, event);
+            }
+
             var l = resolveValueFromContext(expression.left, context, componentInstance, event);
             var r = resolveValueFromContext(expression.right, context, componentInstance, event);
             if (expression.ops === '==') return l == r;

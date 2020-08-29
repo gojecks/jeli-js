@@ -1,8 +1,6 @@
 import { isarray, isobject } from 'js-helpers/helpers';
 
-Service({
-    name: 'query'
-})
+Service()
 
 /**
  * OrderBy filter

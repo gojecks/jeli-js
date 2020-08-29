@@ -1,12 +1,11 @@
 /**
  * 
  * @param {*} jeliWebProvider 
- * @param {*} $webState 
+ * @param {*} webStateService 
  */
-export function ViewInit(jeliWebProvider, $webState) {
+export function ViewInit(jeliWebProvider, webStateService) {
     var originalState = location.hash;
     var stateChanged = false;
-    var html5Mode = jeliWebProvider.html5Mode;
     jeliWebProvider.isLoaded = true;
     /**
      * set the hash Functionality
@@ -19,37 +18,11 @@ export function ViewInit(jeliWebProvider, $webState) {
          */
         window.addEventListener('$locationReplaceState', locationReplaceState)
         window.addEventListener("hashchange", webRouteChangedFn);
-        /**
-         * hashChange event doesn't fire on reload
-         * work around was to check if location# is not empty
-         * fallback if originalState is empty
-         */
-        if (!originalState) {
-            location.hash = refineHash() || jeliWebProvider.fallback;
-        } else {
-            /**
-             * Triggered When user reloads the page
-             */
-            $webState._gotoState(null, refineHash());
-        }
-    }
-
-    /**
-     * set the PopState Functionality
-     * First checked to see if window supports onPopChange Event
-     * @Function window.addEventListener("popState", callback ,false)
-     */
-    if ("onpopstate" in window) {
-        if (html5Mode) {
-            window.onpopstate = function(e) {
-
-            };
-        }
     }
 
     function locationReplaceState(e) {
-        var state = $webState.currentState();
-        $webState.isReplaceState = true;
+        var state = webStateService.currentState();
+        webStateService.isReplaceState = true;
         if ((state.hash !== state.previousHash) || stateChanged) {
             location.replace(state.hash);
             originalState = state.currentLocation;
@@ -59,16 +32,35 @@ export function ViewInit(jeliWebProvider, $webState) {
 
     function webRouteChangedFn(e) {
         var locHash = refineHash();
-        if (!location.hash.length || !$webState.$stateChanged(locHash) || $webState.isReplaceState) {
-            $webState.isReplaceState = false;
+        if (!location.hash.length || !webStateService._stateChanged(locHash) || webStateService.isReplaceState) {
+            webStateService.isReplaceState = false;
             return;
         }
         //go to the required hash
-        $webState.go(locHash);
+        webStateService._gotoState(null, locHash);
     }
 
     //function refineHash
     function refineHash() {
         return (location.hash || '').replace('#', '');
     }
+
+    return new Promise(function(resolve, reject) {
+        setTimeout(function() {
+            /**
+             * hashChange event doesn't fire on reload
+             * work around was to check if location# is not empty
+             * fallback if originalState is empty
+             */
+            if (!originalState) {
+                location.hash = refineHash() || jeliWebProvider.fallback;
+            } else {
+                /**
+                 * Triggered When user reloads the page
+                 */
+                webStateService._gotoState(null, refineHash());
+            }
+            resolve(true);
+        }, 0);
+    })
 }

@@ -46,7 +46,7 @@ EventHandler.prototype.registerListener = function() {
         } catch (e) {
             errorBuilder(e);
         } finally {
-            _this.element.changeDetector.detectChanges();
+            _this.element.changeDetector && _this.element.changeDetector.detectChanges();
         }
     }
 
