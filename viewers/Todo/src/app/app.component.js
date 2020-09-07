@@ -3,7 +3,7 @@ Element({
     selector: 'app-root',
     templateUrl: './app-root.html',
     styleUrl: './app-root.css',
-    viewChild: ["testPlace=#testPlace", "model=:model"],
+    viewChild: ["testPlace=#testPlace", "model:jModel=#input"],
     DI: [HttpService]
 })
 export function AppRootElement(http) {
@@ -41,8 +41,11 @@ export function AppRootElement(http) {
     };
 
     this.didInit = function() {
-        console.log('started');
-        http.get('/').subscribe(console.log, console.log);
+        console.log(this);
+    }
+
+    this.print = function(list) {
+        console.log(list);
     }
 }
 

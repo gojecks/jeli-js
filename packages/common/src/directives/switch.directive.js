@@ -25,6 +25,21 @@ function SwitchViewContext(viewRef, templateRef) {
     };
 }
 
+/**
+ * The following example shows how cases can be nested:
+ * ```
+ * <element :switch="expression">
+ *       <element *switchCase="expression_1">...</element>
+ *       <element *switchCase="expression_2">...</element>
+ *       <other-element *switchCase="expression_3">...</other-element>
+ *       <j-fragment *switchCase="expression_3">
+ *         <!-- use a j-fragment to group multiple root nodes -->
+ *         <inner-element></inner-element>
+ *         <inner-other-element></inner-other-element>
+ *       </j-fragment>
+ *       <element *switchDefault>...</element>
+ *     </element>
+ */
 
 Directive({
     selector: 'switch',

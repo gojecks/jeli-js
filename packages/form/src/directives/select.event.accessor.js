@@ -39,8 +39,9 @@ SelectEventBinder.prototype._handleSelection = function(target) {
 };
 
 SelectEventBinder.prototype.writeValue = function(value) {
-    this.element.children.forEach(function(options) {
-        options.setProp('selected', (isarray(value) ? inarray : isequal)(options.getAttribute('value'), value));
+    this.element.children.forEach(function(option) {
+        if (!(option.nativeElement instanceof HTMLOptionElement)) return;
+        option.setProp('selected', (isarray(value) ? inarray : isequal)(option.getAttribute('value'), value));
     });
 };
 

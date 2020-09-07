@@ -3,10 +3,6 @@ import { isobject, isfunction, isequal } from 'js-helpers/helpers';
 import { extend } from 'js-helpers/utils';
 import { formValidationStack } from './validator.stack';
 
-Service({
-    static: true
-})
-
 /**
  * 
  * @param {*} callback 
@@ -49,10 +45,14 @@ export function FormValidatorService(callback, validators) {
              * check if passed && passed is a promise
              */
             if (isobject(passed) && isequal('async', validatorName)) {
-                return currentProcess.registerAsyncValidator(passed, criteria[validatorName], validatorName);
+                currentProcess.registerAsyncValidator(passed, criteria[validatorName], validatorName);
+                break;
             }
 
             currentProcess.rem(passed, validatorName);
+            if (!passed) {
+                return currentProcess.stop();
+            }
         }
     }
 

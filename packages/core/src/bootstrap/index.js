@@ -1,4 +1,4 @@
-import { Inject } from '../dependency.injector';
+import { Inject, AutoWire } from '../dependency.injector';
 import { _Promise } from '../rx/promise/promise';
 /**
  * JELI LOCAL VARIABLES
@@ -19,11 +19,11 @@ export var INITIALIZERS = new ProviderToken('AppInitializers', true);
  */
 export function bootStrapApplication(moduleToBootStrap) {
     CoreBootstrapContext.compiledModule = moduleToBootStrap;
+    CoreBootstrapContext.injector = new AbstractInjectorInstance();
     InitializeModule(moduleToBootStrap);
     /**
      * trigger INITIALIZERS
      */
-    CoreBootstrapContext.injector = new AbstractInjectorInstance();
     _Promise.all(Inject(INITIALIZERS, CoreBootstrapContext.injector)
         .map(function(callback) {
             return callback();

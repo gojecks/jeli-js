@@ -8,7 +8,6 @@ import { AttributeAppender } from '../attribute';
  */
 export function ElementRef(definition, parent) {
     AbstractElementRef.call(this, definition, parent);
-    var _this = this;
     /**
      * check if element is custom element
      */
@@ -17,25 +16,7 @@ export function ElementRef(definition, parent) {
          * create the element Observer
          */
         ComponentRef.create(this.refId, parent && parent.hostRef.refId);
-        this._viewQuery = Object.create({
-            ϕelements: [],
-            add: function(option, element) {
-                if (!isequal(option[1], _this.tagName)) {
-                    return _this.parent && _this.parent.hostRef.viewQuery.add(option, element);
-                }
-
-                this.ϕelements.push({
-                    key: option[0],
-                    value: element
-                });
-            },
-            render: function(callback) {
-                while (this.ϕelements.length) {
-                    callback(this.ϕelements.pop());
-                }
-                this.ϕelements.length = 0;
-            }
-        });
+        this._viewQuery = new Map();
     }
 
     this.events = new EventHandler(this, definition.events);
@@ -85,3 +66,51 @@ ElementRef.prototype.appendChild = function(template) {
     this.nativeElement.appendChild(template);
     this.changeDetector.detectChanges();
 };
+
+ElementRef.prototype.addViewQuery = function(option, element) {
+    if (!isequal(option[1], this.tagName)) {
+        return this.parent && this.parent.hostRef.addviewQuery(option, element);
+    }
+
+    this._viewQuery.set(option[0], element);
+}
+
+
+/**
+ * 
+ * @param {*} element 
+ * @param {*} observers 
+ */
+function setupAttributeObservers(element, attrObservers) {
+    var observerStarted = false;
+    element.observer(SubscribeObservables(element.hostRef.refId, observe));
+
+    function observe() {
+        for (var propName in attrObservers) {
+            /**
+             * remove the config
+             */
+            if (attrObservers[propName].once && observerStarted) {
+                break;
+            }
+            attributeEvaluator(propName, attrObservers[propName]);
+        }
+
+        /**
+         * 
+         * @param {*} propName 
+         * @param {*} template 
+         */
+        function attributeEvaluator(propName, template) {
+            compileTemplate(template, element.context, element.componentInstance, function(value) {
+                if (AttributeAppender[propName]) {
+                    AttributeAppender[propName](element.nativeElement, value, template);
+                } else {
+                    AttributeAppender.setProp(element.nativeElement, propName, value);
+                }
+            });
+        }
+
+        observerStarted = true;
+    }
+}

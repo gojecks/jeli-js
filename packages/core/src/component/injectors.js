@@ -5,7 +5,8 @@ export var staticInjectionToken = {
     changeDetector: 'changeDetector',
     ViewRef: 'ViewRef',
     ParentRef: 'ParentRef',
-    VALIDATORS: 'VALIDATORS'
+    VALIDATORS: 'VALIDATORS',
+    QueryList: 'QueryList'
 };
 
 /**

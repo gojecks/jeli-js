@@ -49,7 +49,7 @@ function compileTemplate(definition, context, componentInstance, cb) {
     if (definition.templates) {
         value = definition.templates.reduce(function(accum, options) {
             return accum.replace(options[0], evaluateExpression(options[1], context, componentInstance));
-        }, definition.rawValue);
+        }, definition.text);
     } else {
         value = getFilteredTemplateValue(definition, context, componentInstance);
     }
@@ -74,22 +74,6 @@ function evaluateExpression(expr, context, componentInstance) {
     return resolveValueFromContext(expr, context, componentInstance);
 };
 
-/**
- * 
- * @param {*} arg 
- * @param {*} sub 
- */
-function simpleArgumentParser(arg) {
-    var booleanMatcher = simpleBooleanParser(arg),
-        isNum = Number(arg);
-    if (arg && !isNaN(isNum)) {
-        return isNum;
-    } else if (!isundefined(booleanMatcher)) {
-        return booleanMatcher;
-    }
-
-    return arg;
-}
 
 
 /**
@@ -98,23 +82,24 @@ function simpleArgumentParser(arg) {
  * @param {*} context 
  * @param {*} event 
  */
-function generateArguments(args, context, event) {
+function generateArguments(args, context, componentInstance, event) {
     return args.map(argumentMapper);
 
     /**
      * 
      * @param {*} arg 
      */
-    function argumentMapper(arg) {
-        if (isarray(arg)) {
-            if (!arg.length) return arg;
-            var isEvent = isequal(arg[0], '$event');
-            return resolveContext(arg.slice(isEvent ? 1 : 0), isEvent ? event : context);
-        } else if (isstring(arg)) {
-            return isequal(arg, '$event') ? event : context.hasOwnProperty(arg) ? context[arg] : arg;
-        }
+    function argumentMapper(node) {
+        if (isarray(node)) {
+            if (!node.length) return node;
+            var isEvent = isequal(node[0], '$event');
+            return resolveContext(node.slice(isEvent ? 1 : 0), isEvent ? event : context, componentInstance);
+        } else if (isobject(node) && node.arg)
+            return generateArguments(node.arg, context, componentInstance, event);
+        else if (isstring(node))
+            return isequal(node, '$event') ? event : context.hasOwnProperty(node) ? context[node] : node;
 
-        return resolveValueFromContext(arg, context, null, event);
+        return resolveValueFromContext(node, context, componentInstance, event);
     }
 }
 
@@ -126,17 +111,25 @@ function generateArguments(args, context, event) {
  * @param {*} event 
  */
 function resolveValueFromContext(expression, context, componentInstance) {
-    if (isundefined(expression) || isnull(expression) || isboolean(expression) || isnumber(expression) || /(#|rgb)/.test(expression)) {
+    if (isundefined(expression) || isnull(expression) || isboolean(expression) || isnumber(expression) || /(#|rgb)/.test(expression))
         return expression;
-    } else if (isobject(expression)) {
+    else if (isobject(expression))
         return parseObjectExpression.apply(null, arguments);
-    } else if (isarray(expression)) {
+    else if (isarray(expression))
         return resolveContext(expression, context, componentInstance);
-    } else if (expression === '$this') {
+    else if (expression === '$this')
         return componentInstance;
-    }
 
-    return context && (expression in context) ? context[expression] : null;
+    else if (isobject(context) && (expression in context))
+        return context[expression];
+    else if (isobject(componentInstance) && (expression in componentInstance))
+        return componentInstance[expression];
+
+    /**
+     * string type matcher
+     * example are .length
+     */
+    return context && context.hasOwnProperty(expression) ? context[expression] : null;
 }
 
 /**
@@ -167,9 +160,12 @@ function parseObjectExpression(expression, context, componentInstance, event) {
             var dcontext = context;
             if (expression.namespaces) {
                 dcontext = resolveContext(expression.namespaces, context, componentInstance);
+            } else {
+                dcontext = (expression.fn in dcontext) ? context : componentInstance;
             }
+
             if (dcontext && isfunction(dcontext[expression.fn])) {
-                var args = generateArguments(expression.args, context, event);
+                var args = generateArguments(expression.args, context, componentInstance, event);
                 return dcontext[expression.fn].apply(dcontext, args);
             }
 
@@ -191,7 +187,7 @@ function parseObjectExpression(expression, context, componentInstance, event) {
          * a = b
          */
         asg: function() {
-            var value = generateArguments([expression.right], context, event)[0];
+            var value = generateArguments([expression.right], context, componentInstance, event)[0];
             return setModelValue(expression.left, context, value);
         },
         /**
@@ -242,6 +238,12 @@ function parseObjectExpression(expression, context, componentInstance, event) {
         },
         raw: function() {
             return expression.value;
+        },
+        /**
+         * Member expression
+         */
+        mem: function() {
+            return resolveValueFromContext(expression.list, context, componentInstance, event);
         }
     };
 
@@ -281,59 +283,10 @@ function resolveContext(key, context, componentInstance) {
             return accum[property];
         }
 
+        if (Array.isArray(property)) {
+            var value = resolveValueFromContext(property, context, componentInstance);
+            return accum[value];
+        }
         return resolveValueFromContext(property, accum, componentInstance);
     }, context || {});
-}
-
-/**
- * match key with array type
- * @param {*} key 
- * @param {*} model 
- * @param {*} create 
- */
-function matchStringWithArray(key, model, create) {
-    var modelDepth = model,
-        i = 0;
-    while (i <= key.length - 1) {
-        modelDepth = createNewInstance(modelDepth, key[i], create, !isNaN(Number(key[i + 1])));
-        i++;
-    }
-
-    return modelDepth;
-}
-
-/**
- * 
- * @param {*} model 
- * @param {*} key 
- * @param {*} create 
- */
-function createNewInstance(model, key, create, nextIsArrayKey) {
-    var objectType = nextIsArrayKey ? [] : {};
-    if (create && !model[key]) {
-        model[key] = objectType
-    }
-
-    return model && model[key] || objectType;
-}
-
-/**
- * 
- * @param {*} key 
- * @param {*} model 
- */
-function generateArrayKeyType(key, model) {
-    if (-1 < key.indexOf("[")) {
-        model = model || {};
-        return key.split('[').map(function(current) {
-            if (current.indexOf(']') > -1) {
-                var _key = current.split(']')[0];
-                return ((model.hasOwnProperty(_key)) ? model[_key] : _key);
-            }
-
-            return current;
-        }).join('.');
-    }
-
-    return key
 }

@@ -1,6 +1,5 @@
 import { ForDirective } from './directives/for';
 import { IfDirective } from './directives/jIf.directive';
-import { SelectDirective } from './directives/select.directive';
 import { SwitchDirective, SwitchCaseDirective, SwitchDefaultDirective } from './directives/switch.directive';
 import { ClassDirective } from './directives/class.directive';
 import { capitalizeFilter } from './filter/capitalize';
@@ -32,7 +31,6 @@ jModule({
     selectors: [
         ForDirective,
         IfDirective,
-        SelectDirective,
         ClassDirective,
         SwitchDirective,
         SwitchCaseDirective,

@@ -19,23 +19,35 @@ export function TemplateRef(templates) {
         return templates.context;
     };
 
-    this.querySelector = function(selector) {
-        return templates.filter(_selector);
+    /**
+     * 
+     * @param {*} selector 
+     * @param {*} callback 
+     */
+    this.forEach = function(selector, callback) {
         /**
          * returns the required template to compile
          */
-        function _selector(template) {
-            switch (selector[0]) {
-                case ('id'):
-                case ('class'):
-                    return (template.attr && inarray(template.attr[selector[0]], selector[1]));
-                default:
-                    return isequal(selector[1], template.name);
+        function _selectable(template) {
+            if (!selector) {
+                return true;
+            } else if (inarray(selector[0], ['id', 'class'])) {
+                return (template.attr && inarray(template.attr[selector[0]], selector[1]));
+            } else if (isequal(selector[0], 'attr')) {
+                return (template.attr && template.attr.hasOwnProperty(selector[1]));
+            } else {
+                return isequal(selector[1], template.name);
             }
         }
-    };
 
-    this.forEach = function(callback) {
-        templates.forEach(callback);
+        for (var i = 0; i < templates.length; i++) {
+            var template = templates[i];
+            if (_selectable(template)) {
+                if (isequal(template.name, '#fragment'))
+                    template.children.forEach(callback)
+                else
+                    callback(template);
+            }
+        }
     }
 }

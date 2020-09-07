@@ -6,7 +6,7 @@ import { isfunction } from 'js-helpers/helpers';
  * viewDidMount()
  * viewDidDestroy()
  * willObserve()
- * didChanged()
+ * didChange()
  */
 function LifeCycle(componentInstance) {
     var _cycleState = {

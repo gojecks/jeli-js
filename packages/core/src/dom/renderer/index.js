@@ -52,7 +52,7 @@ function element(definition, parent, viewContainer) {
     }
 
     if (definition.vc) {
-        elementRef.hostRef.viewQuery.add(definition.vc, elementRef);
+        elementRef.hostRef.addViewQuery(definition.vc, elementRef);
     }
 
     return elementRef;
@@ -82,19 +82,16 @@ function text(definition, parent) {
 function place(definition, parent, viewContainer, appendToChild) {
     var hostRef = parent.hostRef;
     var templates = hostRef.getTemplateRef('place');
-    if (definition.selector) {
-        templates = templates.querySelector(definition.selector);
-    }
-
-    templates.forEach(function(template) {
-        var child = ViewParserHelper[template.type](template, parent, viewContainer);
-        if (appendToChild) {
-            parent.children.add(child);
-            parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
-        } else {
-            viewContainer.pushToView(child);
-        }
-    });
+    templates
+        .forEach(definition.selector, function(template) {
+            var child = ViewParserHelper[template.type](template, parent.hostRef.parent, viewContainer);
+            if (appendToChild) {
+                parent.children.add(child);
+                parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+            } else {
+                viewContainer.pushToView(child);
+            }
+        });
 
     return null;
 };

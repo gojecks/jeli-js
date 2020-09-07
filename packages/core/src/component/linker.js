@@ -8,17 +8,12 @@ import { isobject, isequal } from 'js-helpers/helpers';
  * @param {*} definition
  */
 export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
+    lifeCycle.trigger('willObserve');
     var propChanges = null;
     var registeredProperty = [];
+    var always = false;
     if (definition.props) {
-        var always = _updateViewBinding(true);
-        if (always) {
-            var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, _updateViewBinding);
-            elementRef.observer(function() {
-                unsubscribe();
-                registeredProperty = [];
-            });
-        }
+        always = _updateViewBinding();
     }
 
     function _updateViewBinding() {
@@ -26,20 +21,21 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
         for (var prop in definition.props) {
             var item = definition.props[prop];
             var name = item.value || prop;
+            var value;
             if (elementRef.props && elementRef.props.hasOwnProperty(name)) {
-                var value;
-                if (isobject(elementRef.props[name])) {
-                    hasBinding = true;
-                    value = getFilteredTemplateValue(
-                        elementRef.props[name],
-                        elementRef.parent.context,
-                        elementRef.parent.componentInstance
-                    );
-                } else {
-                    value = getPrimitiveValue(item.type, name, elementRef.props[name])
-                }
-
-                setValue(prop, value);
+                try {
+                    if (isobject(elementRef.props[name])) {
+                        hasBinding = true;
+                        value = getFilteredTemplateValue(
+                            elementRef.props[name],
+                            ((isequal(elementRef.parent.type, 'comment') && !elementRef.isc) ? elementRef : elementRef.parent).context,
+                            elementRef.parent.componentInstance
+                        );
+                    } else {
+                        value = getPrimitiveValue(item.type, name, elementRef.props[name])
+                    }
+                    setValue(prop, value);
+                } catch (e) { console.error(e); }
             } else if (elementRef.hasAttribute(name)) {
                 setValue(prop, elementRef.attr[name]);
             }
@@ -49,8 +45,6 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
             lifeCycle.trigger('didChange', propChanges);
             propChanges = null;
         }
-
-        lifeCycle.trigger('willObserve');
 
         return hasBinding;
     }
@@ -92,4 +86,34 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
 
         return value;
     }
+
+    /**
+     * hook into the component observables
+     */
+    var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, function() {
+        if (always)
+            _updateViewBinding();
+        lifeCycle.trigger('willObserve');
+    });
+
+    elementRef.observer(function() {
+        unsubscribe();
+        registeredProperty = [];
+    });
+}
+
+
+/**
+ * 
+ * @param {*} refId 
+ * @param {*} fn 
+ */
+function SubscribeObservables(refId, fn) {
+    var componentRef = componentDebugContext.get(refId);
+    var unsubscribe = null;
+    if (componentRef) {
+        unsubscribe = componentRef.observables.subscribe(fn);
+    }
+
+    return unsubscribe;
 }

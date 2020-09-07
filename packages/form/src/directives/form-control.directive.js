@@ -40,7 +40,6 @@ FormControlDirective.prototype.resetForm = function(values) {
 
 FormControlDirective.prototype.viewDidDestroy = function() {
     if (this.form) {
-        this.form.destroy();
         this.form = null;
     }
 };

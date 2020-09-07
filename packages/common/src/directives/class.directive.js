@@ -6,9 +6,9 @@ import { ElementClassList } from '@jeli/core';
  * @param {*} type 
  */
 Directive({
-    selector: 'class',
+    selector: 'jClass',
     DI: ['ElementRef?'],
-    props: ['class']
+    props: ['class=jClass']
 })
 
 export function ClassDirective(elementRef) {
@@ -19,11 +19,12 @@ export function ClassDirective(elementRef) {
         if (isobject(this._jClass)) {
             ElementClassList.add(elementRef.nativeElement, this._jClass);
         } else {
-            ElementClassList.add(elementRef.nativeElement, this.lastAddedClass, false);
+            if (this.lastAddedClass == this._jClass) return;
+            ElementClassList.remove(elementRef.nativeElement, this.lastAddedClass);
             if (this._jClass) {
-                ElementClassList.add(elementRef.nativeElement, this._jClass, true);
-                this.lastAddedClass = this._jClass;
+                ElementClassList.add(elementRef.nativeElement, this._jClass);
             }
+            this.lastAddedClass = this._jClass;
         }
     };
 

@@ -3,7 +3,6 @@ import { FormControlService } from './form-control.service';
 import { FormFieldControlDirective } from './directives/form-field-control.directive';
 import { FormFieldControlService } from './form-field-control.service';
 import { FormFieldDirective } from './directives/form-field.directive';
-import { FormValidatorService } from './form-validator.service';
 import { DefaultEventBinder } from './directives/default.event.accessor';
 import { CheckboxEventBinder } from './directives/checkbox.event.accessor';
 import { RadioEventBinder, RadioEventContainer } from './directives/radio.event.accessor';
@@ -20,7 +19,6 @@ jModule({
     services: [
         FormControlService,
         FormFieldControlService,
-        FormValidatorService,
         RadioEventContainer
     ],
     selectors: [

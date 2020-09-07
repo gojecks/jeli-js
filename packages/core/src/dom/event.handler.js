@@ -46,7 +46,7 @@ EventHandler.prototype.registerListener = function() {
         } catch (e) {
             errorBuilder(e);
         } finally {
-            _this.element.changeDetector && _this.element.changeDetector.detectChanges();
+            _this.element && _this.element.changeDetector.detectChanges();
         }
     }
 
@@ -210,7 +210,7 @@ EventHandler._executeEventsTriggers = function(eventTriggers, componentInstance,
             // set nameSpaces
             var fn = EventHandler.getFnFromContext(event, componentInstance);
             // Check if Arguments is required
-            var narg = generateArguments(event.args, context || componentInstance, ev);
+            var narg = generateArguments(event.args, context || componentInstance, null, ev);
             var ret = fn.apply(fn.context, narg);
             fn.context = null;
             fn = null;

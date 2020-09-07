@@ -1,3 +1,5 @@
+import { staticInjectionToken } from "./injectors";
+
 /**
  * 
  * @param {*} componentInstance 
@@ -5,32 +7,28 @@
  * @param {*} viewChild 
  */
 function buildViewChild(componentInstance, elementRef, viewChild) {
-    elementRef.viewQuery.render(assignValue);
+    elementRef.viewQuery.forEach(assignValue);
     /**
      * 
      * @param {*} item 
      */
-    function assignValue(item) {
-        var option = viewChild[item.key];
-        if (option.type) {
-            switch (option.type.toLowerCase()) {
-                case ('querylist'):
-                    if (!componentInstance.hasOwnProperty(option.name)) {
-                        componentInstance[option.name] = new QueryList();
-                    }
-                    componentInstance[option.name].add(item.value);
-                    break;
-                case ('jmodel'):
-                    componentInstance[option.name] = item.value.nodes.get(option.value);
-                    break;
-                case ('elementref'):
-                    componentInstance[option.name] = item.value;
-                    break;
-            }
-        } else if (option.isdir) {
-            componentInstance[option.name] = item.value.nodes.get(option.value);
-        } else {
-            componentInstance[option.name] = item.value.componentInstance;
+    function assignValue(viewElement, property) {
+        var option = viewChild[property];
+        switch (option.type) {
+            case (staticInjectionToken.QueryList):
+                if (!componentInstance.hasOwnProperty(property)) {
+                    componentInstance[property] = new QueryList();
+                }
+                componentInstance[property].add(viewElement);
+                break;
+            case (staticInjectionToken.ElementRef):
+                componentInstance[property] = viewElement;
+                break;
+            default:
+                componentInstance[property] = (viewElement.nodes.has(option.type) ? viewElement.nodes.get(option.type) : viewElement.context);
+                break;
         }
     }
+
+    elementRef.viewQuery.clear();
 }

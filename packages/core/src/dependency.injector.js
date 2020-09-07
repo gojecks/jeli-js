@@ -1,4 +1,4 @@
-import { isfunction, isstring, isobject } from 'js-helpers/helpers';
+import { isfunction } from 'js-helpers/helpers';
 import { resolveClosureRef } from './utils/closure';
 
 /**
@@ -202,6 +202,11 @@ function resolveDeps(DI, localInjector) {
     return deps;
 }
 
+/**
+ * 
+ * @param {*} reference 
+ * @param {*} localInjector 
+ */
 function resolveReference(reference, localInjector) {
     if (isfunction(reference)) {
         if (reference.instance)

@@ -10,7 +10,7 @@ export function ComponentFactoryResolver(componentFactory, viewComponent, callba
     }
 
     if (!viewComponent) {
-        throw new Error('Unable to resolve component: ' + selector);
+        throw new Error('Unable to determine viewRef');
     }
 
     var viewDefinition = {

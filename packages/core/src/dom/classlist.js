@@ -19,7 +19,7 @@ export function ElementClassList(nativeElement, classList, type) {
  * @param {*} removeClass
  */
 ElementClassList.add = function(nativeElement, classList, removeClass) {
-    if (!classList) {
+    if (!classList || !nativeElement) {
         return;
     }
 
@@ -30,9 +30,22 @@ ElementClassList.add = function(nativeElement, classList, removeClass) {
             }
         }
     } else {
-        nativeElement.classList.toggle(classList, removeClass);
+        nativeElement.classList.add.apply(nativeElement.classList, classList.split(/\s/g));
     }
 };
+
+/**
+ * 
+ * @param {*} nativeElement 
+ * @param {*} classList 
+ */
+ElementClassList.remove = function(nativeElement, classList) {
+    if (!classList || !nativeElement) {
+        return;
+    }
+
+    nativeElement.classList.remove.apply(nativeElement.classList, classList.split(/\s/g));
+}
 
 ElementClassList.contains = function(nativeElement, className) {
     return nativeElement.classList.contains(className);

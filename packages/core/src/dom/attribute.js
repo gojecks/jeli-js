@@ -10,6 +10,8 @@ import { ElementClassList } from './classlist';
  * @param {*} value 
  */
 export function AttributeAppender(nativeElement, prop, value) {
+    if (Node.DOCUMENT_FRAGMENT_NODE === nativeElement.nodeType) return;
+
     if (isobject(prop)) {
         for (var name in prop) {
             nativeElement.setAttribute(name, prop[name]);
@@ -52,7 +54,7 @@ AttributeAppender.class = function(nativeElement, value) {
 
 // extend prop types
 AttributeAppender.setProp = function(nativeElement, propName, propValue) {
-    if (propValue === undefined) return;
+    if (propValue === undefined || !nativeElement) return;
     nativeElement[propValue ? 'setAttribute' : 'removeAttribute'](propName, propValue);
     nativeElement[propName] = propValue;
 };

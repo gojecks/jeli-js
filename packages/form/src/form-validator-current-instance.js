@@ -5,41 +5,45 @@
 function CurrentInstance(next) {
     this.pending = null;
     this.hasAsync = false;
-    /**
-     * @param len
-     */
-    this.add = function(totalValidators) {
-        this.pending = {
-            count: totalValidators,
-            errors: {},
-            failed: false
-        };
-
-        this.hasAsync = false;
-        this.resolve = null;
-    };
-
-    /**
-     * @param passed
-     * @param field
-     * @param type
-     */
-    this.rem = function(passed, type) {
-        this.pending.count--;
-        if (!passed) {
-            this.pending.failed = true;
-            this.pending.errors[type] = true;
-        }
-
-        /**
-         * finished resolving but have some errors
-         * push to the error domain
-         */
-        if (!this.pending.count) {
-            next(this.pending.failed ? this.pending.errors : null);
-        }
-    };
+    this.failed = false;
+    this.errors = null;
+    this.count = 0;
+    this.stop = function() {
+        next(this.failed ? this.errors : null);
+    }
 }
+
+/**
+ * @param len
+ */
+CurrentInstance.prototype.add = function(totalValidators) {
+    this.count = totalValidators;
+    this.errors = {};
+    this.failed = false;
+    this.hasAsync = false;
+    this.resolve = null;
+};
+
+/**
+ * @param passed
+ * @param field
+ * @param type
+ */
+CurrentInstance.prototype.rem = function(passed, type) {
+    this.count--;
+    if (!passed) {
+        this.failed = true;
+        this.errors[type] = true;
+    }
+
+    /**
+     * finished resolving but have some errors
+     * push to the error domain
+     */
+    if (!this.count) {
+        this.stop();
+    }
+};
 
 /**
  * @param asyncInstance

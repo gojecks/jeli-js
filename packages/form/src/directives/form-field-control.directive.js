@@ -20,6 +20,7 @@ export function FormFieldControlDirective(eventBinder, validators) {
     Object.defineProperty(this, 'disabled', {
         set: function() {
             if (!this._warning) {
+                this._warning = true;
                 console.warn('The use of disabled property with a form field control directive will not take effect');
             }
         }

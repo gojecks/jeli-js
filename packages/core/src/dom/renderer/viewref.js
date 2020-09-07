@@ -61,25 +61,36 @@ export function ViewRef(elementRef) {
  */
 function EmbededViewContext(parentRef, templateRef, context) {
     var compiledElement = templateRef.createElement(parentRef);
+    /**
+     * set the targetNode
+     */
     var targetNode = (parentRef.children.last || parentRef).nativeElement;
     var _componentRef = null;
-    var _this = this;
     this.context = context;
     /**
-     * set the isc flag so that child will inherit the right reference for componentRef
+     * create the Viewcontext if templateRef has a context
      */
-    createComponentRef();
+    if (templateRef.hasContext) {
+        ComponentRef.create(compiledElement.refId, parentRef.hostRef.refId);
+        _componentRef = componentDebugContext.get(compiledElement.refId);
+        /**
+         * build the localVariables if context is defined
+         */
+        _componentRef._context = createLocalVariables(templateRef.getContext(), this);
+    }
+
     parentRef.children.add(compiledElement);
     /**
      * schedule render event
      */
-    scheduler.schedule(function() {
+    var clearScheduler = scheduler.schedule(function() {
         transverse(compiledElement);
         parentRef.insertAfter(compiledElement.nativeElement, targetNode);
         compiledElement.changeDetector.detectChanges();
     });
 
     this.destroy = function() {
+        clearScheduler();
         if (_componentRef && !compiledElement.isc) {
             _componentRef.destroy();
             _componentRef = null;
@@ -94,49 +105,6 @@ function EmbededViewContext(parentRef, templateRef, context) {
         this.context = context;
         compiledElement.changeDetector.detectChanges();
     };
-
-    function createComponentRef() {
-        if (templateRef.hasContext) {
-            ComponentRef.create(compiledElement.refId, parentRef.hostRef.refId);
-            _componentRef = componentDebugContext.get(compiledElement.refId);
-            /**
-             * build the localVariables if context is defined
-             */
-            _componentRef._context = createLocalVariables(templateRef.getContext());
-        }
-    }
-
-    /**
-     * 
-     * @param {*} localVariables 
-     */
-    function createLocalVariables(localVariables) {
-        var context = {};
-        if (localVariables) {
-            for (var propName in localVariables) {
-                if (localVariables[propName].match(/\s/)) {
-                    context[propName] = localVariables[propName];
-                } else {
-                    writePropertyBinding(propName);
-                }
-            }
-        }
-
-        /**
-         * 
-         * @param {*} propName 
-         */
-        function writePropertyBinding(propName) {
-            Object.defineProperty(context, propName, {
-                get: function() {
-                    if (!_this.context) return;
-
-                    return _this.context[localVariables[propName]];
-                }
-            });
-        }
-        return context;
-    }
 }
 
 EmbededViewContext.prototype.updateContext = function(updates) {
@@ -144,4 +112,36 @@ EmbededViewContext.prototype.updateContext = function(updates) {
     for (var prop in updates) {
         this.context[prop] = updates[prop];
     }
+}
+
+/**
+ * 
+ * @param {*} localVariables 
+ */
+function createLocalVariables(localVariables, viewContext) {
+    var context = {};
+    if (localVariables) {
+        for (var propName in localVariables) {
+            if (localVariables[propName].match(/\s/)) {
+                context[propName] = localVariables[propName];
+            } else {
+                writePropertyBinding(propName);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param {*} propName 
+     */
+    function writePropertyBinding(propName) {
+        Object.defineProperty(context, propName, {
+            get: function() {
+                if (!viewContext.context) return;
+
+                return viewContext.context[localVariables[propName]];
+            }
+        });
+    }
+    return context;
 }

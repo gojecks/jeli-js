@@ -1,5 +1,6 @@
 import { isequal } from 'js-helpers/helpers';
 import { EventEmitter } from '@jeli/core';
+import { FormValidatorService } from './form-validator.service';
 
 var VALID = 'VALID';
 var INVALID = 'INVALID';

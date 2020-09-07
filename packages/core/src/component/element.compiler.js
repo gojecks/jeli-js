@@ -92,14 +92,10 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
             /**
              * remove the Attribute from element
              */
-            elementRef.nodes.set(definition.selector, componentInstance[ctrl.annotations.exportAs] || componentInstance);
-            var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, function() {
-                lifeCycle.trigger('willObserve');
-            });
+            elementRef.nodes.set(ctrl.annotations.exportAs || definition.selector, componentInstance);
             elementRef.observer(function() {
                 lifeCycle.trigger('viewDidDestroy');
                 elementRef.nodes.delete(definition.selector);
-                unsubscribe();
             });
         }
     }
@@ -174,23 +170,3 @@ function ComponentFactoryInitializer(ctrl, injectorInstance, CB) {
         }
     });
 };
-
-/**
- * 
- * @param {*} refId 
- * @param {*} fn 
- * @param {*} attachDestroy 
- */
-function SubscribeObservables(refId, fn, attachDestroy) {
-    var componentRef = componentDebugContext.get(refId);
-    var unsubscribe = null;
-    if (componentRef) {
-        unsubscribe = componentRef.observables.subscribe(fn);
-        if (attachDestroy) {
-            componentRef.observables.on('$destroy', unsubscribe);
-        }
-
-    }
-
-    return unsubscribe;
-}

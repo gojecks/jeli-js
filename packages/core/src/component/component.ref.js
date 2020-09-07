@@ -1,4 +1,4 @@
-import { inarray, isobject } from 'js-helpers/helpers';
+import { isobject } from 'js-helpers/helpers';
 import { Observer } from '../rx/observer';
 
 /**
@@ -26,11 +26,9 @@ function InternalChangeDetector(context) {
      * trigger all subscribers
      */
     function tick(ignoreChild, ignoreParent) {
-        if (!context.observables || context.inProgress) {
+        if (!context.observables) {
             return;
         }
-
-        context.inProgress = true;
 
         /**
          * trigger parent
@@ -38,7 +36,7 @@ function InternalChangeDetector(context) {
         if (context.parent && !ignoreParent && componentDebugContext.has(context.parent)) {
             var parent = componentDebugContext.get(context.parent);
             parent.changeDetector.detectChanges(true);
-            triggerChild(parent.child, [context.componentRefId]);
+            triggerChild(parent.child, []);
         }
 
         context.observables && context.observables.notifyAllObservers(context.componentInstance);
@@ -53,14 +51,12 @@ function InternalChangeDetector(context) {
         function triggerChild(children, ignore) {
             for (var i = 0; i < children.length; i++) {
                 var refId = children[i];
-                if (!inarray(refId, ignore) && componentDebugContext.has(refId)) {
+                if (!ignore.includes(refId) && componentDebugContext.has(refId)) {
                     var child = componentDebugContext.get(refId);
                     child.changeDetector.detectChanges(false, true);
                 }
             }
         }
-
-        context.inProgress = false;
     };
 }
 
@@ -117,7 +113,7 @@ function ComponentRef(refId) {
 }
 
 ComponentRef.prototype.removeChild = function(refId) {
-    this.child.slice(this.child.indexOf(refId), 1);
+    this.child.splice(this.child.indexOf(refId), 1);
     componentDebugContext.delete(refId);
 };
 
@@ -134,17 +130,6 @@ ComponentRef.prototype.updateModel = function(propName, value) {
     this.changeDetector.detectChanges(false, true);
     return this;
 };
-
-/**
- * @param {*} ComponentRef
- */
-ComponentRef.prototype.new = function(refId) {
-    var childInstance = new ComponentRef(refId);
-    childInstance.parent = this;
-    this.child.push(refId);
-    return childInstance;
-};
-
 
 ComponentRef.prototype.destroy = function() {
     this.changeDetector.markAsChecked();
