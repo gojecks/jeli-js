@@ -33,7 +33,7 @@ EventHandler.prototype.registerListener = function() {
      */
     function jEventHandler(ev) {
         // prevent the default only when its any of these events
-        if (inarray(ev.type, ['submit', 'touchstart', 'touchend', 'touchmove'])) {
+        if (inarray(ev.type, ['touchstart', 'touchend', 'touchmove'])) {
             ev.preventDefault();
         }
 
@@ -185,7 +185,7 @@ EventHandler.prototype.destroy = function() {
  */
 EventHandler.getEventsByType = function(events, type) {
     return events.filter(function(event) {
-        return isequal(event.name, type);
+        return event.name.split(/\s/g).includes(type);
     });
 };
 

@@ -5,24 +5,14 @@ import { isnumber, isstring, isempty, isobject, isfunction, isundefined, isnull,
  */
 export var formValidationStack = Object.create({
     MINLENGTH: function(value, requiredLength) {
-        if (isnumber(value)) {
-            return value >= requiredLength
-        }
-
-        if (isstring(value)) {
-            return value.length >= requiredLength;
-        }
+        if (isnumber(value) || isstring(value))
+            return String(value).length >= requiredLength;
 
         return false;
     },
     MAXLENGTH: function(value, requiredLength) {
-        if (isnumber(value)) {
-            return value <= requiredLength
-        }
-
-        if (isstring(value)) {
-            return value.length <= requiredLength;
-        }
+        if (isnumber(value) || isstring(value))
+            return String(value).length <= requiredLength;
 
         return false;
     },
@@ -46,7 +36,7 @@ export var formValidationStack = Object.create({
     DOMAINVALIDATION: function(domain) {
         return /[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+/.test(domain);
     },
-    MEDIUMPASSWORDSTREGTH: function(passwd) {
+    MEDIUMPASSWORDSTRENGTH: function(passwd) {
         return new RegExp("^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})").test(passwd);
     },
     STRONGPASSWORDSTRENGTH: function(passwd) {

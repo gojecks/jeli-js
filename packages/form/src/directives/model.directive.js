@@ -32,7 +32,7 @@ export function ModelDirective(eventBinder, parentControl, validators) {
 
 ModelDirective.prototype.didChange = function(changes) {
     if (this._isViewModelChanged(changes)) {
-        this.fieldControl.setValue(changes.model, { emitToView: false });
+        this.fieldControl.setValue(changes.model, { emitToView: true });
         this._model = changes.model;
     }
 }

@@ -188,7 +188,7 @@ function parseObjectExpression(expression, context, componentInstance, event) {
          */
         asg: function() {
             var value = generateArguments([expression.right], context, componentInstance, event)[0];
-            return setModelValue(expression.left, context, value);
+            return setModelValue(expression.left, context, componentInstance, value);
         },
         /**
          * UnaryExpression Method
@@ -240,7 +240,7 @@ function parseObjectExpression(expression, context, componentInstance, event) {
             return expression.value;
         },
         /**
-         * Member expression
+         * Member expressionf
          */
         mem: function() {
             return resolveValueFromContext(expression.list, context, componentInstance, event);
@@ -256,14 +256,16 @@ function parseObjectExpression(expression, context, componentInstance, event) {
  * @param {*} model 
  * @param {*} value 
  */
-function setModelValue(key, model, value) {
+function setModelValue(key, context, componentInstance, value) {
     if (isarray(key)) {
-        model = resolveContext(key.slice(0, key.length - 1), model);
+        context = resolveContext(key.slice(0, key.length - 1), context, componentInstance);
         key = key[key.length - 1];
+    } else {
+        context = (key in context) ? context : componentInstance;
     }
 
-    if (model) {
-        model[key] = value;
+    if (context) {
+        context[key] = value;
     }
 
     return value;
