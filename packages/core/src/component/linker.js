@@ -1,4 +1,5 @@
 import { isobject, isequal } from 'js-helpers/helpers';
+import { staticInjectionToken } from './injectors';
 /**
  * structure require Model 
  * Useful in Directive Compiler
@@ -32,7 +33,7 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
                             elementRef.parent.componentInstance
                         );
                     } else {
-                        value = getPrimitiveValue(item.type, name, elementRef.props[name])
+                        value = getPrimitiveValue(item.type, name, elementRef.props[name]);
                     }
                     setValue(prop, value);
                 } catch (e) { console.error(e); }
@@ -80,11 +81,14 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
      * @param {*} value 
      */
     function getPrimitiveValue(type, name, value) {
-        if (isequal(type, 'TemplateRef')) {
-            return elementRef.getTemplateRef(name)
+        switch (type) {
+            case (staticInjectionToken.TemplateRef):
+                return elementRef.getTemplateRef(name);
+            case (staticInjectionToken.Function):
+                return elementRef.parent.componentInstance[value];
+            default:
+                return value;
         }
-
-        return value;
     }
 
     /**

@@ -20,7 +20,7 @@ export var INITIALIZERS = new ProviderToken('AppInitializers', true);
 export function bootStrapApplication(moduleToBootStrap) {
     CoreBootstrapContext.compiledModule = moduleToBootStrap;
     CoreBootstrapContext.injector = new AbstractInjectorInstance();
-    InitializeModule(moduleToBootStrap);
+    moduleToBootStrap();
     /**
      * trigger INITIALIZERS
      */
@@ -36,8 +36,8 @@ export function bootStrapApplication(moduleToBootStrap) {
     });
 
     function bootStrapElement() {
-        if (moduleToBootStrap.annotations.rootElement) {
-            var selector = moduleToBootStrap.annotations.rootElement.annotations.selector;
+        if (moduleToBootStrap.rootElement) {
+            var selector = moduleToBootStrap.rootElement.annotations.selector;
             CoreBootstrapContext.bootStrapComponent = new ElementRef({
                 name: selector,
                 isc: true,
@@ -49,7 +49,7 @@ export function bootStrapApplication(moduleToBootStrap) {
              * bootstrap application
              */
             ElementCompiler(
-                moduleToBootStrap.annotations.rootElement,
+                moduleToBootStrap.rootElement,
                 CoreBootstrapContext.bootStrapComponent,
                 CoreBootstrapContext.injector,
                 function() {});
@@ -60,10 +60,11 @@ export function bootStrapApplication(moduleToBootStrap) {
      * 
      * @param {*} moduleFn 
      */
-    function InitializeModule(moduleFn) {
-        moduleFn();
-        if (moduleFn.annotations.requiredModules) {
-            moduleFn.annotations.requiredModules.forEach(InitializeModule);
-        }
-    }
+    // function InitializeModule(moduleFn) {
+    //     moduleFn();
+    //     if (moduleFn.bootstrap) {
+    //         while
+    //         moduleFn.bootstrap.forEach(InitializeModule);
+    //     }
+    // }
 };

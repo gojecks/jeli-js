@@ -21,8 +21,13 @@ function QueryList() {
     });
 }
 
-QueryList.prototype.add = function(element, emitEvent) {
-    this._list.push(element);
+QueryList.prototype.add = function(element, index, emitEvent) {
+    if (index !== undefined) {
+        this._list.splice(index, 0, element);
+    } else {
+        this._list.push(element);
+    }
+
     if (emitEvent) {
         this.onChanges.next({
             value: element,
@@ -61,7 +66,7 @@ QueryList.prototype.map = function(callback) {
     return this._list.map(callback);
 };
 
-QueryList.prototype.findByIndex = function(index) {
+QueryList.prototype.getByIndex = function(index) {
     return this._list[index];
 };
 
@@ -75,17 +80,11 @@ QueryList.prototype.toString = function() {
 
 QueryList.prototype.destroy = function() {
     while (this._list.length) {
-        this._list.pop().remove();
+        var element = this._list.pop();
+        if (element) element.remove();
     }
     this.onChanges.destroy();
 };
-
-QueryList.prototype.reset = function(newItem, emitEvent) {
-    this.destroy();
-    for (var i = 0; i < newItem.length; i++) {
-        this.add(newItem[i], emitEvent);
-    }
-}
 
 QueryList.prototype.remove = function(element) {
     var index = this._list.findIndex(function(ele) {

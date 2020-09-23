@@ -46,7 +46,9 @@ export function AppRootElement(http) {
 
     this.print = function(list) {
         console.log(list);
-    }
+    };
+
+    this.trackByFn = console.log;
 }
 
 AppRootElement.prototype.addTodo = function() {

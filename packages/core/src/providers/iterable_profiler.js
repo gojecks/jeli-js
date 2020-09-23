@@ -1,4 +1,4 @@
-import { isarray } from 'js-helpers/helpers';
+import { isarray, isfunction } from 'js-helpers/helpers';
 import { hashcode } from 'js-helpers/utils';
 /**
  * IterableProfiler
@@ -14,12 +14,8 @@ export function IterableProfiler(trackBy) {
     this._destroyed = false;
     this.cacheHash = [];
     this.out = null;
-    this.trackBy = trackBy || function(item) {
-        if (item && typeof item === "object") {
-            item = JSON.stringify(item);
-        }
-
-        return hashcode(item);
+    this.trackBy = trackBy || function(item, index) {
+        return item;
     }
 }
 
@@ -36,16 +32,10 @@ IterableProfiler.prototype.diff = function(source) {
      */
     this.out = {
         deleted: [],
-        insert: [],
-        moved: [],
-        changes: []
+        order: []
     };
 
     if ((!source || !source.length) && (!this.cacheHash || !this.cacheHash.length)) {
-        return false;
-    }
-
-    if (source.length === this.cacheHash.length) {
         return false;
     }
 
@@ -55,37 +45,52 @@ IterableProfiler.prototype.diff = function(source) {
      */
     if (!source.length && this.cacheHash.length) {
         this.out.deleted = Object.keys(this.cacheHash).map(Number);
-        this.cacheHash = [];
+        this.cacheHash.length = 0;
         return true;
     }
 
     var len = source.length;
     var newCacheHash = [];
+    var operationOrder = new Array(len);
+    var isDirty = false;
     for (var inc = 0; inc < len; inc++) {
-        var item = source[inc],
-            hash = this.trackBy(item, inc);
-        if (this.cacheHash.hasOwnProperty(inc)) {
+        var item = source[inc];
+        var hash = this.trackBy(item, inc);
+        /**
+         * find the hash in the cacheHash
+         * if hash exists means the object was moved to different index
+         * assign to new position
+         */
+        if (this.cacheHash.includes(hash)) {
             /***
              * cacheHash[key] changed
              */
-            if (this.cacheHash[inc] !== hash) {
-                /**
-                 * find the hash in the cacheHash
-                 * if hash exists means the object was moved to different index
-                 * assign to new position
-                 */
-                var index = this.cacheHash.indexOf(hash);
+            if (!Object.is(this.cacheHash[inc], hash)) {
+                isDirty = true;
                 /**
                  * update changes
                  */
-                this.out.changes.push({
-                    prev: index > -1 ? index : inc,
-                    curr: inc
-                });
+                var prevIndex = this.cacheHash.indexOf(hash);
+                /**
+                 * check if currentIndex is > prevIndex
+                 * eg: [a,b] => [a,c,b]
+                 * true: new Data was added in previous index to the collection
+                 * false: we move the item to correct index
+                 */
+                var operationOrderAtIndex = operationOrder[inc];
+                if (operationOrderAtIndex && operationOrderAtIndex.state !== 'create') {
+                    operationOrder[inc] = ({
+                        prevIndex: prevIndex,
+                        state: 'move'
+                    });
+                }
             }
         } else {
-            this.checkDuplicateRepeater(hash);
-            this.out.insert.push(inc);
+            isDirty = true;
+            operationOrder[inc] = ({
+                index: inc,
+                state: 'create'
+            });
         }
 
         newCacheHash.push(hash);
@@ -95,37 +100,48 @@ IterableProfiler.prototype.diff = function(source) {
      * Validate cacheHash
      */
     if (this.cacheHash.length > newCacheHash.length) {
-        var _this = this;
-        this.cacheHash.forEach(function(hash, idx) {
-            if (!newCacheHash.includes(hash)) {
-                _this.out.deleted.push(idx);
+        for (var i = 0; i < this.cacheHash.length; i++) {
+            if (!newCacheHash.includes(this.cacheHash[i])) {
+                this.out.deleted.push(i);
             }
-        });
+        }
     }
 
     this.cacheHash = newCacheHash;
+    this.out.order = operationOrder;
     newCacheHash = null;
+    operationOrder = null;
 
-    return (this.out.changes.length || this.out.deleted.length || this.out.insert.length) > 0;
+    return isDirty;
 };
 
-IterableProfiler.prototype.forEachChanges = function(callback) {
-    this.out.changes.forEach(callback);
-};
 
 IterableProfiler.prototype.forEachDeleted = function(callback) {
     this.out.deleted.forEach(callback);
 };
 
-IterableProfiler.prototype.forEachInserted = function(callback) {
-    this.out.insert.forEach(callback);
+IterableProfiler.prototype.forEachOperation = function(callback) {
+    var len = this.out.order.length;
+    for (var i = 0; i < len; i++) {
+        if (this.out.order[i]) {
+            callback(this.out.order[i], i);
+        }
+    }
 };
+
 
 
 IterableProfiler.prototype.checkDuplicateRepeater = function(hash) {
     if (this.cacheHash.indexOf(hash) > -1) {
         errorBuilder("Duplicate values are not allowed in repeaters. Use 'track by' expression to specify unique keys");
     }
+};
+
+
+IterableProfiler.prototype.attachTrackBy = function(fn) {
+    if (!isfunction(fn))
+        return;
+    this.trackBy = fn;
 };
 
 IterableProfiler.prototype.destroy = function() {

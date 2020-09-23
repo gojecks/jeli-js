@@ -54,12 +54,12 @@ SelectEventBinder.prototype._getValue = function(target) {
         var optionsValue = [];
         for (var i = 0; i < target.selectedOptions.length; i++) {
             var option = target.selectedOptions[i];
-            var value = this.element.children.findByIndex(option.index).getAttribute('value');
+            var value = this.element.children.getByIndex(option.index).getAttribute('value');
             optionsValue.push(value);
         }
 
         return optionsValue;
     }
 
-    return this.element.children.findByIndex(target.selectedIndex).getAttribute('value');
+    return this.element.children.getByIndex(target.selectedIndex).getAttribute('value');
 }

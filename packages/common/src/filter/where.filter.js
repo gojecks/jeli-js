@@ -4,7 +4,7 @@ import { QueryFactory } from '../services/query.service';
  * @usage: (DEFINITION, "id === 'a'")
  * 
  */
-Pipe({
+Service({
     name: 'whereFilter'
 })
 export function whereFilterFn() {

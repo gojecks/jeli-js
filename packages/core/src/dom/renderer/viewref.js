@@ -3,10 +3,10 @@ import { scheduler } from '../../utils/scheduler';
  * Element ViewRef
  */
 export function ViewRef(elementRef) {
-    var _viewRefs = new Map();
+    this._viewRefs = [];
     this._destroyed = false;
     this.get = function(index) {
-        return _viewRefs.get(index);
+        return this._viewRefs[index];
     };
 
     /**
@@ -16,94 +16,115 @@ export function ViewRef(elementRef) {
      */
     this.createEmbededView = function(templateRef, context, index) {
         var view = new EmbededViewContext(elementRef, templateRef, context);
-        _viewRefs.set(index, view);
+        view.renderView(index);
+        this._viewRefs.splice(index, 0, view);
         /**
          * ViewRef Object
          */
         return view;
     };
 
-    this.remove = function(index) {
-        var view = _viewRefs.get(index);
-        if (view) {
-            view.destroy();
-            _viewRefs.delete(index);
-        }
-    }
-
-    this.move = function(prev, curr) {
-        _viewRefs.set(curr, _viewRefs.get(prev));
-        _viewRefs.delete(prev);
-    };
-
-    /**
-     * destroy the child view
-     */
-    this.clearView = function() {
-        _viewRefs.forEach(function(view) {
-            view.destroy();
-        });
-        _viewRefs.clear();
-    };
-
     Object.defineProperty(this, 'length', {
         get: function() {
-            return _viewRefs.size;
+            return this._viewRefs.length;
         }
     });
 }
 
 /**
  * 
- * @param {*} elementRef 
+ * @param {*} prev 
+ * @param {*} curr 
+ */
+ViewRef.prototype.move = function(prev, curr) {
+    var view = this.get(prev);
+    scheduler.schedule(function() {
+        if (view) {
+            var parent = view.compiledElement.parent;
+            var targetNode = parent.children.getByIndex(curr - 1);
+            if (targetNode) {
+                parent.insertAfter(view.compiledElement.nativeElement, targetNode.nativeElement);
+            }
+        }
+    });
+};
+
+ViewRef.prototype.remove = function(index) {
+    var view = this._viewRefs.splice(index, 1)[0];
+    if (view) {
+        view.destroy();
+    }
+    view = null;
+};
+
+/**
+ * destroy the child view
+ */
+ViewRef.prototype.clearView = function() {
+    while (this._viewRefs.length) {
+        var view = this._viewRefs.shift();
+        view.destroy();
+    }
+};
+
+/**
+ * 
+ * @param {*} parentRef 
  * @param {*} templateRef 
  * @param {*} context 
+ * @param {*} index 
  */
 function EmbededViewContext(parentRef, templateRef, context) {
-    var compiledElement = templateRef.createElement(parentRef);
-    /**
-     * set the targetNode
-     */
-    var targetNode = (parentRef.children.last || parentRef).nativeElement;
     var _componentRef = null;
+    this.compiledElement = templateRef.createElement(parentRef);
     this.context = context;
+    this.unsubscribeScheduler;
     /**
      * create the Viewcontext if templateRef has a context
      */
     if (templateRef.hasContext) {
-        ComponentRef.create(compiledElement.refId, parentRef.hostRef.refId);
-        _componentRef = componentDebugContext.get(compiledElement.refId);
+        ComponentRef.create(this.compiledElement.refId, parentRef.hostRef.refId);
+        _componentRef = componentDebugContext.get(this.compiledElement.refId);
         /**
          * build the localVariables if context is defined
          */
         _componentRef._context = createLocalVariables(templateRef.getContext(), this);
     }
 
-    parentRef.children.add(compiledElement);
     /**
-     * schedule render event
+     * schedule a view rendering
+     * @param {*} index 
      */
-    var clearScheduler = scheduler.schedule(function() {
-        transverse(compiledElement);
-        parentRef.insertAfter(compiledElement.nativeElement, targetNode);
-        compiledElement.changeDetector.detectChanges();
-    });
+    this.renderView = function(index) {
+        var _this = this;
+        this.unsubscribeScheduler = scheduler.schedule(function() {
+            var targetNode = (parentRef.children.last || parentRef).nativeElement;
+            if (index !== undefined && parentRef.children.length > index) {
+                targetNode = parentRef.children.getByIndex(index - 1).nativeElement;
+            }
+            transverse(_this.compiledElement);
+            parentRef.insertAfter(_this.compiledElement.nativeElement, targetNode);
+            parentRef.children.add(_this.compiledElement, index);
+            _this.compiledElement.changeDetector.detectChanges();
+        });
+    }
+
 
     this.destroy = function() {
-        clearScheduler();
-        if (_componentRef && !compiledElement.isc) {
+        this.unsubscribeScheduler();
+        if (_componentRef && !this.compiledElement.isc) {
             _componentRef.destroy();
             _componentRef = null;
         }
 
-        compiledElement.remove(true);
-        compiledElement = null;
+        this.compiledElement.remove(true);
+        this.compiledElement = null;
         this.context = null;
     }
 
     this.setContext = function(context) {
         this.context = context;
-        compiledElement.changeDetector.detectChanges();
+        this.compiledElement.changeDetector.detectChanges();
     };
 }
 

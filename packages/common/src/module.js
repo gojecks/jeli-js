@@ -11,6 +11,7 @@ import { orderByFilterFn } from './filter/orderby.filter.service';
 import { upperCaseFilter } from './filter/uppercase';
 import { whereFilterFn } from './filter/where.filter';
 import { QueryFactory } from './services/query.service';
+import { FilterPipe } from './filter/filter';
 /**
  * set up common Module
  * that other Module could inject
@@ -26,7 +27,8 @@ jModule({
         orderByFilterFn,
         whereFilterFn,
         CurrencyFilter,
-        QueryFactory
+        QueryFactory,
+        FilterPipe
     ],
     selectors: [
         ForDirective,

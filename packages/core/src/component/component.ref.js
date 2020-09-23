@@ -155,7 +155,7 @@ ComponentRef.prototype.destroy = function() {
 ComponentRef.create = function(refId, parentId) {
     var componentRef = new ComponentRef(refId);
     componentDebugContext.set(refId, componentRef);
-    if (parentId) {
+    if (parentId && componentDebugContext.has(parentId)) {
         componentRef.parent = parentId;
         // add child to parent
         componentDebugContext.get(parentId).child.push(refId);

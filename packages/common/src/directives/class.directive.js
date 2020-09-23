@@ -32,6 +32,9 @@ export function ClassDirective(elementRef) {
         set: function(value) {
             this._jClass = value;
             this._changeClass();
+        },
+        get: function() {
+            return this._jClass;
         }
     });
 }

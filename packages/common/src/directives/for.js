@@ -14,14 +14,14 @@ import { IterableProfiler } from '@jeli/core';
 Directive({
     selector: 'for',
     DI: ['ViewRef?', 'TemplateRef?'],
-    props: ['forIn', 'trackBy']
+    props: ['forIn', 'forTrackBy:Function']
 })
 export function ForDirective(viewRef, templateRef) {
     this.viewRef = viewRef;
     this.templateRef = templateRef;
     this.iterable = new IterableProfiler();
+    this._forTrackBy = null;
     this._forIn = null;
-    this.trackBy;
 
     /**
      * add new property
@@ -30,6 +30,15 @@ export function ForDirective(viewRef, templateRef) {
         forIn: {
             set: function(value) {
                 this._forIn = value;
+            }
+        },
+        forTrackBy: {
+            set: function(fn) {
+                this.iterable.attachTrackBy(fn);
+                this._forTrackBy = fn;
+            },
+            get: function() {
+                return this._forTrackBy;
             }
         }
     });
@@ -42,34 +51,31 @@ ForDirective.prototype._listenerFn = function() {
         _this.viewRef.remove(index);
     });
 
-    this.iterable.forEachChanges(function(item) {
-        if (item.prev !== item.curr) {
-            _this.viewRef.move(item.prev, item.curr);
+    this.iterable.forEachOperation(function(item, idx) {
+        switch (item.state) {
+            case ('create'):
+                var context = new jForRow(_this._forIn[idx], idx, null);
+                _this.viewRef.createEmbededView(_this.templateRef, context, idx);
+                break;
+            case ('move'):
+                _this.viewRef.move(item.prevIndex, idx);
+                break;
         }
     });
 
-    /**
-     * trigger filter
-     * large data might be slow for filter
-     */
-    this.iterable.forEachInserted(function(index) {
-        _this.viewRef.createEmbededView(_this.templateRef, new jForRow(_this._forIn[index], index, null), index);
-    });
-
     for (var i = 0; i < this.viewRef.length; i++) {
-        var view = this.viewRef.get(i);
+        var view = _this.viewRef.get(i);
         view.updateContext({
             index: i,
-            count: this._forIn.length
+            count: _this._forIn.length
         });
     }
 };
 
 ForDirective.prototype.willObserve = function() {
     var changes = this.iterable.diff(this._forIn);
-    if (changes) {
+    if (changes)
         this._listenerFn();
-    }
 }
 
 /**

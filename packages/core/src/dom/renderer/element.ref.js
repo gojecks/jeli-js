@@ -69,7 +69,7 @@ ElementRef.prototype.appendChild = function(template) {
 
 ElementRef.prototype.addViewQuery = function(option, element) {
     if (!isequal(option[1], this.tagName)) {
-        return this.parent && this.parent.hostRef.addviewQuery(option, element);
+        return this.parent && this.parent.hostRef.addViewQuery(option, element);
     }
 
     this._viewQuery.set(option[0], element);
@@ -103,10 +103,13 @@ function setupAttributeObservers(element, attrObservers) {
          */
         function attributeEvaluator(propName, template) {
             compileTemplate(template, element.context, element.componentInstance, function(value) {
-                if (AttributeAppender[propName]) {
-                    AttributeAppender[propName](element.nativeElement, value, template);
-                } else {
-                    AttributeAppender.setProp(element.nativeElement, propName, value);
+                try {
+                    if (AttributeAppender[propName])
+                        AttributeAppender[propName](element.nativeElement, value, template);
+                    else
+                        AttributeAppender.setProp(element.nativeElement, propName, value);
+                } catch (e) {
+                    console.error(e);
                 }
             });
         }

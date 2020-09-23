@@ -1,3 +1,5 @@
+import { QueryFactory } from "../services/query.service";
+
 Service({
     name: 'orderBy'
 })

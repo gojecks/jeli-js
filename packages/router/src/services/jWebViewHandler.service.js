@@ -137,3 +137,7 @@ ViewHandler.prototype.resolveViews = function(route, currentRoute) {
         }
     }
 };
+
+ViewHandler.prototype.destroy = function(ref) {
+    this.viewsHolder.delete(ref);
+};

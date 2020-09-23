@@ -1,16 +1,20 @@
-import { isstring, isobject } from 'js-helpers/helpers';
+import { isstring, isobject, isempty } from 'js-helpers/helpers';
 /**
  * 
  * @param {*} element 
  */
 export function ElementClassList(nativeElement, classList, type) {
     if (type) {
-        nativeElement.classList[type].apply(nativeElement.classList, classList.split(" "));
+        nativeElement.classList[type].apply(nativeElement.classList, toClass(classList));
     } else if (classList) {
         nativeElement.classList.value = classList
     } else {
         return nativeElement.classList.value;
     }
+}
+
+function toClass(classList) {
+    return classList.split(/\s/g).filter(function(k) { return !!k; });
 }
 
 /**
@@ -30,7 +34,7 @@ ElementClassList.add = function(nativeElement, classList, removeClass) {
             }
         }
     } else {
-        nativeElement.classList.add.apply(nativeElement.classList, classList.split(/\s/g));
+        nativeElement.classList.add.apply(nativeElement.classList, toClass(classList));
     }
 };
 
@@ -44,7 +48,7 @@ ElementClassList.remove = function(nativeElement, classList) {
         return;
     }
 
-    nativeElement.classList.remove.apply(nativeElement.classList, classList.split(/\s/g));
+    nativeElement.classList.remove.apply(nativeElement.classList, toClass(classList));
 }
 
 ElementClassList.contains = function(nativeElement, className) {

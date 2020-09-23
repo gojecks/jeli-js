@@ -17,8 +17,8 @@ export function errorBuilder(error, logLevel) {
     };
 
     if (typeof error == 'string') {
-        throw new userException(error);
-    } else {
-        console[logLevelMethods[loggerLevel]](error);
+        error = new userException(error);
     }
+
+    console[logLevelMethods[loggerLevel]](error);
 }

@@ -3,4 +3,5 @@ export * from './src/bootstrap/index';
 export * from './src/dom/public.api';
 export * from './src/rx/public.api';
 export * from './src/providers/public.api';
+export * from './src/utils/lazyloader';
 import './src/utils/timeout';

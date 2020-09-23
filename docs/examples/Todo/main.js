@@ -750,7 +750,79 @@ function LifeCycle(componentInstance) {
     };
 }
 ;
+var staticInjectionToken = {
+    ElementRef: 'ElementRef',
+    TemplateRef: 'TemplateRef',
+    changeDetector: 'changeDetector',
+    ViewRef: 'ViewRef',
+    ParentRef: 'ParentRef',
+    VALIDATORS: 'VALIDATORS',
+    QueryList: 'QueryList',
+    Function: 'Function'
+};
+function ComponentInjectors(elementRef) {
+    AbstractInjectorInstance.call(this, elementRef);
+    this.injectors.ElementRef = elementRef;
+    this.currentClassAnnotations = {};
+    this.has = function (tokenName) {
+        return this.injectors.hasOwnProperty(tokenName) || staticInjectionToken.hasOwnProperty(tokenName);
+    };
+}
+ComponentInjectors.prototype = Object.create(AbstractInjectorInstance.prototype);
+ComponentInjectors.prototype.constructor = AbstractInjectorInstance;
+ComponentInjectors.prototype.destroy = function () {
+    this.injectors.ElementRef = null;
+    this.injectors = null;
+    this.currentClassAnnotations = null;
+};
+ComponentInjectors.prototype.get = function (tokenName) {
+    if (this.injectors.hasOwnProperty(tokenName))
+        return this.injectors[tokenName];
+    else if (staticInjectionToken[tokenName])
+        return _ComponentInjectionToken(tokenName, this);
+};
+function _ComponentInjectionToken(tokenName, context) {
+    switch (tokenName) {
+    case staticInjectionToken.TemplateRef:
+        return context.injectors.ElementRef.getTemplateRef(context.currentClassAnnotations.selector);
+    case staticInjectionToken.changeDetector:
+        return context.injectors.ElementRef.changeDetector;
+    case staticInjectionToken.ViewRef:
+        return new ViewRef(context.injectors.ElementRef);
+    case staticInjectionToken.ParentRef: {
+            if (context.currentClassAnnotations.DI.ParentRef.value) {
+                return findParentRef(context.injectors.ElementRef.parent, context.currentClassAnnotations.DI.ParentRef.value);
+            }
+            return context.injectors.ElementRef.parent.componentInstance;
+        }
+    case staticInjectionToken.VALIDATORS:
+        return getValidators(context.injectors.ElementRef);
+    }
+}
+function getValidators(elementRef) {
+    return [
+        'required',
+        'pattern',
+        'minlength',
+        'maxlength'
+    ].reduce(function (accum, key) {
+        if (elementRef.hasAttribute(key)) {
+            accum[key] = elementRef.getAttribute(key);
+        }
+        return accum;
+    }, {});
+}
+function findParentRef(parentRef, refValue) {
+    if (parentRef && !parentRef.nodes.has(refValue)) {
+        return findParentRef(parentRef.parent, refValue);
+    }
+    if (!parentRef) {
+        return null;
+    }
+    return parentRef.nodes.get(refValue);
+}
 function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
+    lifeCycle.trigger('willObserve');
     var propChanges = null;
     var registeredProperty = [];
     var always = false;
@@ -799,15 +871,19 @@ function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
         componentInstance[property] = value;
     }
     function getPrimitiveValue(type, name, value) {
-        if (isequal(type, 'TemplateRef')) {
+        switch (type) {
+        case staticInjectionToken.TemplateRef:
             return elementRef.getTemplateRef(name);
+        case staticInjectionToken.Function:
+            return elementRef.parent.componentInstance[value];
+        default:
+            return value;
         }
-        return value;
     }
     var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, function () {
-        lifeCycle.trigger('willObserve');
         if (always)
             _updateViewBinding();
+        lifeCycle.trigger('willObserve');
     });
     elementRef.observer(function () {
         unsubscribe();
@@ -991,14 +1067,13 @@ function InternalChangeDetector(context) {
         }
     };
     function tick(ignoreChild, ignoreParent) {
-        if (!context.observables || context.inProgress) {
+        if (!context.observables) {
             return;
         }
-        context.inProgress = true;
         if (context.parent && !ignoreParent && componentDebugContext.has(context.parent)) {
             var parent = componentDebugContext.get(context.parent);
             parent.changeDetector.detectChanges(true);
-            triggerChild(parent.child, [context.componentRefId]);
+            triggerChild(parent.child, []);
         }
         context.observables && context.observables.notifyAllObservers(context.componentInstance);
         if (!ignoreChild) {
@@ -1007,13 +1082,12 @@ function InternalChangeDetector(context) {
         function triggerChild(children, ignore) {
             for (var i = 0; i < children.length; i++) {
                 var refId = children[i];
-                if (!inarray(refId, ignore) && componentDebugContext.has(refId)) {
+                if (!ignore.includes(refId) && componentDebugContext.has(refId)) {
                     var child = componentDebugContext.get(refId);
                     child.changeDetector.detectChanges(false, true);
                 }
             }
         }
-        context.inProgress = false;
     }
     ;
 }
@@ -1058,7 +1132,7 @@ function ComponentRef(refId) {
     });
 }
 ComponentRef.prototype.removeChild = function (refId) {
-    this.child.slice(this.child.indexOf(refId), 1);
+    this.child.splice(this.child.indexOf(refId), 1);
     componentDebugContext.delete(refId);
 };
 ComponentRef.prototype.updateModel = function (propName, value) {
@@ -1101,76 +1175,6 @@ function ChangeDetector() {
     CoreBootstrapContext.bootStrapComponent.changeDetector.detectChanges();
 }
 ;
-var staticInjectionToken = {
-    ElementRef: 'ElementRef',
-    TemplateRef: 'TemplateRef',
-    changeDetector: 'changeDetector',
-    ViewRef: 'ViewRef',
-    ParentRef: 'ParentRef',
-    VALIDATORS: 'VALIDATORS',
-    QueryList: 'QueryList'
-};
-function ComponentInjectors(elementRef) {
-    AbstractInjectorInstance.call(this, elementRef);
-    this.injectors.ElementRef = elementRef;
-    this.currentClassAnnotations = {};
-    this.has = function (tokenName) {
-        return this.injectors.hasOwnProperty(tokenName) || staticInjectionToken.hasOwnProperty(tokenName);
-    };
-}
-ComponentInjectors.prototype = Object.create(AbstractInjectorInstance.prototype);
-ComponentInjectors.prototype.constructor = AbstractInjectorInstance;
-ComponentInjectors.prototype.destroy = function () {
-    this.injectors.ElementRef = null;
-    this.injectors = null;
-    this.currentClassAnnotations = null;
-};
-ComponentInjectors.prototype.get = function (tokenName) {
-    if (this.injectors.hasOwnProperty(tokenName))
-        return this.injectors[tokenName];
-    else if (staticInjectionToken[tokenName])
-        return _ComponentInjectionToken(tokenName, this);
-};
-function _ComponentInjectionToken(tokenName, context) {
-    switch (tokenName) {
-    case staticInjectionToken.TemplateRef:
-        return context.injectors.ElementRef.getTemplateRef(context.currentClassAnnotations.selector);
-    case staticInjectionToken.changeDetector:
-        return context.injectors.ElementRef.changeDetector;
-    case staticInjectionToken.ViewRef:
-        return new ViewRef(context.injectors.ElementRef);
-    case staticInjectionToken.ParentRef: {
-            if (context.currentClassAnnotations.DI.ParentRef.value) {
-                return findParentRef(context.injectors.ElementRef.parent, context.currentClassAnnotations.DI.ParentRef.value);
-            }
-            return context.injectors.ElementRef.parent.componentInstance;
-        }
-    case staticInjectionToken.VALIDATORS:
-        return getValidators(context.injectors.ElementRef);
-    }
-}
-function getValidators(elementRef) {
-    return [
-        'required',
-        'pattern',
-        'minlength',
-        'maxlength'
-    ].reduce(function (accum, key) {
-        if (elementRef.hasAttribute(key)) {
-            accum[key] = elementRef.getAttribute(key);
-        }
-        return accum;
-    }, {});
-}
-function findParentRef(parentRef, refValue) {
-    if (parentRef && !parentRef.nodes.has(refValue)) {
-        return findParentRef(parentRef.parent, refValue);
-    }
-    if (!parentRef) {
-        return null;
-    }
-    return parentRef.nodes.get(refValue);
-}
 function buildViewChild(componentInstance, elementRef, viewChild) {
     elementRef.viewQuery.forEach(assignValue);
     function assignValue(viewElement, property) {
@@ -1333,7 +1337,7 @@ var INITIALIZERS = new ProviderToken('AppInitializers', true);
 function bootStrapApplication(moduleToBootStrap) {
     CoreBootstrapContext.compiledModule = moduleToBootStrap;
     CoreBootstrapContext.injector = new AbstractInjectorInstance();
-    InitializeModule(moduleToBootStrap);
+    moduleToBootStrap();
     _Promise.all(Inject(INITIALIZERS, CoreBootstrapContext.injector).map(function (callback) {
         return callback();
     })).done(function () {
@@ -1343,22 +1347,16 @@ function bootStrapApplication(moduleToBootStrap) {
         console.error(err);
     });
     function bootStrapElement() {
-        if (moduleToBootStrap.annotations.rootElement) {
-            var selector = moduleToBootStrap.annotations.rootElement.annotations.selector;
+        if (moduleToBootStrap.rootElement) {
+            var selector = moduleToBootStrap.rootElement.annotations.selector;
             CoreBootstrapContext.bootStrapComponent = new ElementRef({
                 name: selector,
                 isc: true,
                 type: 'element',
                 fromDOM: true
             }, null);
-            ElementCompiler(moduleToBootStrap.annotations.rootElement, CoreBootstrapContext.bootStrapComponent, CoreBootstrapContext.injector, function () {
+            ElementCompiler(moduleToBootStrap.rootElement, CoreBootstrapContext.bootStrapComponent, CoreBootstrapContext.injector, function () {
             });
-        }
-    }
-    function InitializeModule(moduleFn) {
-        moduleFn();
-        if (moduleFn.annotations.requiredModules) {
-            moduleFn.annotations.requiredModules.forEach(InitializeModule);
         }
     }
 }
@@ -1698,16 +1696,20 @@ function EmbededViewContext(parentRef, templateRef, context) {
     var compiledElement = templateRef.createElement(parentRef);
     var targetNode = (parentRef.children.last || parentRef).nativeElement;
     var _componentRef = null;
-    var _this = this;
     this.context = context;
-    createComponentRef();
+    if (templateRef.hasContext) {
+        ComponentRef.create(compiledElement.refId, parentRef.hostRef.refId);
+        _componentRef = componentDebugContext.get(compiledElement.refId);
+        _componentRef._context = createLocalVariables(templateRef.getContext(), this);
+    }
     parentRef.children.add(compiledElement);
-    scheduler.schedule(function () {
+    var clearScheduler = scheduler.schedule(function () {
         transverse(compiledElement);
         parentRef.insertAfter(compiledElement.nativeElement, targetNode);
         compiledElement.changeDetector.detectChanges();
     });
     this.destroy = function () {
+        clearScheduler();
         if (_componentRef && !compiledElement.isc) {
             _componentRef.destroy();
             _componentRef = null;
@@ -1720,35 +1722,6 @@ function EmbededViewContext(parentRef, templateRef, context) {
         this.context = context;
         compiledElement.changeDetector.detectChanges();
     };
-    function createComponentRef() {
-        if (templateRef.hasContext) {
-            ComponentRef.create(compiledElement.refId, parentRef.hostRef.refId);
-            _componentRef = componentDebugContext.get(compiledElement.refId);
-            _componentRef._context = createLocalVariables(templateRef.getContext());
-        }
-    }
-    function createLocalVariables(localVariables) {
-        var context = {};
-        if (localVariables) {
-            for (var propName in localVariables) {
-                if (localVariables[propName].match(/\s/)) {
-                    context[propName] = localVariables[propName];
-                } else {
-                    writePropertyBinding(propName);
-                }
-            }
-        }
-        function writePropertyBinding(propName) {
-            Object.defineProperty(context, propName, {
-                get: function () {
-                    if (!_this.context)
-                        return;
-                    return _this.context[localVariables[propName]];
-                }
-            });
-        }
-        return context;
-    }
 }
 EmbededViewContext.prototype.updateContext = function (updates) {
     if (!this.context)
@@ -1757,6 +1730,28 @@ EmbededViewContext.prototype.updateContext = function (updates) {
         this.context[prop] = updates[prop];
     }
 };
+function createLocalVariables(localVariables, viewContext) {
+    var context = {};
+    if (localVariables) {
+        for (var propName in localVariables) {
+            if (localVariables[propName].match(/\s/)) {
+                context[propName] = localVariables[propName];
+            } else {
+                writePropertyBinding(propName);
+            }
+        }
+    }
+    function writePropertyBinding(propName) {
+        Object.defineProperty(context, propName, {
+            get: function () {
+                if (!viewContext.context)
+                    return;
+                return viewContext.context[localVariables[propName]];
+            }
+        });
+    }
+    return context;
+}
 function ElementStyle(nativeElement, name, value) {
     if (name && !value && isstring(name)) {
         if (!!window.getComputedStyle) {
@@ -1973,7 +1968,6 @@ EventHandler.prototype.registerListener = function () {
     var _this = this;
     function jEventHandler(ev) {
         if (inarray(ev.type, [
-                'submit',
                 'touchstart',
                 'touchend',
                 'touchmove'
@@ -2051,7 +2045,7 @@ EventHandler.prototype.destroy = function () {
 };
 EventHandler.getEventsByType = function (events, type) {
     return events.filter(function (event) {
-        return isequal(event.name, type);
+        return event.name.split(/\s/g).includes(type);
     });
 };
 EventHandler._executeEventsTriggers = function (eventTriggers, componentInstance, context, ev) {
@@ -2095,7 +2089,9 @@ function getFilteredTemplateValue(templateModel, context, componentInstance) {
     var value = resolveValueFromContext(templateModel.prop, context, componentInstance);
     if (templateModel.fns) {
         value = templateModel.fns.reduce(function (accum, filterClass, idx) {
-            var filterArgs = generateArguments(templateModel.args[idx], context, value);
+            var filterArgs = [];
+            if (templateModel.args[idx])
+                filterArgs = generateArguments(templateModel.args[idx], context, value);
             filterArgs.unshift(accum);
             return filterParser(filterClass, filterArgs);
         }, value);
@@ -2178,7 +2174,7 @@ function parseObjectExpression(expression, context, componentInstance, event) {
         },
         asg: function () {
             var value = generateArguments([expression.right], context, componentInstance, event)[0];
-            return setModelValue(expression.left, context, value);
+            return setModelValue(expression.left, context, componentInstance, value);
         },
         una: function () {
             var val = resolveValueFromContext(expression.args, context, componentInstance, event);
@@ -2250,13 +2246,15 @@ function parseObjectExpression(expression, context, componentInstance, event) {
     };
     return internalParser[expression.type] && internalParser[expression.type]();
 }
-function setModelValue(key, model, value) {
+function setModelValue(key, context, componentInstance, value) {
     if (isarray(key)) {
-        model = resolveContext(key.slice(0, key.length - 1), model);
+        context = resolveContext(key.slice(0, key.length - 1), context, componentInstance);
         key = key[key.length - 1];
+    } else {
+        context = key in context ? context : componentInstance;
     }
-    if (model) {
-        model[key] = value;
+    if (context) {
+        context[key] = value;
     }
     return value;
 }
@@ -2724,6 +2722,11 @@ IterableProfiler.prototype.checkDuplicateRepeater = function (hash) {
         errorBuilder('Duplicate values are not allowed in repeaters. Use \'track by\' expression to specify unique keys');
     }
 };
+IterableProfiler.prototype.attachTrackBy = function (fn) {
+    if (!isfunction(fn))
+        return;
+    this.trackBy = fn;
+};
 IterableProfiler.prototype.destroy = function () {
     this._destroyed = true;
     this.cacheHash.length = 0;
@@ -2761,9 +2764,9 @@ exports.AbstractInjectorInstance = AbstractInjectorInstance;
 exports.closureRef = closureRef;
 exports.resolveClosureRef = resolveClosureRef;
 exports.ϕjeliLinker = ϕjeliLinker;
+exports.staticInjectionToken = staticInjectionToken;
 exports.ChangeDetector = ChangeDetector;
 exports.Observer = Observer;
-exports.staticInjectionToken = staticInjectionToken;
 exports.INITIALIZERS = INITIALIZERS;
 exports.bootStrapApplication = bootStrapApplication;
 exports._Promise = _Promise;
@@ -2790,10 +2793,13 @@ exports.IterableProfiler = IterableProfiler;
 },
 'dist/common/bundles/jeli-common-module.js': function(module, exports, __required){
 var helpers = __required('node_modules/js-helpers/helpers.js');
+var isundefined = helpers['isundefined'];
+var isfunction = helpers['isfunction'];
 var isarray = helpers['isarray'];
 var isobject = helpers['isobject'];
 var isequal = helpers['isequal'];
 var core = __required('dist/core/bundles/jeli-core-module.js');
+var errorBuilder = core['errorBuilder'];
 var ElementClassList = core['ElementClassList'];
 var IterableProfiler = core['IterableProfiler'];
 function jForRow(context, index, count) {
@@ -2829,12 +2835,21 @@ var ForDirective = function () {
         this.viewRef = viewRef;
         this.templateRef = templateRef;
         this.iterable = new IterableProfiler();
+        this._forTrackBy = null;
         this._forIn = null;
-        this.trackBy;
         Object.defineProperties(this, {
             forIn: {
                 set: function (value) {
                     this._forIn = value;
+                }
+            },
+            forTrackBy: {
+                set: function (fn) {
+                    this.iterable.attachTrackBy(fn);
+                    this._forTrackBy = fn;
+                },
+                get: function () {
+                    return this._forTrackBy;
                 }
             }
         });
@@ -2880,7 +2895,7 @@ var ForDirective = function () {
         },
         props: {
             forIn: {},
-            trackBy: {}
+            forTrackBy: { type: 'Function' }
         },
         module: 'CommonModule'
     };
@@ -3110,7 +3125,10 @@ var capitalizeFilter = function () {
             return value.charAt(0).toUpperCase() + value.substr(1, value.length);
         };
     }
-    capitalizeFilter.annotations = { name: 'capitalize' };
+    capitalizeFilter.annotations = {
+        name: 'capitalize',
+        module: 'CommonModule'
+    };
     return capitalizeFilter;
 }();
 var NumberFilter = function () {
@@ -3137,7 +3155,10 @@ var NumberFilter = function () {
             return format.apply(value || 0, factoRize);
         };
     }
-    NumberFilter.annotations = { name: 'number' };
+    NumberFilter.annotations = {
+        name: 'number',
+        module: 'CommonModule'
+    };
     return NumberFilter;
 }();
 var CurrencyFilter = function () {
@@ -3154,7 +3175,8 @@ var CurrencyFilter = function () {
     }
     CurrencyFilter.annotations = {
         name: 'currency',
-        DI: { NumberFilter: { factory: NumberFilter } }
+        DI: { NumberFilter: { factory: NumberFilter } },
+        module: 'CommonModule'
     };
     return CurrencyFilter;
 }();
@@ -3165,7 +3187,10 @@ var jsonFilterFn = function () {
             return typeof value === 'object' ? JSON.stringify(value, null, parseInt(spacing || '0')) : value;
         };
     }
-    jsonFilterFn.annotations = { name: 'json' };
+    jsonFilterFn.annotations = {
+        name: 'json',
+        module: 'CommonModule'
+    };
     return jsonFilterFn;
 }();
 var lowerCaseFilter = function () {
@@ -3175,41 +3200,11 @@ var lowerCaseFilter = function () {
             return value.toLowerCase();
         };
     }
-    lowerCaseFilter.annotations = { name: 'lowercase' };
+    lowerCaseFilter.annotations = {
+        name: 'lowercase',
+        module: 'CommonModule'
+    };
     return lowerCaseFilter;
-}();
-var orderByFilterFn = function () {
-    'use strict';
-    function orderByFilterFn() {
-        this.compile = function (value, propertyName) {
-            if (value.length < 2) {
-                return value;
-            }
-            var _queryApi = new QueryFactory(value), newList;
-            var splitedProps = propertyName.split(':');
-            if (splitedProps.length > 1) {
-                reverse = splitedProps.pop();
-            }
-            propertyName = splitedProps.pop();
-            newList = _queryApi.sortBy.apply(_queryApi, propertyName.split(','));
-            if (reverse) {
-                return newList.reverse();
-            }
-            return value;
-        };
-    }
-    orderByFilterFn.annotations = { name: 'orderBy' };
-    return orderByFilterFn;
-}();
-var upperCaseFilter = function () {
-    'use strict';
-    function upperCaseFilter() {
-        this.compile = function (value) {
-            return value.toUpperCase();
-        };
-    }
-    upperCaseFilter.annotations = { name: 'uppercase' };
-    return upperCaseFilter;
 }();
 var QueryFactory = function () {
     'use strict';
@@ -3238,8 +3233,47 @@ var QueryFactory = function () {
         return this;
     }
     ;
-    QueryFactory.annotations = {};
+    QueryFactory.annotations = { module: 'CommonModule' };
     return QueryFactory;
+}();
+var orderByFilterFn = function () {
+    'use strict';
+    function orderByFilterFn() {
+        this.compile = function (value, propertyName) {
+            if (value.length < 2) {
+                return value;
+            }
+            var _queryApi = new QueryFactory(value), newList;
+            var splitedProps = propertyName.split(':');
+            if (splitedProps.length > 1) {
+                reverse = splitedProps.pop();
+            }
+            propertyName = splitedProps.pop();
+            newList = _queryApi.sortBy.apply(_queryApi, propertyName.split(','));
+            if (reverse) {
+                return newList.reverse();
+            }
+            return value;
+        };
+    }
+    orderByFilterFn.annotations = {
+        name: 'orderBy',
+        module: 'CommonModule'
+    };
+    return orderByFilterFn;
+}();
+var upperCaseFilter = function () {
+    'use strict';
+    function upperCaseFilter() {
+        this.compile = function (value) {
+            return value.toUpperCase();
+        };
+    }
+    upperCaseFilter.annotations = {
+        name: 'uppercase',
+        module: 'CommonModule'
+    };
+    return upperCaseFilter;
 }();
 var whereFilterFn = function () {
     'use strict';
@@ -3248,34 +3282,68 @@ var whereFilterFn = function () {
             return new QueryFactory(model).where(query);
         };
     }
-    whereFilterFn.annotations = { name: 'whereFilter' };
+    whereFilterFn.annotations = {
+        name: 'whereFilter',
+        module: 'CommonModule'
+    };
     return whereFilterFn;
+}();
+var FilterPipe = function () {
+    'use strict';
+    function FilterPipe() {
+        this.compile = function (array, expression) {
+            if (!Array.isArray(array)) {
+                if (array == null)
+                    return array;
+                console.error('expected Array type but got ' + typeof array);
+            }
+            var expressionType = expression !== null ? typeof expression : 'null';
+            var predicateFn = null;
+            var matchAny;
+            switch (expressionType) {
+            case 'function':
+                predicateFn = expression;
+                break;
+            case 'boolean':
+            case 'null':
+            case 'number':
+            case 'string':
+                matchAny = true;
+            case 'object':
+                predicateFn = createPredicator(expression, matchAny);
+                break;
+            default:
+                return array;
+            }
+            return Array.prototype.filter.call(array, predicateFn);
+        };
+        function createPredicator(expression, matchAny) {
+            return function (item) {
+                if (isobject(expression)) {
+                    for (var key in expression) {
+                        var expectedValue = expression[key];
+                        if (isfunction(expectedValue) || isundefined(expectedValue)) {
+                            continue;
+                        }
+                        if (expectedValue != item[key]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            };
+        }
+    }
+    FilterPipe.annotations = {
+        name: 'filter',
+        module: 'CommonModule'
+    };
+    return FilterPipe;
 }();
 var CommonModule = function () {
     'use strict';
     function CommonModule() {
     }
-    CommonModule.annotations = {
-        services: [
-            NumberFilter,
-            capitalizeFilter,
-            jsonFilterFn,
-            upperCaseFilter,
-            lowerCaseFilter,
-            orderByFilterFn,
-            whereFilterFn,
-            CurrencyFilter,
-            QueryFactory
-        ],
-        selectors: [
-            ForDirective,
-            IfDirective,
-            ClassDirective,
-            SwitchDirective,
-            SwitchCaseDirective,
-            SwitchDefaultDirective
-        ]
-    };
     return CommonModule;
 }();
 exports.CommonModule = CommonModule;
@@ -3291,9 +3359,10 @@ exports.NumberFilter = NumberFilter;
 exports.jsonFilterFn = jsonFilterFn;
 exports.lowerCaseFilter = lowerCaseFilter;
 exports.orderByFilterFn = orderByFilterFn;
+exports.QueryFactory = QueryFactory;
 exports.upperCaseFilter = upperCaseFilter;
 exports.whereFilterFn = whereFilterFn;
-exports.QueryFactory = QueryFactory;
+exports.FilterPipe = FilterPipe;
 },
 'dist/common/bundles/jeli-common-datetime-module.js': function(module, exports, __required){
 var core = __required('dist/core/bundles/jeli-core-module.js');
@@ -3594,7 +3663,8 @@ var DatetimeService = function () {
             MONTHS_FULL: { factory: MONTHS_FULL },
             DAYS_HALF: { factory: DAYS_HALF },
             DAYS_FULL: { factory: DAYS_FULL }
-        }
+        },
+        module: 'DateTimeModule'
     };
     return DatetimeService;
 }();
@@ -3628,7 +3698,8 @@ var dateTimeFilterFN = function () {
     }
     dateTimeFilterFN.annotations = {
         name: 'dateTime',
-        DI: { DatetimeService: { factory: DatetimeService } }
+        DI: { DatetimeService: { factory: DatetimeService } },
+        module: 'DateTimeModule'
     };
     return dateTimeFilterFN;
 }();
@@ -3641,7 +3712,8 @@ var TimeAgoFilterFn = function () {
     }
     TimeAgoFilterFn.annotations = {
         name: 'timeAgo',
-        DI: { DatetimeService: { factory: DatetimeService } }
+        DI: { DatetimeService: { factory: DatetimeService } },
+        module: 'DateTimeModule'
     };
     return TimeAgoFilterFn;
 }();
@@ -3649,14 +3721,6 @@ var DateTimeModule = function () {
     'use strict';
     function DateTimeModule() {
     }
-    DateTimeModule.annotations = {
-        services: [
-            DatetimeService,
-            dateTimeFilterFN,
-            TimeAgoFilterFn
-        ],
-        selectors: [calendarFN]
-    };
     return DateTimeModule;
 }();
 exports.DateTimeModule = DateTimeModule;
@@ -3736,6 +3800,160 @@ var FormControlDirective = function () {
     };
     return FormControlDirective;
 }();
+function CurrentInstance(next) {
+    this.pending = null;
+    this.hasAsync = false;
+    this.failed = false;
+    this.errors = null;
+    this.count = 0;
+    this.stop = function () {
+        next(this.failed ? this.errors : null);
+    };
+}
+CurrentInstance.prototype.add = function (totalValidators) {
+    this.count = totalValidators;
+    this.errors = {};
+    this.failed = false;
+    this.hasAsync = false;
+    this.resolve = null;
+};
+CurrentInstance.prototype.rem = function (passed, type) {
+    this.count--;
+    if (!passed) {
+        this.failed = true;
+        this.errors[type] = true;
+    }
+    if (!this.count) {
+        this.stop();
+    }
+};
+CurrentInstance.prototype.registerAsyncValidator = function (asyncInstance, Request, name) {
+    this.hasAsync = true;
+    var _this = this;
+    var callback = function (type, ret) {
+        return function (response) {
+            _this.rem(Request[type] ? Request[type](response) : ret, name);
+        };
+    };
+    asyncInstance.then(callback('onsuccess', true), callback('onerror', false));
+};
+var formValidationStack = Object.create({
+    MINLENGTH: function (value, requiredLength) {
+        if (isnumber(value) || isstring(value))
+            return String(value).length >= requiredLength;
+        return false;
+    },
+    MAXLENGTH: function (value, requiredLength) {
+        if (isnumber(value) || isstring(value))
+            return String(value).length <= requiredLength;
+        return false;
+    },
+    EMAILVALIDATION: function (val) {
+        var regExp = /^\w+([\.-]?\w+)*@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return regExp.test(val);
+    },
+    ISEMPTY: function (val, def) {
+        return def === isempty(val);
+    },
+    BOOLEAN: function (value, def) {
+        return isboolean(value) && isequal(value, def);
+    },
+    DOMAINVALIDATION: function (domain) {
+        return /[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+/.test(domain);
+    },
+    MEDIUMPASSWORDSTRENGTH: function (passwd) {
+        return new RegExp('^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})').test(passwd);
+    },
+    STRONGPASSWORDSTRENGTH: function (passwd) {
+        return new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})').test(passwd);
+    },
+    PATTERN: function (value, pattern) {
+        return new RegExp(pattern).test(value);
+    },
+    ASYNC: function (val, def) {
+        if (!isobject(def) || !isfunction(def.resolve)) {
+            return false;
+        }
+        return def.resolve(val);
+    },
+    REQUIRED: function (value, required) {
+        if (required) {
+            return !isundefined(value) && !isnull(value) && !isempty(value);
+        }
+        return !required;
+    },
+    REQUIREDTRUE: function (value) {
+        return isboolean(value) && value === true;
+    }
+});
+function FormValidatorService(callback, validators) {
+    var currentProcess = new CurrentInstance(callback);
+    function _throwErrorIfNoValidators(validatorsObj) {
+        if (!isobject(validatorsObj)) {
+            throw new Error('Validators are required in order to perform validations');
+        }
+    }
+    function _validate(value, criteria) {
+        var _criteria = Object.keys(criteria);
+        currentProcess.add(_criteria.length);
+        for (var i = 0; i < _criteria.length; i++) {
+            var validatorName = _criteria[i];
+            var passed = false, validatorFn = formValidationStack[validatorName.toUpperCase()];
+            if (validatorFn) {
+                passed = validatorFn(value, criteria[validatorName]);
+            } else if (isfunction(criteria[validatorName])) {
+                passed = criteria[validatorName](value);
+            }
+            if (isobject(passed) && isequal('async', validatorName)) {
+                currentProcess.registerAsyncValidator(passed, criteria[validatorName], validatorName);
+                break;
+            }
+            currentProcess.rem(passed, validatorName);
+            if (!passed) {
+                return currentProcess.stop();
+            }
+        }
+    }
+    function _validateObjectTypes(formValues) {
+        if (!Object.keys(formValues).length) {
+            validationInstance.emptyFormFields = true;
+            trigger();
+        } else {
+            var _fieldsToValidate = Object.keys(validators);
+            var err = _fieldsToValidate.reduce(function (ret, key) {
+                if (!formValues.hasOwnProperty(key)) {
+                    ret++;
+                    ErrorHandler(key, ['required']);
+                }
+                return ret;
+            }, 0);
+            if (!err) {
+                currentProcess.pending.count = _fieldsToValidate.length;
+                _fieldsToValidate.forEach(function (field) {
+                    _validateField(formValues[field], validators[field], field);
+                });
+            } else {
+                trigger();
+            }
+        }
+    }
+    function formValidator(formValue) {
+        if (!validators) {
+            return callback(null);
+        }
+        _throwErrorIfNoValidators(validators);
+        _validate(formValue, validators);
+    }
+    formValidator.addValidators = function (newValidators) {
+        _throwErrorIfNoValidators(newValidators);
+        if (!validators) {
+            validators = newValidators;
+        } else {
+            validators = extend(true, validators, newValidators);
+        }
+    };
+    return formValidator;
+}
 var VALID = 'VALID';
 var INVALID = 'INVALID';
 var DISABLED = 'DISABLED';
@@ -4073,7 +4291,10 @@ var FormControlService = function () {
         });
         return invalid ? errors : null;
     };
-    FormControlService.annotations = { static: true };
+    FormControlService.annotations = {
+        static: true,
+        module: 'FormModule'
+    };
     FormControlService.annotations.instance = FormControlService;
     return FormControlService;
 }();
@@ -4195,7 +4416,10 @@ var FormFieldControlService = function () {
         this._onChangeEvents.length = 0;
         this._onDisableEvents.length = 0;
     };
-    FormFieldControlService.annotations = { static: true };
+    FormFieldControlService.annotations = {
+        static: true,
+        module: 'FormModule'
+    };
     FormFieldControlService.annotations.instance = FormFieldControlService;
     return FormFieldControlService;
 }();
@@ -4241,166 +4465,6 @@ var FormFieldDirective = function () {
     };
     return FormFieldDirective;
 }();
-function CurrentInstance(next) {
-    this.pending = null;
-    this.hasAsync = false;
-    this.add = function (totalValidators) {
-        this.pending = {
-            count: totalValidators,
-            errors: {},
-            failed: false
-        };
-        this.hasAsync = false;
-        this.resolve = null;
-    };
-    this.rem = function (passed, type) {
-        this.pending.count--;
-        if (!passed) {
-            this.pending.failed = true;
-            this.pending.errors[type] = true;
-        }
-        if (!this.pending.count) {
-            next(this.pending.failed ? this.pending.errors : null);
-        }
-    };
-}
-CurrentInstance.prototype.registerAsyncValidator = function (asyncInstance, Request, name) {
-    this.hasAsync = true;
-    var _this = this;
-    var callback = function (type, ret) {
-        return function (response) {
-            _this.rem(Request[type] ? Request[type](response) : ret, name);
-        };
-    };
-    asyncInstance.then(callback('onsuccess', true), callback('onerror', false));
-};
-var formValidationStack = Object.create({
-    MINLENGTH: function (value, requiredLength) {
-        if (isnumber(value)) {
-            return value >= requiredLength;
-        }
-        if (isstring(value)) {
-            return value.length >= requiredLength;
-        }
-        return false;
-    },
-    MAXLENGTH: function (value, requiredLength) {
-        if (isnumber(value)) {
-            return value <= requiredLength;
-        }
-        if (isstring(value)) {
-            return value.length <= requiredLength;
-        }
-        return false;
-    },
-    EMAILVALIDATION: function (val) {
-        var regExp = /^\w+([\.-]?\w+)*@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        return regExp.test(val);
-    },
-    ISEMPTY: function (val, def) {
-        return def === isempty(val);
-    },
-    BOOLEAN: function (value, def) {
-        return isboolean(value) && isequal(value, def);
-    },
-    DOMAINVALIDATION: function (domain) {
-        return /[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+/.test(domain);
-    },
-    MEDIUMPASSWORDSTREGTH: function (passwd) {
-        return new RegExp('^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})').test(passwd);
-    },
-    STRONGPASSWORDSTRENGTH: function (passwd) {
-        return new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})').test(passwd);
-    },
-    PATTERN: function (value, pattern) {
-        return new RegExp(pattern).test(value);
-    },
-    ASYNC: function (val, def) {
-        if (!isobject(def) || !isfunction(def.resolve)) {
-            return false;
-        }
-        return def.resolve(val);
-    },
-    REQUIRED: function (value, required) {
-        if (required) {
-            return !isundefined(value) && !isnull(value) && !isempty(value);
-        }
-        return !required;
-    },
-    REQUIREDTRUE: function (value) {
-        return isboolean(value) && value === true;
-    }
-});
-var FormValidatorService = function () {
-    'use strict';
-    function FormValidatorService(callback, validators) {
-        var currentProcess = new CurrentInstance(callback);
-        function _throwErrorIfNoValidators(validatorsObj) {
-            if (!isobject(validatorsObj)) {
-                throw new Error('Validators are required in order to perform validations');
-            }
-        }
-        function _validate(value, criteria) {
-            var _criteria = Object.keys(criteria);
-            currentProcess.add(_criteria.length);
-            for (var i = 0; i < _criteria.length; i++) {
-                var validatorName = _criteria[i];
-                var passed = false, validatorFn = formValidationStack[validatorName.toUpperCase()];
-                if (validatorFn) {
-                    passed = validatorFn(value, criteria[validatorName]);
-                } else if (isfunction(criteria[validatorName])) {
-                    passed = criteria[validatorName](value);
-                }
-                if (isobject(passed) && isequal('async', validatorName)) {
-                    return currentProcess.registerAsyncValidator(passed, criteria[validatorName], validatorName);
-                }
-                currentProcess.rem(passed, validatorName);
-            }
-        }
-        function _validateObjectTypes(formValues) {
-            if (!Object.keys(formValues).length) {
-                validationInstance.emptyFormFields = true;
-                trigger();
-            } else {
-                var _fieldsToValidate = Object.keys(validators);
-                var err = _fieldsToValidate.reduce(function (ret, key) {
-                    if (!formValues.hasOwnProperty(key)) {
-                        ret++;
-                        ErrorHandler(key, ['required']);
-                    }
-                    return ret;
-                }, 0);
-                if (!err) {
-                    currentProcess.pending.count = _fieldsToValidate.length;
-                    _fieldsToValidate.forEach(function (field) {
-                        _validateField(formValues[field], validators[field], field);
-                    });
-                } else {
-                    trigger();
-                }
-            }
-        }
-        function formValidator(formValue) {
-            if (!validators) {
-                return callback(null);
-            }
-            _throwErrorIfNoValidators(validators);
-            _validate(formValue, validators);
-        }
-        formValidator.addValidators = function (newValidators) {
-            _throwErrorIfNoValidators(newValidators);
-            if (!validators) {
-                validators = newValidators;
-            } else {
-                validators = extend(true, validators, newValidators);
-            }
-        };
-        return formValidator;
-    }
-    FormValidatorService.annotations = { static: true };
-    FormValidatorService.annotations.instance = FormValidatorService;
-    return FormValidatorService;
-}();
 var ResolveDefaultBinder = {
     name: VALUE_ACCESSOR,
     reference: closureRef(function () {
@@ -4421,7 +4485,7 @@ var DefaultEventBinder = function () {
     DefaultEventBinder.annotations = {
         selector: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl]',
         events: {
-            input: {
+            'input': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4433,7 +4497,7 @@ var DefaultEventBinder = function () {
                         fn: 'onChange'
                     }]
             },
-            blur: {
+            'blur': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4468,7 +4532,7 @@ var CheckboxEventBinder = function () {
     CheckboxEventBinder.annotations = {
         selector: 'input:type=checkbox:[model|formField|fieldControl]',
         events: {
-            change: {
+            'change': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4480,7 +4544,7 @@ var CheckboxEventBinder = function () {
                         fn: 'onChange'
                     }]
             },
-            blur: {
+            'blur': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4522,7 +4586,7 @@ var RadioEventContainer = function () {
             return a.name === b.name;
         }
     }
-    RadioEventContainer.annotations = {};
+    RadioEventContainer.annotations = { module: 'FormModule' };
     return RadioEventContainer;
 }();
 var RadioEventBinder = function () {
@@ -4569,7 +4633,7 @@ var RadioEventBinder = function () {
             value: {}
         },
         events: {
-            change: {
+            'change': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4581,7 +4645,7 @@ var RadioEventBinder = function () {
                         fn: 'onChange'
                     }]
             },
-            blur: {
+            'blur': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4642,7 +4706,7 @@ var SelectEventBinder = function () {
     SelectEventBinder.annotations = {
         selector: 'select:[model|formField|fieldControl]',
         events: {
-            input: {
+            'input': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4653,7 +4717,7 @@ var SelectEventBinder = function () {
                         fn: '_handleSelection'
                     }]
             },
-            blur: {
+            'blur': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4693,7 +4757,7 @@ var NumberEventBinder = function () {
     NumberEventBinder.annotations = {
         selector: 'input:type=number:[model|formField|fieldControl]',
         events: {
-            input: {
+            'input': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4705,7 +4769,7 @@ var NumberEventBinder = function () {
                         fn: 'onChange'
                     }]
             },
-            blur: {
+            'blur': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4745,7 +4809,7 @@ var RangeEventBinder = function () {
     RangeEventBinder.annotations = {
         selector: 'input:type=range:[model|formField|fieldControl]',
         events: {
-            input: {
+            'input': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4757,7 +4821,7 @@ var RangeEventBinder = function () {
                         fn: 'onChange'
                     }]
             },
-            change: {
+            'change': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4769,7 +4833,7 @@ var RangeEventBinder = function () {
                         fn: 'onChange'
                     }]
             },
-            blur: {
+            'blur': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -4868,7 +4932,7 @@ var ModelDirective = function () {
     }
     ModelDirective.prototype.didChange = function (changes) {
         if (this._isViewModelChanged(changes)) {
-            this.fieldControl.setValue(changes.model, { emitToView: false });
+            this.fieldControl.setValue(changes.model, { emitToView: true });
             this._model = changes.model;
         }
     };
@@ -4899,7 +4963,7 @@ var ModelDirective = function () {
             modelOptions: {},
             name: {}
         },
-        events: { modelChange: { type: 'emitter' } },
+        events: { 'modelChange': { type: 'emitter' } },
         exportAs: 'jModel',
         dynamicInjectors: true,
         module: 'FormModule'
@@ -4910,39 +4974,19 @@ var FormModule = function () {
     'use strict';
     function FormModule() {
     }
-    FormModule.annotations = {
-        services: [
-            FormControlService,
-            FormFieldControlService,
-            FormValidatorService,
-            RadioEventContainer
-        ],
-        selectors: [
-            FormControlDirective,
-            FormFieldControlDirective,
-            FormFieldDirective,
-            DefaultEventBinder,
-            ModelDirective,
-            CheckboxEventBinder,
-            RadioEventBinder,
-            SelectEventBinder,
-            NumberEventBinder,
-            RangeEventBinder
-        ]
-    };
     return FormModule;
 }();
 exports.FormModule = FormModule;
 exports.FormControlDirective = FormControlDirective;
 exports.FormControlService = FormControlService;
 exports.FormControlAbstract = FormControlAbstract;
+exports.FormValidatorService = FormValidatorService;
+exports.formValidationStack = formValidationStack;
 exports.FormFieldControlDirective = FormFieldControlDirective;
 exports.VALUE_ACCESSOR = VALUE_ACCESSOR;
 exports.AbstractValueAccessor = AbstractValueAccessor;
 exports.FormFieldControlService = FormFieldControlService;
 exports.FormFieldDirective = FormFieldDirective;
-exports.FormValidatorService = FormValidatorService;
-exports.formValidationStack = formValidationStack;
 exports.ResolveDefaultBinder = ResolveDefaultBinder;
 exports.DefaultEventBinder = DefaultEventBinder;
 exports.ResolveCheckboxBinder = ResolveCheckboxBinder;
@@ -4994,7 +5038,7 @@ var HttpInterceptor = function () {
             next();
         };
     }
-    HttpInterceptor.annotations = {};
+    HttpInterceptor.annotations = { module: 'HttpModule' };
     return HttpInterceptor;
 }();
 var defaultOptions = {
@@ -5209,7 +5253,8 @@ var HttpService = function () {
         DI: {
             HttpInterceptor: { factory: HttpInterceptor },
             ChangeDetector: { factory: ChangeDetector }
-        }
+        },
+        module: 'HttpModule'
     };
     return HttpService;
 }();
@@ -5217,12 +5262,6 @@ var HttpModule = function () {
     'use strict';
     function HttpModule() {
     }
-    HttpModule.annotations = {
-        services: [
-            HttpInterceptor,
-            HttpService
-        ]
-    };
     return HttpModule;
 }();
 exports.HttpModule = HttpModule;
@@ -5282,7 +5321,7 @@ var WebStateProvider = function () {
             location.hash = '#' + this.fallback;
         }
     };
-    WebStateProvider.annotations = {};
+    WebStateProvider.annotations = { module: 'RouterModule' };
     return WebStateProvider;
 }();
 var ViewHandler = function () {
@@ -5373,7 +5412,8 @@ var ViewHandler = function () {
         DI: {
             WebStateProvider: { factory: WebStateProvider },
             ComponentFactoryResolver: { factory: ComponentFactoryResolver }
-        }
+        },
+        module: 'RouterModule'
     };
     return ViewHandler;
 }();
@@ -5655,7 +5695,8 @@ var WebStateService = function () {
             WebStateProvider: { factory: WebStateProvider },
             ViewHandler: { factory: ViewHandler },
             CustomEventHandler: { factory: CustomEventHandler }
-        }
+        },
+        module: 'RouterModule'
     };
     return WebStateService;
 }();
@@ -5675,7 +5716,7 @@ var GoFn = function () {
             params: {}
         },
         events: {
-            click: {
+            'click': {
                 type: 'event',
                 value: [{
                         type: 'call',
@@ -5814,7 +5855,8 @@ var ViewIntentService = function () {
         DI: {
             WebStateProvider: { factory: WebStateProvider },
             ComponentFactoryResolver: { factory: ComponentFactoryResolver }
-        }
+        },
+        module: 'RouterModule'
     };
     return ViewIntentService;
 }();
@@ -5846,7 +5888,7 @@ var OpenIntent = function () {
             params: {}
         },
         events: {
-            event: {
+            'event': {
                 type: 'click',
                 value: [{
                         type: 'call',
@@ -5927,20 +5969,6 @@ var RouterModule = function () {
         },
         factory: ViewInit
     }, true);
-    RouterModule.annotations = {
-        services: [
-            ViewHandler,
-            WebStateService,
-            WebStateProvider,
-            ViewIntentService
-        ],
-        selectors: [
-            jViewFn,
-            JIntentContainer,
-            GoFn,
-            OpenIntent
-        ]
-    };
     return RouterModule;
 }();
 exports.RouterModule = RouterModule;
@@ -6116,7 +6144,7 @@ RouterPageElement.annotations = {
     module: 'AppModule'
 };
 
-RouterPageElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[FormControlDirective],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[RadioEventBinder,FormFieldDirective]},{"type":"text","ast":{"text":" Yes"}},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[RadioEventBinder,FormFieldDirective]},{"type":"text","ast":{"text":" No"}},{"type":"element","name":"br","index":5,"isc":false},{"type":"element","name":"input","index":6,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[CheckboxEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":7,"isc":false}]},{"type":"element","name":"textarea","index":1,"isc":false,"props":{"formField":"textarea"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":4,"isc":false},{"type":"element","name":"input","index":5,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":6,"isc":false},{"type":"element","name":"input","index":7,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[RangeEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":8,"isc":false},{"type":"element","name":"input","index":9,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[NumberEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":10,"isc":false},{"type":"element","name":"select","index":11,"isc":false,"props":{"formField":"select"},"providers":[SelectEventBinder,FormFieldDirective],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":{"text":"Select 1"}}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":{"text":"Select 2"}}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":{"text":"Select 3"}}]}]},{"type":"element","name":"div","index":12,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[FormControlDirective],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[DefaultEventBinder,FormFieldDirective]}]},{"type":"element","name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"input","index":2,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[NumberEventBinder,FormFieldDirective]}]},{"type":"element","name":"div","index":13,"isc":false,"children":[{"type":"element","name":"button","index":0,"isc":false,"attrObservers":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":"text","ast":{"text":"Submit"}}]}]},{"type":"element","name":"item-list","index":14,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[ItemList],"children":[],"templates":{"place":[{"type":"element","name":"pre","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"${0}","once":false,"templates":[["${0}",{"prop":"value","args":[[]],"fns":[jsonFilterFn]}]]}}]}]}},{"type":"element","name":"pre","index":15,"isc":false,"children":[{"type":"text","ast":{"text":"${0}","once":false,"templates":[["${0}",{"prop":["testForm","value"],"args":[["3"]],"fns":[jsonFilterFn]}]]}}]}]}], {}) /** template loader **/;
+RouterPageElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[FormControlDirective],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[RadioEventBinder,FormFieldDirective]},{"type":"text","ast":{"text":" Yes"}},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[RadioEventBinder,FormFieldDirective]},{"type":"text","ast":{"text":" No"}},{"type":"element","name":"br","index":5,"isc":false},{"type":"element","name":"input","index":6,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[CheckboxEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":7,"isc":false}]},{"type":"element","name":"textarea","index":1,"isc":false,"props":{"formField":"textarea"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":4,"isc":false},{"type":"element","name":"input","index":5,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":6,"isc":false},{"type":"element","name":"input","index":7,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[RangeEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":8,"isc":false},{"type":"element","name":"input","index":9,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[NumberEventBinder,FormFieldDirective]},{"type":"element","name":"br","index":10,"isc":false},{"type":"element","name":"select","index":11,"isc":false,"props":{"formField":"select"},"providers":[SelectEventBinder,FormFieldDirective],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":{"text":"Select 1"}}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":{"text":"Select 2"}}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":{"text":"Select 3"}}]}]},{"type":"element","name":"div","index":12,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[FormControlDirective],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[DefaultEventBinder,FormFieldDirective]}]},{"type":"element","name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[DefaultEventBinder,FormFieldDirective]},{"type":"element","name":"input","index":2,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[NumberEventBinder,FormFieldDirective]}]},{"type":"element","name":"div","index":13,"isc":false,"children":[{"type":"element","name":"button","index":0,"isc":false,"attrObservers":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":"text","ast":{"text":"Submit"}}]}]},{"type":"element","name":"item-list","index":14,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[ItemList],"children":[],"templates":{"place":[{"type":"element","name":"pre","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"${0}","once":false,"templates":[["${0}",{"prop":"value","args":[],"fns":[jsonFilterFn]}]]}}]}]}},{"type":"element","name":"pre","index":15,"isc":false,"children":[{"type":"text","ast":{"text":"${0}","once":false,"templates":[["${0}",{"prop":["testForm","value"],"args":[[3]],"fns":[jsonFilterFn]}]]}}]}]}], {}) /** template loader **/;
 return RouterPageElement;
 }();
 
@@ -6177,12 +6205,10 @@ INITIALIZERS.register({factory : InitializeApp, DI : {WebStateService : {factory
 
 ROUTE_INTERCEPTOR.register({useClass : validatorService}, true);
 
-AppRouteModule.annotations = {
-    requiredModules: [
-        RouterModule
-    ],
-    services: []
-};
+!function(){/** bootstrap module**/[
+    RouterModule
+].forEach(function(_module){ _module()});
+}();
 return AppRouteModule;
 }();
 
@@ -6215,7 +6241,7 @@ TestPlaceElement.annotations = {
     module: 'AppModule'
 };
 
-TestPlaceElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"place","name":"#fragment","index":0,"isc":false,"selector":["attr","modal-body"]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":1,"isc":false,"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[ClassDirective],"children":[{"type":"element","name":"p","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"${0}","once":false,"templates":[["${0}",{"prop":"opt","args":[[]],"fns":[jsonFilterFn]}]]}}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[ForDirective]}], {}) /** template loader **/;
+TestPlaceElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"place","name":"#fragment","index":0,"isc":false,"selector":["attr","modal-body"]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":1,"isc":false,"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[ClassDirective],"children":[{"type":"element","name":"p","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"${0}","once":false,"templates":[["${0}",{"prop":"opt","args":[],"fns":[jsonFilterFn]}]]}}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[ForDirective]}], {}) /** template loader **/;
 return TestPlaceElement;
 }();
 
@@ -6256,6 +6282,7 @@ var dateTimeFilterFN = datetime['dateTimeFilterFN'];
 var TestPlaceElement = __required('viewers/Todo/src/app/components/test-place.js', 'TestPlaceElement');
 var common = __required('dist/common/bundles/jeli-common-module.js');
 var jsonFilterFn = common['jsonFilterFn'];
+var FilterPipe = common['FilterPipe'];
 var SwitchDefaultDirective = common['SwitchDefaultDirective'];
 var SwitchCaseDirective = common['SwitchCaseDirective'];
 var SwitchDirective = common['SwitchDirective'];
@@ -6307,6 +6334,7 @@ function AppRootElement(http) {
     this.print = function (list) {
         console.log(list);
     };
+    this.trackByFn = console.log;
 }
 AppRootElement.prototype.addTodo = function () {
     if (this.todoDescription) {
@@ -6364,7 +6392,7 @@ AppRootElement.annotations = {
     module: 'AppModule'
 };
 
-AppRootElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":{"text":" Todo Application "}}]}]}]}]},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[CheckboxEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attrObservers":{"checked":{"prop":true,"once":true}},"vc":["model","app-root"]},{"type":"comment","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"div","index":4,"isc":false,"children":[{"type":"text","ast":{"text":"I am Test Condition"}}]},"ifElse":{"refId":"fallback","type":"element","name":"#fragment","index":6,"isc":false,"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":0,"isc":false,"context":{"i":"$context"},"children":[{"type":"text","ast":{"text":"Testing_${0}","once":false,"templates":[["${0}",{"prop":"i"}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[ForDirective]}]}},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[IfDirective]},{"type":"element","name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[ClassDirective],"children":[{"type":"text","ast":{"text":"Class test"}}]},{"type":"element","name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[SwitchDirective],"children":[{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"I am ${0} case","once":false,"templates":[["${0}",{"prop":"test"}]]}}]}},"props":{"switchCase":{"prop":true}},"providers":[SwitchCaseDirective]},{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"test-place","index":1,"isc":true,"providers":[TestPlaceElement],"children":[],"templates":{"place":[{"type":"text","ast":{"text":"I am default switch element"}}]}}},"providers":[SwitchDefaultDirective]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":8,"isc":false,"context":{"item":"$context"},"children":[{"type":"text","ast":{"text":"${0}","once":true,"templates":[["${0}",{"prop":["selectItemTest",["item"]],"args":[[]],"fns":[jsonFilterFn]}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[1]}}},"providers":[ForDirective]},{"type":"element","name":"p","index":10,"isc":false,"children":[{"type":"text","ast":{"text":"© ${0} FrontendOnly. All Rights Reserved ","once":false,"templates":[["${0}",{"prop":{"type":"raw","value":""},"args":[["YYYY"]],"fns":[dateTimeFilterFN]}]]}}]}], {}) /** template loader **/;
+AppRootElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":{"text":" Todo Application "}}]}]}]}]},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[CheckboxEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attrObservers":{"checked":{"prop":true,"once":true}},"vc":["model","app-root"]},{"type":"comment","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"div","index":4,"isc":false,"children":[{"type":"text","ast":{"text":"I am Test Condition"}}]},"ifElse":{"refId":"fallback","type":"element","name":"#fragment","index":6,"isc":false,"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":0,"isc":false,"context":{"i":"$context"},"children":[{"type":"text","ast":{"text":"Testing_${0}","once":false,"templates":[["${0}",{"prop":"i"}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[ForDirective]}]}},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[IfDirective]},{"type":"element","name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[ClassDirective],"children":[{"type":"text","ast":{"text":"Class test"}}]},{"type":"element","name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[SwitchDirective],"children":[{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"I am ${0} case","once":false,"templates":[["${0}",{"prop":"test"}]]}}]}},"props":{"switchCase":{"prop":true}},"providers":[SwitchCaseDirective]},{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"test-place","index":1,"isc":true,"providers":[TestPlaceElement],"children":[],"templates":{"place":[{"type":"text","ast":{"text":"I am default switch element"}}]}}},"providers":[SwitchDefaultDirective]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":8,"isc":false,"context":{"item":"$context"},"attrObservers":{"class":{"prop":["item","test"],"once":true}},"attr":{"class":"annother"},"children":[{"type":"text","ast":{"text":"${0}","once":true,"templates":[["${0}",{"prop":"item","args":[],"fns":[jsonFilterFn]}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[FilterPipe]},"forTrackBy":"trackByFn"},"providers":[ForDirective]},{"type":"element","name":"p","index":10,"isc":false,"children":[{"type":"text","ast":{"text":"© ${0} FrontendOnly. All Rights Reserved ","once":false,"templates":[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[dateTimeFilterFN]}]]}}]}], {}) /** template loader **/;
 return AppRootElement;
 }();
 
@@ -6392,23 +6420,16 @@ var AppModule = function(){
 function AppModule() {
 }
 
-AppModule.annotations = {
-    requiredModules: [
-        CommonModule,
-        DateTimeModule,
-        FormModule,
-        HttpModule,
-        AppRouteModule
-    ],
-    rootElement: AppRootElement,
-    selectors: [
-        AppRootElement,
-        CalculatorComponent,
-        TestPlaceElement,
-        ItemList,
-        RouterPageElement
-    ]
-};
+AppModule.rootElement = AppRootElement;
+
+!function(){/** bootstrap module**/[
+    CommonModule,
+    DateTimeModule,
+    FormModule,
+    HttpModule,
+    AppRouteModule
+].forEach(function(_module){ _module()});
+}();
 return AppModule;
 }();
 

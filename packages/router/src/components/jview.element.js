@@ -11,11 +11,15 @@ Element({
 
 export function jViewFn(viewHandler, webStateService, elementRef) {
     this.didInit = function() {
-        var ref = '@' + this.ref;
+        this._ref = '@' + this.ref;
         //viewSetter for reference
         viewHandler
-            .setViewReference(elementRef, ref);
+            .setViewReference(elementRef, this._ref);
         webStateService
-            .events.dispatch('view.render', ref);
+            .events.dispatch('view.render', this._ref);
     };
+
+    this.viewDidDestroy = function() {
+        viewHandler.destroy(this._ref)
+    }
 }
