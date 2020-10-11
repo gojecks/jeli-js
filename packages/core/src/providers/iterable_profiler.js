@@ -1,5 +1,4 @@
-import { isarray, isfunction } from 'js-helpers/helpers';
-import { hashcode } from 'js-helpers/utils';
+import { isfunction } from 'js-helpers/helpers';
 /**
  * IterableProfiler
  * Compare Two Objects or Array<Objects>
@@ -102,7 +101,8 @@ IterableProfiler.prototype.diff = function(source) {
     if (this.cacheHash.length > newCacheHash.length) {
         for (var i = 0; i < this.cacheHash.length; i++) {
             if (!newCacheHash.includes(this.cacheHash[i])) {
-                this.out.deleted.push(i);
+                isDirty = true;
+                this.out.deleted.push(i - this.out.deleted.length);
             }
         }
     }

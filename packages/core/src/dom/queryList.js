@@ -1,4 +1,5 @@
 import { Subject } from '../rx/subject';
+import { removeFromArray, addToArray } from 'js-helpers/helpers';
 
 function QueryList() {
     this._list = [];
@@ -22,12 +23,7 @@ function QueryList() {
 }
 
 QueryList.prototype.add = function(element, index, emitEvent) {
-    if (index !== undefined) {
-        this._list.splice(index, 0, element);
-    } else {
-        this._list.push(element);
-    }
-
+    addToArray(this._list, element, index);
     if (emitEvent) {
         this.onChanges.next({
             value: element,
@@ -94,8 +90,12 @@ QueryList.prototype.remove = function(element) {
     return this.removeByIndex(index);
 };
 
+QueryList.prototype.hasIndex = function(index) {
+    return this._list.length - 1 > index;
+}
+
 QueryList.prototype.removeByIndex = function(index) {
-    var element = this._list.splice(index, 1)[0];
+    var element = removeFromArray(this._list, index);
     this.onChanges.next({
         value: element,
         type: 'detached'

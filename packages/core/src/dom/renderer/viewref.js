@@ -1,4 +1,5 @@
 import { scheduler } from '../../utils/scheduler';
+import { removeFromArray, addToArray } from 'js-helpers/helpers';
 /**
  * Element ViewRef
  */
@@ -17,7 +18,7 @@ export function ViewRef(elementRef) {
     this.createEmbededView = function(templateRef, context, index) {
         var view = new EmbededViewContext(elementRef, templateRef, context);
         view.renderView(index);
-        this._viewRefs.splice(index, 0, view);
+        addToArray(this._viewRefs, view, index);
         /**
          * ViewRef Object
          */
@@ -50,8 +51,9 @@ ViewRef.prototype.move = function(prev, curr) {
 };
 
 ViewRef.prototype.remove = function(index) {
-    var view = this._viewRefs.splice(index, 1)[0];
+    var view = removeFromArray(this._viewRefs, index);
     if (view) {
+        view._destroyed_view = true;
         view.destroy();
     }
     view = null;
@@ -99,7 +101,7 @@ function EmbededViewContext(parentRef, templateRef, context) {
         var _this = this;
         this.unsubscribeScheduler = scheduler.schedule(function() {
             var targetNode = (parentRef.children.last || parentRef).nativeElement;
-            if (index !== undefined && parentRef.children.length > index) {
+            if (index !== undefined && parentRef.children.hasIndex(index - 1)) {
                 targetNode = parentRef.children.getByIndex(index - 1).nativeElement;
             }
             transverse(_this.compiledElement);

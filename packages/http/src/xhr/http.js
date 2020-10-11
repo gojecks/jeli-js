@@ -54,23 +54,20 @@ function CoreHttp(url, options, interceptor, changeDetection) {
         var response = new HttpResponse(xhrInstance.status, xhrInstance.readyState, options.url);
         if (xhrInstance.readyState == 4) {
             try {
-                response.data = parseJSON(xhrInstance.responseText, !!xhrInstance.responseText);
+                var data = parseJSON(xhrInstance.responseText, !!xhrInstance.responseText);
                 response.success = (
                     (xhrInstance.status >= 200 && xhrInstance.status < 300) ||
                     xhrInstance.status == 304 ||
                     (xhrInstance.status == 0 && xhrInstance.responseText)
                 );
 
-                // interceptor.resolveInterceptor(response, function(response) {
-                //     if (response instanceof HttpResponse) {
-
-                //     } else if (response instanceof HttpErrorResponse) {}
-                // });
+                xhrPromise.next(data, response);
             } catch (e) {
                 xhrPromise.error(e);
             }
 
             xhrPromise.completed();
+            changeDetection();
         }
     }
 
