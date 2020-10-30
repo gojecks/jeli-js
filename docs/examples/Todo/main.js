@@ -97,6 +97,24 @@ exports.default = function (val) {
     return typeof val === 'undefined';
 };
 },
+'node_modules/js-helpers/fns/addToarray.js': function(module, exports, __required){
+exports.default = function (list, item, index) {
+    if (index >= list.length) {
+        list.push(item);
+    } else {
+        list.splice(index, 0, item);
+    }
+};
+},
+'node_modules/js-helpers/fns/removeFromArray.js': function(module, exports, __required){
+exports.default = function (list, index) {
+    if (index >= list.length - 1) {
+        return list.pop();
+    } else {
+        return list.splice(index, 1)[0];
+    }
+};
+},
 'node_modules/js-helpers/helpers.js': function(module, exports, __required){
 
 exports.inarray = __required('node_modules/js-helpers/fns/inarray.js', 'default');
@@ -114,6 +132,8 @@ exports.isnumber = __required('node_modules/js-helpers/fns/isnumber.js', 'defaul
 exports.isobject = __required('node_modules/js-helpers/fns/isobject.js', 'default');
 exports.isstring = __required('node_modules/js-helpers/fns/isstring.js', 'default');
 exports.isundefined = __required('node_modules/js-helpers/fns/isundefined.js', 'default');
+exports.addToArray = __required('node_modules/js-helpers/fns/addToarray.js', 'default');
+exports.removeFromArray = __required('node_modules/js-helpers/fns/removeFromArray.js', 'default');
 },
 'node_modules/js-helpers/fns/base64.js': function(module, exports, __required){
 exports.default = function () {
@@ -533,8 +553,11 @@ var isnumber = helpers['isnumber'];
 var isnull = helpers['isnull'];
 var isundefined = helpers['isundefined'];
 var isboolean = helpers['isboolean'];
+var isempty = helpers['isempty'];
 var isstring = helpers['isstring'];
 var isarray = helpers['isarray'];
+var addToArray = helpers['addToArray'];
+var removeFromArray = helpers['removeFromArray'];
 var inarray = helpers['inarray'];
 var isequal = helpers['isequal'];
 var isobject = helpers['isobject'];
@@ -556,10 +579,9 @@ function errorBuilder(error, logLevel) {
         return this.name + ': "' + this.message + '"';
     };
     if (typeof error == 'string') {
-        throw new userException(error);
-    } else {
-        console[logLevelMethods[loggerLevel]](error);
+        error = new userException(error);
     }
+    console[logLevelMethods[loggerLevel]](error);
 }
 function closureRef(closureRefFn) {
     if (isfunction(closureRefFn)) {
@@ -1163,7 +1185,7 @@ ComponentRef.prototype.destroy = function () {
 ComponentRef.create = function (refId, parentId) {
     var componentRef = new ComponentRef(refId);
     componentDebugContext.set(refId, componentRef);
-    if (parentId) {
+    if (parentId && componentDebugContext.has(parentId)) {
         componentRef.parent = parentId;
         componentDebugContext.get(parentId).child.push(refId);
     }
@@ -1659,68 +1681,85 @@ var scheduler = {
     }
 };
 function ViewRef(elementRef) {
-    var _viewRefs = new Map();
+    this._viewRefs = [];
     this._destroyed = false;
     this.get = function (index) {
-        return _viewRefs.get(index);
+        return this._viewRefs[index];
     };
     this.createEmbededView = function (templateRef, context, index) {
         var view = new EmbededViewContext(elementRef, templateRef, context);
-        _viewRefs.set(index, view);
+        view.renderView(index);
+        addToArray(this._viewRefs, view, index);
         return view;
-    };
-    this.remove = function (index) {
-        var view = _viewRefs.get(index);
-        if (view) {
-            view.destroy();
-            _viewRefs.delete(index);
-        }
-    };
-    this.move = function (prev, curr) {
-        _viewRefs.set(curr, _viewRefs.get(prev));
-        _viewRefs.delete(prev);
-    };
-    this.clearView = function () {
-        _viewRefs.forEach(function (view) {
-            view.destroy();
-        });
-        _viewRefs.clear();
     };
     Object.defineProperty(this, 'length', {
         get: function () {
-            return _viewRefs.size;
+            return this._viewRefs.length;
         }
     });
 }
+ViewRef.prototype.move = function (prev, curr) {
+    var view = this.get(prev);
+    scheduler.schedule(function () {
+        if (view) {
+            var parent = view.compiledElement.parent;
+            var targetNode = parent.children.getByIndex(curr - 1);
+            if (targetNode) {
+                parent.insertAfter(view.compiledElement.nativeElement, targetNode.nativeElement);
+            }
+        }
+    });
+};
+ViewRef.prototype.remove = function (index) {
+    var view = removeFromArray(this._viewRefs, index);
+    if (view) {
+        view._destroyed_view = true;
+        view.destroy();
+    }
+    view = null;
+};
+ViewRef.prototype.clearView = function () {
+    while (this._viewRefs.length) {
+        var view = this._viewRefs.shift();
+        view.destroy();
+    }
+};
 function EmbededViewContext(parentRef, templateRef, context) {
-    var compiledElement = templateRef.createElement(parentRef);
-    var targetNode = (parentRef.children.last || parentRef).nativeElement;
     var _componentRef = null;
+    this.compiledElement = templateRef.createElement(parentRef);
     this.context = context;
+    this.unsubscribeScheduler;
     if (templateRef.hasContext) {
-        ComponentRef.create(compiledElement.refId, parentRef.hostRef.refId);
-        _componentRef = componentDebugContext.get(compiledElement.refId);
+        ComponentRef.create(this.compiledElement.refId, parentRef.hostRef.refId);
+        _componentRef = componentDebugContext.get(this.compiledElement.refId);
         _componentRef._context = createLocalVariables(templateRef.getContext(), this);
     }
-    parentRef.children.add(compiledElement);
-    var clearScheduler = scheduler.schedule(function () {
-        transverse(compiledElement);
-        parentRef.insertAfter(compiledElement.nativeElement, targetNode);
-        compiledElement.changeDetector.detectChanges();
-    });
+    this.renderView = function (index) {
+        var _this = this;
+        this.unsubscribeScheduler = scheduler.schedule(function () {
+            var targetNode = (parentRef.children.last || parentRef).nativeElement;
+            if (index !== undefined && parentRef.children.hasIndex(index - 1)) {
+                targetNode = parentRef.children.getByIndex(index - 1).nativeElement;
+            }
+            transverse(_this.compiledElement);
+            parentRef.insertAfter(_this.compiledElement.nativeElement, targetNode);
+            parentRef.children.add(_this.compiledElement, index);
+            _this.compiledElement.changeDetector.detectChanges();
+        });
+    };
     this.destroy = function () {
-        clearScheduler();
-        if (_componentRef && !compiledElement.isc) {
+        this.unsubscribeScheduler();
+        if (_componentRef && !this.compiledElement.isc) {
             _componentRef.destroy();
             _componentRef = null;
         }
-        compiledElement.remove(true);
-        compiledElement = null;
+        this.compiledElement.remove(true);
+        this.compiledElement = null;
         this.context = null;
     };
     this.setContext = function (context) {
         this.context = context;
-        compiledElement.changeDetector.detectChanges();
+        this.compiledElement.changeDetector.detectChanges();
     };
 }
 EmbededViewContext.prototype.updateContext = function (updates) {
@@ -1784,12 +1823,17 @@ ElementStyle.set = function (nativeElement, name, value, suffix) {
 };
 function ElementClassList(nativeElement, classList, type) {
     if (type) {
-        nativeElement.classList[type].apply(nativeElement.classList, classList.split(' '));
+        nativeElement.classList[type].apply(nativeElement.classList, toClass(classList));
     } else if (classList) {
         nativeElement.classList.value = classList;
     } else {
         return nativeElement.classList.value;
     }
+}
+function toClass(classList) {
+    return classList.split(/\s/g).filter(function (k) {
+        return !!k;
+    });
 }
 ElementClassList.add = function (nativeElement, classList, removeClass) {
     if (!classList || !nativeElement) {
@@ -1802,14 +1846,14 @@ ElementClassList.add = function (nativeElement, classList, removeClass) {
             }
         }
     } else {
-        nativeElement.classList.add.apply(nativeElement.classList, classList.split(/\s/g));
+        nativeElement.classList.add.apply(nativeElement.classList, toClass(classList));
     }
 };
 ElementClassList.remove = function (nativeElement, classList) {
     if (!classList || !nativeElement) {
         return;
     }
-    nativeElement.classList.remove.apply(nativeElement.classList, classList.split(/\s/g));
+    nativeElement.classList.remove.apply(nativeElement.classList, toClass(classList));
 };
 ElementClassList.contains = function (nativeElement, className) {
     return nativeElement.classList.contains(className);
@@ -1900,7 +1944,7 @@ ElementRef.prototype.appendChild = function (template) {
 };
 ElementRef.prototype.addViewQuery = function (option, element) {
     if (!isequal(option[1], this.tagName)) {
-        return this.parent && this.parent.hostRef.addviewQuery(option, element);
+        return this.parent && this.parent.hostRef.addViewQuery(option, element);
     }
     this._viewQuery.set(option[0], element);
 };
@@ -1916,10 +1960,13 @@ function setupAttributeObservers(element, attrObservers) {
         }
         function attributeEvaluator(propName, template) {
             compileTemplate(template, element.context, element.componentInstance, function (value) {
-                if (AttributeAppender[propName]) {
-                    AttributeAppender[propName](element.nativeElement, value, template);
-                } else {
-                    AttributeAppender.setProp(element.nativeElement, propName, value);
+                try {
+                    if (AttributeAppender[propName])
+                        AttributeAppender[propName](element.nativeElement, value, template);
+                    else
+                        AttributeAppender.setProp(element.nativeElement, propName, value);
+                } catch (e) {
+                    console.error(e);
                 }
             });
         }
@@ -2407,8 +2454,8 @@ function QueryList() {
         }
     });
 }
-QueryList.prototype.add = function (element, emitEvent) {
-    this._list.push(element);
+QueryList.prototype.add = function (element, index, emitEvent) {
+    addToArray(this._list, element, index);
     if (emitEvent) {
         this.onChanges.next({
             value: element,
@@ -2439,7 +2486,7 @@ QueryList.prototype.some = function (callback) {
 QueryList.prototype.map = function (callback) {
     return this._list.map(callback);
 };
-QueryList.prototype.findByIndex = function (index) {
+QueryList.prototype.getByIndex = function (index) {
     return this._list[index];
 };
 QueryList.prototype.find = function (callback) {
@@ -2450,15 +2497,11 @@ QueryList.prototype.toString = function () {
 };
 QueryList.prototype.destroy = function () {
     while (this._list.length) {
-        this._list.pop().remove();
+        var element = this._list.pop();
+        if (element)
+            element.remove();
     }
     this.onChanges.destroy();
-};
-QueryList.prototype.reset = function (newItem, emitEvent) {
-    this.destroy();
-    for (var i = 0; i < newItem.length; i++) {
-        this.add(newItem[i], emitEvent);
-    }
 };
 QueryList.prototype.remove = function (element) {
     var index = this._list.findIndex(function (ele) {
@@ -2466,8 +2509,11 @@ QueryList.prototype.remove = function (element) {
     });
     return this.removeByIndex(index);
 };
+QueryList.prototype.hasIndex = function (index) {
+    return this._list.length - 1 > index;
+};
 QueryList.prototype.removeByIndex = function (index) {
-    var element = this._list.splice(index, 1)[0];
+    var element = removeFromArray(this._list, index);
     this.onChanges.next({
         value: element,
         type: 'detached'
@@ -2647,11 +2693,8 @@ function IterableProfiler(trackBy) {
     this._destroyed = false;
     this.cacheHash = [];
     this.out = null;
-    this.trackBy = trackBy || function (item) {
-        if (item && typeof item === 'object') {
-            item = JSON.stringify(item);
-        }
-        return hashcode(item);
+    this.trackBy = trackBy || function (item, index) {
+        return item;
     };
 }
 IterableProfiler.prototype.diff = function (source) {
@@ -2663,59 +2706,68 @@ IterableProfiler.prototype.diff = function (source) {
     }
     this.out = {
         deleted: [],
-        insert: [],
-        moved: [],
-        changes: []
+        order: []
     };
     if ((!source || !source.length) && (!this.cacheHash || !this.cacheHash.length)) {
         return false;
     }
-    if (source.length === this.cacheHash.length) {
-        return false;
-    }
     if (!source.length && this.cacheHash.length) {
         this.out.deleted = Object.keys(this.cacheHash).map(Number);
-        this.cacheHash = [];
+        this.cacheHash.length = 0;
         return true;
     }
     var len = source.length;
     var newCacheHash = [];
+    var operationOrder = new Array(len);
+    var isDirty = false;
     for (var inc = 0; inc < len; inc++) {
-        var item = source[inc], hash = this.trackBy(item, inc);
-        if (this.cacheHash.hasOwnProperty(inc)) {
-            if (this.cacheHash[inc] !== hash) {
-                var index = this.cacheHash.indexOf(hash);
-                this.out.changes.push({
-                    prev: index > -1 ? index : inc,
-                    curr: inc
-                });
+        var item = source[inc];
+        var hash = this.trackBy(item, inc);
+        if (this.cacheHash.includes(hash)) {
+            if (!Object.is(this.cacheHash[inc], hash)) {
+                isDirty = true;
+                var prevIndex = this.cacheHash.indexOf(hash);
+                var operationOrderAtIndex = operationOrder[inc];
+                if (operationOrderAtIndex && operationOrderAtIndex.state !== 'create') {
+                    operationOrder[inc] = {
+                        prevIndex: prevIndex,
+                        state: 'move'
+                    };
+                }
             }
         } else {
-            this.checkDuplicateRepeater(hash);
-            this.out.insert.push(inc);
+            isDirty = true;
+            operationOrder[inc] = {
+                index: inc,
+                state: 'create'
+            };
         }
         newCacheHash.push(hash);
     }
     if (this.cacheHash.length > newCacheHash.length) {
-        var _this = this;
-        this.cacheHash.forEach(function (hash, idx) {
-            if (!newCacheHash.includes(hash)) {
-                _this.out.deleted.push(idx);
+        for (var i = 0; i < this.cacheHash.length; i++) {
+            if (!newCacheHash.includes(this.cacheHash[i])) {
+                isDirty = true;
+                this.out.deleted.push(i - this.out.deleted.length);
             }
-        });
+        }
     }
     this.cacheHash = newCacheHash;
+    this.out.order = operationOrder;
     newCacheHash = null;
-    return (this.out.changes.length || this.out.deleted.length || this.out.insert.length) > 0;
-};
-IterableProfiler.prototype.forEachChanges = function (callback) {
-    this.out.changes.forEach(callback);
+    operationOrder = null;
+    return isDirty;
 };
 IterableProfiler.prototype.forEachDeleted = function (callback) {
     this.out.deleted.forEach(callback);
 };
-IterableProfiler.prototype.forEachInserted = function (callback) {
-    this.out.insert.forEach(callback);
+IterableProfiler.prototype.forEachOperation = function (callback) {
+    var len = this.out.order.length;
+    for (var i = 0; i < len; i++) {
+        if (this.out.order[i]) {
+            callback(this.out.order[i], i);
+        }
+    }
 };
 IterableProfiler.prototype.checkDuplicateRepeater = function (hash) {
     if (this.cacheHash.indexOf(hash) > -1) {
@@ -2731,6 +2783,104 @@ IterableProfiler.prototype.destroy = function () {
     this._destroyed = true;
     this.cacheHash.length = 0;
     this.out = null;
+};
+function LazyLoader(dropZone) {
+    this.dropZone = dropZone;
+    this.setPath = function (path) {
+        this.sourcePath = path;
+        return this;
+    };
+}
+LazyLoader.prototype.js = function (obj, callback) {
+    this._resolve(obj, callback, 'js');
+};
+LazyLoader.prototype.css = function (obj) {
+    this._resolve(obj, null, 'css');
+};
+LazyLoader.prototype.jscs = function (obj, callback) {
+    for (var type in obj) {
+        this._resolve(obj[type], callback, type);
+    }
+    return this;
+};
+LazyLoader.prototype._resolve = function (filePaths, callback, type) {
+    var stack = [], self = this;
+    if (typeof callback !== 'function') {
+        callback = function () {
+        };
+    }
+    if (filePaths && isarray(filePaths) && filePaths.length > 0) {
+        for (var i = 0; i < filePaths.length; i++) {
+            if (LazyLoader.cached.hasOwnProperty(filePaths[i])) {
+                break;
+            }
+            LazyLoader.cached[filePaths[i]] = '' + Math.random();
+            switch (type) {
+            case 'css':
+                _createCss(filePaths[i]);
+                break;
+            case 'js':
+                _createJs(filePaths[i]);
+                break;
+            }
+            ;
+        }
+        if (type === 'js' && stack.length) {
+            process(callback);
+        } else {
+            callback();
+        }
+    }
+    function _createCss(cssPath) {
+        var styleElement = document.createElement('link');
+        styleElement.setAttribute('type', 'text/css');
+        styleElement.setAttribute('href', clink(cssPath));
+        styleElement.setAttribute('rel', 'stylesheet');
+        styleElement.setAttribute('id', LazyLoader.cached[cssPath]);
+        append(styleElement);
+    }
+    function _createJs(jsPath) {
+        var scriptElement = document.createElement('script');
+        scriptElement.setAttribute('src', clink(jsPath));
+        scriptElement.setAttribute('type', 'text/javascript');
+        scriptElement.async = true;
+        scriptElement.setAttribute('id', LazyLoader.cached[jsPath]);
+        stack.push(scriptElement);
+    }
+    function clink(path) {
+        if (path.includes('//')) {
+            return path;
+        }
+        return [
+            self.sourcePath,
+            path,
+            '.',
+            type
+        ].join('');
+    }
+    function append(scriptElement) {
+        (self.dropZone || document.getElementsByTagName('head')[0]).appendChild(scriptElement);
+    }
+    function process(isCallback) {
+        var currentElement = stack.shift();
+        append(currentElement);
+        currentElement.onreadystatechange = currentElement.onload = function () {
+            var state = currentElement.readyState;
+            if (!isCallback.done && (!state || /loaded|complete/.test(state))) {
+                if (stack.length) {
+                    process(isCallback);
+                } else {
+                    isCallback.done = true;
+                    isCallback();
+                }
+            }
+        };
+    }
+    ;
+};
+LazyLoader.cached = {};
+LazyLoader.staticLoader = function () {
+    LazyLoader.prototype._resolve.apply({}, arguments);
 };
 var nativeTimeout = window.setTimeout;
 var nativeClearTimeout = window.clearTimeout;
@@ -2790,6 +2940,7 @@ exports.CustomEventHandler = CustomEventHandler;
 exports.debounce = debounce;
 exports.ComponentFactoryResolver = ComponentFactoryResolver;
 exports.IterableProfiler = IterableProfiler;
+exports.LazyLoader = LazyLoader;
 },
 'dist/common/bundles/jeli-common-module.js': function(module, exports, __required){
 var helpers = __required('node_modules/js-helpers/helpers.js');
@@ -2859,27 +3010,29 @@ var ForDirective = function () {
         this.iterable.forEachDeleted(function (index) {
             _this.viewRef.remove(index);
         });
-        this.iterable.forEachChanges(function (item) {
-            if (item.prev !== item.curr) {
-                _this.viewRef.move(item.prev, item.curr);
+        this.iterable.forEachOperation(function (item, idx) {
+            switch (item.state) {
+            case 'create':
+                var context = new jForRow(_this._forIn[idx], idx, null);
+                _this.viewRef.createEmbededView(_this.templateRef, context, idx);
+                break;
+            case 'move':
+                _this.viewRef.move(item.prevIndex, idx);
+                break;
             }
         });
-        this.iterable.forEachInserted(function (index) {
-            _this.viewRef.createEmbededView(_this.templateRef, new jForRow(_this._forIn[index], index, null), index);
-        });
         for (var i = 0; i < this.viewRef.length; i++) {
-            var view = this.viewRef.get(i);
+            var view = _this.viewRef.get(i);
             view.updateContext({
                 index: i,
-                count: this._forIn.length
+                count: _this._forIn.length
             });
         }
     };
     ForDirective.prototype.willObserve = function () {
         var changes = this.iterable.diff(this._forIn);
-        if (changes) {
+        if (changes)
             this._listenerFn();
-        }
     };
     ForDirective.prototype.viewDidDestroy = function () {
         this.viewRef.clearView();
@@ -3107,6 +3260,9 @@ var ClassDirective = function () {
             set: function (value) {
                 this._jClass = value;
                 this._changeClass();
+            },
+            get: function () {
+                return this._jClass;
             }
         });
     }
@@ -4696,12 +4852,12 @@ var SelectEventBinder = function () {
             var optionsValue = [];
             for (var i = 0; i < target.selectedOptions.length; i++) {
                 var option = target.selectedOptions[i];
-                var value = this.element.children.findByIndex(option.index).getAttribute('value');
+                var value = this.element.children.getByIndex(option.index).getAttribute('value');
                 optionsValue.push(value);
             }
             return optionsValue;
         }
-        return this.element.children.findByIndex(target.selectedIndex).getAttribute('value');
+        return this.element.children.getByIndex(target.selectedIndex).getAttribute('value');
     };
     SelectEventBinder.annotations = {
         selector: 'select:[model|formField|fieldControl]',
@@ -5156,12 +5312,14 @@ function CoreHttp(url, options, interceptor, changeDetection) {
         var response = new HttpResponse(xhrInstance.status, xhrInstance.readyState, options.url);
         if (xhrInstance.readyState == 4) {
             try {
-                response.data = parseJSON(xhrInstance.responseText, !!xhrInstance.responseText);
+                var data = parseJSON(xhrInstance.responseText, !!xhrInstance.responseText);
                 response.success = xhrInstance.status >= 200 && xhrInstance.status < 300 || xhrInstance.status == 304 || xhrInstance.status == 0 && xhrInstance.responseText;
+                xhrPromise.next(data, response);
             } catch (e) {
                 xhrPromise.error(e);
             }
             xhrPromise.completed();
+            changeDetection();
         }
     }
     function getResponseHeaders(name) {
@@ -5406,6 +5564,9 @@ var ViewHandler = function () {
                 this._pendingViewStack.set(view, viewObj);
             }
         }
+    };
+    ViewHandler.prototype.destroy = function (ref) {
+        this.viewsHolder.delete(ref);
     };
     ViewHandler.annotations = {
         name: 'ViewHandler',
@@ -5733,9 +5894,12 @@ var jViewFn = function () {
     'use strict';
     function jViewFn(viewHandler, webStateService, elementRef) {
         this.didInit = function () {
-            var ref = '@' + this.ref;
-            viewHandler.setViewReference(elementRef, ref);
-            webStateService.events.dispatch('view.render', ref);
+            this._ref = '@' + this.ref;
+            viewHandler.setViewReference(elementRef, this._ref);
+            webStateService.events.dispatch('view.render', this._ref);
+        };
+        this.viewDidDestroy = function () {
+            viewHandler.destroy(this._ref);
         };
     }
     jViewFn.annotations = {

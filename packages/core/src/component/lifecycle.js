@@ -8,7 +8,7 @@ import { isfunction } from 'js-helpers/helpers';
  * willObserve()
  * didChange()
  */
-function LifeCycle(componentInstance) {
+export function LifeCycle(componentInstance) {
     var _cycleState = {
         didInit: !!componentInstance.didInit,
         viewDidLoad: !!componentInstance.viewDidLoad,

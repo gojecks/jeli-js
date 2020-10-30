@@ -29,12 +29,16 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
             try {
                 // set the refID of the directive
                 var template = ctrl.view.getView(elementRef);
+                // attach mutationObserver
+                elementRef.mutationObserver(function(mutaionList, observer) {
+                    lifeCycle.trigger('viewDidLoad');
+                    observer.disconnect();
+                });
+
                 elementRef.appendChild(template);
+                buildViewChild(componentInstance, elementRef, definition.viewChild);
             } catch (e) {
                 errorBuilder(e);
-            } finally {
-                buildViewChild(componentInstance, elementRef, definition.viewChild);
-                lifeCycle.trigger('viewDidLoad');
             }
         }
 

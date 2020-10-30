@@ -1,6 +1,6 @@
 var jeliContext = Object.create({
     buildTime: Date.now(),
-    version: BuildVersion("Elizabeth", "1.0.0"),
+    version: "%VERSION%",
     debug: jeliDebugger
 });
 
@@ -15,3 +15,7 @@ function jeliDebugger(element) {
 
     return null;
 }
+/**
+ * expose jeli context for debugging
+ */
+global.jeli = jeliContext;

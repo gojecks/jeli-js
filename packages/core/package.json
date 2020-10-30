@@ -1,0 +1,23 @@
+{
+    "name": "@jeli/core",
+    "version": "0.0.0-PLACEHOLDER",
+    "description": "jeli-js core",
+    "main": "public.api.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/gojecks/jeli-js.git"
+    },
+    "keywords": [
+        "jeli",
+        "core"
+    ],
+    "author": "jeli",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/gojecks/jeli-js/issues"
+    },
+    "homepage": "https://github.com/gojecks/jeli-js#readme"
+}

@@ -43,6 +43,18 @@ ElementRef.prototype.setProp = function(propName, propValue) {
     return this;
 };
 
+ElementRef.prototype.mutationObserver = function(callback) {
+    // Create an observer instance linked to the callback function
+    var observer = new MutationObserver(function(mutationsList, observer) {
+        if (mutationsList.length) {
+            callback.apply(null, arguments);
+        }
+    });
+
+    // Start observing the target node for configured mutations
+    observer.observe(this.nativeElement, { attributes: false, childList: true, subtree: true });
+};
+
 
 ElementRef.prototype.setAttribute = function(name, value, attachInElement) {
     this.attr[name] = value;
