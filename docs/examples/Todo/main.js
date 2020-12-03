@@ -550,12 +550,12 @@ var simpleBooleanParser = utils['simpleBooleanParser'];
 var copy = utils['copy'];
 var helpers = __required('node_modules/js-helpers/helpers.js');
 var isnumber = helpers['isnumber'];
+var isarray = helpers['isarray'];
 var isnull = helpers['isnull'];
 var isundefined = helpers['isundefined'];
 var isboolean = helpers['isboolean'];
 var isempty = helpers['isempty'];
 var isstring = helpers['isstring'];
-var isarray = helpers['isarray'];
 var addToArray = helpers['addToArray'];
 var removeFromArray = helpers['removeFromArray'];
 var inarray = helpers['inarray'];
@@ -813,7 +813,7 @@ function _ComponentInjectionToken(tokenName, context) {
         return new ViewRef(context.injectors.ElementRef);
     case staticInjectionToken.ParentRef: {
             if (context.currentClassAnnotations.DI.ParentRef.value) {
-                return findParentRef(context.injectors.ElementRef.parent, context.currentClassAnnotations.DI.ParentRef.value);
+                return findParentRef(context.injectors.ElementRef.parent, context.currentClassAnnotations.DI.ParentRef);
             }
             return context.injectors.ElementRef.parent.componentInstance;
         }
@@ -834,14 +834,15 @@ function getValidators(elementRef) {
         return accum;
     }, {});
 }
-function findParentRef(parentRef, refValue) {
-    if (parentRef && !parentRef.nodes.has(refValue)) {
-        return findParentRef(parentRef.parent, refValue);
+function findParentRef(parentRef, refInstance) {
+    var selector = refInstance.value + (refInstance.type ? ':' + refInstance.type : '');
+    if (parentRef && !parentRef.nodes.has(selector)) {
+        return findParentRef(parentRef.parent, refInstance);
     }
     if (!parentRef) {
         return null;
     }
-    return parentRef.nodes.get(refValue);
+    return parentRef.nodes.get(selector);
 }
 function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
     lifeCycle.trigger('willObserve');
@@ -931,12 +932,14 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
         if (ctrl.view) {
             try {
                 var template = ctrl.view.getView(elementRef);
+                elementRef.mutationObserver(function (mutaionList, observer) {
+                    lifeCycle.trigger('viewDidLoad');
+                    observer.disconnect();
+                });
                 elementRef.appendChild(template);
+                buildViewChild(componentInstance, elementRef, definition.viewChild);
             } catch (e) {
                 errorBuilder(e);
-            } finally {
-                buildViewChild(componentInstance, elementRef, definition.viewChild);
-                lifeCycle.trigger('viewDidLoad');
             }
         }
         elementRef.observer(function () {
@@ -1572,10 +1575,7 @@ function AbstractElementRef(definition, parentRef) {
     });
 }
 AbstractElementRef.prototype.getAttribute = function (name) {
-    if (this.prop && this.prop.hasOwnProperty(name)) {
-        return this.prop[name];
-    }
-    return this.attr && this.attr[name];
+    return this.attr && name in this.attr ? this.attr[name] : this.nativeElement.getAttribute(name);
 };
 AbstractElementRef.prototype.insertAfter = function (newNode, targetNode) {
     if (!targetNode.parentNode)
@@ -1880,10 +1880,10 @@ AttributeAppender.innerhtml = function (nativeElement, value) {
     nativeElement.innerHTML = sce.trustAsHTML(value);
 };
 AttributeAppender.src = function (nativeElement, value) {
-    if (!isarray(nativeElement.tagName, [
+    if (![
             'IMG',
             'IFRAME'
-        ])) {
+        ].includes(nativeElement.tagName)) {
         errorBuilder('src is not a valid property of ' + nativeElement.tagName);
     }
     nativeElement.setAttribute('src', value);
@@ -1900,7 +1900,6 @@ AttributeAppender.class = function (nativeElement, value) {
 AttributeAppender.setProp = function (nativeElement, propName, propValue) {
     if (propValue === undefined || !nativeElement)
         return;
-    nativeElement[propValue ? 'setAttribute' : 'removeAttribute'](propName, propValue);
     nativeElement[propName] = propValue;
 };
 function ElementRef(definition, parent) {
@@ -1926,6 +1925,18 @@ ElementRef.prototype.constructor = AbstractElementRef;
 ElementRef.prototype.setProp = function (propName, propValue) {
     AttributeAppender.setProp(this.nativeElement, propName, propValue);
     return this;
+};
+ElementRef.prototype.mutationObserver = function (callback) {
+    var observer = new MutationObserver(function (mutationsList, observer) {
+        if (mutationsList.length) {
+            callback.apply(null, arguments);
+        }
+    });
+    observer.observe(this.nativeElement, {
+        attributes: false,
+        childList: true,
+        subtree: true
+    });
 };
 ElementRef.prototype.setAttribute = function (name, value, attachInElement) {
     this.attr[name] = value;
@@ -2913,6 +2924,7 @@ exports.wireResolvers = wireResolvers;
 exports.AbstractInjectorInstance = AbstractInjectorInstance;
 exports.closureRef = closureRef;
 exports.resolveClosureRef = resolveClosureRef;
+exports.LifeCycle = LifeCycle;
 exports.ϕjeliLinker = ϕjeliLinker;
 exports.staticInjectionToken = staticInjectionToken;
 exports.ChangeDetector = ChangeDetector;
@@ -3863,7 +3875,7 @@ var TimeAgoFilterFn = function () {
     'use strict';
     function TimeAgoFilterFn(dateTimeFactory) {
         this.compile = function (text) {
-            return dateTimeFactory.format(text, 'timeago');
+            return dateTimeFactory.timeConverter(text).timeago;
         };
     }
     TimeAgoFilterFn.annotations = {
@@ -3911,6 +3923,7 @@ var isobject = helpers['isobject'];
 var isempty = helpers['isempty'];
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var ProviderToken = core['ProviderToken'];
+var AttributeAppender = core['AttributeAppender'];
 var closureRef = core['closureRef'];
 var EventEmitter = core['EventEmitter'];
 var errorBuilder = core['errorBuilder'];
@@ -4825,39 +4838,89 @@ var ResolveSelectBinder = {
         return SelectEventBinder;
     })
 };
+function _buildValueToString(id, value) {
+    if (id == null)
+        return '' + value;
+    if (typeof value === 'object' && id)
+        value = 'option:object';
+    return id + ':' + value;
+}
 var SelectEventBinder = function () {
     'use strict';
     function SelectEventBinder(elementRef) {
+        this.idIncrement = 0;
+        this.selectedValue;
+        this._optionValueMap = new Map();
+        this._compare = isequal;
         AbstractValueAccessor.call(this, elementRef);
+        Object.defineProperty(this, 'compareFn', {
+            set: function (fn) {
+                if (typeof fn !== 'function') {
+                    throw new Error('expected function for comparisonFN but got ' + typeof fn + ' instead.');
+                }
+                this._compare = fn;
+            }
+        });
     }
     ;
     SelectEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
     SelectEventBinder.prototype.constructor = AbstractValueAccessor;
-    SelectEventBinder.prototype._handleSelection = function (target) {
-        var selectedValue = this._getValue(target);
-        this.onChange(selectedValue);
+    SelectEventBinder.prototype._handleSelection = function (value) {
+        this.selectedValue = this._getValue(value);
+        this.onChange(this.selectedValue);
     };
     SelectEventBinder.prototype.writeValue = function (value) {
-        this.element.children.forEach(function (option) {
-            if (!(option.nativeElement instanceof HTMLOptionElement))
-                return;
-            option.setProp('selected', (isarray(value) ? inarray : isequal)(option.getAttribute('value'), value));
-        });
-    };
-    SelectEventBinder.prototype._getValue = function (target) {
-        if (!this.element.children.length || target.options.length > this.element.children.length) {
-            return target.value;
+        this.selectedValue = value;
+        var _this = this;
+        if (!this.element.hasAttribute('multiple')) {
+            var optionId = this._getOptionId(value);
+            if (optionId === null) {
+                this.element.setProp('selectedIndex', -1);
+            }
+            this.element.setProp('value', _buildValueToString(optionId, value));
+        } else {
+            var markAsSelected = function (opt) {
+                AttributeAppender.setProp(opt, 'selected', false);
+            };
+            if (Array.isArray(value)) {
+                var optionIds = value.map(function (v) {
+                    return _this._getOptionId(v) || v;
+                });
+                markAsSelected = function (opt) {
+                    AttributeAppender.setProp(opt, 'selected', inarray(opt.value, optionIds));
+                };
+            }
+            this._markAsSelectedMultiple(markAsSelected);
         }
+    };
+    SelectEventBinder.prototype._getValue = function (valueString) {
         if (this.element.hasAttribute('multiple')) {
             var optionsValue = [];
-            for (var i = 0; i < target.selectedOptions.length; i++) {
-                var option = target.selectedOptions[i];
-                var value = this.element.children.getByIndex(option.index).getAttribute('value');
+            for (var i = 0; i < this.element.nativeElement.selectedOptions.length; i++) {
+                var value = this._getOptionValue(this.element.nativeElement.selectedOptions[i].value);
                 optionsValue.push(value);
             }
             return optionsValue;
         }
-        return this.element.children.getByIndex(target.selectedIndex).getAttribute('value');
+        return this._getOptionValue(valueString);
+    };
+    SelectEventBinder.prototype._getOptionValue = function (valueString) {
+        var optionId = valueString.split(':')[0];
+        return this._optionValueMap.has(optionId) ? this._optionValueMap.get(optionId) : valueString;
+    };
+    SelectEventBinder.prototype.genOptionId = function () {
+        return (this.idIncrement++).toString();
+    };
+    SelectEventBinder.prototype._getOptionId = function (value) {
+        var keys = this._optionValueMap.keys();
+        for (var i in keys) {
+            if (this._compare(this._optionValueMap.get(keys[i]), value))
+                return keys[i];
+        }
+        return null;
+    };
+    SelectEventBinder.prototype._markAsSelectedMultiple = function (callback) {
+        Array.from(this.element.nativeElement.options).forEach(callback);
     };
     SelectEventBinder.annotations = {
         selector: 'select:[model|formField|fieldControl]',
@@ -4868,7 +4931,8 @@ var SelectEventBinder = function () {
                         type: 'call',
                         args: [[
                                 '$event',
-                                'target'
+                                'target',
+                                'value'
                             ]],
                         fn: '_handleSelection'
                     }]
@@ -4882,11 +4946,62 @@ var SelectEventBinder = function () {
                     }]
             }
         },
+        props: { compareFn: {} },
         resolve: [ResolveSelectBinder],
         DI: { ElementRef: { optional: true } },
         module: 'FormModule'
     };
     return SelectEventBinder;
+}();
+var OptionDirective = function () {
+    'use strict';
+    function OptionDirective(selectInstance, elementRef) {
+        if (selectInstance)
+            this.id = selectInstance.genOptionId();
+        Object.defineProperty(this, 'value', {
+            set: function (value) {
+                this.setValue(value);
+                if (selectInstance)
+                    selectInstance.writeValue(selectInstance.selectedValue);
+            }
+        });
+        Object.defineProperty(this, 'jValue', {
+            set: function (value) {
+                if (!selectInstance)
+                    return;
+                selectInstance._optionValueMap.set(this.id, value);
+                this.setValue(_buildValueToString(this.id, value));
+                selectInstance.writeValue(selectInstance.selectedValue);
+            }
+        });
+        this.setValue = function (value) {
+            elementRef.setProp('value', value);
+        };
+        this.viewDidDestroy = function () {
+            if (selectInstance) {
+                selectInstance._optionValueMap.delete(this.id);
+                selectInstance.writeValue(selectInstance.selectedValue);
+            }
+        };
+    }
+    OptionDirective.annotations = {
+        selector: 'option',
+        DI: {
+            ParentRef: {
+                optional: true,
+                type: '[model|formField|fieldControl]',
+                value: 'select'
+            },
+            ElementRef: { optional: true }
+        },
+        props: {
+            value: {},
+            jValue: {}
+        },
+        dynamicInjectors: true,
+        module: 'FormModule'
+    };
+    return OptionDirective;
 }();
 var ResolveNumberBinder = {
     name: VALUE_ACCESSOR,
@@ -5152,6 +5267,7 @@ exports.RadioEventContainer = RadioEventContainer;
 exports.RadioEventBinder = RadioEventBinder;
 exports.ResolveSelectBinder = ResolveSelectBinder;
 exports.SelectEventBinder = SelectEventBinder;
+exports.OptionDirective = OptionDirective;
 exports.ModelDirective = ModelDirective;
 exports.getValueAccessor = getValueAccessor;
 exports.ResolveNumberBinder = ResolveNumberBinder;
@@ -5435,6 +5551,7 @@ var unserialize = utils['unserialize'];
 var extend = utils['extend'];
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var INITIALIZERS = core['INITIALIZERS'];
+var errorBuilder = core['errorBuilder'];
 var Inject = core['Inject'];
 var _Promise = core['_Promise'];
 var ProviderToken = core['ProviderToken'];
@@ -5583,7 +5700,7 @@ var _unregistered = {};
 var $stateCollection = {};
 var $intentCollection = {};
 function createRoute(url) {
-    var replacer = '/(\\w+)', paramsMapping = [];
+    var replacer = '/([\\w-]+)', paramsMapping = [];
     url = url.replace(/([\/]|)([:]|)+(\w+)/g, function (match) {
         if (match.indexOf(':') > -1) {
             paramsMapping.push(match.split(':')[1]);
@@ -5636,8 +5753,8 @@ function generateRoute(routeConfig, requireParent) {
     if (!routeConfig.url) {
         routeConfig.abstract = true;
     }
-    $stateCollection[routeConfig.name] = routeConfig;
     routeConfig.route.$$views = _views;
+    $stateCollection[routeConfig.name] = routeConfig;
     if (_unregistered.hasOwnProperty(routeConfig.name)) {
         _unregistered[routeConfig.name].forEach(function (uName) {
             setupRoutes(uName, $stateCollection[uName]);
@@ -5645,36 +5762,37 @@ function generateRoute(routeConfig, requireParent) {
         delete _unregistered[routeConfig.name];
     }
 }
-function setupRoutes(name, routeConfig) {
+function setupRoutes(routeConfig) {
     var requireParent = routeConfig.hasOwnProperty('parent');
     if (requireParent && !$stateCollection.hasOwnProperty(routeConfig.parent)) {
         if (!_unregistered.hasOwnProperty(routeConfig.parent)) {
             _unregistered[routeConfig.parent] = [];
         }
-        _unregistered[routeConfig.parent].push(name);
-        $stateCollection[name] = routeConfig;
+        _unregistered[routeConfig.parent].push(routeConfig.name);
+        $stateCollection[routeConfig.name] = routeConfig;
         return this;
     }
-    routeConfig.name = name;
     generateRoute(routeConfig, requireParent);
-    function addChildren(config, parentName) {
+    function addChildren(config) {
         if (config.children) {
             config.children.forEach(function (childConfig) {
                 if (childConfig.name) {
-                    childConfig.url = childConfig.url || [
-                        '',
-                        parentName,
-                        childConfig.name
-                    ].join('/');
-                    childConfig.parent = parentName;
+                    var name = childConfig.name;
+                    childConfig.name = [
+                        config.name,
+                        name
+                    ].join('.');
+                    childConfig.url = '/' + config.name + (childConfig.url || '/' + name);
+                    childConfig.parent = config.name;
                     generateRoute(childConfig, true);
-                    addChildren(childConfig, childConfig.name);
+                    addChildren(childConfig);
+                } else {
+                    errorBuilder('unregistered child route in parent<' + config.name + '>, name is required:' + JSON.stringify(childConfig));
                 }
             });
         }
     }
-    addChildren(routeConfig, name);
-    return this;
+    addChildren(routeConfig);
 }
 function getRequiredRoute(routeName) {
     var queryParam = routeName.split('?'), foundRoute = function () {
@@ -5805,12 +5923,12 @@ var WebStateService = function () {
     WebStateService.prototype.$href = function (stateName, params) {
         var state = this.webStateProvider.getRouteObj(stateName);
         if (state) {
-            if (state.route.paramsLength && !params) {
-                throw new Error(stateName + ' requires parameter, buit none was provided');
+            if (state.route.paramsMapping.length && !params) {
+                throw new Error(stateName + ' requires parameter, but none was provided');
             }
             var href = state.url.replace(/\:(\w)+/g, function (index, key) {
-                var chkr = index.split(':')[1];
-                return chkr in params && params[chkr] ? params[chkr] : index;
+                var param = index.split(':')[1];
+                return param in params ? params[param] : index;
             });
             return href;
         }
@@ -5839,6 +5957,9 @@ var WebStateService = function () {
     };
     WebStateService.prototype.getParam = function (name) {
         return this.state.route.params[name];
+    };
+    WebStateService.prototype.getUrlParams = function () {
+        return Object(this.state.route.params);
     };
     WebStateService.prototype._stateChanged = function (path) {
         return !isequal(this.$$baseUrl, path);
@@ -6125,7 +6246,13 @@ var RouterModule = function () {
     'use strict';
     function RouterModule() {
     }
-    RouterModule.setRoutes = setupRoutes;
+    RouterModule.setRoutes = function (routes) {
+        if (Array.isArray(routes)) {
+            routes.forEach(setupRoutes);
+        } else {
+            setupRoutes(routes);
+        }
+    };
     INITIALIZERS.register({
         DI: {
             WebStateProvider: { factory: WebStateProvider },
@@ -6347,20 +6474,18 @@ var AppRouteModule = function(){
 "use strict";
 
 function AppRouteModule() {
-    RouterModule.setRoutes('app', {
-        children: [
-            {
-                name: 'calculator',
-                url: '/calculator',
-                views: { '@content': CalculatorComponent }
-            },
-            {
-                name: 'welcome',
-                url: '/',
-                views: { '@content': RouterPageElement }
-            }
-        ]
-    });
+    RouterModule.setRoutes([
+        {
+            name: 'calculator',
+            url: '/calculator',
+            views: { '@content': CalculatorComponent }
+        },
+        {
+            name: 'welcome',
+            url: '/',
+            views: { '@content': RouterPageElement }
+        }
+    ]);
 }
 
 INITIALIZERS.register({factory : configureWebState, DI : {WebStateProvider : {factory: WebStateProvider}}}, true);
@@ -6454,6 +6579,8 @@ var ForDirective = common['ForDirective'];
 var ClassDirective = common['ClassDirective'];
 var IfDirective = common['IfDirective'];
 var form = __required('dist/form/bundles/jeli-form-module.js');
+var OptionDirective = form['OptionDirective'];
+var SelectEventBinder = form['SelectEventBinder'];
 var ModelDirective = form['ModelDirective'];
 var CheckboxEventBinder = form['CheckboxEventBinder'];
 var core = __required('dist/core/bundles/jeli-core-module.js');
@@ -6465,6 +6592,7 @@ var AppRootElement = function(){
 "use strict";
 
 function AppRootElement(http) {
+    this.valueBinding = 3;
     this.test = true;
     this.error = false;
     this.keys = [2];
@@ -6498,7 +6626,6 @@ function AppRootElement(http) {
     this.print = function (list) {
         console.log(list);
     };
-    this.trackByFn = console.log;
 }
 AppRootElement.prototype.addTodo = function () {
     if (this.todoDescription) {
@@ -6556,7 +6683,7 @@ AppRootElement.annotations = {
     module: 'AppModule'
 };
 
-AppRootElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":{"text":" Todo Application "}}]}]}]}]},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[CheckboxEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attrObservers":{"checked":{"prop":true,"once":true}},"vc":["model","app-root"]},{"type":"comment","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"div","index":4,"isc":false,"children":[{"type":"text","ast":{"text":"I am Test Condition"}}]},"ifElse":{"refId":"fallback","type":"element","name":"#fragment","index":6,"isc":false,"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":0,"isc":false,"context":{"i":"$context"},"children":[{"type":"text","ast":{"text":"Testing_${0}","once":false,"templates":[["${0}",{"prop":"i"}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[ForDirective]}]}},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[IfDirective]},{"type":"element","name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[ClassDirective],"children":[{"type":"text","ast":{"text":"Class test"}}]},{"type":"element","name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[SwitchDirective],"children":[{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"I am ${0} case","once":false,"templates":[["${0}",{"prop":"test"}]]}}]}},"props":{"switchCase":{"prop":true}},"providers":[SwitchCaseDirective]},{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"test-place","index":1,"isc":true,"providers":[TestPlaceElement],"children":[],"templates":{"place":[{"type":"text","ast":{"text":"I am default switch element"}}]}}},"providers":[SwitchDefaultDirective]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":8,"isc":false,"context":{"item":"$context"},"attrObservers":{"class":{"prop":["item","test"],"once":true}},"attr":{"class":"annother"},"children":[{"type":"text","ast":{"text":"${0}","once":true,"templates":[["${0}",{"prop":"item","args":[],"fns":[jsonFilterFn]}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[FilterPipe]},"forTrackBy":"trackByFn"},"providers":[ForDirective]},{"type":"element","name":"p","index":10,"isc":false,"children":[{"type":"text","ast":{"text":"© ${0} FrontendOnly. All Rights Reserved ","once":false,"templates":[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[dateTimeFilterFN]}]]}}]}], {}) /** template loader **/;
+AppRootElement.view = /** jeli template **/ new ViewParser([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":{"text":" Todo Application "}}]}]}]}]},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[CheckboxEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attrObservers":{"checked":{"prop":true,"once":true}},"vc":["model","app-root"]},{"type":"comment","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"div","index":4,"isc":false,"children":[{"type":"text","ast":{"text":"I am Test Condition"}}]},"ifElse":{"refId":"fallback","type":"element","name":"#fragment","index":6,"isc":false,"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":0,"isc":false,"context":{"i":"$context"},"children":[{"type":"text","ast":{"text":"Testing_${0}","once":false,"templates":[["${0}",{"prop":"i"}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[ForDirective]}]}},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[IfDirective]},{"type":"element","name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[ClassDirective],"children":[{"type":"text","ast":{"text":"Class test"}}]},{"type":"element","name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[SwitchDirective],"children":[{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"I am ${0} case","once":false,"templates":[["${0}",{"prop":"test"}]]}}]}},"props":{"switchCase":{"prop":true}},"providers":[SwitchCaseDirective]},{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"test-place","index":1,"isc":true,"providers":[TestPlaceElement],"children":[],"templates":{"place":[{"type":"text","ast":{"text":"I am default switch element"}}]}}},"providers":[SwitchDefaultDirective]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":8,"isc":false,"context":{"item":"$context"},"attr":{"class":"annother"},"children":[{"type":"text","ast":{"text":"${0}","once":true,"templates":[["${0}",{"prop":"item","args":[],"fns":[jsonFilterFn]}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[FilterPipe]},"forTrackBy":"trackByFn"},"providers":[ForDirective]},{"type":"text","ast":{"text":"Selected: ${0}","once":false,"templates":[["${0}",{"prop":"valueBinding"}]]}},{"type":"element","name":"select","index":10,"isc":false,"props":{"model":{"prop":"valueBinding"}},"providers":[SelectEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding","right":"$event"}],"custom":true}],"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"option","index":0,"isc":false,"props":{"option":"","value":{"prop":"opt","once":false}},"providers":[OptionDirective],"context":{"opt":"$context"},"children":[{"type":"text","ast":{"text":"${0}","once":true,"templates":[["${0}",{"prop":"opt"}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[1,2,3,4,5,6]}}},"providers":[ForDirective]}]},{"type":"element","name":"br","index":12,"isc":false},{"type":"text","ast":{"text":" Selected: ${0}","once":false,"templates":[["${0}",{"prop":"valueBinding2","args":[],"fns":[jsonFilterFn]}]]}},{"type":"element","name":"select","index":14,"isc":false,"props":{"model":{"prop":"valueBinding2"}},"providers":[SelectEventBinder,ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding2","right":"$event"}],"custom":true}],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":{"text":"Select 1"}}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":{"text":"Select 2"}}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":{"text":"Select 3"}}]}]},{"type":"element","name":"p","index":16,"isc":false,"children":[{"type":"text","ast":{"text":"© ${0} FrontendOnly. All Rights Reserved ","once":false,"templates":[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[dateTimeFilterFN]}]]}}]}], {}) /** template loader **/;
 return AppRootElement;
 }();
 

@@ -1,4 +1,4 @@
-import { isobject, isarray, isequal } from 'js-helpers/helpers';
+import { isobject, isequal } from 'js-helpers/helpers';
 import { errorBuilder } from '../utils/errorLogger';
 import { sce } from './renderer/sce';
 import { ElementStyle } from './style';
@@ -34,7 +34,7 @@ AttributeAppender.innerhtml = function(nativeElement, value) {
 };
 
 AttributeAppender.src = function(nativeElement, value) {
-    if (!isarray(nativeElement.tagName, ['IMG', 'IFRAME'])) {
+    if (!['IMG', 'IFRAME'].includes(nativeElement.tagName)) {
         errorBuilder("src is not a valid property of " + nativeElement.tagName);
     }
     nativeElement.setAttribute('src', value);
@@ -55,6 +55,5 @@ AttributeAppender.class = function(nativeElement, value) {
 // extend prop types
 AttributeAppender.setProp = function(nativeElement, propName, propValue) {
     if (propValue === undefined || !nativeElement) return;
-    nativeElement[propValue ? 'setAttribute' : 'removeAttribute'](propName, propValue);
     nativeElement[propName] = propValue;
 };

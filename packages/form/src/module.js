@@ -6,7 +6,7 @@ import { FormFieldDirective } from './directives/form-field.directive';
 import { DefaultEventBinder } from './directives/default.event.accessor';
 import { CheckboxEventBinder } from './directives/checkbox.event.accessor';
 import { RadioEventBinder, RadioEventContainer } from './directives/radio.event.accessor';
-import { SelectEventBinder } from './directives/select.event.accessor';
+import { OptionDirective, SelectEventBinder } from './directives/select.event.accessor';
 import { ModelDirective } from './directives/model.directive';
 import './utils';
 import { NumberEventBinder } from './directives/number.event.accessor';
@@ -31,7 +31,8 @@ jModule({
         RadioEventBinder,
         SelectEventBinder,
         NumberEventBinder,
-        RangeEventBinder
+        RangeEventBinder,
+        OptionDirective
     ]
 })
 

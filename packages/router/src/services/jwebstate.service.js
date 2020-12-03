@@ -150,13 +150,13 @@ WebStateService.prototype.go = function(path, params) {
 WebStateService.prototype.$href = function(stateName, params) {
     var state = this.webStateProvider.getRouteObj(stateName);
     if (state) {
-        if (state.route.paramsLength && !params) {
-            throw new Error(stateName + " requires parameter, buit none was provided");
+        if (state.route.paramsMapping.length && !params) {
+            throw new Error(stateName + " requires parameter, but none was provided");
         }
 
         var href = state.url.replace(/\:(\w)+/g, function(index, key) {
-            var chkr = index.split(":")[1]
-            return chkr in params && params[chkr] ? params[chkr] : index;
+            var param = index.split(":")[1];
+            return param in params ? params[param] : index;
         });
 
         return href;
@@ -206,6 +206,13 @@ WebStateService.prototype.search = function(query) {
  */
 WebStateService.prototype.getParam = function(name) {
     return this.state.route.params[name];
+};
+
+/**
+ * getState param
+ */
+WebStateService.prototype.getUrlParams = function() {
+    return Object(this.state.route.params);
 };
 
 WebStateService.prototype._stateChanged = function(path) {

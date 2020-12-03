@@ -70,11 +70,7 @@ function AbstractElementRef(definition, parentRef) {
 }
 
 AbstractElementRef.prototype.getAttribute = function(name) {
-    if (this.prop && this.prop.hasOwnProperty(name)) {
-        return this.prop[name];
-    }
-
-    return this.attr && this.attr[name];
+    return (this.attr && name in this.attr) ? this.attr[name] : this.nativeElement.getAttribute(name);
 };
 
 /**

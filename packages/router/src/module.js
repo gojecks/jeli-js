@@ -34,4 +34,10 @@ jModule({
     ]
 })
 export function RouterModule() {}
-RouterModule.setRoutes = setupRoutes;
+RouterModule.setRoutes = function(routes) {
+    if (Array.isArray(routes)) {
+        routes.forEach(setupRoutes);
+    } else {
+        setupRoutes(routes);
+    }
+}

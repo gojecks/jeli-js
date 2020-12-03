@@ -96,8 +96,17 @@
   <h5 *switchCase="true">I am ${test} case</h5>
   <test-place *switchDefault>I am default switch element</test-place>
 </div>
+<div *for="item in [{test:2}] | filter:{test:2}; trackBy as trackByFn" class="annother">${:item | json}</div>
 
-<div *for="item in [{test:2}] | filter:{test:2}; trackBy as trackByFn" attr-class="item.test" class="annother">${:item | json}</div>
+Selected: ${valueBinding}
+<select @{:model}="valueBinding">
+  <option :option *for="opt in [1,2,3,4,5,6]" {value}="opt">${:opt}</option>
+</select> <br/> Selected: ${valueBinding2 | json}
+<select @{:model}="valueBinding2" multiple>
+  <option value="select_1">Select 1</option>
+  <option value="select_2">Select 2</option>
+  <option value="select_3">Select 3</option>
+</select>
 
 
 <!-- <a :go="welcome">Welcome Page</a> | <a :go="calculator">Calculator</a>

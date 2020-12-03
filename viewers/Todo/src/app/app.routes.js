@@ -40,21 +40,19 @@ jModule({
     ]
 })
 export function AppRouteModule() {
-    RouterModule.setRoutes('app', {
-        children: [{
-                name: 'calculator',
-                url: '/calculator',
-                views: {
-                    "@content": CalculatorComponent
-                }
-            },
-            {
-                name: 'welcome',
-                url: '/',
-                views: {
-                    "@content": RouterPageElement
-                }
+    RouterModule.setRoutes([{
+            name: 'calculator',
+            url: '/calculator',
+            views: {
+                "@content": CalculatorComponent
             }
-        ]
-    });
+        },
+        {
+            name: 'welcome',
+            url: '/',
+            views: {
+                "@content": RouterPageElement
+            }
+        }
+    ]);
 }

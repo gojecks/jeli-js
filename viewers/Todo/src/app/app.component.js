@@ -7,6 +7,7 @@ Element({
     DI: [HttpService]
 })
 export function AppRootElement(http) {
+    this.valueBinding = 3;
     this.test = true;
     this.error = false;
     this.keys = [2];
@@ -47,8 +48,6 @@ export function AppRootElement(http) {
     this.print = function(list) {
         console.log(list);
     };
-
-    this.trackByFn = console.log;
 }
 
 AppRootElement.prototype.addTodo = function() {

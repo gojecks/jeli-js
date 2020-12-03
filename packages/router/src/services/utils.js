@@ -1,5 +1,5 @@
 import { extend, unserialize } from 'js-helpers/utils';
-import { ProviderToken, _Promise, Inject } from '@jeli/core';
+import { ProviderToken, _Promise, Inject, errorBuilder } from '@jeli/core';
 export var ROUTE_INTERCEPTOR = new ProviderToken('RouteInterceptor', true);
 /**
  * @internal
@@ -12,7 +12,7 @@ var $intentCollection = {};
  * @param {*} url 
  */
 function createRoute(url) {
-    var replacer = "\/(\\w+)",
+    var replacer = "\/([\\w-]+)",
         paramsMapping = [];
     url = url.replace(/([\/]|)([:]|)+(\w+)/g, function(match) {
         if (match.indexOf(":") > -1) {
@@ -102,10 +102,10 @@ function generateRoute(routeConfig, requireParent) {
         routeConfig.abstract = true;
     }
 
-    //set the route
-    $stateCollection[routeConfig.name] = routeConfig;
     //set the current route view paths
     routeConfig.route.$$views = _views;
+    //set the route
+    $stateCollection[routeConfig.name] = routeConfig;
 
     //check if route is parent that needs to register child
     if (_unregistered.hasOwnProperty(routeConfig.name)) {
@@ -120,10 +120,9 @@ function generateRoute(routeConfig, requireParent) {
 
 /**
  * 
- * @param {*} name 
  * @param {*} routeConfig 
  */
-function setupRoutes(name, routeConfig) {
+function setupRoutes(routeConfig) {
     var requireParent = routeConfig.hasOwnProperty('parent');
     /**
      * current route is binded to a parent
@@ -137,28 +136,31 @@ function setupRoutes(name, routeConfig) {
         }
 
         //push to the unregistered watchlist
-        _unregistered[routeConfig.parent].push(name);
-        $stateCollection[name] = routeConfig;
+        _unregistered[routeConfig.parent].push(routeConfig.name);
+        $stateCollection[routeConfig.name] = routeConfig;
         return this;
     }
 
-    /**
-     * generate the route
-     */
-    routeConfig.name = name;
     generateRoute(routeConfig, requireParent);
 
     /**
      * compile children route
      */
-    function addChildren(config, parentName) {
+    function addChildren(config) {
         if (config.children) {
             config.children.forEach(function(childConfig) {
                 if (childConfig.name) {
-                    childConfig.url = childConfig.url || ['', parentName, childConfig.name].join('/');
-                    childConfig.parent = parentName;
+                    var name = childConfig.name;
+                    /**
+                     * concat the parentName with the childName
+                     */
+                    childConfig.name = [config.name, name].join('.');
+                    childConfig.url = ('/' + config.name + (childConfig.url || '/' + name));
+                    childConfig.parent = config.name;
                     generateRoute(childConfig, true);
-                    addChildren(childConfig, childConfig.name);
+                    addChildren(childConfig);
+                } else {
+                    errorBuilder('unregistered child route in parent<' + config.name + '>, name is required:' + JSON.stringify(childConfig));
                 }
             });
         }
@@ -167,10 +169,7 @@ function setupRoutes(name, routeConfig) {
     /**
      * trigger recursive children
      */
-    addChildren(routeConfig, name);
-
-    //return the curent state;
-    return this;
+    addChildren(routeConfig);
 }
 
 /**

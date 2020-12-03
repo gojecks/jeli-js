@@ -61,7 +61,7 @@ function _ComponentInjectionToken(tokenName, context) {
         case (staticInjectionToken.ParentRef):
             {
                 if (context.currentClassAnnotations.DI.ParentRef.value) {
-                    return findParentRef(context.injectors.ElementRef.parent, context.currentClassAnnotations.DI.ParentRef.value);
+                    return findParentRef(context.injectors.ElementRef.parent, context.currentClassAnnotations.DI.ParentRef);
                 }
                 return context.injectors.ElementRef.parent.componentInstance;
             }
@@ -86,11 +86,12 @@ function getValidators(elementRef) {
 /**
  * 
  * @param {*} parentRef 
- * @param {*} refValue 
+ * @param {*} refInsttance 
  */
-function findParentRef(parentRef, refValue) {
-    if (parentRef && !parentRef.nodes.has(refValue)) {
-        return findParentRef(parentRef.parent, refValue);
+function findParentRef(parentRef, refInstance) {
+    var selector = (refInstance.value + (refInstance.type ? ':' + refInstance.type : ''));
+    if (parentRef && !parentRef.nodes.has(selector)) {
+        return findParentRef(parentRef.parent, refInstance);
     }
     /**
      * return null if no parentRef value
@@ -102,5 +103,5 @@ function findParentRef(parentRef, refValue) {
     /**
      * return the parentRef instance
      */
-    return parentRef.nodes.get(refValue);
+    return parentRef.nodes.get(selector);
 }

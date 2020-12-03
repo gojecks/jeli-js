@@ -8,6 +8,6 @@ Pipe({
 //@result converts date to timeago
 export function TimeAgoFilterFn(dateTimeFactory) {
     this.compile = function(text) {
-        return dateTimeFactory.format(text, 'timeago');
+        return dateTimeFactory.timeConverter(text).timeago;
     };
 }
