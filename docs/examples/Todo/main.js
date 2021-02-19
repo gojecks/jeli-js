@@ -933,7 +933,7 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
             try {
                 var template = ctrl.view.getView(elementRef);
                 elementRef.mutationObserver(function (mutaionList, observer) {
-                    lifeCycle.trigger('viewDidLoad');
+                    lifeCycle && lifeCycle.trigger('viewDidLoad');
                     observer.disconnect();
                 });
                 elementRef.appendChild(template);
@@ -1578,7 +1578,7 @@ AbstractElementRef.prototype.getAttribute = function (name) {
     return this.attr && name in this.attr ? this.attr[name] : this.nativeElement.getAttribute(name);
 };
 AbstractElementRef.prototype.insertAfter = function (newNode, targetNode) {
-    if (!targetNode.parentNode)
+    if (!targetNode || !targetNode.parentNode)
         return;
     targetNode = targetNode || this.nativeElement;
     targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
@@ -3365,7 +3365,7 @@ var lowerCaseFilter = function () {
     'use strict';
     function lowerCaseFilter() {
         this.compile = function (value) {
-            return value.toLowerCase();
+            return (value || '').toLowerCase();
         };
     }
     lowerCaseFilter.annotations = {
@@ -3434,7 +3434,7 @@ var upperCaseFilter = function () {
     'use strict';
     function upperCaseFilter() {
         this.compile = function (value) {
-            return value.toUpperCase();
+            return (value || '').toUpperCase();
         };
     }
     upperCaseFilter.annotations = {

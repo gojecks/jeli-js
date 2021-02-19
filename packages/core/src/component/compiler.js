@@ -28,15 +28,14 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
         if (ctrl.view) {
             try {
                 // set the refID of the directive
-                var template = ctrl.view.getView(elementRef);
+                var renderedElement = ctrl.view.compile(elementRef);
                 // attach mutationObserver
                 elementRef.mutationObserver(function(mutaionList, observer) {
-                    lifeCycle.trigger('viewDidLoad');
+                    lifeCycle && lifeCycle.trigger('viewDidLoad');
                     observer.disconnect();
                 });
 
-                elementRef.appendChild(template);
-                buildViewChild(componentInstance, elementRef, definition.viewChild);
+                elementRef.appendChild(renderedElement);
             } catch (e) {
                 errorBuilder(e);
             }
@@ -44,10 +43,8 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
 
         // Add event Watcher to the ele
         elementRef.observer(function() {
+            // do cleanup when component is destroyed
             lifeCycle.trigger('viewDidDestroy');
-            /**
-             * remove the styles
-             */
             componentRef.destroy();
             lifeCycle = null;
             componentRef = null;

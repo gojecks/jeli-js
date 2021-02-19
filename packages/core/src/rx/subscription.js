@@ -42,7 +42,7 @@ export function Subscription(replayOnSubscription) {
      * @param {*} args 
      */
     this.notify = function(type, args) {
-        if (state.resolveWith === 'completed') {
+        if (!state || state.resolveWith === 'completed') {
             return;
         }
 

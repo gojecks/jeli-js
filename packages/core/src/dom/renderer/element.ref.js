@@ -1,4 +1,5 @@
 import { isequal } from 'js-helpers/helpers';
+import { staticInjectionToken } from '../../component/injectors';
 import { AttributeAppender } from '../attribute';
 /**
  * 
@@ -16,14 +17,13 @@ export function ElementRef(definition, parent) {
          * create the element Observer
          */
         ComponentRef.create(this.refId, parent && parent.hostRef.refId);
-        this._viewQuery = new Map();
     }
 
     this.events = new EventHandler(this, definition.events);
     Object.defineProperties(this, {
         viewQuery: {
             get: function() {
-                return this._viewQuery || this.parent._viewQuery;
+                return this._viewQuery || this.parent && this.parent._viewQuery;
             }
         }
     });
@@ -79,12 +79,29 @@ ElementRef.prototype.appendChild = function(template) {
     this.changeDetector.detectChanges();
 };
 
-ElementRef.prototype.addViewQuery = function(option, element) {
+ElementRef.prototype.addViewQuery = function(option, childEelement) {
     if (!isequal(option[1], this.tagName)) {
-        return this.parent && this.parent.hostRef.addViewQuery(option, element);
+        return this.parent && this.parent.hostRef.addViewQuery(option, childEelement);
     }
 
-    this._viewQuery.set(option[0], element);
+    switch (option[0].type) {
+        case (staticInjectionToken.QueryList):
+            if (!this.componentInstance.hasOwnProperty(option[0].name)) {
+                this.componentInstance[option[0].name] = new QueryList();
+            }
+            this.componentInstance[option[0].name].add(childEelement);
+            break;
+        case (staticInjectionToken.ElementRef):
+            this.componentInstance[option[0].name] = childEelement;
+            break;
+        default:
+            Object.defineProperty(this.componentInstance, option[0].name, {
+                get: function() {
+                    return (childEelement.nodes.has(option[0].type) ? childEelement.nodes.get(option[0].type) : childEelement.context);
+                }
+            });
+            break;
+    }
 }
 
 

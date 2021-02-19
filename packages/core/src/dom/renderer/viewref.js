@@ -99,16 +99,27 @@ function EmbededViewContext(parentRef, templateRef, context) {
      */
     this.renderView = function(index) {
         var _this = this;
-        this.unsubscribeScheduler = scheduler.schedule(function() {
+        /**
+         * view render scheduler
+         */
+        function _scheduler() {
             var targetNode = (parentRef.children.last || parentRef).nativeElement;
-            if (index !== undefined && parentRef.children.hasIndex(index - 1)) {
-                targetNode = parentRef.children.getByIndex(index - 1).nativeElement;
+            var _arrIndex = (index ? (index - 1) : index);
+            if (index !== undefined && parentRef.children.hasIndex(_arrIndex)) {
+                targetNode = parentRef.children.getByIndex(_arrIndex).nativeElement;
             }
             transverse(_this.compiledElement);
             parentRef.insertAfter(_this.compiledElement.nativeElement, targetNode);
             parentRef.children.add(_this.compiledElement, index);
-            _this.compiledElement.changeDetector.detectChanges();
-        });
+            var changeDetector = _this.compiledElement.changeDetector;
+            if (changeDetector) {
+                changeDetector.detectChanges();
+            }
+        }
+        /**
+         * register our scheduler
+         */
+        this.unsubscribeScheduler = scheduler.schedule(_scheduler);
     }
 
 

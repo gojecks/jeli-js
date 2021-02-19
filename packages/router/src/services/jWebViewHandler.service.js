@@ -27,6 +27,7 @@ export function ViewHandler(webStateProvider, componentResolver) {
 ViewHandler.prototype.setViewReference = function(elementRef, ref) {
     this.viewsHolder.set(ref, {
         element: elementRef,
+        compiledWith: null,
         cleanUp: function() {
             if (this.compiledWith) {
                 this.compiledWith.remove();
@@ -139,5 +140,7 @@ ViewHandler.prototype.resolveViews = function(route, currentRoute) {
 };
 
 ViewHandler.prototype.destroy = function(ref) {
+    if (!this.viewsHolder.has(ref)) return;
+    this.viewsHolder.get(ref).cleanUp();
     this.viewsHolder.delete(ref);
 };

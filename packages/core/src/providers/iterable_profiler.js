@@ -50,7 +50,7 @@ IterableProfiler.prototype.diff = function(source) {
 
     var len = source.length;
     var newCacheHash = [];
-    var operationOrder = new Array(len);
+    var operationOrder = [];
     var isDirty = false;
     for (var inc = 0; inc < len; inc++) {
         var item = source[inc];
@@ -60,6 +60,7 @@ IterableProfiler.prototype.diff = function(source) {
          * if hash exists means the object was moved to different index
          * assign to new position
          */
+        var outOfCacheRange = (inc > (this.cacheHash.length - 1));
         if (this.cacheHash.includes(hash)) {
             /***
              * cacheHash[key] changed
@@ -76,19 +77,25 @@ IterableProfiler.prototype.diff = function(source) {
                  * true: new Data was added in previous index to the collection
                  * false: we move the item to correct index
                  */
-                var operationOrderAtIndex = operationOrder[inc];
-                if (operationOrderAtIndex && operationOrderAtIndex.state !== 'create') {
-                    operationOrder[inc] = ({
+                if ((prevIndex > -1 && prevIndex !== inc)) {
+                    operationOrder.push({
+                        index: inc,
                         prevIndex: prevIndex,
-                        state: 'move'
+                        /**
+                         * check if currentIncrement > prevIndex
+                         * true: create a new record
+                         * false: move it
+                         */
+                        state: (outOfCacheRange ? 'create' : 'update')
                     });
+                    isDirty = true;
                 }
             }
         } else {
             isDirty = true;
-            operationOrder[inc] = ({
+            operationOrder.push({
                 index: inc,
-                state: 'create'
+                state: outOfCacheRange ? 'create' : 'update'
             });
         }
 
@@ -98,12 +105,10 @@ IterableProfiler.prototype.diff = function(source) {
     /**
      * Validate cacheHash
      */
-    if (this.cacheHash.length > newCacheHash.length) {
-        for (var i = 0; i < this.cacheHash.length; i++) {
-            if (!newCacheHash.includes(this.cacheHash[i])) {
-                isDirty = true;
-                this.out.deleted.push(i - this.out.deleted.length);
-            }
+    if (isDirty || this.cacheHash.length > newCacheHash.length) {
+        for (var i = newCacheHash.length; i < this.cacheHash.length; i++) {
+            isDirty = true;
+            this.out.deleted.push(i);
         }
     }
 

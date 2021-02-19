@@ -60,7 +60,8 @@
         "touch": "^3.1.0"
     },
     "scripts": {
-        "test": "mocha './test/**/*.spec.js'"
+        "test": "mocha './test/**/*.spec.js'",
+        "build-core": "node node_modules/@jeli/compiler/bin/compiler.js --entry=core"
     },
     "dependencies": {
         "@jeli/cli-utils": "^0.0.1",

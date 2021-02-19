@@ -12,7 +12,6 @@ export function LifeCycle(componentInstance) {
     var _cycleState = {
         didInit: !!componentInstance.didInit,
         viewDidLoad: !!componentInstance.viewDidLoad,
-        viewDidMount: !!componentInstance.viewDidMount,
         viewDidDestroy: !!componentInstance.viewDidDestroy,
         willObserve: !!componentInstance.willObserve,
         didChange: !!componentInstance.didChange

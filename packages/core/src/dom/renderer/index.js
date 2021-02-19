@@ -1,6 +1,5 @@
 import { copy } from 'js-helpers/utils';
-import { errorBuilder } from '../../utils/errorLogger';
-import { isequal } from 'js-helpers/helpers';
+import { isequal, isfunction } from 'js-helpers/helpers';
 
 /**
  * 
@@ -12,22 +11,23 @@ export function ViewParser(transpiledHTML) {
      * @param {*} parent 
      * @param {*} viewChild 
      */
-    var _viewContainer = [];
-    this.getView = function(parent) {
+    var fragment = document.createDocumentFragment();
+    this.compile = function(parent) {
         for (var i = 0; i < transpiledHTML.length; i++) {
             var compiled = ViewParserHelper[transpiledHTML[i].type](transpiledHTML[i], parent, this);
             if (compiled) {
-                _viewContainer.push(compiled);
+                this.pushToView(compiled);
             }
         }
 
-        return toFragment(_viewContainer, parent);
+        return fragment;
     };
 
-    this.pushToView = function(element) {
-        _viewContainer.push(element);
-    };
-
+    this.pushToView = function(compiled) {
+        compiled.parent && compiled.parent.children.add(compiled);
+        fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
+        transverse(compiled);
+    }
 };
 
 /**
@@ -56,7 +56,7 @@ function element(definition, parent, viewContainer) {
     }
 
     return elementRef;
-};
+}
 
 function comment(definition, parent, viewContainer) {
     return new AbstractElementRef(definition, parent);
@@ -69,7 +69,7 @@ function comment(definition, parent, viewContainer) {
  */
 function text(definition, parent) {
     return new TextNodeRef(copy(definition), parent);
-};
+}
 
 /**
  * <j-fragment *outlet='testContent:*'></j-fragment>
@@ -115,27 +115,7 @@ function outlet(definition, parent, viewContainer) {
     }
 
     return null;
-};
-
-
-function toFragment(compiledTemplate, parent) {
-    var fragment = document.createDocumentFragment();
-    while (compiledTemplate.length) {
-        processCompiler(compiledTemplate.shift());
-    }
-
-    /**
-     * 
-     * @param {*} compiled 
-     */
-    function processCompiler(compiled) {
-        parent.children.add(compiled);
-        fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
-        transverse(compiled);
-    }
-
-    return fragment;
-};
+}
 
 /**
  * transverse Template Compiler

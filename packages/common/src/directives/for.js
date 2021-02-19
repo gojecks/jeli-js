@@ -51,14 +51,20 @@ ForDirective.prototype._listenerFn = function() {
         _this.viewRef.remove(index);
     });
 
-    this.iterable.forEachOperation(function(item, idx) {
+    this.iterable.forEachOperation(function(item) {
         switch (item.state) {
             case ('create'):
-                var context = new jForRow(_this._forIn[idx], idx, null);
-                _this.viewRef.createEmbededView(_this.templateRef, context, idx);
+                var context = new jForRow(_this._forIn[item.index], item.index, null);
+                _this.viewRef.createEmbededView(_this.templateRef, context, item.index);
+                break;
+            case ('update'):
+                var view = _this.viewRef.get(item.index);
+                view.updateContext({
+                    $context: _this._forIn[item.index]
+                });
                 break;
             case ('move'):
-                _this.viewRef.move(item.prevIndex, idx);
+                _this.viewRef.move(item.prevIndex, item.index);
                 break;
         }
     });

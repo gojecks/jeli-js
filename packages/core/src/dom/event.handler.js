@@ -126,7 +126,7 @@ EventHandler.prototype.attachEventEmitter = function(eventName, componentInstanc
                 _this.element.context,
                 value
             );
-            _this.element.parent.changeDetector.detectChanges();
+            _this.element && _this.element.parent.changeDetector.detectChanges();
         });
         /**
          * destroy the subscription

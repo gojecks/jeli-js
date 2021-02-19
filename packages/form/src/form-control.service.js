@@ -67,7 +67,7 @@ FormControlService.prototype.patchValue = function(values, options) {
         for (var field in values) {
             if (this.hasField(field) && !options.self) {
                 this.getField(field).patchValue(values[field], {
-                    self: true,
+                    self: options.self,
                     updateView: true
                 });
             }
@@ -116,8 +116,13 @@ FormControlService.prototype.setFieldValidator = function(field, validator) {
 
 FormControlService.prototype.removeField = function(name) {
     this.getField(name).destroy();
-    delete this.values[name];
-    this.valueChanges.next(this.values);
+    delete this.formFieldControls[name];
+    delete this.value[name];
+    this.valueChanges.emit(this.value);
+};
+
+FormControlService.prototype.getAllValues = function() {
+    return this._collectValues(false);
 };
 
 
@@ -160,13 +165,13 @@ FormControlService.prototype._allFieldDisabled = function() {
 };
 
 FormControlService.prototype._updateValue = function() {
-    this.value = this._collectValues();
+    this.value = this._collectValues(true);
 };
 
-FormControlService.prototype._collectValues = function() {
+FormControlService.prototype._collectValues = function(enabledOnly) {
     var values = {};
     this.forEachField(function(control, field) {
-        if (control.enabled) {
+        if ((enabledOnly && control.enabled) || !enabledOnly) {
             values[field] = control.value;
         }
     });

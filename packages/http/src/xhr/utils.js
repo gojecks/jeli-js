@@ -1,3 +1,5 @@
+import { isobject } from 'js-helpers/helpers';
+
 var defaultOptions = {
     url: "",
     type: 'GET',
@@ -99,10 +101,19 @@ function parseJSON(string, tError) {
  * Core HttpResponse
  * @param {*} response 
  */
-export function HttpResponse(status, readyState, url) {
-    this.status = status;
-    this.readyState = readyState;
+export function HttpResponse(xhrInstance, url) {
+    this.status = xhrInstance.status;
+    this.readyState = xhrInstance.readyState;
     this.url = url;
     this.data = null;
     this.success = false;
+    this.headers = Object({
+        getResponseHeader: function(name) {
+            if (!isobject(name)) {
+                return xhrInstance.getResponseHeader(name);
+            } else {
+                return name.map(xhrInstance.getResponseHeader);
+            }
+        }
+    });
 }

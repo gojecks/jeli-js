@@ -36,7 +36,7 @@ function AbstractElementRef(definition, parentRef) {
                     return componentDebugContext.get(this.refId).context;
                 }
 
-                return this.parent.context;
+                return this.parent && this.parent.context;
             }
         },
         componentInstance: {
@@ -45,7 +45,7 @@ function AbstractElementRef(definition, parentRef) {
                     return componentDebugContext.get(this.refId).componentInstance;
                 }
 
-                return this.hostRef.componentInstance;
+                return this.hostRef && this.hostRef.componentInstance;
             }
         },
         changeDetector: {
@@ -54,7 +54,7 @@ function AbstractElementRef(definition, parentRef) {
                     return componentDebugContext.get(this.refId).changeDetector;
                 }
 
-                return this.hostRef.changeDetector;
+                return this.hostRef && this.hostRef.changeDetector;
             }
         },
         hostRef: {
@@ -63,7 +63,7 @@ function AbstractElementRef(definition, parentRef) {
                     return this;
                 }
 
-                return this.parent.hostRef;
+                return this.parent && this.parent.hostRef;
             }
         }
     });
@@ -78,7 +78,7 @@ AbstractElementRef.prototype.getAttribute = function(name) {
  * @param {*} targetNode
  */
 AbstractElementRef.prototype.insertAfter = function(newNode, targetNode) {
-    if (!targetNode.parentNode) return;
+    if (!targetNode || !targetNode.parentNode) return;
     targetNode = targetNode || this.nativeElement;
     targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
     this.changeDetector.detectChanges();

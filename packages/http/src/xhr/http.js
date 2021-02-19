@@ -51,7 +51,7 @@ function CoreHttp(url, options, interceptor, changeDetection) {
      * @param {*} readyState 
      */
     function respondToReadyState(readyState) {
-        var response = new HttpResponse(xhrInstance.status, xhrInstance.readyState, options.url);
+        var response = new HttpResponse(xhrInstance, options.url);
         if (xhrInstance.readyState == 4) {
             try {
                 var data = parseJSON(xhrInstance.responseText, !!xhrInstance.responseText);
@@ -68,22 +68,6 @@ function CoreHttp(url, options, interceptor, changeDetection) {
 
             xhrPromise.completed();
             changeDetection();
-        }
-    }
-
-    /**
-     * @method getResponseHeaders
-     * @param {*} name 
-     */
-    function getResponseHeaders(name) {
-        if (!isobject(name)) {
-            return xhrInstance.getResponseHeader(name);
-        } else {
-            for (var i in name) {
-                name[i] = xhrInstance.getResponseHeader(name[i]);
-            }
-
-            return name;
         }
     }
 
