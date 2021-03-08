@@ -47,13 +47,18 @@ FormControlService.prototype.hasField = function(controlName) {
 };
 
 FormControlService.prototype.getField = function(controlName) {
-    if (isarray(controlName)) {
-        return controlName.reduce(function(accum, path) {
-            return accum.getField(path);
-        }, this);
+    var path = this.getPath(controlName);
+    if (isarray(path)) {
+        return this.getByPath(path);
     }
     return this.formFieldControls[controlName] || null;
 };
+
+FormControlService.prototype.getByPath = function(paths) {
+    return paths.reduce(function(accum, path) {
+        return accum.getField(path);
+    }, this);
+}
 
 FormControlService.prototype._setupControl = function(control) {
     control.setParent(this);

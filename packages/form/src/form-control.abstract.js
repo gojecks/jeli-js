@@ -1,4 +1,4 @@
-import { isequal } from 'js-helpers/helpers';
+import { isequal, isarray } from 'js-helpers/helpers';
 import { EventEmitter } from '@jeli/core';
 import { FormValidatorService } from './form-validator.service';
 
@@ -248,4 +248,8 @@ FormControlAbstract.prototype._updateStatusOnError = function(emitEvent) {
     if (this._parent) {
         this._parent._updateStatusOnError(emitEvent);
     }
+}
+
+FormControlAbstract.prototype.getPath = function(path) {
+    return ((path && path.includes('.')) ? path.split('.') : path);
 }

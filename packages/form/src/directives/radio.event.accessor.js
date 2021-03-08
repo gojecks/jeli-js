@@ -73,8 +73,8 @@ RadioEventBinder.prototype.didDestroy = function() {
 };
 
 RadioEventBinder.prototype._checkFieldName = function() {
-    if (this.name && this.formField && this.formField !== this.name) {
-        errorBuilder('if you define a name and formField both values must match. <input type=radio name=radio :form-field=radio');
+    if (this.name && this.formField && this.formField != this.name) {
+        errorBuilder('if you define a name and formField both values must match. <input type=radio name=' + this.name + ' :formField=' + this.formField);
     }
 
     if (!this.name && this.formField) this.name = this.formField;
