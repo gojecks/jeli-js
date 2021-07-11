@@ -1,5 +1,4 @@
 import { inarray, isequal } from 'js-helpers/helpers';
-import { errorBuilder } from '../../utils/errorLogger';
 /**
  * 
  * @param {*} templates 
@@ -11,8 +10,8 @@ export function TemplateRef(templates) {
      * build the required element based on the template definition
      * @param {*} parentNode 
      */
-    this.createElement = function(parentNode) {
-        return ViewParserHelper[templates.type](templates, parentNode);
+    this.createElement = function(parentNode, viewContainer) {
+        return ViewParserHelper[templates.type](templates, parentNode, viewContainer);
     };
 
     this.getContext = function() {

@@ -1,5 +1,10 @@
 /**
- * 
+ * holds the number of elements created by application
+ * textNodes are ignored
+ */
+var $eUID = 1;
+/**
+ * Abstract element ref for generating components
  * @param {*} definition 
  * @param {*} parentRef 
  */
@@ -22,12 +27,6 @@ function AbstractElementRef(definition, parentRef) {
     this.nativeNode = this.nativeElement.nodeType === 8 ? this.nativeElement : null;
     this.nodes = new Map();
     this._viewQuery = null;
-    this.getTemplateRef = function(templateId) {
-        if (!definition.templates || !definition.templates.hasOwnProperty(templateId)) {
-            errorBuilder('No templates Defined #' + templateId);
-        }
-        return new TemplateRef(definition.templates[templateId]);
-    };
 
     Object.defineProperties(this, {
         context: {
@@ -65,106 +64,28 @@ function AbstractElementRef(definition, parentRef) {
 
                 return this.parent && this.parent.hostRef;
             }
+        },
+        "[[TEMPLATES]]": {
+            get: function() {
+                return definition.templates;
+            }
         }
     });
-}
-
-AbstractElementRef.prototype.getAttribute = function(name) {
-    return (this.attr && name in this.attr) ? this.attr[name] : this.nativeElement.getAttribute(name);
-};
-
-/**
- * @param {*} newNode
- * @param {*} targetNode
- */
-AbstractElementRef.prototype.insertAfter = function(newNode, targetNode) {
-    if (!targetNode || !targetNode.parentNode) return;
-    targetNode = targetNode || this.nativeElement;
-    targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
-    this.changeDetector.detectChanges();
-};
-
-AbstractElementRef.prototype.remove = function(removeFromParent) {
-    if (this.nativeElement && this.nativeElement.nodeType != 11) {
-        this.nativeElement.remove();
-    }
-
-    if (removeFromParent && this.parent) {
-        this.parent.children.remove(this);
-    }
-
-    cleanupElementRef(this);
 };
 
 AbstractElementRef.prototype.hasAttribute = function(name) {
     return this.attr && this.attr.hasOwnProperty(name);
 };
 
-/**
- * @param {*} ele
- */
-AbstractElementRef.prototype.removeChild = function(element) {
-    this.children.remove(element);
-    cleanupElementRef(element);
+AbstractElementRef.prototype.getAttribute = function(name) {
+    return (this.attr && name in this.attr) ? this.attr[name] : this.nativeElement.getAttribute(name);
 };
 
-/**
- * Observe when an element is removed
- * from the DOM
- * remove all watchList
- * Destroy Model observer if any
- * 
- * @param {*} onDestroyListener
- */
-AbstractElementRef.prototype.observer = function(onDestroyListener) {
-    if (onDestroyListener) {
-        this.$observers.push(onDestroyListener)
+AbstractElementRef.prototype.getTemplateRef = function(templateId, silent) {
+    var templates = this["[[TEMPLATES]]"];
+    if (!templates || !templates.hasOwnProperty(templateId)) {
+        if (!silent) errorBuilder('No templates Defined #' + templateId);
+        return null;
     }
-};
-
-
-/**
- * 
- * @param {*} element 
- */
-function cleanupElementRef(elementRef) {
-    elementRef.events && elementRef.events.destroy();
-    /**
-     * trigger registered listeners
-     */
-    while (elementRef.$observers.length) {
-        elementRef.$observers.pop()();
-    }
-
-    /**
-     * remove children
-     */
-    elementRef.children.destroy();
-    elementRef.nativeElement = null;
-    elementRef.parent = null;
-    elementRef.providers = null;
-    elementRef._viewQuery = null;
-    elementRef.nodes.clear();
-};
-
-
-/**
- * 
- * @param {*} tag 
- * @param {*} text 
- * @param {*} fromDOM 
- */
-function createElementByType(tag, text, fromDOM) {
-    if (fromDOM) {
-        return document.querySelector(tag);
-    }
-
-    switch (tag) {
-        case ('#comment'):
-            return document.createComment(text);
-        case ('#fragment'):
-            return document.createDocumentFragment();
-        default:
-            return document.createElement(tag);
-    }
+    return new TemplateRef(templates[templateId]);
 };

@@ -26,7 +26,7 @@ FormFieldControlService.prototype._setInitialState = function(state) {
         state.disabled ? this.disable({ self: true }) : this.enable({ self: true });
         this.eventType = state.eventType || this.eventType;
     } else {
-        this.value = state;
+        this.value = (state !== undefined ? state : null);
     }
 };
 

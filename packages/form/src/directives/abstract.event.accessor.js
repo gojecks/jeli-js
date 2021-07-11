@@ -8,7 +8,7 @@ export function AbstractValueAccessor(elementRef) {
 }
 
 AbstractValueAccessor.prototype.setDisabledState = function(state) {
-    this.element.setProp('disabled', state);
+    AttributeAppender.setProp(this.element.nativeElement, 'disabled', state);
 };
 
 AbstractValueAccessor.prototype.registerOnBlur = function(onBlurFn) {

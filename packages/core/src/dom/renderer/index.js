@@ -1,18 +1,15 @@
-import { copy } from 'js-helpers/utils';
-import { isequal, isfunction } from 'js-helpers/helpers';
-
 /**
  * 
  * @param {*} transpiledHTML 
  */
-export function ViewParser(transpiledHTML) {
+export function ViewParser() {
     /**
      * 
      * @param {*} parent 
      * @param {*} viewChild 
      */
     var fragment = document.createDocumentFragment();
-    this.compile = function(parent) {
+    this.compile = function(transpiledHTML, parent) {
         for (var i = 0; i < transpiledHTML.length; i++) {
             var compiled = ViewParserHelper[transpiledHTML[i].type](transpiledHTML[i], parent, this);
             if (compiled) {
@@ -27,7 +24,7 @@ export function ViewParser(transpiledHTML) {
         compiled.parent && compiled.parent.children.add(compiled);
         fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
         transverse(compiled);
-    }
+    };
 };
 
 /**
@@ -52,13 +49,19 @@ function element(definition, parent, viewContainer) {
     }
 
     if (definition.vc) {
-        elementRef.hostRef.addViewQuery(definition.vc, elementRef);
+        elementAddViewQuery(elementRef.hostRef, definition.vc, elementRef);
     }
 
     return elementRef;
 }
 
-function comment(definition, parent, viewContainer) {
+/**
+ * 
+ * @param {*} definition 
+ * @param {*} parent 
+ * @returns 
+ */
+function comment(definition, parent) {
     return new AbstractElementRef(definition, parent);
 }
 
@@ -68,12 +71,11 @@ function comment(definition, parent, viewContainer) {
  * @param {*} parent 
  */
 function text(definition, parent) {
-    return new TextNodeRef(copy(definition), parent);
+    return new TextNodeRef(definition, parent);
 }
 
 /**
- * <j-fragment *outlet='testContent:*'></j-fragment>
- * <j-template #test-content data-test></j-template>
+ * <j-template #testContent></j-template>
  * @param {*} definition
  * @param {*} parent
  * @param {*} viewContainer
@@ -81,17 +83,27 @@ function text(definition, parent) {
  */
 function place(definition, parent, viewContainer, appendToChild) {
     var hostRef = parent.hostRef;
-    var templates = hostRef.getTemplateRef('place');
-    templates
-        .forEach(definition.selector, function(template) {
-            var child = ViewParserHelper[template.type](template, parent.hostRef.parent, viewContainer);
-            if (appendToChild) {
-                parent.children.add(child);
-                parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
-            } else {
-                viewContainer.pushToView(child);
-            }
-        });
+    var template = hostRef.getTemplateRef(definition.refId || 'place', true);
+    if (template) {
+        if (definition.refId) {
+            createAndAppend(template);
+        } else {
+            template.forEach(definition.selector, createAndAppend);
+        }
+    }
+    /**
+     * 
+     * @param {*} elementDefinition 
+     */
+    function createAndAppend(elementDefinition) {
+        var child = ViewParserHelper[elementDefinition.type](elementDefinition, hostRef.parent, viewContainer);
+        if (appendToChild) {
+            parent.children.add(child);
+            parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+        } else {
+            viewContainer.pushToView(child);
+        }
+    }
 
     return null;
 };
@@ -129,7 +141,7 @@ function transverse(node) {
             proceedWithCompilation(node);
         }
     } else if (node instanceof TextNodeRef && node.hasBinding) {
-        node.registerObserver();
+        textNodeCompiler(node);
     }
 
     /**
@@ -143,13 +155,12 @@ function transverse(node) {
         /**
          * Bind Listeners to the Element
          **/
-        node.events.registerListener();
+        EventHandler.registerListener(node);
         //proceed with the compilation
         //checking child elements
         node.children.forEach(transverse);
     }
 }
-
 
 var ViewParserHelper = {
     element: element,

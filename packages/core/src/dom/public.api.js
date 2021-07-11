@@ -1,5 +1,6 @@
 export * from './renderer/index';
 export * from './renderer/sce';
+import './renderer/utils';
 import './renderer/abstract.element.ref';
 import './renderer/templateref';
 import './renderer/viewref'

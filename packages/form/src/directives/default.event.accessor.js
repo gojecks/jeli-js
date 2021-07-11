@@ -1,5 +1,5 @@
 import { VALUE_ACCESSOR } from "./abstract.event.accessor";
-import { closureRef } from '@jeli/core';
+import { closureRef, AttributeAppender } from '@jeli/core';
 
 export var ResolveDefaultBinder = {
     name: VALUE_ACCESSOR,
@@ -33,5 +33,5 @@ DefaultEventBinder.prototype.constructor = AbstractValueAccessor;
 
 DefaultEventBinder.prototype.writeValue = function(value) {
     value = (value === null || value === undefined) ? '' : value;
-    this.element.setProp('value', value, true);
+    AttributeAppender.setProp(this.element.nativeElement, 'value', value);
 };

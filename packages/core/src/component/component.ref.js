@@ -162,11 +162,3 @@ ComponentRef.create = function(refId, parentId) {
     }
     componentRef = null;
 };
-
-/**
- * Change detector
- */
-export function ChangeDetector() {
-    if (!CoreBootstrapContext.bootStrapComponent) return;
-    CoreBootstrapContext.bootStrapComponent.changeDetector.detectChanges();
-};

@@ -44,7 +44,7 @@ ViewRef.prototype.move = function(prev, curr) {
             var parent = view.compiledElement.parent;
             var targetNode = parent.children.getByIndex(curr - 1);
             if (targetNode) {
-                parent.insertAfter(view.compiledElement.nativeElement, targetNode.nativeElement);
+                elementInsertAfter(parent, view.compiledElement.nativeElement, targetNode.nativeElement);
             }
         }
     });
@@ -109,9 +109,9 @@ function EmbededViewContext(parentRef, templateRef, context) {
                 targetNode = parentRef.children.getByIndex(_arrIndex).nativeElement;
             }
             transverse(_this.compiledElement);
-            parentRef.insertAfter(_this.compiledElement.nativeElement, targetNode);
+            elementInsertAfter(parentRef, _this.compiledElement.nativeElement, targetNode);
             parentRef.children.add(_this.compiledElement, index);
-            var changeDetector = _this.compiledElement.changeDetector;
+            var changeDetector = _this.compiledElement && _this.compiledElement.changeDetector;
             if (changeDetector) {
                 changeDetector.detectChanges();
             }
@@ -130,7 +130,7 @@ function EmbededViewContext(parentRef, templateRef, context) {
             _componentRef = null;
         }
 
-        this.compiledElement.remove(true);
+        removeElement(this.compiledElement, true);
         this.compiledElement = null;
         this.context = null;
     }

@@ -61,8 +61,7 @@
     },
     "scripts": {
         "test": "mocha './test/**/*.spec.js'",
-        "build-core": "node node_modules/@jeli/compiler/bin/compiler.js --entry=core",
-        ":other": "node node_modules/@jeli/compiler/bin/compiler.js"
+        "build": "node node_modules/@jeli/compiler/bin/compiler.js"
     },
     "dependencies": {
         "@jeli/cli-utils": "^0.0.1",

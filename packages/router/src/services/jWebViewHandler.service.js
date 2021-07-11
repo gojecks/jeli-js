@@ -1,5 +1,5 @@
 import { WebStateProvider } from './jwebstate.provider';
-import { ComponentFactoryResolver } from '@jeli/core';
+import { ComponentFactoryResolver, DOMHelper } from '@jeli/core';
 Service({
     name: 'ViewHandler',
     DI: [WebStateProvider, ComponentFactoryResolver]
@@ -30,12 +30,10 @@ ViewHandler.prototype.setViewReference = function(elementRef, ref) {
         compiledWith: null,
         cleanUp: function() {
             if (this.compiledWith) {
-                this.compiledWith.remove();
+                DOMHelper.remove(this.compiledWith);
             } else {
                 // templates only
-                this.element.children.forEach(function(child) {
-                    child.remove();
-                });
+                this.element.children.forEach(DOMHelper.remove);
             }
         }
     });

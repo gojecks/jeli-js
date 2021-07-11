@@ -1,5 +1,5 @@
 import { VALUE_ACCESSOR } from "./abstract.event.accessor";
-import { closureRef } from '@jeli/core';
+import { closureRef, AttributeAppender } from '@jeli/core';
 
 export var ResolveRangeBinder = {
     name: VALUE_ACCESSOR,
@@ -34,7 +34,7 @@ RangeEventBinder.prototype.constructor = AbstractValueAccessor;
 
 RangeEventBinder.prototype.writeValue = function(value) {
     value = (value === null || value === undefined) ? '' : value;
-    this.element.setProp('value', parseFloat(value), true);
+    AttributeAppender.setProp(this.element.nativeElement, 'value', parseFloat(value), true);
 };
 
 RangeEventBinder.prototype.registerOnChange = function(onChangeFn) {

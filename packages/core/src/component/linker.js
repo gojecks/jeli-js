@@ -100,7 +100,7 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
         lifeCycle.trigger('willObserve');
     });
 
-    elementRef.observer(function() {
+    attachElementObserver(elementRef, function() {
         unsubscribe();
         registeredProperty = [];
     });

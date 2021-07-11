@@ -1,6 +1,5 @@
 import { VALUE_ACCESSOR } from './abstract.event.accessor';
-import { errorBuilder } from '@jeli/core';
-import { closureRef } from '@jeli/core';
+import { closureRef, AttributeAppender, errorBuilder } from '@jeli/core';
 
 export var ResolveRadioBinder = {
     name: VALUE_ACCESSOR,
@@ -91,5 +90,5 @@ RadioEventBinder.prototype.registerOnChange = function(onChangeFn) {
 
 RadioEventBinder.prototype.writeValue = function(value) {
     this.state = value == this.value;
-    this.element.setProp('checked', this.state, true);
+    AttributeAppender.setProp(this.element.nativeElement, 'checked', this.state);
 };

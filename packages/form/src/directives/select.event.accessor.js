@@ -64,9 +64,9 @@ SelectEventBinder.prototype.writeValue = function(value) {
     if (!this.element.hasAttribute('multiple')) {
         var optionId = this._getOptionId(value);
         if (optionId === null) {
-            this.element.setProp('selectedIndex', -1);
+            AttributeAppender.setProp(this.element.nativeElement, 'selectedIndex', -1);
         }
-        this.element.setProp('value', _buildValueToString(optionId, value));
+        AttributeAppender.setProp(this.element.nativeElement, 'value', _buildValueToString(optionId, value));
     } else {
         var markAsSelected = function(opt) { AttributeAppender.setProp(opt, 'selected', false); };
         if (Array.isArray(value)) {
@@ -141,7 +141,7 @@ export function OptionDirective(selectInstance, elementRef) {
     });
 
     this.setValue = function(value) {
-        elementRef.setProp('value', value);
+        AttributeAppender.setProp(this.element.nativeElement, 'value', value);
     };
 
     this.viewDidDestroy = function() {

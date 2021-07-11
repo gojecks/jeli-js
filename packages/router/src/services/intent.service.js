@@ -1,4 +1,4 @@
-import { ComponentFactoryResolver } from '@jeli/core';
+import { ComponentFactoryResolver, DOMHelper } from '@jeli/core';
 import { WebStateProvider } from './jwebstate.provider';
 Service({
     name: 'viewIntent',
@@ -39,13 +39,13 @@ export function ViewIntentService(webStateProvider, componentResolver) {
                     }
                 });
 
-                componentResolver(intentConfig.view.component, this.intentContainer, function(elementRef, componentInstance) {
-                    elementRef.insertAfter(elementRef.nativeElement, _this.intentContainer.nativeElement);
+                componentResolver(intentConfig.view.component, this.intentContainer, function(elementRef) {
+                    DOMHelper.insertAfter(elementRef, elementRef.nativeElement, _this.intentContainer.nativeElement);
                     var config = _this._currentOpenIntent.get(intentName);
                     config.element = elementRef;
                     elementRef.class.add('view-intent');
                     _this.transitIntent(intentName, intentConfig.transition || 50);
-                });
+                }, false);
             } else {
                 this.transitIntent(intentName, 50);
             }
@@ -58,9 +58,9 @@ ViewIntentService.prototype.closeIntent = function() {
     // get net intent
     var current = this.$currentIntent;
     this._currentOpenIntent.forEach(function(intent, key) {
-        intent.element && intent.element.removeAttribute('style');
+        intent.element && intent.element.nativeElement.removeAttribute('style');
         if ((current === key)) {
-            intent.element && intent.element.remove();
+            DOMHelper.remove(intent.element);
         } else {
             allIntents.push(key);
         }
@@ -76,7 +76,7 @@ ViewIntentService.prototype.closeIntent = function() {
 ViewIntentService.prototype.$destroyAllIntent = function() {
     // get all intent keys
     this._currentOpenIntent.forEach(function(intentView) {
-        intentView.element && intentView.element.remove();
+        DOMHelper.remove(intentView.element);
     });
     this.$currentIntent = undefined;
     this._currentOpenIntent.clear();
@@ -124,7 +124,7 @@ ViewIntentService.prototype.getIntentView = function(intentName) {
 
 ViewIntentService.prototype.hideAllIntent = function(removeIntent) {
     this._currentOpenIntent.forEach(function(intentView) {
-        intentView.element && intentView.element.removeAttribute('style');
+        intentView.element && intentView.element.nativeElement.removeAttribute('style');
     });
 };
 

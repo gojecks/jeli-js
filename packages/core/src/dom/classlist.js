@@ -29,9 +29,7 @@ ElementClassList.add = function(nativeElement, classList, removeClass) {
 
     if (isobject(classList)) {
         for (var className in classList) {
-            if (isstring(classList[className])) {
-                nativeElement.classList.toggle(className, classList[className]);
-            }
+            nativeElement.classList[classList[className] ? 'add' : 'remove'](className);
         }
     } else {
         nativeElement.classList.add.apply(nativeElement.classList, toClass(classList));

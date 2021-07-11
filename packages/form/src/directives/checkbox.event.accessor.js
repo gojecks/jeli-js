@@ -1,5 +1,5 @@
 import { VALUE_ACCESSOR } from './abstract.event.accessor';
-import { closureRef } from '@jeli/core';
+import { closureRef, AttributeAppender } from '@jeli/core';
 
 export var ResolveCheckboxBinder = {
     name: VALUE_ACCESSOR,
@@ -33,5 +33,5 @@ CheckboxEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
 CheckboxEventBinder.prototype.constructor = AbstractValueAccessor;
 
 CheckboxEventBinder.prototype.writeValue = function(checked) {
-    this.element.setProp('checked', checked, true);
+    AttributeAppender.setProp(this.element.nativeElement, 'checked', checked, true);
 };

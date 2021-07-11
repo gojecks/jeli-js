@@ -63,7 +63,7 @@ export var formValidationStack = Object.create({
     },
     REQUIRED: function(value, required) {
         if (required) {
-            return !isundefined(value) && !isnull(value) && !isempty(value);
+            return !isundefined(value) && !isnull(value) && ("" !== value);
         }
 
         return !required;

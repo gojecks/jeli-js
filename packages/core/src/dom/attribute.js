@@ -21,39 +21,52 @@ export function AttributeAppender(nativeElement, prop, value) {
     }
 }
 
-AttributeAppender.style = function(nativeElement, value, template) {
-    if (isobject(value)) {
-        ElementStyle(nativeElement, value);
-    } else {
-        ElementStyle.set(nativeElement, template.props, value, template.suffix);
+AttributeAppender.helpers = {
+    style: function(nativeElement, value, template) {
+        if (isobject(value)) {
+            ElementStyle(nativeElement, value);
+        } else {
+            ElementStyle.set(nativeElement, template.props, value, template.suffix);
+        }
+    },
+    innerhtml: function(nativeElement, value) {
+        nativeElement.innerHTML = sce.trustAsHTML(value);
+    },
+    src: function(nativeElement, value) {
+        if (!['IMG', 'IFRAME'].includes(nativeElement.tagName)) {
+            errorBuilder("src is not a valid property of " + nativeElement.tagName);
+        }
+        nativeElement.setAttribute('src', value);
+    },
+    href: function(nativeElement, value) {
+        if (!isequal('A', nativeElement.tagName)) {
+            errorBuilder("href is not a valid property of " + nativeElement.nativeElement.tagName);
+        }
+
+        nativeElement.setAttribute('href', value);
+    },
+    class: function(nativeElement, value) {
+        ElementClassList.add(nativeElement, value);
     }
 };
 
-AttributeAppender.innerhtml = function(nativeElement, value) {
-    nativeElement.innerHTML = sce.trustAsHTML(value);
-};
-
-AttributeAppender.src = function(nativeElement, value) {
-    if (!['IMG', 'IFRAME'].includes(nativeElement.tagName)) {
-        errorBuilder("src is not a valid property of " + nativeElement.tagName);
-    }
-    nativeElement.setAttribute('src', value);
-};
-
-AttributeAppender.href = function(nativeElement, value) {
-    if (!isequal('A', nativeElement.tagName)) {
-        errorBuilder("href is not a valid property of " + nativeElement.nativeElement.tagName);
-    }
-
-    nativeElement.setAttribute('href', value);
-};
-
-AttributeAppender.class = function(nativeElement, value) {
-    ElementClassList.add(nativeElement, value);
-};
-
-// extend prop types
-AttributeAppender.setProp = function(nativeElement, propName, propValue) {
+/**
+ * 
+ * @param {*} nativeElement 
+ * @param {*} propName 
+ * @param {*} propValue 
+ * @param {*} template 
+ * @returns 
+ */
+AttributeAppender.setProp = function(nativeElement, propName, propValue, template) {
     if (propValue === undefined || !nativeElement) return;
-    nativeElement[propName] = propValue;
+    if (AttributeAppender.helpers[propName]) {
+        return AttributeAppender.helpers[propName](nativeElement, propValue, template);
+    }
+
+    if (propName in nativeElement) {
+        nativeElement[propName] = propValue;
+    } else {
+        nativeElement.setAttribute(propName, propValue);
+    }
 };

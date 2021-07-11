@@ -3,7 +3,6 @@ import { _Promise } from '../rx/promise/promise';
 /**
  * JELI LOCAL VARIABLES
  */
-var $eUID = 1;
 var CoreBootstrapContext = ({
     bootStrapComponent: null,
     compiledModule: null,
@@ -55,16 +54,12 @@ export function bootStrapApplication(moduleToBootStrap) {
                 function() {});
         }
     }
+};
 
-    /**
-     * 
-     * @param {*} moduleFn 
-     */
-    // function InitializeModule(moduleFn) {
-    //     moduleFn();
-    //     if (moduleFn.bootstrap) {
-    //         while
-    //         moduleFn.bootstrap.forEach(InitializeModule);
-    //     }
-    // }
+/**
+ * Change detector
+ */
+export function ChangeDetector() {
+    if (!CoreBootstrapContext.bootStrapComponent) return;
+    CoreBootstrapContext.bootStrapComponent.changeDetector.detectChanges();
 };

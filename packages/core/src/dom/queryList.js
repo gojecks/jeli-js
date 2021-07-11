@@ -77,7 +77,7 @@ QueryList.prototype.toString = function() {
 QueryList.prototype.destroy = function() {
     while (this._list.length) {
         var element = this._list.pop();
-        if (element) element.remove();
+        if (element) removeElement(element);
     }
     this.onChanges.destroy();
 };

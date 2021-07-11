@@ -28,21 +28,22 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
         if (ctrl.view) {
             try {
                 // set the refID of the directive
-                var renderedElement = ctrl.view.compile(elementRef);
+                var renderedElement = ctrl.view(elementRef);
                 // attach mutationObserver
-                elementRef.mutationObserver(function(mutaionList, observer) {
+                elementMutationObserver(elementRef.nativeElement, function(mutaionList, observer) {
                     lifeCycle && lifeCycle.trigger('viewDidLoad');
                     observer.disconnect();
                 });
 
-                elementRef.appendChild(renderedElement);
+                elementRef.nativeElement.appendChild(renderedElement);
+                elementRef.changeDetector.detectChanges();
             } catch (e) {
                 errorBuilder(e);
             }
         }
 
         // Add event Watcher to the ele
-        elementRef.observer(function() {
+        attachElementObserver(elementRef, function() {
             // do cleanup when component is destroyed
             lifeCycle.trigger('viewDidDestroy');
             componentRef.destroy();
@@ -71,16 +72,16 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
         function _registry(evName) {
             switch (definition.events[evName].type) {
                 case ('event'):
-                    elementRef.events.attachEventHandler(evName, definition.events[evName].value, componentInstance);
+                    EventHandler.attachEvent(elementRef.events, evName, definition.events[evName].value, componentInstance);
                     break;
                 case ('emitter'):
                     /**
                      * attach an instance of emitter to the componentInstance
                      */
-                    elementRef.events.attachEventEmitter(evName, componentInstance);
+                    EventHandler.attachEventEmitter(elementRef, evName, componentInstance);
                     break;
                 case ('dispatcher'):
-                    elementRef.events.attachEventDispatcher(evName, componentInstance);
+                    EventHandler.attachEventDispatcher(elementRef, evName, componentInstance);
                     break;
 
             }
@@ -94,7 +95,7 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
              * remove the Attribute from element
              */
             elementRef.nodes.set(ctrl.annotations.exportAs || definition.selector, componentInstance);
-            elementRef.observer(function() {
+            attachElementObserver(elementRef, function() {
                 lifeCycle.trigger('viewDidDestroy');
                 elementRef.nodes.delete(definition.selector);
             });

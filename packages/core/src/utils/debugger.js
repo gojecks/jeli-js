@@ -1,6 +1,6 @@
 var jeliContext = Object.create({
     buildTime: Date.now(),
-    version: "%VERSION%",
+    version: __buildOptions.version,
     debug: jeliDebugger
 });
 
@@ -10,7 +10,8 @@ var jeliContext = Object.create({
  */
 function jeliDebugger(element) {
     if (element && CoreBootstrapContext.enableDebugger) {
-        return componentDebugContext.get(element);
+        return CoreBootstrapContext.bootStrapComponent;
+        // return false; // componentDebugContext.get(element.getAttribute('jeli-ref'));
     }
 
     return null;

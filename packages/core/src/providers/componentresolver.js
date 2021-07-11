@@ -1,12 +1,15 @@
 /**
  * 
  * @param {*} componentFactory 
- * @param {*} element 
+ * @param {*} viewComponent 
  * @param {*} callback 
+ * @param {*} skipElemetInsert 
+ * @returns 
  */
-export function ComponentFactoryResolver(componentFactory, viewComponent, callback) {
+export function ComponentFactoryResolver(componentFactory, viewComponent, callback, skipElemetInsert) {
     if (!componentFactory || !componentFactory.annotations.exposeView) {
         errorBuilder('No exported factory found for <' + componentFactory.annotations.selector + '> in ' + componentFactory.annotations.module);
+        return null;
     }
 
     if (!viewComponent) {
@@ -22,7 +25,7 @@ export function ComponentFactoryResolver(componentFactory, viewComponent, callba
     var component = new ElementRef(viewDefinition, viewComponent);
     var localInjectors = new ComponentInjectors(component);
     ElementCompiler(componentFactory, component, localInjectors, function(componentInstance) {
-        viewComponent.insertAfter(component.nativeElement, viewComponent.nativeElement);
+        elementInsertAfter(viewComponent, component.nativeElement, viewComponent.nativeElement);
         callback(component, componentInstance);
     });
     localInjectors = null;

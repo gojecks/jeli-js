@@ -55,8 +55,7 @@ function compileTemplate(definition, context, componentInstance, cb) {
     } else {
         value = getFilteredTemplateValue(definition, context, componentInstance);
     }
-
-    cb(value);
+    cb((value == null || value == undefined || value == 'null') ? '' : value);
 }
 
 /**

@@ -34,7 +34,7 @@ export function ElementStyle(nativeElement, name, value) {
  * @param {*} suffix
  */
 ElementStyle.set = function(nativeElement, name, value, suffix) {
-    if (inarray(name, ['width', 'height', 'top', 'bottom', 'left', 'right']) && typeof value === 'number') {
+    if (typeof value === 'number' && inarray(name, ['width', 'height', 'top', 'bottom', 'left', 'right'])) {
         value += suffix || 'px';
     }
 
