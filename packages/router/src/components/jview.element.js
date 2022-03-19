@@ -2,24 +2,25 @@
 //As an Elemen <j-view ref="default"></j-view>
 //as Attribute <element j-view="default"></element>
 import { ViewHandler } from '../services/jWebViewHandler.service';
-import { WebStateService } from '../services/jwebstate.service';
+import { staticRoutePrefix } from '../services/utils';
+import { LocationService } from '../services/route.location.service';
 Element({
-    selector: 'j-view',
-    DI: [ViewHandler, WebStateService, 'ElementRef?'],
+    selector: 'router-view',
+    DI: [ViewHandler, LocationService, 'ElementRef?'],
     props: ["ref"]
 })
 
-export function jViewFn(viewHandler, webStateService, elementRef) {
+export function jViewFn(viewHandler, locationService, elementRef) {
+    this.ref = staticRoutePrefix;
     this.didInit = function() {
-        this._ref = '@' + this.ref;
         //viewSetter for reference
         viewHandler
-            .setViewReference(elementRef, this._ref);
-        webStateService
-            .events.dispatch('view.render', this._ref);
+            .setViewReference(elementRef, this.ref);
+        locationService
+            .events.dispatch('view.render', this.ref);
     };
 
     this.viewDidDestroy = function() {
-        viewHandler.destroy(this._ref)
+        viewHandler.destroy(this.ref)
     }
 }

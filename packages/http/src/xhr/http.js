@@ -1,34 +1,30 @@
-import { Subject } from '@jeli/core';
-import { isobject, isstring, inarray } from 'js-helpers/helpers';
-import { extend, serialize } from 'js-helpers/utils';
+import { Subject, InterceptorResolver } from '@jeli/core';
+import { inarray } from 'js-helpers/helpers';
+import { HttpRequestError } from '../http.error';
+import { HttpRequest } from '../http.request';
+import { HttpResponse } from '../http.response';
 import './utils';
-import { HttpResponse } from './utils';
+import { HTTP_INTERCEPTORS } from './utils';
 
 /**
  * 
  * @param {*} url 
  * @param {*} options 
- * @param {*} interceptor 
  * @param {*} changeDetection 
  */
-function CoreHttp(url, options, interceptor, changeDetection) {
+function CoreHttp(url, options, changeDetection) {
     var xhrPromise = new Subject();
-    if (!options && isobject(url)) {
-        options = url;
-    }
-
-    options = extend(true, defaultOptions, options);
-    options.url = options.url || url;
-    options.type = options.type.toLowerCase();
-    var xhrInstance = xhr();
+    var httpRequest = new HttpRequest(url, options);
+    var httpError = new HttpRequestError('');
 
     /**
      * $httpProvider Interceptor
      * Request Interceptor
      **/
-    interceptor.resolveInterceptor(options, function(request) {
+    InterceptorResolver(HTTP_INTERCEPTORS, httpRequest, function(request) {
         if (!request) {
-            throw new Error('HTTP: Interceptor should return a value');
+            httpError.setMessage('HTTP: Interceptor should return a value');
+            return xhrPromise.error(httpError);
         }
 
         /**
@@ -38,32 +34,25 @@ function CoreHttp(url, options, interceptor, changeDetection) {
             changeDetection();
         }
 
-        if (options.processData) {
-            processRequest();
+        if (request.processData) {
+            request.processRequest();
         }
 
         sendRequest();
-        return xhrPromise;
     });
 
     /**
      * 
      * @param {*} readyState 
      */
-    function respondToReadyState(readyState) {
-        var response = new HttpResponse(xhrInstance, options.url);
-        if (xhrInstance.readyState == 4) {
+    function respondToReadyState() {
+        var response = new HttpResponse(httpRequest);
+        if (httpRequest.xhrInstance.readyState == 4) {
             try {
-                var data = parseJSON(xhrInstance.responseText, !!xhrInstance.responseText);
-                response.success = (
-                    (xhrInstance.status >= 200 && xhrInstance.status < 300) ||
-                    xhrInstance.status == 304 ||
-                    (xhrInstance.status == 0 && xhrInstance.responseText)
-                );
-
+                var data = parseJSON(httpRequest.xhrInstance.responseText);
                 xhrPromise.next(data, response);
             } catch (e) {
-                xhrPromise.error(e);
+                xhrPromise.error(httpError);
             }
 
             xhrPromise.completed();
@@ -71,79 +60,36 @@ function CoreHttp(url, options, interceptor, changeDetection) {
         }
     }
 
+    function attachListener() {
+        httpRequest.xhrInstance.addEventListener('load', respondToReadyState);
+        httpRequest.xhrInstanceaddEventListener('timeout', handleError);
+        httpRequest.xhrInstance.addEventListener('error', handleError);
+        httpRequest.xhrInstance.addEventListener('abort', handleError);
+
+        function handleError(e) {
+            httpError.setErrorType(e.type);
+            xhrPromise.error(httpError);
+        }
+    }
+
     /**
      * set Request Headers
      */
-    function setHeaders() {
-        for (var name in options.headers) {
-            if (unsafeHeaders[name] || /^(Sec-|Proxy-)/.test(name)) {
-                throw new Error("Refused to set unsafe header \"" + name + "\"");
-            }
-
-            xhrInstance.setRequestHeader(name, options.headers[name]);
-        }
-    }
-
-    /**
-     * process Request
-     */
-    function processRequest() {
-        //check if header requires withCredentials flag
-        if (options.xhrFields && options.xhrFields.withCredentials) {
-            //set the withCredentials Flag
-            xhrInstance.withCredentials = true;
-        }
-
-        if (!options.headers['Content-Type'] && options.data) {
-            options.headers['Content-Type'] = 'application/json';
-        }
-
-
-        if (!isstring(options.data)) {
-            switch (options.type) {
-                case ("get"):
-                    options.data = serialize(options.data);
-                    break;
-                default:
-                    options.data = JSON.stringify(options.data);
-                    break;
-            }
-        }
-
-        //Set the options data and cache
-        if (options.type === 'get') {
-            if (options.data) {
-                options.url += ((/\?/).test(options.url) ? '&' : '?') + options.data;
-            }
-
-            if (!options.cache) {
-                options.url += ((/\?/).test(options.url) ? '&' : '?') + '_=' + (new Date()).getTime();
-            }
-        }
-    }
-
     function sendRequest() {
-        xhrInstance.onreadystatechange = respondToReadyState;
-        xhrInstance.open(options.type, options.url, options.asynchronous);
-        /**
-         * handle before send
-         * function recieves the XMLHTTPREQUEST
-         */
-        if (options.beforeSend && isfunction(options.beforeSend)) {
-            options.beforeSend.apply(options.beforeSend, [xhrInstance]);
-        }
-
-        setHeaders();
+        attachListener();
+        httpRequest.xhrInstance.open(httpRequest.type, httpRequest.url, httpRequest.asynchronous);
+        httpRequest.processRequestHeaders();
         var body = null;
-        if (inarray(options.type, ['post', 'put', 'delete'])) {
-            body = options.data;
+        if (inarray(httpRequest.type, ['post', 'put', 'delete'])) {
+            body = httpRequest.data;
         }
 
         //send the request
         try {
-            xhrInstance.send(body);
+            httpRequest.xhrInstance.send(body);
         } catch (e) {
-            triggerError(e);
+            httpError.setMessage(e);
+            xhrPromise.error(httpError);
         }
     }
 

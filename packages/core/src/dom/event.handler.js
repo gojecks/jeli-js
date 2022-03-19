@@ -20,15 +20,19 @@ EventHandler.prototype.destroy = function() {
     this._events.length = 0;
 };
 
+/**
+ * this property holds registry for custom events
+ */
+EventHandler.customRegistry = {
+    window: new CustomEventHandler(window),
+    document: new CustomEventHandler(document)
+};
+
 
 EventHandler.registerListener = function(element) {
-    if (!element.events._events.length) {
-        return;
-    }
-
+    if (!element.events || !element.events._events.length) return;
     var eventInstance = element.events;
-
-    function handler($ev) { EventHandler.HandleEvent(element, $ev); };
+    var handler = function($ev) { handleEvent(element, $ev); };
 
     /**
      * 
@@ -36,60 +40,33 @@ EventHandler.registerListener = function(element) {
      */
     function _registerEvent(eventName) {
         if (!eventInstance.registeredEvents.has(eventName)) {
-            element.nativeElement.addEventListener(eventName, handler, false);
-            eventInstance.registeredEvents.set(eventName, function() {
-                element.nativeElement.removeEventListener(eventName, handler);
-            });
+            /**
+             * events that goes with a . e.g (window.message)
+             */
+            if (eventName.includes('.')) {
+                var event = eventName.split('.');
+                if (EventHandler.customRegistry[event[0]]) {
+                    var unsubscribe = EventHandler.customRegistry[event[0]].register(event[1], function(htmlEvent) {
+                        handleEvent(element, htmlEvent, eventName);
+                    });
+                    eventInstance.registeredEvents.set(eventName, unsubscribe);
+                }
+            } else {
+                element.nativeElement.addEventListener(eventName, handler, false);
+                eventInstance.registeredEvents.set(eventName, function() {
+                    element.nativeElement.removeEventListener(eventName, handler);
+                });
+            }
         }
     }
-
-    for (var i = 0; i < eventInstance._events.length; i++) {
-        var event = eventInstance._events[i];
+    var totalEvents = eventInstance._events.length;
+    while (totalEvents--) {
+        var event = eventInstance._events[totalEvents];
         if (!event.custom) {
             event.name.split(' ').forEach(_registerEvent);
         }
     }
 };
-
-/**
- * 
- * @param {*} element 
- * @param {*} event 
- */
-EventHandler.HandleEvent = function(element, event) {
-    // prevent the default only when its any of these events
-    if (inarray(event.type, ['touchstart', 'touchend', 'touchmove'])) {
-        event.preventDefault();
-    }
-
-    try {
-        EventHandler
-            .getEventsByType(element.events._events, event.type)
-            .forEach(triggerEvents);
-    } catch (e) {
-        errorBuilder(e);
-    } finally {
-        element && element.changeDetector.detectChanges();
-    }
-
-    /**
-     * 
-     * @param {*} registeredEvent 
-     * @param {*} event 
-     */
-    function triggerEvents(registeredEvent) {
-        if (registeredEvent.handler) {
-            registeredEvent.handler(event);
-        } else {
-            EventHandler._executeEventsTriggers(
-                registeredEvent.value,
-                element.hostRef.componentInstance,
-                element.context,
-                event
-            );
-        }
-    }
-}
 
 
 /**
@@ -103,7 +80,7 @@ EventHandler.attachEvent = function(eventInstance, eventName, eventValue, compon
     eventInstance._events.push({
         name: eventName,
         handler: function($event) {
-            return EventHandler._executeEventsTriggers(eventValue, componentInstance, null, $event);
+            return _executeEventsTriggers(eventValue, componentInstance, null, $event);
         }
     });
 };
@@ -115,16 +92,18 @@ EventHandler.attachEvent = function(eventInstance, eventName, eventValue, compon
  * @param {*} componentInstance 
  */
 EventHandler.attachEventEmitter = function(element, eventName, componentInstance) {
-    var registeredEvent = EventHandler.getEventsByType(element.events._events, eventName)[0];
+    var registeredEvent = getEventsByType(element.events._events, eventName)[0];
     if (registeredEvent && registeredEvent.value) {
         var unSubscribe = componentInstance[eventName].subscribe(function(value) {
-            EventHandler._executeEventsTriggers(
+            _executeEventsTriggers(
                 registeredEvent.value,
                 element.parent.componentInstance,
                 element.context,
                 value
             );
-            element && element.parent.changeDetector.detectChanges();
+            // trigger change detector if defined
+            var parentElement = element && element.parent;
+            parentElement && parentElement.changeDetector && parentElement.changeDetector.detectChanges();
         });
         /**
          * destroy the subscription
@@ -139,8 +118,8 @@ EventHandler.attachEventEmitter = function(element, eventName, componentInstance
  * @param {*} eventName 
  * @param {*} componentInstance 
  */
-EventHandler.prototype.attachEventDispatcher = function(element, eventName, componentInstance) {
-    var registeredEvent = EventHandler.getEventsByType(element.events._events, eventName)[0];
+EventHandler.attachEventDispatcher = function(element, eventName, componentInstance) {
+    var registeredEvent = getEventsByType(element.events._events, eventName)[0];
     var context = null;
     if (registeredEvent && registeredEvent.value) {
         context = element.context;
@@ -155,7 +134,7 @@ EventHandler.prototype.attachEventDispatcher = function(element, eventName, comp
          */
         if (context.hasOwnProperty(eventName)) {
             var unSubscribe = context[eventName].subscribe(function(value) {
-                EventHandler._executeEventsTriggers(
+                _executeEventsTriggers(
                     registeredEvent.value,
                     componentInstance,
                     element.context,
@@ -176,7 +155,7 @@ EventHandler.prototype.attachEventDispatcher = function(element, eventName, comp
 /**
  * static APIs
  */
-EventHandler.getEventsByType = function(events, type) {
+function getEventsByType(events, type) {
     return events.filter(function(event) {
         return event.name.split(/\s/g).includes(type);
     });
@@ -189,7 +168,7 @@ EventHandler.getEventsByType = function(events, type) {
  * @param {*} context 
  * @param {*} ev 
  */
-EventHandler._executeEventsTriggers = function(eventTriggers, componentInstance, context, ev) {
+function _executeEventsTriggers(eventTriggers, componentInstance, context, ev) {
     eventTriggers.forEach(_dispatch);
     /**
      * 
@@ -201,13 +180,14 @@ EventHandler._executeEventsTriggers = function(eventTriggers, componentInstance,
             parseObjectExpression(event, context, componentInstance, ev);
         } else if (event.fn) {
             // set nameSpaces
-            var fn = EventHandler.getFnFromContext(event, componentInstance);
-            // Check if Arguments is required
-            var narg = generateArguments(event.args, context || componentInstance, null, ev);
-            var ret = fn.apply(fn.context, narg);
-            fn.context = null;
-            fn = null;
-            return ret;
+            var fn = getFnFromContext(event, componentInstance);
+            if (fn) {
+                // Check if Arguments is required
+                var narg = generateArguments(event.args, context || componentInstance, null, ev);
+                fn.apply(fn.context, narg);
+                fn.context = null;
+                fn = null;
+            }
         }
     }
 }
@@ -216,7 +196,7 @@ EventHandler._executeEventsTriggers = function(eventTriggers, componentInstance,
  * @param {*} componentInstance
  * @param {*} eventInstance 
  */
-EventHandler.getFnFromContext = function(eventInstance, componentInstance) {
+function getFnFromContext(eventInstance, componentInstance) {
     var instance = componentInstance;
     if (eventInstance.namespaces) {
         instance = resolveContext(eventInstance.namespaces, componentInstance);
@@ -236,3 +216,98 @@ EventHandler.getFnFromContext = function(eventInstance, componentInstance) {
 
     return fn;
 };
+
+/**
+ * 
+ * @param {*} element 
+ * @param {*} event 
+ * @param {*} eventName 
+ */
+function handleEvent(element, event, eventName) {
+    eventName = eventName || event.type;
+    // prevent the default only when its any of these events
+    if (inarray(eventName, ['touchstart', 'touchend', 'touchmove', 'submit'])) {
+        event.preventDefault();
+    }
+
+    try {
+        getEventsByType(element.events._events, eventName).forEach(triggerEvents);
+    } catch (e) {
+        errorBuilder(e);
+    } finally {
+        element && element.changeDetector && element.changeDetector.detectChanges();
+    }
+
+    /**
+     * 
+     * @param {*} registeredEvent 
+     * @param {*} event 
+     */
+    function triggerEvents(registeredEvent) {
+        if (registeredEvent.handler) {
+            return registeredEvent.handler(event);
+        } else {
+            var selectedElem = element;
+            if (registeredEvent.target) {
+                if (!event.target.closest(registeredEvent.target)) return;
+                selectedElem = jeliQuerySelector(element, event.target) || element;
+            }
+
+            _executeEventsTriggers(
+                registeredEvent.value,
+                element.hostRef.componentInstance,
+                selectedElem.context,
+                event
+            );
+
+            selectedElem = null;
+        }
+    }
+}
+
+/**
+ * Jeli event manager
+ * @param {*} element 
+ */
+export function CustomEventHandler(element) {
+    var _this = this;
+    var trigger = function(event) { _this.trigger(event); };
+    this.element = element;
+    this.registeredEvents = {};
+    this.register = function(type, callback) {
+        var _this = this;
+        var index = -1;
+        if (this.element && this.registeredEvents) {
+            if (!this.registeredEvents.hasOwnProperty(type)) {
+                this.registeredEvents[type] = [];
+                this.element.addEventListener(type, trigger, false);
+            }
+            index = this.registeredEvents[type].push(callback);
+            /**
+             * unregister
+             */
+            return function() {
+                _this.registeredEvents[type].splice(index - 1, 1);
+            }
+        }
+    };
+
+    this.trigger = function(event) {
+        var listeners = this.registeredEvents[event.type];
+        if (listeners && listeners.length) {
+            listeners.forEach(function(listener) {
+                listener(event);
+            })
+        }
+    };
+
+    this.destroy = function() {
+        for (var type in this.registeredEvents) {
+            this.registeredEvents[type].length = 0;
+            delete this.registeredEvents[type];
+            this.element.removeEventListener(type, trigger, false);
+        }
+        this.element = null;
+        this.registeredEvents = null;
+    };
+}

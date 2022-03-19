@@ -4,9 +4,9 @@
  * @param {*} parent 
  */
 function TextNodeRef(definition, parent) {
-    this.nativeNode = document.createTextNode(definition.ast.text);
+    this.nativeNode = document.createTextNode(definition.ast[0]);
     this.type = 'text';
-    this.hasBinding = !!definition.ast.templates;
+    this.hasBinding = definition.ast.length > 1;
 
     if (this.hasBinding) {
         Object.defineProperties(this, {

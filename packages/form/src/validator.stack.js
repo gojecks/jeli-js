@@ -5,21 +5,20 @@ import { isnumber, isstring, isempty, isobject, isfunction, isundefined, isnull,
  */
 export var formValidationStack = Object.create({
     MINLENGTH: function(value, requiredLength) {
-        if (isnumber(value) || isstring(value))
+        if (null !== value && undefined !== value)
             return String(value).length >= requiredLength;
 
-        return false;
+        return true;
     },
     MAXLENGTH: function(value, requiredLength) {
-        if (isnumber(value) || isstring(value))
+        if (value)
             return String(value).length <= requiredLength;
 
-        return false;
+        return true;
     },
-    EMAILVALIDATION: function(val) {
-        var regExp = /^\w+([\.-]?\w+)*@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-
-        return regExp.test(val);
+    EMAILVALIDATION: function(value) {
+        var regExp = "^\\w+([\.-]?\w+)*@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$";
+        return formValidationStack.PATTERN(value, regExp);
     },
     ISEMPTY: function(val, def) {
         return def === isempty(val);
@@ -34,32 +33,22 @@ export var formValidationStack = Object.create({
     // (?=.[!@#\$%\^&])	The string must contain at least one special character, but we are escaping reserved RegEx characters to avoid conflict
     // (?=.{8,})	The string must be eight characters or longer
     DOMAINVALIDATION: function(domain) {
-        return /[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+/.test(domain);
+        return formValidationStack.PATTERN(domain, "[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+");
     },
     MEDIUMPASSWORDSTRENGTH: function(passwd) {
-        return new RegExp("^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})").test(passwd);
+        return formValidationStack.PATTERN(passwd, "^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})");
     },
     STRONGPASSWORDSTRENGTH: function(passwd) {
-        return new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})").test(passwd)
-    },
-    PATTERN: function(value, pattern) {
-        return new RegExp(pattern).test(value);
+        return formValidationStack.PATTERN(passwd, "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})");
     },
     /**
-     * $ajax validation
-     * accepted pattern 
-     * 	{
-     * 		resolve : <function > | <string>
-     * 		onsuccess : <function>
-     * 		onerror : <function>
-     * 	}
+     * 
+     * @param {*} value 
+     * @param {*} pattern 
+     * @returns 
      */
-    ASYNC: function(val, def) {
-        if (!isobject(def) || !isfunction(def.resolve)) {
-            return false;
-        }
-
-        return def.resolve(val);
+    PATTERN: function(value, pattern) {
+        return new RegExp(pattern).test(value);
     },
     REQUIRED: function(value, required) {
         if (required) {
@@ -73,5 +62,33 @@ export var formValidationStack = Object.create({
      */
     REQUIREDTRUE: function(value) {
         return isboolean(value) && value === true;
+    },
+    /**
+     * 
+     * @param {*} value 
+     * @param {*} minNumber 
+     * @returns 
+     */
+    MINNUMBER: function(value, minNumber) {
+        if (null !== value && undefined !== value) {
+            value = Number(value);
+            return !isNaN(value) && minNumber <= value;
+        }
+
+        return true;
+    },
+
+    /**
+     * 
+     * @param {*} value 
+     * @param {*} maxNumber 
+     * @returns 
+     */
+    MAXNUMBER: function(value, maxNumber) {
+        if (value) {
+            value = Number(value);
+            return !isNaN(value) && value <= maxNumber;
+        }
+        return true;
     }
 });

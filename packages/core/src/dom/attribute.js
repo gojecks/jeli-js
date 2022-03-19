@@ -26,7 +26,7 @@ AttributeAppender.helpers = {
         if (isobject(value)) {
             ElementStyle(nativeElement, value);
         } else {
-            ElementStyle.set(nativeElement, template.props, value, template.suffix);
+            ElementStyle.set(nativeElement, template.type, value, template.suffix);
         }
     },
     innerhtml: function(nativeElement, value) {

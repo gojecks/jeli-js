@@ -31,8 +31,8 @@ export function FormValidatorService(callback, validators) {
         currentProcess.add(_criteria.length);
         for (var i = 0; i < _criteria.length; i++) {
             var validatorName = _criteria[i];
-            var passed = false,
-                validatorFn = formValidationStack[validatorName.toUpperCase()];
+            var passed = false;
+            var validatorFn = formValidationStack[validatorName.toUpperCase()];
             if (validatorFn) {
                 passed = validatorFn(value, criteria[validatorName]);
             }
@@ -44,14 +44,13 @@ export function FormValidatorService(callback, validators) {
             /**
              * check if passed && passed is a promise
              */
-            if (isobject(passed) && isequal('async', validatorName)) {
-                currentProcess.registerAsyncValidator(passed, criteria[validatorName], validatorName);
-                break;
-            }
-
-            currentProcess.rem(passed, validatorName);
-            if (!passed) {
-                return currentProcess.stop();
+            if (isequal('async', validatorName)) {
+                currentProcess.registerAsyncValidator(passed, validatorName);
+            } else {
+                currentProcess.rem(passed, validatorName);
+                if (!passed) {
+                    return currentProcess.stop();
+                }
             }
         }
     }
@@ -117,3 +116,21 @@ export function FormValidatorService(callback, validators) {
 
     return formValidator;
 }
+
+/**
+ * set a custom validator that can be called with your application
+ * @param {*} validatorName 
+ * @param {*} validatorFn 
+ * @param {*} override 
+ * @returns 
+ */
+export function customFormValidator(validatorName, validatorFn, override) {
+    if (formValidationStack.hasOwnProperty(validatorName.toUpperCase()) && !override) {
+        return errorBuilder('[' + validatorName + '] already exists, please pass the override parameter to the validator');
+    }
+
+    /**
+     * register the validator
+     */
+    formValidationStack[validatorName.toUpperCase()] = validatorFn;
+};

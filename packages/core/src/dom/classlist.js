@@ -1,4 +1,4 @@
-import { isstring, isobject, isempty } from 'js-helpers/helpers';
+import { isobject } from 'js-helpers/helpers';
 /**
  * 
  * @param {*} element 

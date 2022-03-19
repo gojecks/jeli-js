@@ -156,7 +156,6 @@ LazyLoader.prototype._resolve = function(filePaths, callback, type) {
  * static property for holding already resolve paths
  */
 LazyLoader.cached = {};
-
 LazyLoader.staticLoader = function() {
     LazyLoader.prototype._resolve.apply({}, arguments);
 }

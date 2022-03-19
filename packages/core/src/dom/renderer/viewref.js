@@ -147,35 +147,3 @@ EmbededViewContext.prototype.updateContext = function(updates) {
         this.context[prop] = updates[prop];
     }
 }
-
-/**
- * 
- * @param {*} localVariables 
- */
-function createLocalVariables(localVariables, viewContext) {
-    var context = {};
-    if (localVariables) {
-        for (var propName in localVariables) {
-            if (localVariables[propName].match(/\s/)) {
-                context[propName] = localVariables[propName];
-            } else {
-                writePropertyBinding(propName);
-            }
-        }
-    }
-
-    /**
-     * 
-     * @param {*} propName 
-     */
-    function writePropertyBinding(propName) {
-        Object.defineProperty(context, propName, {
-            get: function() {
-                if (!viewContext.context) return;
-
-                return viewContext.context[localVariables[propName]];
-            }
-        });
-    }
-    return context;
-}

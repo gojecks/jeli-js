@@ -1,56 +1,58 @@
 import { ComponentFactoryResolver, DOMHelper } from '@jeli/core';
-import { WebStateProvider } from './jwebstate.provider';
 Service({
-    name: 'viewIntent',
-    DI: [WebStateProvider, ComponentFactoryResolver]
+    name: 'viewIntent'
 })
 
 /**
  * 
- * @param {*} webStateProvider 
  * @param {*} ComponentResolver 
  */
-export function ViewIntentService(webStateProvider, componentResolver) {
+export function ViewIntentService() {
     this._currentOpenIntent = new Map();
     this.intentContainer = null;
     this.$currentIntent = "";
-    /**
-     * Open an intent
-     */
-    this.openIntent = function(intentName, params) {
-        if ((this.$currentIntent === intentName)) {
-            return;
-        }
+}
 
-        var intentConfig = webStateProvider.getIntent(intentName);
-        if (intentConfig) {
-            if (!this._currentOpenIntent.has(intentName)) {
-                // set out intent to cache
-                // _intentCache[intentName] = _intent;
-                // set the current intent name
-                var _this = this;
-                this.$currentIntent = intentName;
-                this._currentOpenIntent.set(intentName, {
-                    element: null,
-                    route: {
-                        name: intentName,
-                        params: params,
-                        data: intentConfig.data
-                    }
-                });
-
-                componentResolver(intentConfig.view.component, this.intentContainer, function(elementRef) {
-                    DOMHelper.insertAfter(elementRef, elementRef.nativeElement, _this.intentContainer.nativeElement);
-                    var config = _this._currentOpenIntent.get(intentName);
-                    config.element = elementRef;
-                    elementRef.class.add('view-intent');
-                    _this.transitIntent(intentName, intentConfig.transition || 50);
-                }, false);
-            } else {
-                this.transitIntent(intentName, 50);
-            }
-        };
+/**
+ * 
+ * @param {*} intentName 
+ * @param {*} params 
+ * @returns 
+ */
+ViewIntentService.prototype.openIntent = function(intentName, params) {
+    if ((this.$currentIntent === intentName)) {
+        return;
     }
+
+    var intentConfig = $intentCollection[intentName];
+    if (intentConfig) {
+        if (!this._currentOpenIntent.has(intentName)) {
+            // set out intent to cache
+            // _intentCache[intentName] = _intent;
+            // set the current intent name
+            var _this = this;
+            this.$currentIntent = intentName;
+            this._currentOpenIntent.set(intentName, {
+                element: null,
+                route: {
+                    name: intentName,
+                    params: params,
+                    data: intentConfig.data
+                }
+            });
+
+            ComponentFactoryResolver(intentConfig.view.component, this.intentContainer, function(componentRef) {
+                DOMHelper.insertAfter(componentRef, componentRef.nativeElement, _this.intentContainer.nativeElement);
+                var config = _this._currentOpenIntent.get(intentName);
+                config.element = componentRef;
+                componentRef.class.add('view-intent');
+                _this.intentContainer.children.add(componentRef);
+                _this.transitIntent(intentName, intentConfig.transition || 50);
+            }, true);
+        } else {
+            this.transitIntent(intentName, 50);
+        }
+    };
 }
 
 ViewIntentService.prototype.closeIntent = function() {

@@ -1,18 +1,11 @@
-import { WebStateProvider } from './jwebstate.provider';
 import { ComponentFactoryResolver, DOMHelper } from '@jeli/core';
+import { getParentRoute, staticRoutePrefix } from './utils';
 Service({
-    name: 'ViewHandler',
-    DI: [WebStateProvider, ComponentFactoryResolver]
+    name: 'ViewHandler'
 })
-
-/**
- * 
- * @param {*} WebStateProvider 
- * @param {*} ComponentResolver 
- */
-export function ViewHandler(webStateProvider, componentResolver) {
+export function ViewHandler() {
     this.viewsHolder = new Map();
-    this.currentView = '@';
+    this.currentView = staticRoutePrefix;
     this.stateInProgress;
     this.stateQueue = [];
     this.$stateTransitioned = false;
@@ -20,8 +13,6 @@ export function ViewHandler(webStateProvider, componentResolver) {
     this.previousState = "";
     this._pendingViewStack = new Map();
     this._resolvedParents = {};
-    this.webStateProvider = webStateProvider;
-    this.componentResolver = componentResolver;
 }
 
 ViewHandler.prototype.setViewReference = function(elementRef, ref) {
@@ -62,8 +53,8 @@ ViewHandler.prototype.compileViewTemplate = function(viewComponent, viewObjectIn
     //remove cache
     viewObjectInstance.cleanUp();
     if (viewComponent) {
-        this.componentResolver(viewComponent, viewObjectInstance.element, function(component, componentInstance) {
-            viewObjectInstance.compiledWith = component;
+        ComponentFactoryResolver(viewComponent, viewObjectInstance.element, function(componentRef) {
+            viewObjectInstance.compiledWith = componentRef;
         });
     }
 };
@@ -86,15 +77,15 @@ ViewHandler.prototype.removeViews = function(_views) {
 /**
  * getCurrentView
  * @param {*} _route 
- * @param {*} currentRoute
  */
-ViewHandler.prototype.getCurrentView = function(_route, currentRoute) {
+ViewHandler.prototype.getCurrentView = function(_route) {
     var _views = [],
         mView = Object.keys(_route.views).concat();
     // register route to resolved
     this._resolvedParents[_route.name] = true;
     if (_route.route.parent && !this._resolvedParents[_route.route.parent.name]) {
-        this._resolvedParents[this.webStateProvider.getParentRoute(_route.route.parent.name).name] = true;
+        var parentRoute = getParentRoute(_route.route.parent.name);
+        this._resolvedParents[parentRoute.name] = true;
         this._resolvedParents[_route.route.parent.name] = true;
         return mView;
     }
@@ -119,10 +110,10 @@ ViewHandler.prototype.getCurrentView = function(_route, currentRoute) {
 /**
  * trigger the resolved route views
  */
-ViewHandler.prototype.resolveViews = function(route, currentRoute) {
-    var _views = this.getCurrentView(route, currentRoute);
+ViewHandler.prototype.resolveViews = function(route) {
+    var _views = this.getCurrentView(route);
     for (var idx = 0; idx < _views.length; idx++) {
-        var view = _views[idx] || '@';
+        var view = _views[idx] || staticRoutePrefix;
         var viewObj = ((route.views) ? route.views[view] : route);
         var viewObjectInstance = this.getView(view);
         /**

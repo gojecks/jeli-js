@@ -13,20 +13,21 @@ function AbstractElementRef(definition, parentRef) {
      * extend the definition
      */
     this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
-    this.refId = 'jeli:' + +new Date + ":" + $eUID++;
     this.$observers = [];
+    this.refId = '__eid_' + $eUID++;
     this.children = new QueryList();
     this.parent = parentRef;
+    this.hostRefId = (parentRef) ? parentRef.isc ? parentRef.refId : parentRef.hostRefId || this.refId : this.refId;
     this.type = definition.type;
     this.tagName = definition.name.toLowerCase();
-    this.isc = definition.isc;
-    this.providers = definition.providers;
     this.index = definition.index;
     this.attr = definition.attr;
     this.props = definition.props;
-    this.nativeNode = this.nativeElement.nodeType === 8 ? this.nativeElement : null;
-    this.nodes = new Map();
-    this._viewQuery = null;
+    this.isc = definition.isc;
+    if (definition.providers) {
+        this.providers = definition.providers;
+        this.nodes = new Map();
+    }
 
     Object.defineProperties(this, {
         context: {
@@ -34,26 +35,19 @@ function AbstractElementRef(definition, parentRef) {
                 if (componentDebugContext.has(this.refId)) {
                     return componentDebugContext.get(this.refId).context;
                 }
-
                 return this.parent && this.parent.context;
             }
         },
         componentInstance: {
             get: function() {
-                if (componentDebugContext.has(this.refId)) {
-                    return componentDebugContext.get(this.refId).componentInstance;
-                }
-
-                return this.hostRef && this.hostRef.componentInstance;
+                var hostElement = ComponentRef.get(this.refId, this.hostRefId);
+                return hostElement.componentInstance;
             }
         },
         changeDetector: {
             get: function() {
-                if (componentDebugContext.has(this.refId)) {
-                    return componentDebugContext.get(this.refId).changeDetector;
-                }
-
-                return this.hostRef && this.hostRef.changeDetector;
+                var hostElement = ComponentRef.get(this.refId, this.hostRefId);
+                return hostElement.changeDetector;
             }
         },
         hostRef: {
@@ -69,6 +63,16 @@ function AbstractElementRef(definition, parentRef) {
             get: function() {
                 return definition.templates;
             }
+        },
+        nativeNode: {
+            get: function() {
+                return this.nativeElement.nodeType === 8 ? this.nativeElement : null;
+            }
+        },
+        data: {
+            get: function() {
+                return definition.data;
+            }
         }
     });
 };
@@ -79,13 +83,4 @@ AbstractElementRef.prototype.hasAttribute = function(name) {
 
 AbstractElementRef.prototype.getAttribute = function(name) {
     return (this.attr && name in this.attr) ? this.attr[name] : this.nativeElement.getAttribute(name);
-};
-
-AbstractElementRef.prototype.getTemplateRef = function(templateId, silent) {
-    var templates = this["[[TEMPLATES]]"];
-    if (!templates || !templates.hasOwnProperty(templateId)) {
-        if (!silent) errorBuilder('No templates Defined #' + templateId);
-        return null;
-    }
-    return new TemplateRef(templates[templateId]);
 };

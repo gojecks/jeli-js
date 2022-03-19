@@ -29,7 +29,7 @@ export function FormFieldControlDirective(eventBinder, validators) {
 
 FormFieldControlDirective.prototype.didInit = function() {
     if (!(this.control instanceof FormFieldControlService)) {
-        errorBuilder('Expected instance of FormFieldControlService but got ' + typeof this.control);
+        return errorBuilder('Expected instance of FormFieldControlService but got ' + typeof this.control);
     }
 
     setupControl(this.control, this);

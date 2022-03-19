@@ -1,4 +1,5 @@
 import { isobject, isequal } from 'js-helpers/helpers';
+import { TemplateRef } from '../dom/renderer/templateref';
 import { staticInjectionToken } from './injectors';
 /**
  * structure require Model 
@@ -83,7 +84,7 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
     function getPrimitiveValue(type, name, value) {
         switch (type) {
             case (staticInjectionToken.TemplateRef):
-                return elementRef.getTemplateRef(name);
+                return TemplateRef.factory(elementRef, name);
             case (staticInjectionToken.Function):
                 return elementRef.parent.componentInstance[value];
             default:
@@ -102,7 +103,7 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
 
     attachElementObserver(elementRef, function() {
         unsubscribe();
-        registeredProperty = [];
+        registeredProperty.length = 0;
     });
 }
 

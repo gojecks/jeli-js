@@ -1,7 +1,7 @@
 import { Subject } from '../rx/subject';
 import { removeFromArray, addToArray } from 'js-helpers/helpers';
 
-function QueryList() {
+export function QueryList() {
     this._list = [];
     Object.defineProperties(this, {
         length: {
@@ -27,6 +27,7 @@ QueryList.prototype.add = function(element, index, emitEvent) {
     if (emitEvent) {
         this.onChanges.next({
             value: element,
+            index: index,
             type: 'add'
         });
     }
@@ -35,7 +36,7 @@ QueryList.prototype.add = function(element, index, emitEvent) {
 QueryList.prototype.get = function(element) {
     if (element) {
         return this._list.find(function(ele) {
-            return ele === element
+            return ele === element;
         });
     }
 
@@ -43,7 +44,7 @@ QueryList.prototype.get = function(element) {
 };
 
 QueryList.prototype.filter = function(callback) {
-    this._list.filter(callback);
+    return this._list.filter(callback);
 };
 
 QueryList.prototype.forEach = function(callback) {
@@ -98,6 +99,7 @@ QueryList.prototype.removeByIndex = function(index) {
     var element = removeFromArray(this._list, index);
     this.onChanges.next({
         value: element,
+        index: index,
         type: 'detached'
     });
 

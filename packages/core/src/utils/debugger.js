@@ -6,12 +6,30 @@ var jeliContext = Object.create({
 
 /**
  * 
+ * @param {*} b 
+ * @param {*} c 
+ * @returns ElementRef | NULL
+ */
+function jeliQuerySelector(b, c) {
+    if ((b.nativeElement || b.nativeNode) === c) {
+        return b;
+    } else if (b.children) {
+        for (var e of b.children._list) {
+            const f = jeliQuerySelector(e, c);
+            if (f) return f;
+        }
+    } else {
+        return null;
+    }
+};
+
+/**
+ * 
  * @param {*} element 
  */
 function jeliDebugger(element) {
     if (element && CoreBootstrapContext.enableDebugger) {
-        return CoreBootstrapContext.bootStrapComponent;
-        // return false; // componentDebugContext.get(element.getAttribute('jeli-ref'));
+        return jeliQuerySelector(CoreBootstrapContext.bootStrapComponent, element);
     }
 
     return null;

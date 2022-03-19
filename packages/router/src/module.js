@@ -3,12 +3,12 @@ import { jViewFn } from './components/jview.element';
 import { OpenIntent } from './components/open.directive';
 import { JIntentContainer } from './components/view-container.element';
 import { ViewIntentService } from './services/intent.service';
-import { ViewInit } from './services/jWebRoute.init';
 import { ViewHandler } from './services/jWebViewHandler.service';
-import { WebStateProvider } from './services/jwebstate.provider';
 import { WebStateService } from './services/jwebstate.service';
-import { INITIALIZERS } from '@jeli/core';
+import { APP_BOOTSTRAP } from '@jeli/core';
 import './services/utils';
+import { RouterInitService } from './services/router.init.service';
+import { LocationService } from './services/route.location.service';
 
 // jeli route manager
 // created 10-11-15 7:00pm
@@ -18,12 +18,11 @@ jModule({
     services: [
         ViewHandler,
         WebStateService,
-        WebStateProvider,
         ViewIntentService,
         {
-            name: INITIALIZERS,
-            DI: [WebStateProvider, WebStateService],
-            factory: ViewInit
+            name: APP_BOOTSTRAP,
+            DI: [LocationService],
+            factory: RouterInitService
         }
     ],
     selectors: [
@@ -40,4 +39,4 @@ RouterModule.setRoutes = function(routes) {
     } else {
         setupRoutes(routes);
     }
-}
+};

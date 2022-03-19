@@ -36,6 +36,8 @@ export var DateStringConverter = function(str) {
         if (arr) {
             arr.shift();
             return new Date(arr[0], (arr[1] - 1), setDay(arr[2]), arr[3] || 0, arr[4] || 0, arr[5] || 0);
+        } else if (/(\d+)-(\d+)-(\d+)/.test(str)) {
+            return new Date(str);
         }
     }
 

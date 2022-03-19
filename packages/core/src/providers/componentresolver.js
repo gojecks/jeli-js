@@ -1,3 +1,5 @@
+import { noop } from "../utils/closure";
+
 /**
  * 
  * @param {*} componentFactory 
@@ -6,7 +8,7 @@
  * @param {*} skipElemetInsert 
  * @returns 
  */
-export function ComponentFactoryResolver(componentFactory, viewComponent, callback, skipElemetInsert) {
+export function ComponentFactoryResolver(componentFactory, viewComponent, callback, skipElementInsert) {
     if (!componentFactory || !componentFactory.annotations.exposeView) {
         errorBuilder('No exported factory found for <' + componentFactory.annotations.selector + '> in ' + componentFactory.annotations.module);
         return null;
@@ -22,11 +24,14 @@ export function ComponentFactoryResolver(componentFactory, viewComponent, callba
         isc: true,
         providers: [componentFactory]
     };
-    var component = new ElementRef(viewDefinition, viewComponent);
-    var localInjectors = new ComponentInjectors(component);
-    ElementCompiler(componentFactory, component, localInjectors, function(componentInstance) {
-        elementInsertAfter(viewComponent, component.nativeElement, viewComponent.nativeElement);
-        callback(component, componentInstance);
+    var componentRef = new ElementRef(viewDefinition, viewComponent, true);
+    var localInjectors = new ComponentInjectors(componentRef);
+    ElementCompiler(componentFactory, componentRef, localInjectors, function(componentInstance) {
+        if (!skipElementInsert) {
+            elementInsertAfter(viewComponent, componentRef.nativeElement, viewComponent.nativeElement);
+            viewComponent.children.add(componentRef);
+        }
+        noop(callback)(componentRef, componentInstance);
     });
     localInjectors = null;
     viewDefinition = null;

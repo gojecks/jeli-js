@@ -3,6 +3,7 @@ Service({
 })
 export function capitalizeFilter() {
     this.compile = function(value) {
-        return value.charAt(0).toUpperCase() + value.substr(1, value.length);
+        if (!value) return "";
+        return value.charAt(0).toUpperCase() + value.slice(1);
     };
 }

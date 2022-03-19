@@ -22,7 +22,7 @@ export function FormControlAbstract(validators) {
     this._onDisableEvents = [];
     this._onControlChangeListener = function() {};
     this.validator = FormValidatorService(function(errors) {
-        _this.setError(errors);
+        _this.setError(errors, true);
     }, validators);
 
 
@@ -151,7 +151,7 @@ FormControlAbstract.prototype.disable = function(options) {
         });
     });
 
-    this._updateValue();
+    this.updateValueAndStatus({ self: true, emitEvent: options.emitEvent });
     if (isequal(options.emitEvent, true)) {
         this.valueChanges.emit(this.value);
     }
@@ -208,6 +208,7 @@ FormControlAbstract.prototype.markAsUntouched = function(options) {
  * options = {self: boolean}
  */
 FormControlAbstract.prototype.markAsTouched = function(options) {
+    if (this.touched) return;
     options = options || {};
     this.touched = true;
     if (this.parent && !options.self) {

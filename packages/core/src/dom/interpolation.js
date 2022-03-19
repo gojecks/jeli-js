@@ -48,10 +48,10 @@ function getFilteredTemplateValue(templateModel, context, componentInstance) {
  */
 function compileTemplate(definition, context, componentInstance, cb) {
     var value = undefined;
-    if (definition.templates) {
-        value = definition.templates.reduce(function(accum, options) {
+    if (definition.length > 1) {
+        value = definition[1].reduce(function(accum, options) {
             return accum.replace(options[0], evaluateExpression(options[1], context, componentInstance));
-        }, definition.text);
+        }, definition[0]);
     } else {
         value = getFilteredTemplateValue(definition, context, componentInstance);
     }
@@ -115,7 +115,7 @@ function resolveValueFromContext(expression, context, componentInstance) {
     if (isundefined(expression) || isnull(expression) || isboolean(expression) || isnumber(expression) || /(#|rgb)/.test(expression))
         return expression;
     else if (isobject(expression))
-        return parseObjectExpression.apply(null, arguments);
+        return parseObjectExpression(expression, context, componentInstance);
     else if (isarray(expression))
         return resolveContext(expression, context, componentInstance);
     else if (expression === '$this')
@@ -281,15 +281,16 @@ function setModelValue(key, context, componentInstance, value) {
  */
 function resolveContext(key, context, componentInstance) {
     var isEventType = context instanceof Event;
-    return key.reduce(function(accum, property) {
+    return key.reduce(function(accum, property, idx) {
         if (isEventType) {
             return accum[property];
         }
 
+        var componentEntry = idx ? null : componentInstance;
         if (Array.isArray(property)) {
-            var value = resolveValueFromContext(property, context, componentInstance);
-            return accum[value];
+            var value = resolveValueFromContext(property, context, componentEntry);
+            return accum && accum[value];
         }
-        return resolveValueFromContext(property, accum, componentInstance);
+        return resolveValueFromContext(property, accum, componentEntry);
     }, context || {});
 }

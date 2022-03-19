@@ -13,8 +13,8 @@ import { RangeEventBinder } from './directives/range.event.accessor';
  * @param {*} dir 
  */
 function setupControl(fieldControl, dir) {
-    if (!fieldControl) errorBuilder('No field control found for ' + dir.name);
-    if (!dir.eventBinder) errorBuilder('No EventBinder defined');
+    if (!fieldControl) return errorBuilder('No field control found for ' + dir.name);
+    if (!dir.eventBinder) return errorBuilder('No EventBinder defined');
 
     // set validators
     fieldControl.setValidators(dir._validators);
@@ -22,7 +22,7 @@ function setupControl(fieldControl, dir) {
     setUpViewChangeEvent(fieldControl, dir);
     setupBlurEvent(fieldControl, dir);
 
-    if (dir.eventBinder.setUpDisableState) {
+    if (dir.eventBinder.setDisabledState) {
         fieldControl.registerOnDisabledListener(function(state) {
             dir.eventBinder.setDisabledState(state);
         });
@@ -78,6 +78,26 @@ function updateControl(fieldControl, dir) {
     fieldControl.setValue(fieldControl._pendingValue, { emitToView: false });
     dir.modelToViewUpdate(fieldControl._pendingValue);
     fieldControl._pendingChange = false;
+    fieldControl.markAsTouched();
+}
+
+/**
+ * 
+ * @param {*} dir 
+ * @returns 
+ */
+function _validateAndBindStatus(dir) {
+    if (dir._registered) return
+    if (!dir.form || !(dir.form instanceof FormControlService)) {
+        return errorBuilder((dir.formName ? '[' + dir.formName + ']' : '') + 'Expected instance of FormControlService but got ' + typeof dir.form);
+    }
+    /**
+     * trigger for status changed
+     */
+    dir._registered = true;
+    dir.form.statusChanged.subscribe(function() {
+        dir.changeDetector.detectChanges();
+    });
 }
 
 var inbuiltAccessor = [

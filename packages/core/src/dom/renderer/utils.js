@@ -26,9 +26,9 @@ function elementMutationObserver(nativeElement, callback) {
  * @param {*} childEelement 
  * @returns 
  */
-function elementAddViewQuery(hostElement, option, childEelement) {
+function addViewQuery(hostElement, option, childElement) {
     if (!isequal(option[1], hostElement.tagName)) {
-        return hostElement.parent && elementAddViewQuery(hostElement.parent.hostRef, option, childEelement);
+        return hostElement.parent && addViewQuery(hostElement.parent.hostRef, option, childElement);
     }
 
     switch (option[0].type) {
@@ -36,20 +36,23 @@ function elementAddViewQuery(hostElement, option, childEelement) {
             if (!hostElement.componentInstance.hasOwnProperty(option[0].name)) {
                 hostElement.componentInstance[option[0].name] = new QueryList();
             }
-            hostElement.componentInstance[option[0].name].add(childEelement);
+            hostElement.componentInstance[option[0].name].add(childElement);
             break;
         case (staticInjectionToken.ElementRef):
-            hostElement.componentInstance[option[0].name] = childEelement;
+            hostElement.componentInstance[option[0].name] = childElement;
             break;
         default:
             Object.defineProperty(hostElement.componentInstance, option[0].name, {
+                configurable: true,
+                enumerable: true,
                 get: function() {
-                    return (childEelement.nodes.has(option[0].type) ? childEelement.nodes.get(option[0].type) : childEelement.context);
+                    return (childElement.nodes.has(option[0].type) ? childElement.nodes.get(option[0].type) : childElement.context);
                 }
             });
             break;
     }
 }
+
 
 /**
  * 
@@ -139,9 +142,10 @@ function cleanupElementRef(elementRef) {
     elementRef.children.destroy();
     elementRef.nativeElement = null;
     elementRef.parent = null;
-    elementRef.providers = null;
-    elementRef._viewQuery = null;
-    elementRef.nodes.clear();
+    if (elementRef.providers) {
+        elementRef.providers = null;
+        elementRef.nodes.clear();
+    }
 };
 
 /**
@@ -202,6 +206,38 @@ function setupAttributeObservers(element, attrObservers) {
 
         observerStarted = true;
     }
+}
+
+/**
+ * 
+ * @param {*} localVariables 
+ */
+function createLocalVariables(localVariables, viewContext) {
+    var context = {};
+    if (localVariables) {
+        for (var propName in localVariables) {
+            if (localVariables[propName].match(/\s/)) {
+                context[propName] = localVariables[propName];
+            } else {
+                writePropertyBinding(propName);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param {*} propName 
+     */
+    function writePropertyBinding(propName) {
+        Object.defineProperty(context, propName, {
+            get: function() {
+                if (!viewContext.context) return;
+
+                return viewContext.context[localVariables[propName]];
+            }
+        });
+    }
+    return context;
 }
 
 /**

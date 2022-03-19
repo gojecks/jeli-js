@@ -13,6 +13,7 @@ Directive({
  */
 export function OpenIntent(elementRef, viewIntent) {
     this.params = {};
+    this._open = null;
 
     this.clickHandler = function() {
         // state has changed
@@ -28,6 +29,10 @@ export function OpenIntent(elementRef, viewIntent) {
         set: function(value) {
             this.splitWhere = (value || '').split(':');
             this.pathName = this.splitWhere.shift();
+            this._open = value;
+        },
+        get: function() {
+            return this._open;
         }
     });
 }

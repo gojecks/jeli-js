@@ -31,7 +31,7 @@ CurrentInstance.prototype.add = function(totalValidators) {
  */
 CurrentInstance.prototype.rem = function(passed, type) {
     this.count--;
-    if (!passed) {
+    if (passed !== true) {
         this.failed = true;
         this.errors[type] = true;
     }
@@ -46,19 +46,16 @@ CurrentInstance.prototype.rem = function(passed, type) {
 };
 
 /**
- * @param asyncInstance
- * @param Request
- * @param field
- * @param name
+ * 
+ * @param {*} asyncInstance 
+ * @param {*} name 
  */
-CurrentInstance.prototype.registerAsyncValidator = function(asyncInstance, Request, name) {
+CurrentInstance.prototype.registerAsyncValidator = function(asyncInstance, name) {
     this.hasAsync = true;
     var _this = this;
-    var callback = function(type, ret) {
-        return function(response) {
-            _this.rem((Request[type]) ? Request[type](response) : ret, name);
-        }
+    var callback = function(value) {
+        _this.rem(value, name);
     };
 
-    asyncInstance.then(callback('onsuccess', true), callback('onerror', false));
+    asyncInstance.then(callback, callback);
 };

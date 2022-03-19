@@ -95,6 +95,7 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
              * remove the Attribute from element
              */
             elementRef.nodes.set(ctrl.annotations.exportAs || definition.selector, componentInstance);
+            lifeCycle && lifeCycle.trigger('viewDidLoad');
             attachElementObserver(elementRef, function() {
                 lifeCycle.trigger('viewDidDestroy');
                 elementRef.nodes.delete(definition.selector);
@@ -134,15 +135,14 @@ ElementCompiler.resolve = function(node, nextTick) {
      * @param {*} isDetachedElement 
      */
     var inc = 0;
+    var componentInjectors = new ComponentInjectors(node);
 
     function next() {
         var factory = node.providers[inc];
-        var componentInjectors = new ComponentInjectors(node);
-
         inc++;
         if (factory) {
+            componentInjectors.set('Selector', factory.annotations.selector);
             try {
-                componentInjectors.currentClassAnnotations = factory.annotations;
                 ElementCompiler(factory, node, componentInjectors, next);
             } catch (e) {
                 errorBuilder(e);

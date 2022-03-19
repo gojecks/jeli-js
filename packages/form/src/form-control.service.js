@@ -68,7 +68,7 @@ FormControlService.prototype._setupControl = function(control) {
 
 FormControlService.prototype.patchValue = function(values, options) {
     options = options || {};
-    if (isobject(values)) {
+    if (isobject(values) || isarray(values)) {
         for (var field in values) {
             if (this.hasField(field) && !options.self) {
                 this.getField(field).patchValue(values[field], {
@@ -81,10 +81,11 @@ FormControlService.prototype.patchValue = function(values, options) {
 };
 
 FormControlService.prototype.setValue = function(values, options) {
+    if (!values) return;
     this._allValuePresent(values);
     for (var field in values) {
         this._isControlPresent(field);
-        this.formFieldControls[field].setValue(values[key], {
+        this.formFieldControls[field].setValue(values[field], {
             self: options && options.self,
         });
     }
@@ -99,8 +100,9 @@ FormControlService.prototype.forEachField = function(callback) {
 
 FormControlService.prototype.reset = function(value, options) {
     options = (options || {});
+    value = (value || {});
     this.forEachField(function(control, name) {
-        control.reset(value[name], {
+        control.reset(value[name] || null, {
             self: true,
             emitEvent: options.emitEvent
         });
@@ -118,6 +120,17 @@ FormControlService.prototype.setFieldValidator = function(field, validator) {
     return this;
 };
 
+FormControlService.prototype.allTouched = function() {
+    var alltouched = true;
+    this.forEachField(function(control, name) {
+        if (!control.touched) {
+            alltouched = false;
+        }
+    });
+
+    return alltouched;
+}
+
 
 FormControlService.prototype.removeField = function(name) {
     this.getField(name).destroy();
@@ -133,7 +146,7 @@ FormControlService.prototype.getAllValues = function() {
 
 FormControlService.prototype._allValuePresent = function(values) {
     this.forEachField(function(control, field) {
-        if (!isundefined(values[field])) {
+        if (isundefined(values[field])) {
             errorBuilder('value for formField(' + field + ') is missing');
         }
     });

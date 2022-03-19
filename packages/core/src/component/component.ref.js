@@ -60,6 +60,10 @@ function InternalChangeDetector(context) {
     };
 }
 
+InternalChangeDetector.prototype.onlySelf = function() {
+    this.detectChanges(false, true);
+};
+
 InternalChangeDetector.prototype.markAsChecked = function() {
     this._changeDetectorState = 1;
 };
@@ -161,4 +165,13 @@ ComponentRef.create = function(refId, parentId) {
         componentDebugContext.get(parentId).child.push(refId);
     }
     componentRef = null;
+};
+
+/**
+ * 
+ * @param {*} refId 
+ * @returns 
+ */
+ComponentRef.get = function(refId, hostRefId) {
+    return componentDebugContext.get(refId) || componentDebugContext.get(hostRefId) || {};
 };

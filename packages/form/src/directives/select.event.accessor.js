@@ -141,7 +141,7 @@ export function OptionDirective(selectInstance, elementRef) {
     });
 
     this.setValue = function(value) {
-        AttributeAppender.setProp(this.element.nativeElement, 'value', value);
+        AttributeAppender.setProp(elementRef.nativeElement, 'value', value);
     };
 
     this.viewDidDestroy = function() {

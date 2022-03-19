@@ -7,17 +7,19 @@ export var staticInjectionToken = {
     ParentRef: 'ParentRef',
     VALIDATORS: 'VALIDATORS',
     QueryList: 'QueryList',
-    Function: 'Function'
+    Function: 'Function',
+    HostRef: 'HostRef'
 };
 
 /**
  * Method for generating Injectors
  * @param {*} annotations 
+ * @param {*} selector) 
  */
-function ComponentInjectors(elementRef) {
+function ComponentInjectors(elementRef, selector) {
     AbstractInjectorInstance.call(this, elementRef);
     this.injectors.ElementRef = elementRef;
-    this.currentClassAnnotations = {};
+    this.injectors.Selector = selector;
     this.has = function(tokenName) {
         return this.injectors.hasOwnProperty(tokenName) || staticInjectionToken.hasOwnProperty(tokenName);
     };
@@ -30,18 +32,20 @@ ComponentInjectors.prototype.destroy = function() {
     this.currentClassAnnotations = null;
 };
 
-ComponentInjectors.prototype.get = function(tokenName) {
-    if (this.injectors.hasOwnProperty(tokenName))
-        return this.injectors[tokenName];
-    else if (staticInjectionToken[tokenName])
-        return _ComponentInjectionToken(tokenName, this);
+ComponentInjectors.prototype.get = function(dep) {
+    if (this.injectors.hasOwnProperty(dep.tokenName))
+        return this.injectors[dep.tokenName];
+    else if (staticInjectionToken[dep.tokenName])
+        return _ComponentInjectionToken(dep, this);
 }
 
 /**
  * 
+ * @param {*} dep 
  * @param {*} context 
+ * @returns 
  */
-function _ComponentInjectionToken(tokenName, context) {
+function _ComponentInjectionToken(dep, context) {
     /**
      * generate local injectors
      * Getter for Dependencies that are set in runTime
@@ -51,17 +55,17 @@ function _ComponentInjectionToken(tokenName, context) {
      * ? symbol represents optional Dependency
      * @param {*} idx 
      */
-    switch (tokenName) {
+    switch (dep.tokenName) {
         case (staticInjectionToken.TemplateRef):
-            return context.injectors.ElementRef.getTemplateRef(context.currentClassAnnotations.selector);
+            return TemplateRef.factory(context.injectors.ElementRef, context.get({ tokenName: 'Selector' }));
         case (staticInjectionToken.changeDetector):
             return context.injectors.ElementRef.changeDetector;
         case (staticInjectionToken.ViewRef):
             return new ViewRef(context.injectors.ElementRef);
         case (staticInjectionToken.ParentRef):
             {
-                if (context.currentClassAnnotations.DI.ParentRef.value) {
-                    return findParentRef(context.injectors.ElementRef.parent, context.currentClassAnnotations.DI.ParentRef);
+                if (dep.value) {
+                    return findParentRef(context.injectors.ElementRef.parent, dep);
                 }
                 return context.injectors.ElementRef.parent.componentInstance;
             }
@@ -90,7 +94,7 @@ function getValidators(elementRef) {
  */
 function findParentRef(parentRef, refInstance) {
     var selector = (refInstance.value + (refInstance.type ? ':' + refInstance.type : ''));
-    if (parentRef && !parentRef.nodes.has(selector)) {
+    if (parentRef && (!parentRef.nodes || !parentRef.nodes.has(selector))) {
         return findParentRef(parentRef.parent, refInstance);
     }
     /**

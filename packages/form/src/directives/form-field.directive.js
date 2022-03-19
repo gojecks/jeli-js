@@ -22,8 +22,8 @@ export function FormFieldDirective(parentContainer, eventBinder, validators) {
 }
 
 FormFieldDirective.prototype.didInit = function() {
-    if (!(this.parent instanceof FormControlDirective)) {
-        errorBuilder('Expected an instance of FormControlDirective but got ' + typeof this.parent);
+    if (!this.parent) {
+        return errorBuilder('[formField=' + this.name + ']: Expected an instance of FormControlDirective but got ' + typeof this.parent);
     }
 
     this.control = this.parent.addField(this);

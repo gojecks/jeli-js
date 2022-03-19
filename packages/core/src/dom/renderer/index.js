@@ -1,7 +1,5 @@
-/**
- * 
- * @param {*} transpiledHTML 
- */
+import { TemplateRef } from "./templateref";
+
 export function ViewParser() {
     /**
      * 
@@ -42,17 +40,26 @@ function element(definition, parent, viewContainer) {
         for (var i = 0; i < definition.children.length; i++) {
             var child = ViewParserHelper[definition.children[i].type](definition.children[i], elementRef, viewContainer, true);
             if (child) {
-                elementRef.children.add(child);
-                elementRef.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+                pushToParent(child, elementRef, i);
             }
         }
     }
 
     if (definition.vc) {
-        elementAddViewQuery(elementRef.hostRef, definition.vc, elementRef);
+        addViewQuery(elementRef.hostRef, definition.vc, elementRef);
     }
 
     return elementRef;
+}
+
+/**
+ * push Child element to parent
+ * @param {*} child 
+ * @param {*} parent 
+ */
+function pushToParent(child, parent, index) {
+    parent.children.add(child, index);
+    parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
 }
 
 /**
@@ -79,33 +86,45 @@ function text(definition, parent) {
  * @param {*} definition
  * @param {*} parent
  * @param {*} viewContainer
- * @param {*} appendToChild
+ * @param {*} appendToParent
  */
-function place(definition, parent, viewContainer, appendToChild) {
+function place(definition, parent, viewContainer, appendToParent) {
     var hostRef = parent.hostRef;
-    var template = hostRef.getTemplateRef(definition.refId || 'place', true);
-    if (template) {
-        if (definition.refId) {
-            createAndAppend(template);
-        } else {
-            template.forEach(definition.selector, createAndAppend);
-        }
-    }
+    var createPlaceElement = !(viewContainer || appendToParent);
+    var template = TemplateRef.factory(hostRef, 'place', true);
+    var placeElement = (createPlaceElement) ? new AbstractElementRef({
+        name: "#fragment",
+        type: "element"
+    }, hostRef) : null
+
     /**
      * 
      * @param {*} elementDefinition 
      */
     function createAndAppend(elementDefinition) {
         var child = ViewParserHelper[elementDefinition.type](elementDefinition, hostRef.parent, viewContainer);
-        if (appendToChild) {
-            parent.children.add(child);
-            parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+        // store the origin
+        child.hostRefId = hostRef.refId;
+        if (appendToParent || createPlaceElement) {
+            pushToParent(child, placeElement || parent);
         } else {
             viewContainer.pushToView(child);
         }
+
+        /**
+         * check if VC property is defined in placeTemplate
+         * register the required to the child
+         */
+        if (definition.vc && ([elementDefinition.refId, child.tagName].includes(definition.vc[0].value))) {
+            addViewQuery(hostRef, definition.vc, child);
+        }
     }
 
-    return null;
+    if (template) {
+        template.forEach(definition.selector, createAndAppend);
+    }
+
+    return placeElement;
 };
 
 /**
@@ -135,6 +154,7 @@ function outlet(definition, parent, viewContainer) {
  */
 function transverse(node) {
     if (node instanceof AbstractElementRef) {
+        if (node._lazyCompiled) return;
         if (node.providers && node.providers.length) {
             ElementCompiler.resolve(node, proceedWithCompilation);
         } else {

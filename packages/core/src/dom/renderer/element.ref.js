@@ -1,11 +1,14 @@
 /**
  * 
- * @param {*} ele 
- * @param {*} parent 
  * @param {*} definition 
+ * @param {*} parent 
+ * @param {*} _lazyCompiled
  */
-export function ElementRef(definition, parent) {
+export function ElementRef(definition, parent, _lazyCompiled) {
     AbstractElementRef.call(this, definition, parent);
+    this.events = new EventHandler((definition.events || []).slice());
+    this._lazyCompiled = _lazyCompiled;
+
     /**
      * check if element is custom element
      */
@@ -16,27 +19,11 @@ export function ElementRef(definition, parent) {
         ComponentRef.create(this.refId, parent && parent.hostRef.refId);
     }
 
-    this.events = new EventHandler((definition.events || []).slice());
-    Object.defineProperties(this, {
-        viewQuery: {
-            get: function() {
-                return this._viewQuery || this.parent && this.parent._viewQuery;
-            }
-        }
-    });
-
     /**
      * definition.attrObservers
      */
     if (definition.attr$) {
         setupAttributeObservers(this, definition.attr$);
-    }
-
-    // set the parentRefId
-    if (CoreBootstrapContext.enableDebugger) {
-        AttributeAppender(this.nativeElement, {
-            "jeli-ref": this.hostRef.refId
-        });
     }
 }
 

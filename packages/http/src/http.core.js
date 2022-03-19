@@ -1,18 +1,20 @@
-import { HttpInterceptor } from './http.interceptor';
 import { ChangeDetector } from '@jeli/core';
 import './xhr/http';
+
+var staticMethods = ['put', 'get', 'post', 'request', 'patch', 'delete'];
+
 Service({
-    DI: [HttpInterceptor, ChangeDetector]
+    DI: [ChangeDetector]
 })
 
-export function HttpService(interceptor, changeDetector) {
+export function HttpService(changeDetector) {
     /**
      * factory to expose
      * @param {*} url 
      * @param {*} options 
      */
     function http(url, options) {
-        return CoreHttp(url, options, interceptor, changeDetector);
+        return CoreHttp(url, options, changeDetector);
     }
 
     /**

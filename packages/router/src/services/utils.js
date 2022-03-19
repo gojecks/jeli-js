@@ -1,18 +1,30 @@
 import { extend, unserialize } from 'js-helpers/utils';
-import { ProviderToken, _Promise, Inject, errorBuilder } from '@jeli/core';
+import { ProviderToken, errorBuilder } from '@jeli/core';
 export var ROUTE_INTERCEPTOR = new ProviderToken('RouteInterceptor', true);
+export var staticRoutePrefix = '^';
+export var routeConfig = Object({
+    isLoaded: false,
+    intentFallback: null,
+    useHash: true,
+    fallback: {
+        url: '/',
+        name: '.'
+    },
+    restoreOnRefresh: true
+});
 /**
  * @internal
  */
 var _unregistered = {};
 var $stateCollection = {};
 var $intentCollection = {};
+
 /**
  * 
  * @param {*} url 
  */
 function createRoute(url) {
-    var replacer = "\/([\\w-]+)",
+    var replacer = "\/([\\w-@!.]+)",
         paramsMapping = [];
     url = url.replace(/([\/]|)([:]|)+(\w+)/g, function(match) {
         if (match.indexOf(":") > -1) {
@@ -30,118 +42,142 @@ function createRoute(url) {
 }
 
 /**
- * 
- * @param {*} routeConfig 
- * @param {*} requireParent 
+ * attach view to a route configuration
+ * @param {*} view 
+ * @param {*} route 
  */
-function generateRoute(routeConfig, requireParent) {
-    function addViewMatcher(view) {
-        //add the required target view to the view scope
-        if (routeConfig.component) {
-            if (!routeConfig.views[view]) {
-                routeConfig.views[view] = {};
-            }
-
-            routeConfig.views[view] = routeConfig.component;
-            delete routeConfig.component;
-        }
-    }
-
-    /**
-     * register the intent
-     */
-    if (routeConfig.isIntent) {
-        $intentCollection[routeConfig.name] = routeConfig;
-        return;
-    }
-
-    // check for abstract route
-    routeConfig.route = createRoute(routeConfig.url || '^');
-    // get the view names
-    // used to track multiple views
-    var _views = Object.keys(routeConfig.views || {});
-
-    /**
-     * compile parent
-     */
-    if (requireParent) {
-        var parentRoute = $stateCollection[routeConfig.parent];
-        routeConfig.views = routeConfig.views || {}; // create new view
-        //copy all views except for
-        //targeted view
-        for (var view in parentRoute.views) {
-            if (view !== routeConfig.targetView) {
-                routeConfig.views[view] = parentRoute.views[view];
-            } else if (!routeConfig.views[view]) {
-                addViewMatcher(view);
-            }
+function addViewMatcher(view, route) {
+    //add the required target view to the view scope
+    if (route.component) {
+        route.views = (route.views || {});
+        if (!route.views[view]) {
+            route.views[view] = {};
         }
 
-        /**
-         * only match when the routeConfig
-         * doesn't have the targeted view
-         * and has views property
-         * Pardon usage errors
-         */
-        if (routeConfig.targetView && !routeConfig.views[routeConfig.targetView]) {
-            addViewMatcher(routeConfig.targetView);
-        }
-
-        //overwrite our routeConfig
-        routeConfig.route.parent = parentRoute;
-        //check if parent views exist in child views
-        if (!_views.length && !routeConfig.abstract) {
-            _views = parentRoute.route.$$views;
-        }
-
-        parentRoute = null;
-        delete routeConfig.parent;
-    }
-
-    if (!routeConfig.url) {
-        routeConfig.abstract = true;
-    }
-
-    //set the current route view paths
-    routeConfig.route.$$views = _views;
-    //set the route
-    $stateCollection[routeConfig.name] = routeConfig;
-
-    //check if route is parent that needs to register child
-    if (_unregistered.hasOwnProperty(routeConfig.name)) {
-        _unregistered[routeConfig.name].forEach(function(uName) {
-            setupRoutes(uName, $stateCollection[uName]);
-        });
-
-        //remove the registra
-        delete _unregistered[routeConfig.name];
+        route.views[view] = route.component;
+        delete route.component;
     }
 }
 
 /**
  * 
- * @param {*} routeConfig 
+ * @param {*} route 
+ * @param {*} requireParent 
  */
-function setupRoutes(routeConfig) {
-    var requireParent = routeConfig.hasOwnProperty('parent');
+function generateRoute(route, requireParent) {
+    /**
+     * register the intent
+     */
+    if (route.isIntent) {
+        $intentCollection[route.name] = route;
+        return;
+    }
+
+    // check for abstract route
+    route.route = createRoute(route.url || '^');
+    // get the view names
+    // used to track multiple views
+    var _views = Object.keys(route.views || {});
+
+    /**
+     * compile parent
+     */
+    if (requireParent) {
+        var parentRoute = $stateCollection[route.parent];
+        route.views = route.views || {}; // create new view
+        //copy all views except for
+        //targeted view
+        for (var view in parentRoute.views) {
+            if (view !== route.targetView) {
+                route.views[view] = parentRoute.views[view];
+            } else if (!route.views[view]) {
+                addViewMatcher(view, route);
+            }
+        }
+
+        /**
+         * only match when the route
+         * doesn't have the targeted view
+         * and has views property
+         * Pardon usage errors
+         */
+        if (route.targetView && !route.views[route.targetView]) {
+            addViewMatcher(route.targetView, route);
+        }
+
+        //overwrite our route
+        route.route.parent = parentRoute;
+        //check if parent views exist in child views
+        if (!_views.length && !route.abstract) {
+            _views = parentRoute.route.$$views;
+        }
+
+        parentRoute = null;
+        delete route.parent;
+    }
+
+    if (!route.url) {
+        route.abstract = true;
+    }
+
+    //set the current route view paths
+    route.route.$$views = _views;
+    //set the route
+    $stateCollection[route.name] = route;
+
+    //check if route is parent that needs to register child
+    if (_unregistered.hasOwnProperty(route.name)) {
+        _unregistered[route.name].forEach(function(uName) {
+            setupRoutes($stateCollection[uName]);
+        });
+
+        //remove the registra
+        delete _unregistered[route.name];
+    }
+}
+
+/**
+ * 
+ * @param {*} route 
+ */
+function setupRoutes(route) {
+    var requireParent = route.hasOwnProperty('parent');
+    if (!route.name && route.url) {
+        route.name = route.url.replace(/[/:]/g, _ => _ == '/' ? '.' : '')
+    }
+
+    /**
+     * component without view definition
+     */
+    if (!route.parent) {
+        addViewMatcher(route.targetView || staticRoutePrefix, route);
+    }
+
+    if (route.fallback && !routeConfig.fallback && route.url) {
+        routeConfig.fallback = {
+            name: route.name,
+            url: route.url
+        };
+    }
+
     /**
      * current route is binded to a parent
      * check if parent is resolve
      * else move to unregistered holder
      */
-    if (requireParent && !$stateCollection.hasOwnProperty(routeConfig.parent)) {
+    if (requireParent && !$stateCollection.hasOwnProperty(route.parent)) {
         //push unregistered route to object
-        if (!_unregistered.hasOwnProperty(routeConfig.parent)) {
-            _unregistered[routeConfig.parent] = [];
+        if (!_unregistered.hasOwnProperty(route.parent)) {
+            _unregistered[route.parent] = [];
         }
 
         //push to the unregistered watchlist
-        _unregistered[routeConfig.parent].push(routeConfig.name);
-        $stateCollection[routeConfig.name] = routeConfig;
+        _unregistered[route.parent].push(route.name);
+        $stateCollection[route.name] = route;
         return this;
     }
 
-    generateRoute(routeConfig, requireParent);
+    generateRoute(route, requireParent);
 
     /**
      * compile children route
@@ -169,78 +205,108 @@ function setupRoutes(routeConfig) {
     /**
      * trigger recursive children
      */
-    addChildren(routeConfig);
+    addChildren(route);
+}
+/**
+ * 
+ * @param {*} name 
+ * @returns 
+ */
+export function getParentRoute(name) {
+    var parent = $stateCollection[name],
+        fnd;
+    do {
+        if (parent) { fnd = parent; }
+    } while (parent = parent.route.parent);
+
+    return fnd;
 }
 
 /**
  * 
  * @param {*} routeName 
+ * @returns 
  */
-function getRequiredRoute(routeName) {
-    var queryParam = routeName.split("?"),
-        foundRoute = (function() {
-            for (var prop in $stateCollection) {
-                if (!$stateCollection[prop].abstract && $stateCollection[prop].route.regexp.test(queryParam[0])) {
-                    return $stateCollection[prop];
-                }
-            }
-        })();
-
-    return ({
-        get: function() {
-            return foundRoute;
-        },
-        checkParams: function(params) {
-            if (foundRoute) {
-                foundRoute.route.params = extend({}, foundRoute.params || {}, params || {});
-                if (foundRoute.route.paramsMapping.length && !params) {
-                    foundRoute.route.regexp.exec(queryParam[0]).splice(1)
-                        .forEach(function(val, inc) {
-                            var isNumber = parseInt(val);
-                            foundRoute.route.params[foundRoute.route.paramsMapping[inc]] = !isNaN(isNumber) ? isNumber : val;
-                        });
-                }
-
-                // route contains queryParam
-                if (queryParam[1]) {
-                    foundRoute.route.params = extend(
-                        foundRoute.route.params,
-                        unserialize(queryParam[1])
-                    );
-                }
-            }
-
-            return foundRoute;
+function getRouteObj(routeName) {
+    var queryParam = routeName.split("?");
+    for (var prop in $stateCollection) {
+        if (!$stateCollection[prop].abstract && $stateCollection[prop].route.regexp.test(queryParam[0])) {
+            return $stateCollection[prop];
         }
+    }
+
+    return $stateCollection[routeConfig.fallback.name] || null;
+}
+
+/**
+ * 
+ * @param {*} routeName 
+ * @param {*} params 
+ * @returns 
+ */
+export function getRequiredRoute(routeName, params) {
+    var queryParam = routeName.split("?"),
+        foundRoute = getRouteObj(routeName);
+    if (foundRoute) {
+        foundRoute.route.params = extend({}, foundRoute.params || {}, params || {});
+        if (foundRoute.route.paramsMapping.length && !params) {
+            foundRoute.route.regexp.exec(queryParam[0]).splice(1)
+                .forEach(function(val, inc) {
+                    var isNumber = Number(val);
+                    foundRoute.route.params[foundRoute.route.paramsMapping[inc]] = !isNaN(isNumber) ? isNumber : val;
+                });
+        }
+
+        // route contains queryParam
+        if (queryParam[1]) {
+            foundRoute.route.params = extend(
+                foundRoute.route.params,
+                unserialize(queryParam[1])
+            );
+        }
+    }
+
+    return foundRoute;
+}
+
+export function parseUrl(href, params) {
+    return href.replace(/\:(\w)+/g, function(index, key) {
+        var param = index.split(":")[1];
+        return param in params ? params[param] : index;
     });
 }
 
 /**
  * 
- * @param {*} route 
- * @param {*} callback 
+ * @param {*} stateName 
+ * @param {*} params 
+ * @returns 
  */
-export function ResolveRouteInterceptor(route, callback) {
-    var interceptors = Inject(ROUTE_INTERCEPTOR);
-    var locals = {};
-    if (!interceptors || !interceptors.length) {
-        return callback(locals);
-    }
-
-    var len = 0;
-
-    /**
-     * iterator method
-     */
-    function next() {
-        var interceptor = interceptors[len];
-        len++;
-        if (interceptor) {
-            interceptor.resolve(route, locals, next);
-        } else {
-            callback(locals);
+export function getHref(stateName, params) {
+    var state = $stateCollection[stateName];
+    if (state) {
+        if (state.route.paramsMapping.length && !params) {
+            throw new Error(stateName + " requires parameter, but none was provided");
         }
+
+        return parseUrl(state.url, params);
     }
 
-    next();
-};
+    return routeConfig.fallback.url;
+}
+
+/**
+ * 
+ * @param {*} route 
+ * @param {*} path 
+ * @param {*} redirectMethod 
+ */
+export function RouteInterceptorInstance(route, path, redirectMethod) {
+    this.name = route.name;
+    this.path = path;
+    this.data = route.data;
+    this.params = route.params;
+    this.originalUrl = route.url;
+    this.locals = {};
+    this.redirect = redirectMethod;
+}

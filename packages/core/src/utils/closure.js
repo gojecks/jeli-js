@@ -22,3 +22,7 @@ export function resolveClosureRef(ref) {
         return ref;
     }
 };
+
+export function noop(callback) {
+    return (callback || function() {});
+};

@@ -47,6 +47,9 @@ export function IfDirective(viewRef, templateRef) {
             set: function(value) {
                 this._jIfValue = value;
                 this.createView();
+            },
+            get: function() {
+                return this._jIfValue;
             }
         },
         ifElse: {

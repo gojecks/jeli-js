@@ -1,6 +1,15 @@
 function AbstractEventRx() {
     this._listeners = [];
+    this._hooks = [];
 }
+
+AbstractEventRx.prototype.when = function() {
+    for (var i = 0; i < arguments.length; i++) {
+        this._hooks.push(arguments[i]);
+    }
+
+    return this;
+};
 
 AbstractEventRx.prototype.subscribe = function(fn) {
     var index = this._listeners.length;
@@ -15,10 +24,11 @@ AbstractEventRx.prototype.subscribe = function(fn) {
      * remove subscription
      */
     return function() {
-        _this._listeners.slice(index, 1);
+        _this._listeners.splice(index, 1);
     }
 };
 
 AbstractEventRx.prototype.destroy = function() {
     this._listeners.length = 0;
+    this._hooks.length = 0;
 };

@@ -5,24 +5,41 @@
  * @returns 
  */
 export function StateManager(current, callback, states) {
-    this.current = current;
+    this.current = '';
     this.states = states || [];
-    this.lastStateIndex = this.states.indexOf(current);
     this.set = function(name) {
-        trigger.call(this, name);
-        this.current = name;
-        this.lastStateIndex = this.states.indexOf(name);
+        if (!validateAction(this.current, name)) {
+            this.current = name;
+            this.lastStateIndex = this.states.indexOf(name);
+        }
     };
 
-    function trigger(name) {
-        (callback || function() {})(this.current, name);
+    /**
+     * 
+     * @param {*} current 
+     * @param {*} next 
+     * @returns 
+     */
+    function validateAction(current, next) {
+        return (callback || function() { return false; })(current, next);
     }
 
-    Object.defineProperty(this, 'isLast', {
-        get: function() {
-            return this.lastStateIndex === this.states.length - 1;
+    Object.defineProperties(this, {
+        isLast: {
+            get: function() {
+                return this.lastStateIndex === this.states.length - 1;
+            }
+        },
+        isFirst: {
+            get: function() {
+                return this.lastStateIndex < 1;
+            }
         }
     });
+    /**
+     * trigger the set method
+     */
+    this.set(current);
 }
 
 StateManager.prototype.next = function() {

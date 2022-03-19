@@ -1,4 +1,4 @@
-import { FormControlDirective } from './directives/form-control.directive';
+import { FormControlDirective, FormControlNameDirective } from './directives/form-control.directive';
 import { FormControlService } from './form-control.service';
 import { FormFieldControlDirective } from './directives/form-field-control.directive';
 import { FormFieldControlService } from './form-field-control.service';
@@ -11,6 +11,7 @@ import { ModelDirective } from './directives/model.directive';
 import './utils';
 import { NumberEventBinder } from './directives/number.event.accessor';
 import { RangeEventBinder } from './directives/range.event.accessor';
+import { FormRepeaterService } from './form-repeater.service';
 
 /**
  * JeliFromModule
@@ -19,10 +20,12 @@ jModule({
     services: [
         FormControlService,
         FormFieldControlService,
+        FormRepeaterService,
         RadioEventContainer
     ],
     selectors: [
         FormControlDirective,
+        FormControlNameDirective,
         FormFieldControlDirective,
         FormFieldDirective,
         DefaultEventBinder,

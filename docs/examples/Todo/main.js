@@ -15,7 +15,9 @@ bootStrapApplication(AppModule);
         if (!installedModules.hasOwnProperty(moduleId)){
             /** create a new ref **/ 
             installedModules[moduleId] = { exports: true };
-            modules[moduleId](installedModules[moduleId], installedModules[moduleId], __required, global);
+            try {
+                modules[moduleId](installedModules[moduleId], installedModules[moduleId], __required, global);
+            } catch (e) {}
         }
 
         return property ? installedModules[moduleId][property] : installedModules[moduleId];
@@ -620,35 +622,40 @@ exports.base64 = __required('node_modules/js-helpers/fns/base64.js', 'default');
 'dist/core/bundles/jeli-core-module.js': (function(module, exports, __required, global){
 "use strict";
 __required.r(exports, 'LazyLoader', function(){ return LazyLoader;});
+__required.r(exports, 'InterceptorResolver', function(){ return InterceptorResolver;});
 __required.r(exports, 'IterableProfiler', function(){ return IterableProfiler;});
 __required.r(exports, 'ComponentFactoryResolver', function(){ return ComponentFactoryResolver;});
+__required.r(exports, 'rxWhile', function(){ return rxWhile;});
+__required.r(exports, 'rxDebounceTime', function(){ return rxDebounceTime;});
 __required.r(exports, 'debounce', function(){ return debounce;});
-__required.r(exports, 'CustomEventHandler', function(){ return CustomEventHandler;});
+__required.r(exports, 'EventManager', function(){ return EventManager;});
+__required.r(exports, 'Promise2', function(){ return Promise2;});
 __required.r(exports, 'EventEmitter', function(){ return EventEmitter;});
+__required.r(exports, 'StateManager', function(){ return StateManager;});
 __required.r(exports, 'AbstractObserver', function(){ return AbstractObserver;});
 __required.r(exports, 'Observable', function(){ return Observable;});
 __required.r(exports, 'Subscription', function(){ return Subscription;});
 __required.r(exports, 'Subject', function(){ return Subject;});
+__required.r(exports, 'QueryList', function(){ return QueryList;});
 __required.r(exports, 'ElementRef', function(){ return ElementRef;});
 __required.r(exports, 'scheduler', function(){ return scheduler;});
 __required.r(exports, 'ViewRef', function(){ return ViewRef;});
-__required.r(exports, 'TemplateRef', function(){ return TemplateRef;});
 __required.r(exports, 'ElementClassList', function(){ return ElementClassList;});
 __required.r(exports, 'ElementStyle', function(){ return ElementStyle;});
 __required.r(exports, 'AttributeAppender', function(){ return AttributeAppender;});
 __required.r(exports, 'DOMHelper', function(){ return DOMHelper;});
 __required.r(exports, 'sce', function(){ return sce;});
 __required.r(exports, 'ViewParser', function(){ return ViewParser;});
-__required.r(exports, 'Defer', function(){ return Defer;});
-__required.r(exports, 'CorePromiseHandler', function(){ return CorePromiseHandler;});
-__required.r(exports, '_Promise', function(){ return _Promise;});
 __required.r(exports, 'ChangeDetector', function(){ return ChangeDetector;});
 __required.r(exports, 'bootStrapApplication', function(){ return bootStrapApplication;});
+__required.r(exports, 'APP_BOOTSTRAP', function(){ return APP_BOOTSTRAP;});
 __required.r(exports, 'INITIALIZERS', function(){ return INITIALIZERS;});
 __required.r(exports, 'Observer', function(){ return Observer;});
 __required.r(exports, 'staticInjectionToken', function(){ return staticInjectionToken;});
+__required.r(exports, 'TemplateRef', function(){ return TemplateRef;});
 __required.r(exports, 'ϕjeliLinker', function(){ return ϕjeliLinker;});
 __required.r(exports, 'LifeCycle', function(){ return LifeCycle;});
+__required.r(exports, 'noop', function(){ return noop;});
 __required.r(exports, 'resolveClosureRef', function(){ return resolveClosureRef;});
 __required.r(exports, 'closureRef', function(){ return closureRef;});
 __required.r(exports, 'AbstractInjectorInstance', function(){ return AbstractInjectorInstance;});
@@ -668,13 +675,12 @@ var isundefined = helpers['isundefined'];
 var isboolean = helpers['isboolean'];
 var addToArray = helpers['addToArray'];
 var removeFromArray = helpers['removeFromArray'];
-var isempty = helpers['isempty'];
-var inarray = helpers['inarray'];
 var isstring = helpers['isstring'];
+var inarray = helpers['inarray'];
 var isequal = helpers['isequal'];
 var isobject = helpers['isobject'];
 var isfunction = helpers['isfunction'];
-var __buildOptions = { 'version': '1.0.0' };
+var __buildOptions = {};
 function errorBuilder(error, logLevel) {
     var loggerLevel = void 0 == logLevel ? 0 : logLevel;
     var logLevelMethods = [
@@ -710,59 +716,72 @@ function resolveClosureRef(ref) {
     }
 }
 ;
+function noop(callback) {
+    return callback || function () {
+    };
+}
+;
 var existingInstance = new Map();
 function ProviderToken(tokenName, multiple, provide) {
     var tokenRecords = [];
-    var persists = false;
+    var _persists = true;
+    var resolved = false;
     this.tokenName = tokenName;
-    this.register = function (value, wireInstant) {
-        value = wireInstant ? AutoWire(value) : value;
+    this.register = function (value, persist) {
         if (multiple) {
             tokenRecords.push(value);
         } else {
             tokenRecords = value;
         }
-        persists = wireInstant;
+        _persists = persist;
+        resolved = false;
     };
     this.resolve = function () {
-        var token;
+        if (resolved && _persists)
+            return tokenRecords;
+        var token = null;
         try {
             if (multiple) {
                 token = tokenRecords.map(getToken);
             } else {
                 token = getToken(tokenRecords);
             }
+            if (!_persists)
+                tokenRecords = [];
+            else
+                tokenRecords = token;
+            resolved = _persists;
         } catch (e) {
             errorBuilder('error while resolving ' + tokenName);
         }
-        if (!persists)
-            tokenRecords = [];
         return token;
     };
     if (provide) {
         this.register(provide, true);
     }
     function getToken(token) {
-        return persists ? token : AutoWire(token);
+        return resolved ? token : AutoWire(token);
     }
 }
-function Inject(factory, localInjector) {
-    if (localInjector && localInjector.has(factory)) {
-        return localInjector.get(factory);
-    } else if (isfunction(factory)) {
-        if (!factory.annotations) {
-            return resolveClosureRef(factory);
+function Inject(dep, localInjector) {
+    if (dep.instance) {
+        return dep.instance;
+    } else if (dep instanceof ProviderToken) {
+        return dep.resolve();
+    } else if (localInjector && localInjector.has(dep.tokenName)) {
+        return localInjector.get(dep);
+    } else if (isfunction(dep)) {
+        if (!dep.annotations) {
+            return resolveClosureRef(dep);
         }
-        var instance = factory.annotations.instance;
+        var instance = dep.annotations.instance;
         if (!instance) {
-            instance = AutoWire(resolveClosureRef(factory), localInjector);
-            if (!factory.annotations.noSingleton) {
-                factory.annotations.instance = instance;
+            instance = AutoWire(resolveClosureRef(dep), localInjector);
+            if (!dep.annotations.noSingleton) {
+                dep.annotations.instance = instance;
             }
         }
         return instance;
-    } else if (factory instanceof ProviderToken) {
-        return factory.resolve();
     }
     return null;
 }
@@ -790,7 +809,7 @@ function wireResolvers(deps, localInjector) {
             var token = deps[i];
             var tokenValue = resolveTokenBase(token, localInjector);
             if (token.name instanceof ProviderToken) {
-                token.name.register(tokenValue);
+                token.name.register(tokenValue, false);
             } else if (isfunction(token.name)) {
                 console.log(token, tokenValue);
             }
@@ -800,10 +819,7 @@ function wireResolvers(deps, localInjector) {
 function resolveTokenBase(token, localInjector) {
     var tokenValue;
     if (token.factory) {
-        var args = resolveDeps(token.DI, localInjector);
-        tokenValue = function () {
-            return resolveClosureRef(token.factory).apply(null, args);
-        };
+        tokenValue = resolveClosureRef.factory(token, localInjector);
     } else if (token.useClass) {
         tokenValue = Inject(token.useClass, localInjector);
     } else if (token.reference) {
@@ -813,26 +829,21 @@ function resolveTokenBase(token, localInjector) {
     }
     return tokenValue;
 }
-function resolveDeps(DI, localInjector) {
-    var deps = [];
-    if (DI) {
-        for (var serviceName in DI) {
-            var doInject = DI[serviceName];
-            var injectableParam = null;
-            var err = false;
-            try {
-                injectableParam = Inject(doInject.factory || serviceName, localInjector);
-            } catch (e) {
-                err = true;
-            } finally {
-                if (err && !doInject.optional) {
-                    throw new Error('Unable to resolve provider ' + serviceName);
-                }
+function resolveDeps(deps, localInjector) {
+    return (deps || []).map(function (di) {
+        var injectableParam = null;
+        var err = false;
+        try {
+            injectableParam = Inject(di, localInjector);
+        } catch (e) {
+            err = true;
+        } finally {
+            if (err && !di.optional) {
+                throw new Error('Unable to resolve provider ' + di.name || di.tokenName);
             }
-            deps.push(injectableParam);
         }
-    }
-    return deps;
+        return injectableParam;
+    });
 }
 function resolveReference(reference, localInjector) {
     if (isfunction(reference)) {
@@ -851,6 +862,12 @@ function resolveReference(reference, localInjector) {
         return reference;
     }
 }
+resolveClosureRef.factory = function (token, localInjector) {
+    var args = resolveDeps(token.DI, localInjector);
+    return function () {
+        return resolveClosureRef(token.factory).apply(null, args);
+    };
+};
 function AbstractInjectorInstance() {
     this.injectors = {};
     this.has = function (injectorToken) {
@@ -884,6 +901,49 @@ function LifeCycle(componentInstance) {
     };
 }
 ;
+function TemplateRef(templates) {
+    this.hasContext = !!templates.context;
+    this.createElement = function (parentNode, viewContainer) {
+        return ViewParserHelper[templates.type](templates, parentNode, viewContainer);
+    };
+    this.getContext = function () {
+        return templates.context;
+    };
+    this.forEach = function (selector, callback) {
+        function _selectable(template) {
+            if (!selector) {
+                return true;
+            } else if (inarray(selector[0], [
+                    'id',
+                    'class'
+                ])) {
+                return template.attr && inarray(template.attr[selector[0]], selector[1]) || selector[0] === 'id' && template.refId === selector[1];
+            } else if (isequal(selector[0], 'attr')) {
+                return template.attr && template.attr.hasOwnProperty(selector[1]);
+            } else {
+                return isequal(selector[1], template.name);
+            }
+        }
+        for (var i = 0; i < templates.length; i++) {
+            var template = templates[i];
+            if (_selectable(template)) {
+                if (isequal(template.name, '#fragment'))
+                    template.children.forEach(callback);
+                else
+                    callback(template);
+            }
+        }
+    };
+}
+TemplateRef.factory = function (node, templateId, silent) {
+    var templates = node['[[TEMPLATES]]'];
+    if (!templates || !templates.hasOwnProperty(templateId)) {
+        if (!silent)
+            errorBuilder('No templates Defined #' + templateId);
+        return null;
+    }
+    return new TemplateRef(templates[templateId]);
+};
 var staticInjectionToken = {
     ElementRef: 'ElementRef',
     TemplateRef: 'TemplateRef',
@@ -892,12 +952,13 @@ var staticInjectionToken = {
     ParentRef: 'ParentRef',
     VALIDATORS: 'VALIDATORS',
     QueryList: 'QueryList',
-    Function: 'Function'
+    Function: 'Function',
+    HostRef: 'HostRef'
 };
-function ComponentInjectors(elementRef) {
+function ComponentInjectors(elementRef, selector) {
     AbstractInjectorInstance.call(this, elementRef);
     this.injectors.ElementRef = elementRef;
-    this.currentClassAnnotations = {};
+    this.injectors.Selector = selector;
     this.has = function (tokenName) {
         return this.injectors.hasOwnProperty(tokenName) || staticInjectionToken.hasOwnProperty(tokenName);
     };
@@ -909,23 +970,23 @@ ComponentInjectors.prototype.destroy = function () {
     this.injectors = null;
     this.currentClassAnnotations = null;
 };
-ComponentInjectors.prototype.get = function (tokenName) {
-    if (this.injectors.hasOwnProperty(tokenName))
-        return this.injectors[tokenName];
-    else if (staticInjectionToken[tokenName])
-        return _ComponentInjectionToken(tokenName, this);
+ComponentInjectors.prototype.get = function (dep) {
+    if (this.injectors.hasOwnProperty(dep.tokenName))
+        return this.injectors[dep.tokenName];
+    else if (staticInjectionToken[dep.tokenName])
+        return _ComponentInjectionToken(dep, this);
 };
-function _ComponentInjectionToken(tokenName, context) {
-    switch (tokenName) {
+function _ComponentInjectionToken(dep, context) {
+    switch (dep.tokenName) {
     case staticInjectionToken.TemplateRef:
-        return context.injectors.ElementRef.getTemplateRef(context.currentClassAnnotations.selector);
+        return TemplateRef.factory(context.injectors.ElementRef, context.get({ tokenName: 'Selector' }));
     case staticInjectionToken.changeDetector:
         return context.injectors.ElementRef.changeDetector;
     case staticInjectionToken.ViewRef:
         return new ViewRef(context.injectors.ElementRef);
     case staticInjectionToken.ParentRef: {
-            if (context.currentClassAnnotations.DI.ParentRef.value) {
-                return findParentRef(context.injectors.ElementRef.parent, context.currentClassAnnotations.DI.ParentRef);
+            if (dep.value) {
+                return findParentRef(context.injectors.ElementRef.parent, dep);
             }
             return context.injectors.ElementRef.parent.componentInstance;
         }
@@ -948,7 +1009,7 @@ function getValidators(elementRef) {
 }
 function findParentRef(parentRef, refInstance) {
     var selector = refInstance.value + (refInstance.type ? ':' + refInstance.type : '');
-    if (parentRef && !parentRef.nodes.has(selector)) {
+    if (parentRef && (!parentRef.nodes || !parentRef.nodes.has(selector))) {
         return findParentRef(parentRef.parent, refInstance);
     }
     if (!parentRef) {
@@ -1008,7 +1069,7 @@ function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
     function getPrimitiveValue(type, name, value) {
         switch (type) {
         case staticInjectionToken.TemplateRef:
-            return elementRef.getTemplateRef(name);
+            return TemplateRef.factory(elementRef, name);
         case staticInjectionToken.Function:
             return elementRef.parent.componentInstance[value];
         default:
@@ -1022,7 +1083,7 @@ function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
     });
     attachElementObserver(elementRef, function () {
         unsubscribe();
-        registeredProperty = [];
+        registeredProperty.length = 0;
     });
 }
 function SubscribeObservables(refId, fn) {
@@ -1043,7 +1104,7 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
         componentRef.componentInstance = componentInstance;
         if (ctrl.view) {
             try {
-                var renderedElement = ctrl.view.compile(elementRef);
+                var renderedElement = ctrl.view(elementRef);
                 elementMutationObserver(elementRef.nativeElement, function (mutaionList, observer) {
                     lifeCycle && lifeCycle.trigger('viewDidLoad');
                     observer.disconnect();
@@ -1083,6 +1144,7 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
     function registerDirectiveInstance(componentInstance) {
         if (!elementRef.isc) {
             elementRef.nodes.set(ctrl.annotations.exportAs || definition.selector, componentInstance);
+            lifeCycle && lifeCycle.trigger('viewDidLoad');
             attachElementObserver(elementRef, function () {
                 lifeCycle.trigger('viewDidDestroy');
                 elementRef.nodes.delete(definition.selector);
@@ -1101,13 +1163,13 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
 }
 ElementCompiler.resolve = function (node, nextTick) {
     var inc = 0;
+    var componentInjectors = new ComponentInjectors(node);
     function next() {
         var factory = node.providers[inc];
-        var componentInjectors = new ComponentInjectors(node);
         inc++;
         if (factory) {
+            componentInjectors.set('Selector', factory.annotations.selector);
             try {
-                componentInjectors.currentClassAnnotations = factory.annotations;
                 ElementCompiler(factory, node, componentInjectors, next);
             } catch (e) {
                 errorBuilder(e);
@@ -1228,6 +1290,9 @@ function InternalChangeDetector(context) {
     }
     ;
 }
+InternalChangeDetector.prototype.onlySelf = function () {
+    this.detectChanges(false, true);
+};
 InternalChangeDetector.prototype.markAsChecked = function () {
     this._changeDetectorState = 1;
 };
@@ -1306,134 +1371,8 @@ ComponentRef.create = function (refId, parentId) {
     }
     componentRef = null;
 };
-function CorePromiseHandler(triggerAfterResolve) {
-    var _untilObserver = [];
-    var untilStarted = false;
-    var state = {
-        pending: true,
-        value: null,
-        resolvedWith: ''
-    };
-    var _pending = [];
-    function checkPendingState() {
-        if (!state.pending) {
-            _complete(state.resolvedWith, state.value);
-        } else if (_untilObserver.length && !untilStarted) {
-            untilStarted = true;
-            startUntilObserver();
-        }
-    }
-    function startUntilObserver() {
-        var _interval = setInterval(function () {
-            var allPassed = _untilObserver.map(function (fn) {
-                return fn();
-            }).filter(function (ans) {
-                return !!ans;
-            }).length;
-            if (allPassed === _untilObserver.length) {
-                _complete('resolve');
-                _untilObserver.length = 0;
-                clearInterval(_interval);
-            }
-        }, 100);
-    }
-    function _complete(type, result) {
-        while (_pending[0]) {
-            var fn = _pending.shift()[type];
-            fn.apply(null, result);
-        }
-        state.pending = false;
-        state.value = result;
-        state.resolvedWith = type;
-        (triggerAfterResolve || function () {
-        })();
-    }
-    ;
-    function _registerListener(listeners) {
-        _pending.push(listeners);
-        checkPendingState();
-    }
-    return {
-        complete: _complete,
-        checkPendingState: checkPendingState,
-        startUntilObserver: startUntilObserver,
-        until: _untilObserver,
-        registerListener: _registerListener
-    };
-}
-function Defer(triggerAfterResolve) {
-    var core = CorePromiseHandler(triggerAfterResolve);
-    this.resolve = function () {
-        core.complete('done', arguments);
-    };
-    this.reject = function () {
-        core.complete('fail', arguments);
-    };
-    this.done = function (callback) {
-        core.registerListener({ done: callback });
-        return this;
-    };
-    this.fail = function (callback) {
-        core.registerListener({ fail: callback });
-        return this;
-    };
-}
-function _Promise(triggerAfterResolve) {
-    var core = CorePromiseHandler(triggerAfterResolve);
-    this.resolve = function () {
-        core.complete('resolve', arguments);
-    };
-    this.reject = function (result) {
-        core.complete('reject', arguments);
-    };
-    this.until = function (untilObserver) {
-        core.until.push(untilObserver);
-        return this;
-    };
-    this.then = function (success, failure) {
-        core.registerListener({
-            resolve: success || function () {
-            },
-            reject: failure || function () {
-            }
-        });
-        return this;
-    };
-    this.catch = function (failure) {
-        core.registerListener({
-            reject: failure || function () {
-            }
-        });
-    };
-}
-_Promise.all = function (resolve) {
-    var slice = [].slice;
-    var resolveValues = arguments.length == 1 && resolve.length ? resolve : slice.call(arguments);
-    var length = resolveValues.length;
-    var remaining = length;
-    var deferred = new Defer();
-    var failed = 0;
-    var results = [];
-    function updateDefered(idx, err) {
-        return function (res) {
-            results[idx] = res;
-            if (err) {
-                ++failed;
-            }
-            if (!--remaining) {
-                deferred[failed ? 'reject' : 'resolve'](results);
-            }
-        };
-    }
-    for (var i = 0; i < length; i++) {
-        var cur = resolveValues[i];
-        if (cur instanceof _Promise || cur instanceof Promise) {
-            cur.then(updateDefered(i), updateDefered(i, true));
-        } else {
-            updateDefered(i)(cur);
-        }
-    }
-    return deferred;
+ComponentRef.get = function (refId, hostRefId) {
+    return componentDebugContext.get(refId) || componentDebugContext.get(hostRefId) || {};
 };
 var CoreBootstrapContext = {
     bootStrapComponent: null,
@@ -1443,17 +1382,24 @@ var CoreBootstrapContext = {
     enableDebugger: true
 };
 var INITIALIZERS = new ProviderToken('AppInitializers', true);
+var APP_BOOTSTRAP = new ProviderToken('AppBootstrap', true);
 function bootStrapApplication(moduleToBootStrap) {
-    CoreBootstrapContext.compiledModule = moduleToBootStrap;
-    CoreBootstrapContext.injector = new AbstractInjectorInstance();
-    moduleToBootStrap();
-    _Promise.all(Inject(INITIALIZERS, CoreBootstrapContext.injector).map(function (callback) {
-        return callback();
-    })).done(function () {
-        CoreBootstrapContext.$isCompiled = true;
-        bootStrapElement();
-    }, function (err) {
-        console.error(err);
+    return new Promise(function (resolve, reject) {
+        try {
+            CoreBootstrapContext.compiledModule = moduleToBootStrap;
+            CoreBootstrapContext.injector = new AbstractInjectorInstance();
+            moduleToBootStrap();
+            Promise.all(Inject(INITIALIZERS, CoreBootstrapContext.injector).map(function (callback) {
+                return callback();
+            })).then(function () {
+                CoreBootstrapContext.$isCompiled = true;
+                bootStrapElement();
+                resolve();
+            }, reject);
+        } catch (e) {
+            errorBuilder(e.message);
+            reject();
+        }
     });
     function bootStrapElement() {
         if (moduleToBootStrap.rootElement) {
@@ -1465,6 +1411,9 @@ function bootStrapApplication(moduleToBootStrap) {
                 fromDOM: true
             }, null);
             ElementCompiler(moduleToBootStrap.rootElement, CoreBootstrapContext.bootStrapComponent, CoreBootstrapContext.injector, function () {
+                Inject(APP_BOOTSTRAP, CoreBootstrapContext.injector).forEach(function (callback) {
+                    callback();
+                });
             });
         }
     }
@@ -1476,9 +1425,9 @@ function ChangeDetector() {
     CoreBootstrapContext.bootStrapComponent.changeDetector.detectChanges();
 }
 ;
-function ViewParser(transpiledHTML) {
+function ViewParser() {
     var fragment = document.createDocumentFragment();
-    this.compile = function (parent) {
+    this.compile = function (transpiledHTML, parent) {
         for (var i = 0; i < transpiledHTML.length; i++) {
             var compiled = ViewParserHelper[transpiledHTML[i].type](transpiledHTML[i], parent, this);
             if (compiled) {
@@ -1503,15 +1452,18 @@ function element(definition, parent, viewContainer) {
         for (var i = 0; i < definition.children.length; i++) {
             var child = ViewParserHelper[definition.children[i].type](definition.children[i], elementRef, viewContainer, true);
             if (child) {
-                elementRef.children.add(child);
-                elementRef.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+                pushToParent(child, elementRef, i);
             }
         }
     }
     if (definition.vc) {
-        elementAddViewQuery(elementRef.hostRef, definition.vc, elementRef);
+        addViewQuery(elementRef.hostRef, definition.vc, elementRef);
     }
     return elementRef;
+}
+function pushToParent(child, parent, index) {
+    parent.children.add(child, index);
+    parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
 }
 function comment(definition, parent) {
     return new AbstractElementRef(definition, parent);
@@ -1519,26 +1471,33 @@ function comment(definition, parent) {
 function text(definition, parent) {
     return new TextNodeRef(definition, parent);
 }
-function place(definition, parent, viewContainer, appendToChild) {
+function place(definition, parent, viewContainer, appendToParent) {
     var hostRef = parent.hostRef;
-    var template = hostRef.getTemplateRef(definition.refId || 'place', true);
-    if (template) {
-        if (definition.refId) {
-            createAndAppend(template);
-        } else {
-            template.forEach(definition.selector, createAndAppend);
-        }
-    }
+    var createPlaceElement = !(viewContainer || appendToParent);
+    var template = TemplateRef.factory(hostRef, 'place', true);
+    var placeElement = createPlaceElement ? new AbstractElementRef({
+        name: '#fragment',
+        type: 'element'
+    }, hostRef) : null;
     function createAndAppend(elementDefinition) {
         var child = ViewParserHelper[elementDefinition.type](elementDefinition, hostRef.parent, viewContainer);
-        if (appendToChild) {
-            parent.children.add(child);
-            parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+        child.hostRefId = hostRef.refId;
+        if (appendToParent || createPlaceElement) {
+            pushToParent(child, placeElement || parent);
         } else {
             viewContainer.pushToView(child);
         }
+        if (definition.vc && [
+                elementDefinition.refId,
+                child.tagName
+            ].includes(definition.vc[0].value)) {
+            addViewQuery(hostRef, definition.vc, child);
+        }
     }
-    return null;
+    if (template) {
+        template.forEach(definition.selector, createAndAppend);
+    }
+    return placeElement;
 }
 ;
 function outlet(definition, parent, viewContainer) {
@@ -1555,6 +1514,8 @@ function outlet(definition, parent, viewContainer) {
 }
 function transverse(node) {
     if (node instanceof AbstractElementRef) {
+        if (node._lazyCompiled)
+            return;
         if (node.providers && node.providers.length) {
             ElementCompiler.resolve(node, proceedWithCompilation);
         } else {
@@ -1618,17 +1579,17 @@ function ElementStyle(nativeElement, name, value) {
 }
 ;
 ElementStyle.set = function (nativeElement, name, value, suffix) {
-    if (typeof value === 'number' && inarray(name, [
-            'width',
-            'height',
-            'top',
-            'bottom',
-            'left',
-            'right'
-        ])) {
+    if (typeof value === 'number' && ElementStyle.props.WithSuffix.includes(name)) {
         value += suffix || 'px';
     }
+    if (ElementStyle.props.background.includes(name) && value.includes('.') && !value.startsWith('url')) {
+        value = 'url(' + value + ')';
+    }
     nativeElement.style[name] = value;
+};
+ElementStyle.props = {
+    WithSuffix: 'width|height|top|bottom|left|right|marginTop|marginBottom|marginLeft|marginRight|paddingRight|paddingLeft|paddingTop|paddingBottom|fontSize'.split('|'),
+    background: 'backgroundImage|background'.split('|')
 };
 function ElementClassList(nativeElement, classList, type) {
     if (type) {
@@ -1681,7 +1642,7 @@ AttributeAppender.helpers = {
         if (isobject(value)) {
             ElementStyle(nativeElement, value);
         } else {
-            ElementStyle.set(nativeElement, template.props, value, template.suffix);
+            ElementStyle.set(nativeElement, template.type, value, template.suffix);
         }
     },
     innerhtml: function (nativeElement, value) {
@@ -1731,24 +1692,26 @@ function elementMutationObserver(nativeElement, callback) {
     });
 }
 ;
-function elementAddViewQuery(hostElement, option, childEelement) {
+function addViewQuery(hostElement, option, childElement) {
     if (!isequal(option[1], hostElement.tagName)) {
-        return hostElement.parent && elementAddViewQuery(hostElement.parent.hostRef, option, childEelement);
+        return hostElement.parent && addViewQuery(hostElement.parent.hostRef, option, childElement);
     }
     switch (option[0].type) {
     case staticInjectionToken.QueryList:
         if (!hostElement.componentInstance.hasOwnProperty(option[0].name)) {
             hostElement.componentInstance[option[0].name] = new QueryList();
         }
-        hostElement.componentInstance[option[0].name].add(childEelement);
+        hostElement.componentInstance[option[0].name].add(childElement);
         break;
     case staticInjectionToken.ElementRef:
-        hostElement.componentInstance[option[0].name] = childEelement;
+        hostElement.componentInstance[option[0].name] = childElement;
         break;
     default:
         Object.defineProperty(hostElement.componentInstance, option[0].name, {
+            configurable: true,
+            enumerable: true,
             get: function () {
-                return childEelement.nodes.has(option[0].type) ? childEelement.nodes.get(option[0].type) : childEelement.context;
+                return childElement.nodes.has(option[0].type) ? childElement.nodes.get(option[0].type) : childElement.context;
             }
         });
         break;
@@ -1804,9 +1767,10 @@ function cleanupElementRef(elementRef) {
     elementRef.children.destroy();
     elementRef.nativeElement = null;
     elementRef.parent = null;
-    elementRef.providers = null;
-    elementRef._viewQuery = null;
-    elementRef.nodes.clear();
+    if (elementRef.providers) {
+        elementRef.providers = null;
+        elementRef.nodes.clear();
+    }
 }
 ;
 function createElementByType(tag, text, fromDOM) {
@@ -1845,6 +1809,28 @@ function setupAttributeObservers(element, attrObservers) {
         observerStarted = true;
     }
 }
+function createLocalVariables(localVariables, viewContext) {
+    var context = {};
+    if (localVariables) {
+        for (var propName in localVariables) {
+            if (localVariables[propName].match(/\s/)) {
+                context[propName] = localVariables[propName];
+            } else {
+                writePropertyBinding(propName);
+            }
+        }
+    }
+    function writePropertyBinding(propName) {
+        Object.defineProperty(context, propName, {
+            get: function () {
+                if (!viewContext.context)
+                    return;
+                return viewContext.context[localVariables[propName]];
+            }
+        });
+    }
+    return context;
+}
 var DOMHelper = {
     insert: elementInsertAfter,
     remove: removeElement
@@ -1852,20 +1838,21 @@ var DOMHelper = {
 var $eUID = 1;
 function AbstractElementRef(definition, parentRef) {
     this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
-    this.refId = 'jeli:' + +new Date() + ':' + $eUID++;
     this.$observers = [];
+    this.refId = '__eid_' + $eUID++;
     this.children = new QueryList();
     this.parent = parentRef;
+    this.hostRefId = parentRef ? parentRef.isc ? parentRef.refId : parentRef.hostRefId || this.refId : this.refId;
     this.type = definition.type;
     this.tagName = definition.name.toLowerCase();
-    this.isc = definition.isc;
-    this.providers = definition.providers;
     this.index = definition.index;
     this.attr = definition.attr;
     this.props = definition.props;
-    this.nativeNode = this.nativeElement.nodeType === 8 ? this.nativeElement : null;
-    this.nodes = new Map();
-    this._viewQuery = null;
+    this.isc = definition.isc;
+    if (definition.providers) {
+        this.providers = definition.providers;
+        this.nodes = new Map();
+    }
     Object.defineProperties(this, {
         context: {
             get: function () {
@@ -1877,18 +1864,14 @@ function AbstractElementRef(definition, parentRef) {
         },
         componentInstance: {
             get: function () {
-                if (componentDebugContext.has(this.refId)) {
-                    return componentDebugContext.get(this.refId).componentInstance;
-                }
-                return this.hostRef && this.hostRef.componentInstance;
+                var hostElement = ComponentRef.get(this.refId, this.hostRefId);
+                return hostElement.componentInstance;
             }
         },
         changeDetector: {
             get: function () {
-                if (componentDebugContext.has(this.refId)) {
-                    return componentDebugContext.get(this.refId).changeDetector;
-                }
-                return this.hostRef && this.hostRef.changeDetector;
+                var hostElement = ComponentRef.get(this.refId, this.hostRefId);
+                return hostElement.changeDetector;
             }
         },
         hostRef: {
@@ -1903,6 +1886,16 @@ function AbstractElementRef(definition, parentRef) {
             get: function () {
                 return definition.templates;
             }
+        },
+        nativeNode: {
+            get: function () {
+                return this.nativeElement.nodeType === 8 ? this.nativeElement : null;
+            }
+        },
+        data: {
+            get: function () {
+                return definition.data;
+            }
         }
     });
 }
@@ -1913,49 +1906,6 @@ AbstractElementRef.prototype.hasAttribute = function (name) {
 AbstractElementRef.prototype.getAttribute = function (name) {
     return this.attr && name in this.attr ? this.attr[name] : this.nativeElement.getAttribute(name);
 };
-AbstractElementRef.prototype.getTemplateRef = function (templateId, silent) {
-    var templates = this['[[TEMPLATES]]'];
-    if (!templates || !templates.hasOwnProperty(templateId)) {
-        if (!silent)
-            errorBuilder('No templates Defined #' + templateId);
-        return null;
-    }
-    return new TemplateRef(templates[templateId]);
-};
-function TemplateRef(templates) {
-    this.hasContext = !!templates.context;
-    this.createElement = function (parentNode, viewContainer) {
-        return ViewParserHelper[templates.type](templates, parentNode, viewContainer);
-    };
-    this.getContext = function () {
-        return templates.context;
-    };
-    this.forEach = function (selector, callback) {
-        function _selectable(template) {
-            if (!selector) {
-                return true;
-            } else if (inarray(selector[0], [
-                    'id',
-                    'class'
-                ])) {
-                return template.attr && inarray(template.attr[selector[0]], selector[1]);
-            } else if (isequal(selector[0], 'attr')) {
-                return template.attr && template.attr.hasOwnProperty(selector[1]);
-            } else {
-                return isequal(selector[1], template.name);
-            }
-        }
-        for (var i = 0; i < templates.length; i++) {
-            var template = templates[i];
-            if (_selectable(template)) {
-                if (isequal(template.name, '#fragment'))
-                    template.children.forEach(callback);
-                else
-                    callback(template);
-            }
-        }
-    };
-}
 var scheduler = {
     schedule: function (taskFn, timer) {
         if (!window.requestAnimationFrame) {
@@ -2064,54 +2014,23 @@ EmbededViewContext.prototype.updateContext = function (updates) {
         this.context[prop] = updates[prop];
     }
 };
-function createLocalVariables(localVariables, viewContext) {
-    var context = {};
-    if (localVariables) {
-        for (var propName in localVariables) {
-            if (localVariables[propName].match(/\s/)) {
-                context[propName] = localVariables[propName];
-            } else {
-                writePropertyBinding(propName);
-            }
-        }
-    }
-    function writePropertyBinding(propName) {
-        Object.defineProperty(context, propName, {
-            get: function () {
-                if (!viewContext.context)
-                    return;
-                return viewContext.context[localVariables[propName]];
-            }
-        });
-    }
-    return context;
-}
-function ElementRef(definition, parent) {
+function ElementRef(definition, parent, _lazyCompiled) {
     AbstractElementRef.call(this, definition, parent);
+    this.events = new EventHandler((definition.events || []).slice());
+    this._lazyCompiled = _lazyCompiled;
     if (definition.isc) {
         ComponentRef.create(this.refId, parent && parent.hostRef.refId);
     }
-    this.events = new EventHandler((definition.events || []).slice());
-    Object.defineProperties(this, {
-        viewQuery: {
-            get: function () {
-                return this._viewQuery || this.parent && this.parent._viewQuery;
-            }
-        }
-    });
     if (definition.attr$) {
         setupAttributeObservers(this, definition.attr$);
-    }
-    if (CoreBootstrapContext.enableDebugger) {
-        AttributeAppender(this.nativeElement, { 'jeli-ref': this.hostRef.refId });
     }
 }
 ElementRef.prototype = Object.create(AbstractElementRef.prototype);
 ElementRef.prototype.constructor = AbstractElementRef;
 function TextNodeRef(definition, parent) {
-    this.nativeNode = document.createTextNode(definition.ast.text);
+    this.nativeNode = document.createTextNode(definition.ast[0]);
     this.type = 'text';
-    this.hasBinding = !!definition.ast.templates;
+    this.hasBinding = definition.ast.length > 1;
     if (this.hasBinding) {
         Object.defineProperties(this, {
             parent: {
@@ -2139,12 +2058,12 @@ EventHandler.prototype.destroy = function () {
     this._events.length = 0;
 };
 EventHandler.registerListener = function (element) {
-    if (!element.events._events.length) {
+    if (!element.events || !element.events._events.length) {
         return;
     }
     var eventInstance = element.events;
     function handler($ev) {
-        EventHandler.HandleEvent(element, $ev);
+        handleEvent(element, $ev);
     }
     ;
     function _registerEvent(eventName) {
@@ -2155,33 +2074,11 @@ EventHandler.registerListener = function (element) {
             });
         }
     }
-    for (var i = 0; i < eventInstance._events.length; i++) {
-        var event = eventInstance._events[i];
+    var totalEvents = eventInstance._events.length;
+    while (totalEvents--) {
+        var event = eventInstance._events[totalEvents];
         if (!event.custom) {
             event.name.split(' ').forEach(_registerEvent);
-        }
-    }
-};
-EventHandler.HandleEvent = function (element, event) {
-    if (inarray(event.type, [
-            'touchstart',
-            'touchend',
-            'touchmove'
-        ])) {
-        event.preventDefault();
-    }
-    try {
-        EventHandler.getEventsByType(element.events._events, event.type).forEach(triggerEvents);
-    } catch (e) {
-        errorBuilder(e);
-    } finally {
-        element && element.changeDetector.detectChanges();
-    }
-    function triggerEvents(registeredEvent) {
-        if (registeredEvent.handler) {
-            registeredEvent.handler(event);
-        } else {
-            EventHandler._executeEventsTriggers(registeredEvent.value, element.hostRef.componentInstance, element.context, event);
         }
     }
 };
@@ -2189,22 +2086,23 @@ EventHandler.attachEvent = function (eventInstance, eventName, eventValue, compo
     eventInstance._events.push({
         name: eventName,
         handler: function ($event) {
-            return EventHandler._executeEventsTriggers(eventValue, componentInstance, null, $event);
+            return _executeEventsTriggers(eventValue, componentInstance, null, $event);
         }
     });
 };
 EventHandler.attachEventEmitter = function (element, eventName, componentInstance) {
-    var registeredEvent = EventHandler.getEventsByType(element.events._events, eventName)[0];
+    var registeredEvent = getEventsByType(element.events._events, eventName)[0];
     if (registeredEvent && registeredEvent.value) {
         var unSubscribe = componentInstance[eventName].subscribe(function (value) {
-            EventHandler._executeEventsTriggers(registeredEvent.value, element.parent.componentInstance, element.context, value);
-            element && element.parent.changeDetector.detectChanges();
+            _executeEventsTriggers(registeredEvent.value, element.parent.componentInstance, element.context, value);
+            var parentElement = element && element.parent;
+            parentElement && parentElement.changeDetector && parentElement.changeDetector.detectChanges();
         });
         element.events.registeredEvents.set(eventName, unSubscribe);
     }
 };
-EventHandler.prototype.attachEventDispatcher = function (element, eventName, componentInstance) {
-    var registeredEvent = EventHandler.getEventsByType(element.events._events, eventName)[0];
+EventHandler.attachEventDispatcher = function (element, eventName, componentInstance) {
+    var registeredEvent = getEventsByType(element.events._events, eventName)[0];
     var context = null;
     if (registeredEvent && registeredEvent.value) {
         context = element.context;
@@ -2213,34 +2111,36 @@ EventHandler.prototype.attachEventDispatcher = function (element, eventName, com
         }
         if (context.hasOwnProperty(eventName)) {
             var unSubscribe = context[eventName].subscribe(function (value) {
-                EventHandler._executeEventsTriggers(registeredEvent.value, componentInstance, element.context, value);
+                _executeEventsTriggers(registeredEvent.value, componentInstance, element.context, value);
                 element && element.changeDetector.detectChanges();
             });
             element.events.registeredEvents.set(eventName, unSubscribe);
         }
     }
 };
-EventHandler.getEventsByType = function (events, type) {
+function getEventsByType(events, type) {
     return events.filter(function (event) {
         return event.name.split(/\s/g).includes(type);
     });
-};
-EventHandler._executeEventsTriggers = function (eventTriggers, componentInstance, context, ev) {
+}
+;
+function _executeEventsTriggers(eventTriggers, componentInstance, context, ev) {
     eventTriggers.forEach(_dispatch);
     function _dispatch(event) {
         if (event.left) {
             parseObjectExpression(event, context, componentInstance, ev);
         } else if (event.fn) {
-            var fn = EventHandler.getFnFromContext(event, componentInstance);
-            var narg = generateArguments(event.args, context || componentInstance, null, ev);
-            var ret = fn.apply(fn.context, narg);
-            fn.context = null;
-            fn = null;
-            return ret;
+            var fn = getFnFromContext(event, componentInstance);
+            if (fn) {
+                var narg = generateArguments(event.args, context || componentInstance, null, ev);
+                fn.apply(fn.context, narg);
+                fn.context = null;
+                fn = null;
+            }
         }
     }
-};
-EventHandler.getFnFromContext = function (eventInstance, componentInstance) {
+}
+function getFnFromContext(eventInstance, componentInstance) {
     var instance = componentInstance;
     if (eventInstance.namespaces) {
         instance = resolveContext(eventInstance.namespaces, componentInstance);
@@ -2253,7 +2153,39 @@ EventHandler.getFnFromContext = function (eventInstance, componentInstance) {
     }
     instance = null;
     return fn;
-};
+}
+;
+function handleEvent(element, event) {
+    if (inarray(event.type, [
+            'touchstart',
+            'touchend',
+            'touchmove',
+            'submit'
+        ])) {
+        event.preventDefault();
+    }
+    try {
+        getEventsByType(element.events._events, event.type).forEach(triggerEvents);
+    } catch (e) {
+        errorBuilder(e);
+    } finally {
+        element && element.changeDetector && element.changeDetector.detectChanges();
+    }
+    function triggerEvents(registeredEvent) {
+        if (registeredEvent.handler) {
+            return registeredEvent.handler(event);
+        } else {
+            var selectedElem = element;
+            if (registeredEvent.target) {
+                if (!event.target.closest(registeredEvent.target))
+                    return;
+                selectedElem = jeliQuerySelector(element, event.target) || element;
+            }
+            _executeEventsTriggers(registeredEvent.value, element.hostRef.componentInstance, selectedElem.context, event);
+            selectedElem = null;
+        }
+    }
+}
 function filterParser(filterClass, context) {
     var filterInstance = Inject(filterClass);
     if (!filterInstance) {
@@ -2277,10 +2209,10 @@ function getFilteredTemplateValue(templateModel, context, componentInstance) {
 }
 function compileTemplate(definition, context, componentInstance, cb) {
     var value = undefined;
-    if (definition.templates) {
-        value = definition.templates.reduce(function (accum, options) {
+    if (definition.length > 1) {
+        value = definition[1].reduce(function (accum, options) {
             return accum.replace(options[0], evaluateExpression(options[1], context, componentInstance));
-        }, definition.text);
+        }, definition[0]);
     } else {
         value = getFilteredTemplateValue(definition, context, componentInstance);
     }
@@ -2312,7 +2244,7 @@ function resolveValueFromContext(expression, context, componentInstance) {
     if (isundefined(expression) || isnull(expression) || isboolean(expression) || isnumber(expression) || /(#|rgb)/.test(expression))
         return expression;
     else if (isobject(expression))
-        return parseObjectExpression.apply(null, arguments);
+        return parseObjectExpression(expression, context, componentInstance);
     else if (isarray(expression))
         return resolveContext(expression, context, componentInstance);
     else if (expression === '$this')
@@ -2437,56 +2369,57 @@ function setModelValue(key, context, componentInstance, value) {
 }
 function resolveContext(key, context, componentInstance) {
     var isEventType = context instanceof Event;
-    return key.reduce(function (accum, property) {
+    return key.reduce(function (accum, property, idx) {
         if (isEventType) {
             return accum[property];
         }
+        var componentEntry = idx ? null : componentInstance;
         if (Array.isArray(property)) {
-            var value = resolveValueFromContext(property, context, componentInstance);
-            return accum[value];
+            var value = resolveValueFromContext(property, context, componentEntry);
+            return accum && accum[value];
         }
-        return resolveValueFromContext(property, accum, componentInstance);
+        return resolveValueFromContext(property, accum, componentEntry);
     }, context || {});
 }
 function Subscription(replayOnSubscription) {
-    var subscriptions = [];
-    var state = {
+    this.subscriptions = [];
+    this.state = {
         pending: false,
         value: null,
         resolveWith: ''
     };
-    this.add = function (success, error, completed) {
-        if (isobject(success)) {
-            subscriptions.push(success);
-        } else {
-            subscriptions.push({
-                onSuccess: success,
-                onError: error,
-                onCompleted: completed
-            });
-        }
-        if (replayOnSubscription) {
-        }
-        return this;
-    };
-    this.notify = function (type, args) {
-        if (!state || state.resolveWith === 'completed') {
-            return;
-        }
-        subscriptions.forEach(function (subscription) {
-            if (subscription[type] && isfunction(subscription[type])) {
-                subscription[type](args);
-            }
-        });
-        state.pending = subscriptions.length < 1;
-        state.resolveWith = type;
-        state.value = args;
-    };
-    this.destroy = function () {
-        subscriptions.length = 0;
-        state = null;
-    };
 }
+Subscription.prototype.add = function (success, error, completed) {
+    if (isobject(success)) {
+        this.subscriptions.push(success);
+    } else {
+        this.subscriptions.push({
+            onSuccess: success,
+            onError: error,
+            onCompleted: completed
+        });
+    }
+    if (replayOnSubscription) {
+    }
+    return this;
+};
+Subscription.prototype.notify = function (type, args) {
+    if (!this.state || this.state.resolveWith === 'completed') {
+        return;
+    }
+    this.subscriptions.forEach(function (subscription) {
+        if (subscription[type] && isfunction(subscription[type])) {
+            subscription[type](args);
+        }
+    });
+    this.state.pending = this.subscriptions.length < 1;
+    this.state.resolveWith = type;
+    this.state.value = args;
+};
+Subscription.prototype.destroy = function () {
+    this.subscriptions.length = 0;
+    this.state = null;
+};
 function Observable(callback) {
     var _observer = AbstractObserver();
     callback(_observer);
@@ -2542,16 +2475,16 @@ AbstractObserver.prototype.destroy = function () {
 };
 function Subject() {
     this._observer = new AbstractObserver();
-    this.subscribe = function (success, error, completed) {
-        var subscription = new Subscription(false);
-        subscription.add(success, error, completed);
-        this._observer.add(subscription);
-        return subscription;
-    };
-    Subject.prototype.destroy = function () {
-        this._observer.destroy();
-    };
 }
+Subject.prototype.subscribe = function (success, error, completed) {
+    var subscription = new Subscription(false);
+    subscription.add(success, error, completed);
+    this._observer.add(subscription);
+    return subscription;
+};
+Subject.prototype.destroy = function () {
+    this._observer.destroy();
+};
 Subject.prototype.hasObservers = function () {
     return this._observer.hasObservers();
 };
@@ -2589,6 +2522,7 @@ QueryList.prototype.add = function (element, index, emitEvent) {
     if (emitEvent) {
         this.onChanges.next({
             value: element,
+            index: index,
             type: 'add'
         });
     }
@@ -2602,7 +2536,7 @@ QueryList.prototype.get = function (element) {
     return this._list;
 };
 QueryList.prototype.filter = function (callback) {
-    this._list.filter(callback);
+    return this._list.filter(callback);
 };
 QueryList.prototype.forEach = function (callback) {
     this._list.forEach(callback);
@@ -2646,6 +2580,7 @@ QueryList.prototype.removeByIndex = function (index) {
     var element = removeFromArray(this._list, index);
     this.onChanges.next({
         value: element,
+        index: index,
         type: 'detached'
     });
     return element;
@@ -2653,7 +2588,14 @@ QueryList.prototype.removeByIndex = function (index) {
 QueryList.prototype.onChanges = new Subject();
 function AbstractEventRx() {
     this._listeners = [];
+    this._hooks = [];
 }
+AbstractEventRx.prototype.when = function () {
+    for (var i = 0; i < arguments.length; i++) {
+        this._hooks.push(arguments[i]);
+    }
+    return this;
+};
 AbstractEventRx.prototype.subscribe = function (fn) {
     var index = this._listeners.length;
     var _this = this;
@@ -2663,11 +2605,55 @@ AbstractEventRx.prototype.subscribe = function (fn) {
     }
     this._listeners.push(fn);
     return function () {
-        _this._listeners.slice(index, 1);
+        _this._listeners.splice(index, 1);
     };
 };
 AbstractEventRx.prototype.destroy = function () {
     this._listeners.length = 0;
+    this._hooks.length = 0;
+};
+function StateManager(current, callback, states) {
+    this.current = current;
+    this.states = states || [];
+    this.lastStateIndex = this.states.indexOf(current);
+    this.set = function (name) {
+        trigger.call(this, name);
+        this.current = name;
+        this.lastStateIndex = this.states.indexOf(name);
+    };
+    function trigger(name) {
+        (callback || function () {
+        })(this.current, name);
+    }
+    Object.defineProperties(this, {
+        isLast: {
+            get: function () {
+                return this.lastStateIndex === this.states.length - 1;
+            }
+        },
+        isFirst: {
+            get: function () {
+                return this.lastStateIndex < 1;
+            }
+        }
+    });
+}
+StateManager.prototype.next = function () {
+    var next = this.lastStateIndex + 1;
+    if (this.states.length - 1 >= next) {
+        this.set(this.states[next]);
+    }
+};
+StateManager.prototype.previous = function () {
+    if (this.lastStateIndex) {
+        this.set(this.states[this.lastStateIndex - 1]);
+    }
+};
+StateManager.prototype.isState = function (state) {
+    return state === this.current;
+};
+StateManager.prototype.setClass = function (state) {
+    return this.isState(state) ? 'active' : '';
 };
 function EventEmitter() {
     AbstractEventRx.call(this);
@@ -2675,78 +2661,189 @@ function EventEmitter() {
 EventEmitter.prototype = Object.create(AbstractEventRx.prototype);
 EventEmitter.prototype.constructor = AbstractEventRx;
 EventEmitter.prototype.emit = function (args) {
-    this._listeners.forEach(function (fn) {
-        fn(args);
+    _eventRxTrigger(this, args);
+};
+function Promise2(callback, extension) {
+    var _catchCallback = function (e) {
+        console.error(e);
+    };
+    var defer = {
+        success: [],
+        error: [],
+        state: {
+            pending: true,
+            value: undefined
+        }
+    };
+    var noop = function () {
+    };
+    function trigger(code) {
+        return function (response) {
+            defer.state.pending = false;
+            defer.state.value = response;
+            defer.state.resolvedWith = code;
+            while (defer[code].length) {
+                call(defer[code].shift());
+            }
+        };
+    }
+    function call(fn) {
+        defer.state.value = (fn || noop)(defer.state.value);
+    }
+    function commitOrTrigger(type, fn) {
+        if (!defer.state.pending) {
+            if (type === defer.state.resolvedWith) {
+                call(fn);
+            }
+        } else {
+            defer[type].push(fn);
+        }
+    }
+    this.onSuccess = function (fn) {
+        commitOrTrigger('success', fn);
+        return this;
+    };
+    this.onError = function (fn) {
+        commitOrTrigger('error', fn);
+        return this;
+    };
+    this.then = function (done, fail) {
+        this.onSuccess(done);
+        this.onError(fail);
+        return this;
+    };
+    this.catch = function (catchFn) {
+        _catchCallback = catchFn;
+    };
+    if (extension) {
+        for (var action in extension) {
+            this[action] = extension[action];
+        }
+    }
+    if (callback) {
+        try {
+            callback(trigger('success'), trigger('error'));
+        } catch (e) {
+            _catchCallback(e);
+        }
+    } else {
+        throw Error('DBPromise requires a callback method');
+    }
+}
+Promise2.extension = function (callback, events) {
+    var eventRegistry = {};
+    this.handlers = (events || []).reduce(function (acc, event) {
+        acc[event] = registry(event);
+        eventRegistry[event] = [];
+        return acc;
+    }, {});
+    function registry(event) {
+        return function (fn) {
+            eventRegistry[event].push(fn || callback);
+            return this;
+        };
+    }
+    this.call = function (eventName, args) {
+        if (eventRegistry[eventName] && eventRegistry[eventName].length) {
+            while (eventRegistry[eventName].length) {
+                eventRegistry[eventName].shift().apply(null, args);
+            }
+        } else {
+            callback.apply(null, args);
+        }
+    };
+};
+Promise2.all = function (resolve) {
+    var slice = [].slice;
+    var resolveValues = arguments.length == 1 && resolve.length ? resolve : slice.call(arguments);
+    var length = resolveValues.length;
+    var remaining = length;
+    var failed = 0;
+    var results = [];
+    return new Promise2(function (resolve, reject) {
+        function updateDefered(idx, err) {
+            return function (res) {
+                results[idx] = res;
+                if (err) {
+                    ++failed;
+                }
+                if (!--remaining) {
+                    (failed ? reject : resolve)(results);
+                }
+            };
+        }
+        for (var i = 0; i < length; i++) {
+            var cur = resolveValues[i];
+            if (cur instanceof Promise2 || cur instanceof Promise) {
+                cur.then(updateDefered(i), updateDefered(i, true));
+            } else {
+                updateDefered(i)(cur);
+            }
+        }
     });
 };
-function CustomEventHandler(type, defaultFn, eventExtension) {
-    if (!type) {
-        type = 'register';
-    }
-    ;
-    if (typeof eventExtension !== 'function') {
-        eventExtension = function (obj) {
-            return obj;
-        };
-    }
-    var registered = +new Date();
-    var _eventsQueue = {};
-    var _eventsObj = function () {
-        return eventExtension({
-            type: '',
-            registered: registered,
-            timestamp: +new Date(),
-            isTrusted: true,
-            returnValue: true,
-            target: null,
-            defaultPrevented: false,
-            preventDefault: function () {
-                this.defaultPrevented = true;
-            }
-        });
+function EventManager(defaultCallback, eventExtensionMethod) {
+    var _events = {};
+    this.defaultCallback = defaultCallback || function () {
     };
-    var _defaultFn = defaultFn || function () {
+    this.eventExtensionMethod = typeof eventExtensionMethod === 'function' ? eventExtensionMethod : function (obj) {
+        return obj;
     };
-    function CustomEvent() {
-        this[type] = function (name, fn) {
-            if (!_eventsQueue[name]) {
-                _eventsQueue[name] = [];
-            }
-            _eventsQueue[name].push(fn);
-            return _eventsQueue[name].length - 1;
-        };
-    }
-    CustomEvent.prototype.dispatch = function (name) {
-        var _events = _eventsObj();
-        _events.type = name;
-        _events.timestamp = +new Date();
-        var arg = [_events].concat(Array.prototype.slice.call(arguments, 1, arguments.length));
-        if (_eventsQueue[name]) {
-            _eventsQueue[name].forEach(function (fn) {
-                fn.apply(fn, arg);
-            });
+    this.add = function (eventName, callback) {
+        if (!_events.hasOwnProperty(eventName)) {
+            _events[eventName] = [];
         }
-        if (!_events.defaultPrevented) {
-            _defaultFn.apply(_defaultFn, arg);
-        }
+        _events[eventName].push(callback);
+        return _events[eventName].length - 1;
     };
-    CustomEvent.prototype.unlink = function (eventName, index) {
-        if (_eventsQueue[eventName] && _eventsQueue[eventName].length) {
-            _eventsQueue[eventName].splice(1, index);
-        }
+    this.get = function (eventName) {
+        return _events[eventName] || [];
     };
-    CustomEvent.prototype.destroy = function (name) {
-        if (name && _eventsQueue[name]) {
-            delete _eventsQueue[name];
-        }
-    };
-    CustomEvent.prototype.one = function (eventName, idx) {
-        if (_eventsQueue[eventName] && _eventsQueue[eventName].length) {
-            return _eventsQueue[eventName][idx];
-        }
-    };
-    return new CustomEvent();
 }
+EventManager.prototype._eventsObj = function (type) {
+    return this.eventExtensionMethod({
+        type: type,
+        timestamp: +new Date(),
+        isTrusted: true,
+        returnValue: true,
+        target: null,
+        defaultPrevented: false,
+        preventDefault: function () {
+            this.defaultPrevented = true;
+        }
+    });
+};
+EventManager.prototype.dispatch = function (eventName) {
+    var eventObj = this._eventsObj(eventName);
+    var arg = [eventObj].concat(Array.prototype.slice.call(arguments, 1, arguments.length));
+    var eventListeners = this.get(eventName);
+    if (eventListeners) {
+        eventListeners.forEach(function (fn) {
+            fn.apply(fn, arg);
+        });
+    }
+    if (!eventObj.defaultPrevented) {
+        this.defaultCallback.apply(this.defaultCallback, arg);
+    }
+};
+EventManager.prototype.unlink = function (eventName, index) {
+    var eventListeners = this.get(eventName);
+    if (eventListeners) {
+        eventListeners.splice(1, index);
+    }
+};
+EventManager.prototype.destroy = function (eventName) {
+    var eventListeners = this.get(eventName);
+    if (eventListeners) {
+        eventListeners.length = 0;
+    }
+};
+EventManager.prototype.one = function (eventName, idx) {
+    var eventListeners = this.get(eventName);
+    if (eventListeners) {
+        return eventListeners[idx];
+    }
+};
 function debounce(func, wait, immediate) {
     var timeout;
     return function () {
@@ -2763,6 +2860,18 @@ function debounce(func, wait, immediate) {
         if (callNow) {
             func.apply(context, args);
         }
+    };
+}
+;
+function rxDebounceTime(timeout, immediate) {
+    return debounce(function (value, listener) {
+        listener(true);
+    }, timeout, immediate);
+}
+;
+function rxWhile(callback) {
+    return function (value, listener) {
+        listener(callback(value));
     };
 }
 ;
@@ -2804,7 +2913,38 @@ function _comparison(value, suscription) {
     suscription.lastValue = value;
     return noChanges;
 }
-function ComponentFactoryResolver(componentFactory, viewComponent, callback, skipElemetInsert) {
+function triggerWhen(operators, args, callback) {
+    if (!operators || !operators.length) {
+        return callback(true);
+    }
+    var inc = 0;
+    var failed = false;
+    function next() {
+        var fn = operators[inc];
+        if (fn) {
+            fn(args, function (value) {
+                if (!value) {
+                    failed = true;
+                }
+                inc++;
+                next();
+            });
+        } else {
+            callback(!failed);
+        }
+    }
+    next();
+}
+function _eventRxTrigger(context, value) {
+    triggerWhen(context._hooks, value, function (allPassed) {
+        if (allPassed) {
+            context._listeners.forEach(function (fn) {
+                fn(value);
+            });
+        }
+    });
+}
+function ComponentFactoryResolver(componentFactory, viewComponent, callback, skipElementInsert) {
     if (!componentFactory || !componentFactory.annotations.exposeView) {
         errorBuilder('No exported factory found for <' + componentFactory.annotations.selector + '> in ' + componentFactory.annotations.module);
         return null;
@@ -2818,11 +2958,14 @@ function ComponentFactoryResolver(componentFactory, viewComponent, callback, ski
         isc: true,
         providers: [componentFactory]
     };
-    var component = new ElementRef(viewDefinition, viewComponent);
-    var localInjectors = new ComponentInjectors(component);
-    ElementCompiler(componentFactory, component, localInjectors, function (componentInstance) {
-        elementInsertAfter(viewComponent, component.nativeElement, viewComponent.nativeElement);
-        callback(component, componentInstance);
+    var componentRef = new ElementRef(viewDefinition, viewComponent, true);
+    var localInjectors = new ComponentInjectors(componentRef);
+    ElementCompiler(componentFactory, componentRef, localInjectors, function (componentInstance) {
+        if (!skipElementInsert) {
+            elementInsertAfter(viewComponent, componentRef.nativeElement, viewComponent.nativeElement);
+            viewComponent.children.add(componentRef);
+        }
+        noop(callback)(componentRef, componentInstance);
     });
     localInjectors = null;
     viewDefinition = null;
@@ -2922,6 +3065,23 @@ IterableProfiler.prototype.destroy = function () {
     this.cacheHash.length = 0;
     this.out = null;
 };
+function InterceptorResolver(interceptorToken, locals, callback) {
+    var interceptors = Inject(interceptorToken);
+    if (!interceptors || !interceptors.length) {
+        return callback(locals);
+    }
+    var len = 0;
+    function next() {
+        var interceptor = interceptors[len];
+        len++;
+        if (interceptor) {
+            interceptor.resolve(locals, next);
+        } else {
+            callback(locals);
+        }
+    }
+    next();
+}
 function LazyLoader(dropZone) {
     this.dropZone = dropZone;
     this.setPath = function (path) {
@@ -3025,9 +3185,23 @@ var jeliContext = Object.create({
     version: __buildOptions.version,
     debug: jeliDebugger
 });
+function jeliQuerySelector(b, c) {
+    if ((b.nativeElement || b.nativeNode) === c) {
+        return b;
+    } else if (b.children) {
+        for (var e of b.children._list) {
+            const f = jeliQuerySelector(e, c);
+            if (f)
+                return f;
+        }
+    } else {
+        return null;
+    }
+}
+;
 function jeliDebugger(element) {
     if (element && CoreBootstrapContext.enableDebugger) {
-        return CoreBootstrapContext.bootStrapComponent;
+        return jeliQuerySelector(CoreBootstrapContext.bootStrapComponent, element);
     }
     return null;
 }
@@ -3085,7 +3259,7 @@ var core = __required('dist/core/bundles/jeli-core-module.js');
 var errorBuilder = core['errorBuilder'];
 var ElementClassList = core['ElementClassList'];
 var IterableProfiler = core['IterableProfiler'];
-var __buildOptions = { 'version': '1.0.0' };
+var __buildOptions = {};
 function jForRow(context, index, count) {
     this.count = count;
     this.index = index;
@@ -3179,10 +3353,16 @@ var ForDirective = function () {
     };
     ForDirective.annotations = {
         selector: 'for',
-        DI: {
-            ViewRef: { optional: true },
-            TemplateRef: { optional: true }
-        },
+        DI: [
+            {
+                optional: true,
+                tokenName: 'ViewRef'
+            },
+            {
+                optional: true,
+                tokenName: 'TemplateRef'
+            }
+        ],
         props: {
             forIn: {},
             forTrackBy: { type: 'Function' }
@@ -3223,6 +3403,9 @@ var IfDirective = function () {
                 set: function (value) {
                     this._jIfValue = value;
                     this.createView();
+                },
+                get: function () {
+                    return this._jIfValue;
                 }
             },
             ifElse: {
@@ -3243,10 +3426,16 @@ var IfDirective = function () {
     }
     IfDirective.annotations = {
         selector: 'if',
-        DI: {
-            ViewRef: { optional: true },
-            TemplateRef: { optional: true }
-        },
+        DI: [
+            {
+                optional: true,
+                tokenName: 'ViewRef'
+            },
+            {
+                optional: true,
+                tokenName: 'TemplateRef'
+            }
+        ],
         props: {
             if: {},
             ifElse: { type: 'TemplateRef' },
@@ -3342,14 +3531,21 @@ var SwitchCaseDirective = function () {
     SwitchCaseDirective.annotations = {
         selector: 'switchCase',
         props: { switchCase: {} },
-        DI: {
-            ViewRef: { optional: true },
-            TemplateRef: { optional: true },
-            ParentRef: {
+        DI: [
+            {
                 optional: true,
-                value: 'switch'
+                tokenName: 'ViewRef'
+            },
+            {
+                optional: true,
+                tokenName: 'TemplateRef'
+            },
+            {
+                optional: true,
+                value: 'switch',
+                tokenName: 'ParentRef'
             }
-        },
+        ],
         dynamicInjectors: true,
         module: 'CommonModule'
     };
@@ -3362,14 +3558,21 @@ var SwitchDefaultDirective = function () {
     }
     SwitchDefaultDirective.annotations = {
         selector: 'switchDefault',
-        DI: {
-            ViewRef: { optional: true },
-            TemplateRef: { optional: true },
-            ParentRef: {
+        DI: [
+            {
                 optional: true,
-                value: 'switch'
+                tokenName: 'ViewRef'
+            },
+            {
+                optional: true,
+                tokenName: 'TemplateRef'
+            },
+            {
+                optional: true,
+                value: 'switch',
+                tokenName: 'ParentRef'
             }
-        },
+        ],
         dynamicInjectors: true,
         module: 'CommonModule'
     };
@@ -3405,7 +3608,10 @@ var ClassDirective = function () {
     }
     ClassDirective.annotations = {
         selector: 'jClass',
-        DI: { ElementRef: { optional: true } },
+        DI: [{
+                optional: true,
+                tokenName: 'ElementRef'
+            }],
         props: { class: { value: 'jClass' } },
         module: 'CommonModule'
     };
@@ -3415,7 +3621,9 @@ var capitalizeFilter = function () {
     'use strict';
     function capitalizeFilter() {
         this.compile = function (value) {
-            return value.charAt(0).toUpperCase() + value.substr(1, value.length);
+            if (!value)
+                return '';
+            return value.charAt(0).toUpperCase() + value.slice(1);
         };
     }
     capitalizeFilter.annotations = {
@@ -3468,7 +3676,7 @@ var CurrencyFilter = function () {
     }
     CurrencyFilter.annotations = {
         name: 'currency',
-        DI: { NumberFilter: { factory: NumberFilter } },
+        DI: [NumberFilter],
         module: 'CommonModule'
     };
     return CurrencyFilter;
@@ -3658,7 +3866,7 @@ __required.r(exports, 'calendarFN', function(){ return calendarFN;});
 __required.r(exports, 'DateTimeModule', function(){ return DateTimeModule;});
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var ProviderToken = core['ProviderToken'];
-var __buildOptions = { 'version': '1.0.0' };
+var __buildOptions = {};
 var leapYear = function (year) {
     return year % 4 == 0 ? 1 : 0;
 };
@@ -3688,6 +3896,8 @@ var DateStringConverter = function (str) {
         if (arr) {
             arr.shift();
             return new Date(arr[0], arr[1] - 1, setDay(arr[2]), arr[3] || 0, arr[4] || 0, arr[5] || 0);
+        } else if (/(\d+)-(\d+)-(\d+)/.test(str)) {
+            return new Date(str);
         }
     }
     return new Date();
@@ -3950,12 +4160,12 @@ var DatetimeService = function () {
         return result;
     };
     DatetimeService.annotations = {
-        DI: {
-            MONTHS_HALF: { factory: MONTHS_HALF },
-            MONTHS_FULL: { factory: MONTHS_FULL },
-            DAYS_HALF: { factory: DAYS_HALF },
-            DAYS_FULL: { factory: DAYS_FULL }
-        },
+        DI: [
+            MONTHS_HALF,
+            MONTHS_FULL,
+            DAYS_HALF,
+            DAYS_FULL
+        ],
         module: 'DateTimeModule'
     };
     return DatetimeService;
@@ -3975,7 +4185,7 @@ var calendarFN = function () {
     }
     calendarFN.annotations = {
         selector: 'jx-calendar',
-        DI: { DatetimeService: { factory: DatetimeService } },
+        DI: [DatetimeService],
         props: { config: {} },
         module: 'DateTimeModule'
     };
@@ -3990,7 +4200,7 @@ var dateTimeFilterFN = function () {
     }
     dateTimeFilterFN.annotations = {
         name: 'dateTime',
-        DI: { DatetimeService: { factory: DatetimeService } },
+        DI: [DatetimeService],
         module: 'DateTimeModule'
     };
     return dateTimeFilterFN;
@@ -4004,7 +4214,7 @@ var TimeAgoFilterFn = function () {
     }
     TimeAgoFilterFn.annotations = {
         name: 'timeAgo',
-        DI: { DatetimeService: { factory: DatetimeService } },
+        DI: [DatetimeService],
         module: 'DateTimeModule'
     };
     return TimeAgoFilterFn;
@@ -4018,6 +4228,7 @@ var DateTimeModule = function () {
 }),
 'dist/form/bundles/jeli-form-module.js': (function(module, exports, __required, global){
 "use strict";
+__required.r(exports, 'FormRepeaterService', function(){ return FormRepeaterService;});
 __required.r(exports, 'RangeEventBinder', function(){ return RangeEventBinder;});
 __required.r(exports, 'ResolveRangeBinder', function(){ return ResolveRangeBinder;});
 __required.r(exports, 'NumberEventBinder', function(){ return NumberEventBinder;});
@@ -4040,9 +4251,12 @@ __required.r(exports, 'AbstractValueAccessor', function(){ return AbstractValueA
 __required.r(exports, 'VALUE_ACCESSOR', function(){ return VALUE_ACCESSOR;});
 __required.r(exports, 'FormFieldControlDirective', function(){ return FormFieldControlDirective;});
 __required.r(exports, 'formValidationStack', function(){ return formValidationStack;});
+__required.r(exports, 'customFormValidator', function(){ return customFormValidator;});
 __required.r(exports, 'FormValidatorService', function(){ return FormValidatorService;});
 __required.r(exports, 'FormControlAbstract', function(){ return FormControlAbstract;});
 __required.r(exports, 'FormControlService', function(){ return FormControlService;});
+__required.r(exports, 'AbstractFormControl', function(){ return AbstractFormControl;});
+__required.r(exports, 'FormControlNameDirective', function(){ return FormControlNameDirective;});
 __required.r(exports, 'FormControlDirective', function(){ return FormControlDirective;});
 __required.r(exports, 'FormModule', function(){ return FormModule;});
 var utils = __required('node_modules/js-helpers/utils.js');
@@ -4065,48 +4279,95 @@ var AttributeAppender = core['AttributeAppender'];
 var closureRef = core['closureRef'];
 var EventEmitter = core['EventEmitter'];
 var errorBuilder = core['errorBuilder'];
-var __buildOptions = { 'version': '1.0.0' };
+var __buildOptions = {};
+function AbstractFormControl(changeDetector) {
+    this.changeDetector = changeDetector;
+    this._registered = false;
+    this.formName = '';
+    this._formFields = [];
+    this.form = null;
+}
+AbstractFormControl.prototype.addField = function (formFieldInstance) {
+    var formControl = this.form.getField(formFieldInstance.name);
+    setupControl(formControl, formFieldInstance);
+    this.form.updateValueAndStatus({ emitEvent: false });
+    this._formFields.push(formFieldInstance);
+    return formControl;
+};
+AbstractFormControl.prototype.removeField = function (formFieldInstance) {
+    this._formFields.splice(this._formFields.indexOf(formFieldInstance), 1);
+};
+AbstractFormControl.prototype.getField = function (fieldName) {
+    return this.form.getField(fieldName);
+};
+AbstractFormControl.prototype.resetForm = function (values) {
+    this.form.reset(values);
+};
+AbstractFormControl.prototype.viewDidDestroy = function () {
+    if (this.form) {
+        this.form = null;
+    }
+};
 var FormControlDirective = function () {
     'use strict';
-    function FormControlDirective() {
-        this._formFields = [];
-        this.form = null;
+    function FormControlDirective(changeDetector) {
+        AbstractFormControl.call(this, changeDetector);
         Object.defineProperty(this, 'formControl', {
             set: function (formControl) {
                 this.form = formControl;
-                if (!formControl || !(formControl instanceof FormControlService)) {
-                    errorBuilder('Expected instance of FormControlService but got ' + typeof formControl);
-                }
+                _validateAndBindStatus(this);
             }
         });
     }
-    FormControlDirective.prototype.addField = function (formFieldInstance) {
-        var formControl = this.form.getField(formFieldInstance.name);
-        setupControl(formControl, formFieldInstance);
-        this.form.updateValueAndStatus({ emitEvent: false });
-        this._formFields.push(formFieldInstance);
-        return formControl;
-    };
-    FormControlDirective.prototype.removeField = function (formFieldInstance) {
-        this._formFields.splice(this._formFields.indexOf(formFieldInstance), 1);
-    };
-    FormControlDirective.prototype.getField = function (fieldName) {
-        return this.formControl.getField(fieldName);
-    };
-    FormControlDirective.prototype.resetForm = function (values) {
-        this.form.reset(values);
-    };
-    FormControlDirective.prototype.viewDidDestroy = function () {
-        if (this.form) {
-            this.form = null;
-        }
-    };
+    FormControlDirective.prototype = Object.create(AbstractFormControl.prototype);
+    FormControlDirective.prototype.constructor = FormControlDirective;
     FormControlDirective.annotations = {
         selector: 'formControl',
         props: { formControl: {} },
+        DI: [{
+                optional: true,
+                tokenName: 'changeDetector'
+            }],
         module: 'FormModule'
     };
     return FormControlDirective;
+}();
+var FormControlNameDirective = function () {
+    'use strict';
+    function FormControlNameDirective(parentControl, changeDetector) {
+        AbstractFormControl.call(this, changeDetector);
+        if (!parentControl || !(parentControl instanceof FormControlDirective)) {
+            return errorBuilder('Expected instance of FormControlService but got ' + typeof parentControl);
+        }
+        Object.defineProperty(this, 'formControlName', {
+            set: function (formName) {
+                this.formName = formName;
+                this.form = parentControl.getField(formName);
+                _validateAndBindStatus(this);
+            }
+        });
+    }
+    FormControlNameDirective.prototype = Object.create(AbstractFormControl.prototype);
+    FormControlNameDirective.prototype.constructor = FormControlNameDirective;
+    FormControlNameDirective.annotations = {
+        selector: 'formControlName',
+        props: { formControlName: {} },
+        DI: [
+            {
+                optional: true,
+                value: 'formControl',
+                tokenName: 'ParentRef'
+            },
+            {
+                optional: true,
+                tokenName: 'changeDetector'
+            }
+        ],
+        exportAs: 'formControl',
+        dynamicInjectors: true,
+        module: 'FormModule'
+    };
+    return FormControlNameDirective;
 }();
 function CurrentInstance(next) {
     this.pending = null;
@@ -4147,18 +4408,18 @@ CurrentInstance.prototype.registerAsyncValidator = function (asyncInstance, Requ
 };
 var formValidationStack = Object.create({
     MINLENGTH: function (value, requiredLength) {
-        if (isnumber(value) || isstring(value))
+        if (null !== value && undefined !== value)
             return String(value).length >= requiredLength;
-        return false;
+        return true;
     },
     MAXLENGTH: function (value, requiredLength) {
-        if (isnumber(value) || isstring(value))
+        if (value)
             return String(value).length <= requiredLength;
-        return false;
+        return true;
     },
-    EMAILVALIDATION: function (val) {
-        var regExp = /^\w+([\.-]?\w+)*@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        return regExp.test(val);
+    EMAILVALIDATION: function (value) {
+        var regExp = '^\\w+([.-]?w+)*@(([[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}])|(([a-zA-Z-0-9]+.)+[a-zA-Z]{2,}))$';
+        return formValidationStack.PATTERN(value, regExp);
     },
     ISEMPTY: function (val, def) {
         return def === isempty(val);
@@ -4167,13 +4428,13 @@ var formValidationStack = Object.create({
         return isboolean(value) && isequal(value, def);
     },
     DOMAINVALIDATION: function (domain) {
-        return /[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+/.test(domain);
+        return formValidationStack.PATTERN(domain, '[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:.[a-zA-Z]{2,})+');
     },
     MEDIUMPASSWORDSTRENGTH: function (passwd) {
-        return new RegExp('^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})').test(passwd);
+        return formValidationStack.PATTERN(passwd, '^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})');
     },
     STRONGPASSWORDSTRENGTH: function (passwd) {
-        return new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})').test(passwd);
+        return formValidationStack.PATTERN(passwd, '^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})');
     },
     PATTERN: function (value, pattern) {
         return new RegExp(pattern).test(value);
@@ -4192,6 +4453,20 @@ var formValidationStack = Object.create({
     },
     REQUIREDTRUE: function (value) {
         return isboolean(value) && value === true;
+    },
+    MINNUMBER: function (value, minNumber) {
+        if (null !== value && undefined !== value) {
+            value = Number(value);
+            return !isNaN(value) && minNumber <= value;
+        }
+        return true;
+    },
+    MAXNUMBER: function (value, maxNumber) {
+        if (value) {
+            value = Number(value);
+            return !isNaN(value) && value <= maxNumber;
+        }
+        return true;
     }
 });
 function FormValidatorService(callback, validators) {
@@ -4214,11 +4489,11 @@ function FormValidatorService(callback, validators) {
             }
             if (isobject(passed) && isequal('async', validatorName)) {
                 currentProcess.registerAsyncValidator(passed, criteria[validatorName], validatorName);
-                break;
-            }
-            currentProcess.rem(passed, validatorName);
-            if (!passed) {
-                return currentProcess.stop();
+            } else {
+                currentProcess.rem(passed, validatorName);
+                if (!passed) {
+                    return currentProcess.stop();
+                }
             }
         }
     }
@@ -4262,6 +4537,13 @@ function FormValidatorService(callback, validators) {
     };
     return formValidator;
 }
+function customFormValidator(validatorName, validatorFn, override) {
+    if (formValidationStack.hasOwnProperty(validatorName.toUpperCase()) && !override) {
+        return errorBuilder('[' + validatorName + '] already exists, please pass the override parameter to the validator');
+    }
+    formValidationStack[validatorName.toUpperCase()] = validatorFn;
+}
+;
 var VALID = 'VALID';
 var INVALID = 'INVALID';
 var DISABLED = 'DISABLED';
@@ -4278,7 +4560,7 @@ function FormControlAbstract(validators) {
     this._onControlChangeListener = function () {
     };
     this.validator = FormValidatorService(function (errors) {
-        _this.setError(errors);
+        _this.setError(errors, true);
     }, validators);
     this.valueChanges = new EventEmitter();
     this.statusChanged = new EventEmitter();
@@ -4389,7 +4671,10 @@ FormControlAbstract.prototype.disable = function (options) {
     this.forEachField(function (control) {
         control.disable({ self: true });
     });
-    this._updateValue();
+    this.updateValueAndStatus({
+        self: true,
+        emitEvent: options.emitEvent
+    });
     if (isequal(options.emitEvent, true)) {
         this.valueChanges.emit(this.value);
     }
@@ -4424,6 +4709,8 @@ FormControlAbstract.prototype.markAsUntouched = function (options) {
     });
 };
 FormControlAbstract.prototype.markAsTouched = function (options) {
+    if (this.touched)
+        return;
     options = options || {};
     this.touched = true;
     if (this.parent && !options.self) {
@@ -4504,7 +4791,7 @@ var FormControlService = function () {
     };
     FormControlService.prototype.patchValue = function (values, options) {
         options = options || {};
-        if (isobject(values)) {
+        if (isobject(values) || isarray(values)) {
             for (var field in values) {
                 if (this.hasField(field) && !options.self) {
                     this.getField(field).patchValue(values[field], {
@@ -4530,8 +4817,9 @@ var FormControlService = function () {
     };
     FormControlService.prototype.reset = function (value, options) {
         options = options || {};
+        value = value || {};
         this.forEachField(function (control, name) {
-            control.reset(value[name], {
+            control.reset(value[name] || null, {
                 self: true,
                 emitEvent: options.emitEvent
             });
@@ -4545,6 +4833,15 @@ var FormControlService = function () {
     FormControlService.prototype.setFieldValidator = function (field, validator) {
         this.getField(field).setValidators(validator);
         return this;
+    };
+    FormControlService.prototype.allTouched = function () {
+        var alltouched = true;
+        this.forEachField(function (control, name) {
+            if (!control.touched) {
+                alltouched = false;
+            }
+        });
+        return alltouched;
     };
     FormControlService.prototype.removeField = function (name) {
         this.getField(name).destroy();
@@ -4657,7 +4954,7 @@ var FormFieldControlDirective = function () {
     }
     FormFieldControlDirective.prototype.didInit = function () {
         if (!(this.control instanceof FormFieldControlService)) {
-            errorBuilder('Expected instance of FormFieldControlService but got ' + typeof this.control);
+            return errorBuilder('Expected instance of FormFieldControlService but got ' + typeof this.control);
         }
         setupControl(this.control, this);
         if (this.control.disabled && this.eventBinder.setDisabledState) {
@@ -4669,10 +4966,13 @@ var FormFieldControlDirective = function () {
     };
     FormFieldControlDirective.annotations = {
         selector: 'fieldControl',
-        DI: {
-            VALUE_ACCESSOR: { factory: VALUE_ACCESSOR },
-            VALIDATORS: { optional: true }
-        },
+        DI: [
+            VALUE_ACCESSOR,
+            {
+                optional: true,
+                tokenName: 'VALIDATORS'
+            }
+        ],
         props: {
             control: { value: 'fieldControl' },
             disabled: {}
@@ -4751,8 +5051,8 @@ var FormFieldDirective = function () {
         this.parent = parentContainer;
     }
     FormFieldDirective.prototype.didInit = function () {
-        if (!(this.parent instanceof FormControlDirective)) {
-            errorBuilder('Expected an instance of FormControlDirective but got ' + typeof this.parent);
+        if (!this.parent) {
+            return errorBuilder('[formField=' + this.name + ']: Expected an instance of FormControlDirective but got ' + typeof this.parent);
         }
         this.control = this.parent.addField(this);
         if (this.control.disabled && this.eventBinder.setDisabledState) {
@@ -4770,14 +5070,18 @@ var FormFieldDirective = function () {
     };
     FormFieldDirective.annotations = {
         selector: 'formField',
-        DI: {
-            ParentRef: {
+        DI: [
+            {
                 optional: true,
-                value: 'formControl'
+                value: 'formControl',
+                tokenName: 'ParentRef'
             },
-            VALUE_ACCESSOR: { factory: VALUE_ACCESSOR },
-            VALIDATORS: { optional: true }
-        },
+            VALUE_ACCESSOR,
+            {
+                optional: true,
+                tokenName: 'VALIDATORS'
+            }
+        ],
         props: { name: { value: 'formField' } },
         dynamicInjectors: true,
         module: 'FormModule'
@@ -4826,7 +5130,10 @@ var DefaultEventBinder = function () {
             }
         },
         resolve: [ResolveDefaultBinder],
-        DI: { ElementRef: { optional: true } },
+        DI: [{
+                optional: true,
+                tokenName: 'ElementRef'
+            }],
         module: 'FormModule'
     };
     return DefaultEventBinder;
@@ -4873,7 +5180,10 @@ var CheckboxEventBinder = function () {
             }
         },
         resolve: [ResolveCheckboxBinder],
-        DI: { ElementRef: { optional: true } },
+        DI: [{
+                optional: true,
+                tokenName: 'ElementRef'
+            }],
         module: 'FormModule'
     };
     return CheckboxEventBinder;
@@ -4974,10 +5284,13 @@ var RadioEventBinder = function () {
             }
         },
         resolve: [ResolveRadioBinder],
-        DI: {
-            ElementRef: { optional: true },
-            RadioEventContainer: { factory: RadioEventContainer }
-        },
+        DI: [
+            {
+                optional: true,
+                tokenName: 'ElementRef'
+            },
+            RadioEventContainer
+        ],
         module: 'FormModule'
     };
     return RadioEventBinder;
@@ -5098,7 +5411,10 @@ var SelectEventBinder = function () {
         },
         props: { compareFn: {} },
         resolve: [ResolveSelectBinder],
-        DI: { ElementRef: { optional: true } },
+        DI: [{
+                optional: true,
+                tokenName: 'ElementRef'
+            }],
         module: 'FormModule'
     };
     return SelectEventBinder;
@@ -5125,7 +5441,7 @@ var OptionDirective = function () {
             }
         });
         this.setValue = function (value) {
-            AttributeAppender.setProp(this.element.nativeElement, 'value', value);
+            AttributeAppender.setProp(elementRef.nativeElement, 'value', value);
         };
         this.viewDidDestroy = function () {
             if (selectInstance) {
@@ -5136,14 +5452,18 @@ var OptionDirective = function () {
     }
     OptionDirective.annotations = {
         selector: 'option',
-        DI: {
-            ParentRef: {
+        DI: [
+            {
                 optional: true,
                 type: '[model|formField|fieldControl]',
-                value: 'select'
+                value: 'select',
+                tokenName: 'ParentRef'
             },
-            ElementRef: { optional: true }
-        },
+            {
+                optional: true,
+                tokenName: 'ElementRef'
+            }
+        ],
         props: {
             value: {},
             jValue: {}
@@ -5200,7 +5520,10 @@ var NumberEventBinder = function () {
             }
         },
         resolve: [ResolveNumberBinder],
-        DI: { ElementRef: { optional: true } },
+        DI: [{
+                optional: true,
+                tokenName: 'ElementRef'
+            }],
         module: 'FormModule'
     };
     return NumberEventBinder;
@@ -5264,21 +5587,24 @@ var RangeEventBinder = function () {
             }
         },
         resolve: [ResolveRangeBinder],
-        DI: { ElementRef: { optional: true } },
+        DI: [{
+                optional: true,
+                tokenName: 'ElementRef'
+            }],
         module: 'FormModule'
     };
     return RangeEventBinder;
 }();
 function setupControl(fieldControl, dir) {
     if (!fieldControl)
-        errorBuilder('No field control found for ' + dir.name);
+        return errorBuilder('No field control found for ' + dir.name);
     if (!dir.eventBinder)
-        errorBuilder('No EventBinder defined');
+        return errorBuilder('No EventBinder defined');
     fieldControl.setValidators(dir._validators);
     dir.eventBinder.writeValue(fieldControl.value);
     setUpViewChangeEvent(fieldControl, dir);
     setupBlurEvent(fieldControl, dir);
-    if (dir.eventBinder.setUpDisableState) {
+    if (dir.eventBinder.setDisabledState) {
         fieldControl.registerOnDisabledListener(function (state) {
             dir.eventBinder.setDisabledState(state);
         });
@@ -5312,6 +5638,18 @@ function updateControl(fieldControl, dir) {
     fieldControl.setValue(fieldControl._pendingValue, { emitToView: false });
     dir.modelToViewUpdate(fieldControl._pendingValue);
     fieldControl._pendingChange = false;
+    fieldControl.markAsTouched();
+}
+function _validateAndBindStatus(dir) {
+    if (dir._registered)
+        return;
+    if (!dir.form || !(dir.form instanceof FormControlService)) {
+        return errorBuilder((dir.formName ? '[' + dir.formName + ']' : '') + 'Expected instance of FormControlService but got ' + typeof dir.form);
+    }
+    dir._registered = true;
+    dir.form.statusChanged.subscribe(function () {
+        dir.changeDetector.detectChanges();
+    });
 }
 var inbuiltAccessor = [
     CheckboxEventBinder,
@@ -5371,14 +5709,18 @@ var ModelDirective = function () {
     };
     ModelDirective.annotations = {
         selector: 'model',
-        DI: {
-            VALUE_ACCESSOR: { factory: VALUE_ACCESSOR },
-            parentControl: {
+        DI: [
+            VALUE_ACCESSOR,
+            {
                 optional: true,
-                value: 'form'
+                value: 'form',
+                tokenName: 'parentControl'
             },
-            VALIDATORS: { optional: true }
-        },
+            {
+                optional: true,
+                tokenName: 'VALIDATORS'
+            }
+        ],
         props: {
             model: {},
             modelOptions: {},
@@ -5391,6 +5733,62 @@ var ModelDirective = function () {
     };
     return ModelDirective;
 }();
+var FormRepeaterService = function () {
+    'use strict';
+    function FormRepeaterService(fields, autoGenerate, validators) {
+        FormControlAbstract.call(this, validators);
+        this.formFieldControls = [];
+        this._defaultfields = fields;
+        this._autoSetup(autoGenerate);
+        this.updateValueAndStatus();
+    }
+    FormRepeaterService.prototype = Object.create(FormControlService.prototype);
+    FormRepeaterService.prototype.constructor = FormControlAbstract;
+    FormRepeaterService.prototype.addField = function (fieldControl) {
+        if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
+            this.formFieldControls.push(fieldControl);
+        } else if (this._defaultfields) {
+            this.formFieldControls.push(new FormControlService(this._defaultfields));
+        } else {
+            this.formFieldControls.push(new FormFieldControlService(fieldControl));
+        }
+        this._setupControl(this.formFieldControls[this.formFieldControls.length - 1]);
+    };
+    FormRepeaterService.prototype.getField = function (index) {
+        return this.formFieldControls[index] || null;
+    };
+    FormRepeaterService.prototype._collectValues = function (enabledOnly) {
+        var values = [];
+        this.forEachField(function (control) {
+            if (enabledOnly && control.enabled || !enabledOnly) {
+                values.push(control.value);
+            }
+        });
+        return values;
+    };
+    FormRepeaterService.prototype.removeField = function (index) {
+        var len = this.formFieldControls.length;
+        if (!len || len < index)
+            return;
+        this.formFieldControls[index].destroy();
+        this.value.splice(index, 1);
+        this.formFieldControls.splice(index, 1);
+        this.valueChanges.emit(this.value);
+    };
+    FormRepeaterService.prototype._autoSetup = function (autoGenerate) {
+        if (autoGenerate) {
+            while (autoGenerate--) {
+                this.addField();
+            }
+        }
+    };
+    FormRepeaterService.annotations = {
+        static: true,
+        module: 'FormModule'
+    };
+    FormRepeaterService.annotations.instance = FormRepeaterService;
+    return FormRepeaterService;
+}();
 var FormModule = function () {
     'use strict';
     function FormModule() {
@@ -5400,70 +5798,41 @@ var FormModule = function () {
 }),
 'dist/http/bundles/jeli-http-module.js': (function(module, exports, __required, global){
 "use strict";
-__required.r(exports, 'HttpResponse', function(){ return HttpResponse;});
-__required.r(exports, 'unsafeHeaders', function(){ return unsafeHeaders;});
-__required.r(exports, 'HttpService', function(){ return HttpService;});
-__required.r(exports, 'HttpInterceptor', function(){ return HttpInterceptor;});
+__required.r(exports, 'CSRFCookieHeaderService', function(){ return CSRFCookieHeaderService;});
+__required.r(exports, 'csrfCookieConfig', function(){ return csrfCookieConfig;});
+__required.r(exports, 'HttpCookieManager', function(){ return HttpCookieManager;});
+__required.r(exports, 'HttpCSRFModule', function(){ return HttpCSRFModule;});
 __required.r(exports, 'HTTP_INTERCEPTORS', function(){ return HTTP_INTERCEPTORS;});
+__required.r(exports, 'HttpResponse', function(){ return HttpResponse;});
+__required.r(exports, 'HttpRequest', function(){ return HttpRequest;});
+__required.r(exports, 'HttpRequestError', function(){ return HttpRequestError;});
+__required.r(exports, 'HttpService', function(){ return HttpService;});
 __required.r(exports, 'HttpModule', function(){ return HttpModule;});
 var utils = __required('node_modules/js-helpers/utils.js');
 var serialize = utils['serialize'];
-var extend = utils['extend'];
 var helpers = __required('node_modules/js-helpers/helpers.js');
-var inarray = helpers['inarray'];
+var isnull = helpers['isnull'];
 var isstring = helpers['isstring'];
+var isundefined = helpers['isundefined'];
 var isobject = helpers['isobject'];
+var inarray = helpers['inarray'];
 var core = __required('dist/core/bundles/jeli-core-module.js');
+var ProviderToken = core['ProviderToken'];
+var InterceptorResolver = core['InterceptorResolver'];
 var Subject = core['Subject'];
 var ChangeDetector = core['ChangeDetector'];
-var Inject = core['Inject'];
-var ProviderToken = core['ProviderToken'];
-var __buildOptions = { 'version': '1.0.0' };
-var HTTP_INTERCEPTORS = new ProviderToken('interceptors', true);
-var HttpInterceptor = function () {
-    'use strict';
-    function HttpInterceptor() {
-        this.resolveInterceptor = function (options, callback) {
-            var interceptors = Inject(HTTP_INTERCEPTORS);
-            if (!interceptors || !interceptors.length) {
-                return callback(options);
-            }
-            var len = 0;
-            function next() {
-                var interceptor = interceptors[len];
-                len++;
-                if (interceptor) {
-                    interceptor.resolve(options, callback);
-                } else {
-                    callback(options);
-                }
-            }
-            next();
-        };
-    }
-    HttpInterceptor.annotations = { module: 'HttpModule' };
-    return HttpInterceptor;
-}();
-var defaultOptions = {
-    url: '',
-    type: 'GET',
-    processData: true,
-    headers: { 'Accept': 'text/javascript, application/json, text/html, application/xml, text/xml, */*' },
-    asynchronous: true,
-    data: '',
-    xhr: null,
-    getResponseHeader: null,
-    cache: true
+var __buildOptions = {};
+function HttpRequestError(message) {
+    this.errorType = null;
+    this.message = message;
+    this.status = 400;
+}
+HttpRequestError.prototype.setMessage = function (message) {
+    this.message = message;
 };
-var staticMethods = [
-    'put',
-    'get',
-    'post',
-    'request',
-    'head',
-    'patch',
-    'delete'
-];
+HttpRequestError.prototype.setErrorType = function (type) {
+    this.errorType = type;
+};
 var unsafeHeaders = {
     'Accept-Charset': true,
     'Accept-Encoding': true,
@@ -5484,162 +5853,159 @@ var unsafeHeaders = {
     'User-Agent': true,
     'Via': true
 };
-function xhr() {
-    if (typeof XMLHttpRequest !== 'undefined' && !window.ActiveXObject) {
-        return new XMLHttpRequest();
-    } else {
-        try {
-            return new ActiveXObject('Msxml2.XMLHTTP.6.0');
-        } catch (e) {
-        }
-        try {
-            return new ActiveXObject('Msxml2.XMLHTTP.3.0');
-        } catch (e) {
-        }
-        try {
-            return new ActiveXObject('Msxml2.XMLHTTP');
-        } catch (e) {
-        }
+function HttpRequest(url, options) {
+    if (!options && isobject(url)) {
+        options = url;
     }
-    return false;
+    this.url = options.url || url;
+    this.type = (options.type || 'GET').toLowerCase();
+    this.processData = !isundefined(option.processData) ? option.processData : true;
+    this.headers = Object.assign({
+        'Accept': 'application/json',
+        'CONTENT-TYPE': 'application/json'
+    }, options.headers || {});
+    this.asynchronous = !isundefined(option.asynchronous) ? option.asynchronous : true;
+    this.data = options.data || '';
+    this.xhrInstance = new XMLHttpRequest();
+    this.cache = !isundefined(options.cache) ? options.cache : true;
 }
-function parseXML(text) {
-    if (!!window.DOMParser) {
-        return new DOMParser().parseFromString(text, 'text/xml');
-    } else {
-        var xml = new ActiveXObject('Microsoft.XMLDOM');
-        xml.async = 'false';
-        xml.loadXML(text);
-        return xml;
-    }
-}
-function parseJSON(string, tError) {
-    var content;
-    try {
-        content = JSON.parse(string);
-    } catch (e) {
-        if (tError) {
-            throw new Error(e);
+HttpRequest.prototype.progress = function (progressCallback) {
+    this.xhrInstance.addEventListener('progress', progressCallback, false);
+};
+HttpRequest.prototype.setHeaders = function (headers) {
+    Object.assign(this.headers, headers);
+};
+HttpRequest.prototype.processRequest = function () {
+    this.processData = false;
+    if (!isstring(this.data)) {
+        if (this.type === 'get') {
+            this.data = serialize(this.data);
         } else {
-            content = string;
+            this.data = JSON.stringify(this.data);
         }
     }
-    return content;
-}
-function HttpResponse(xhrInstance, url) {
-    this.status = xhrInstance.status;
-    this.readyState = xhrInstance.readyState;
-    this.url = url;
+    if (this.type === 'get') {
+        if (this.data) {
+            this.url += (/\?/.test(this.url) ? '&' : '?') + this.data;
+        }
+        if (!this.cache) {
+            this.url += (/\?/.test(this.url) ? '&' : '?') + '_=' + Date.now();
+        }
+    }
+};
+HttpRequest.prototype.processRequestHeaders = function () {
+    for (var name in this.headers) {
+        if (unsafeHeaders[name] || /^(Sec-|Proxy-)/.test(name)) {
+            throw new Error('Refused to set unsafe header "' + name + '"');
+        }
+        this.xhrInstance.setRequestHeader(name, this.headers[name]);
+    }
+};
+function HttpResponse(httpRequest) {
+    this.status = httpRequest.xhrInstance.status;
+    this.readyState = httpRequest.xhrInstance.readyState;
+    this.url = httpRequest.url;
     this.data = null;
-    this.success = false;
+    this.success = httpRequest.xhrInstance.status >= 200 && httpRequest.xhrInstance.status < 300 || httpRequest.xhrInstance.status == 304 || httpRequest.xhrInstance.status == 0 && httpRequest.xhrInstance.responseText;
     this.headers = Object({
         getResponseHeader: function (name) {
             if (!isobject(name)) {
-                return xhrInstance.getResponseHeader(name);
+                return httpRequest.xhrInstance.getResponseHeader(name);
             } else {
-                return name.map(xhrInstance.getResponseHeader);
+                return name.map(httpRequest.xhrInstance.getResponseHeader);
             }
         }
     });
 }
-function CoreHttp(url, options, interceptor, changeDetection) {
-    var xhrPromise = new Subject();
-    if (!options && isobject(url)) {
-        options = url;
+var HTTP_INTERCEPTORS = new ProviderToken('interceptors', true);
+function parseJSON(response) {
+    var content;
+    var tError = !!response;
+    try {
+        content = JSON.parse(response);
+    } catch (e) {
+        if (tError) {
+            throw new Error(e);
+        } else {
+            content = response;
+        }
     }
-    options = extend(true, defaultOptions, options);
-    options.url = options.url || url;
-    options.type = options.type.toLowerCase();
-    var xhrInstance = xhr();
-    interceptor.resolveInterceptor(options, function (request) {
+    return content;
+}
+function CoreHttp(url, options, changeDetection) {
+    var xhrPromise = new Subject();
+    var httpRequest = new HttpRequest(url, options);
+    var httpError = new HttpRequestError('');
+    InterceptorResolver(HTTP_INTERCEPTORS, httpRequest, function (request) {
         if (!request) {
-            throw new Error('HTTP: Interceptor should return a value');
+            httpError.setMessage('HTTP: Interceptor should return a value');
+            return xhrPromise.error(httpError);
         }
         if (changeDetection) {
             changeDetection();
         }
-        if (options.processData) {
-            processRequest();
+        if (request.processData) {
+            request.processRequest();
         }
         sendRequest();
-        return xhrPromise;
     });
-    function respondToReadyState(readyState) {
-        var response = new HttpResponse(xhrInstance, options.url);
-        if (xhrInstance.readyState == 4) {
+    function respondToReadyState() {
+        var response = new HttpResponse(httpRequest);
+        if (httpRequest.xhrInstance.readyState == 4) {
             try {
-                var data = parseJSON(xhrInstance.responseText, !!xhrInstance.responseText);
-                response.success = xhrInstance.status >= 200 && xhrInstance.status < 300 || xhrInstance.status == 304 || xhrInstance.status == 0 && xhrInstance.responseText;
+                var data = parseJSON(httpRequest.xhrInstance.responseText);
                 xhrPromise.next(data, response);
             } catch (e) {
-                xhrPromise.error(e);
+                xhrPromise.error(httpError);
             }
             xhrPromise.completed();
             changeDetection();
         }
     }
-    function setHeaders() {
-        for (var name in options.headers) {
-            if (unsafeHeaders[name] || /^(Sec-|Proxy-)/.test(name)) {
-                throw new Error('Refused to set unsafe header "' + name + '"');
-            }
-            xhrInstance.setRequestHeader(name, options.headers[name]);
-        }
-    }
-    function processRequest() {
-        if (options.xhrFields && options.xhrFields.withCredentials) {
-            xhrInstance.withCredentials = true;
-        }
-        if (!options.headers['Content-Type'] && options.data) {
-            options.headers['Content-Type'] = 'application/json';
-        }
-        if (!isstring(options.data)) {
-            switch (options.type) {
-            case 'get':
-                options.data = serialize(options.data);
-                break;
-            default:
-                options.data = JSON.stringify(options.data);
-                break;
-            }
-        }
-        if (options.type === 'get') {
-            if (options.data) {
-                options.url += (/\?/.test(options.url) ? '&' : '?') + options.data;
-            }
-            if (!options.cache) {
-                options.url += (/\?/.test(options.url) ? '&' : '?') + '_=' + new Date().getTime();
-            }
+    function attachListener() {
+        httpRequest.xhrInstance.addEventListener('load', respondToReadyState);
+        httpRequest.xhrInstanceaddEventListener('timeout', handleError);
+        httpRequest.xhrInstance.addEventListener('error', handleError);
+        httpRequest.xhrInstance.addEventListener('abort', handleError);
+        function handleError(e) {
+            httpError.setErrorType(e.type);
+            xhrPromise.error(httpError);
         }
     }
     function sendRequest() {
-        xhrInstance.onreadystatechange = respondToReadyState;
-        xhrInstance.open(options.type, options.url, options.asynchronous);
-        if (options.beforeSend && isfunction(options.beforeSend)) {
-            options.beforeSend.apply(options.beforeSend, [xhrInstance]);
-        }
-        setHeaders();
+        attachListener();
+        httpRequest.xhrInstance.open(httpRequest.type, httpRequest.url, httpRequest.asynchronous);
+        httpRequest.processRequestHeaders();
         var body = null;
-        if (inarray(options.type, [
+        if (inarray(httpRequest.type, [
                 'post',
                 'put',
                 'delete'
             ])) {
-            body = options.data;
+            body = httpRequest.data;
         }
         try {
-            xhrInstance.send(body);
+            httpRequest.xhrInstance.send(body);
         } catch (e) {
-            triggerError(e);
+            httpError.setMessage(e);
+            xhrPromise.error(httpError);
         }
     }
     return xhrPromise;
 }
+var staticMethods = [
+    'put',
+    'get',
+    'post',
+    'request',
+    'patch',
+    'delete'
+];
 var HttpService = function () {
     'use strict';
-    function HttpService(interceptor, changeDetector) {
+    function HttpService(changeDetector) {
         function http(url, options) {
-            return CoreHttp(url, options, interceptor, changeDetector);
+            return CoreHttp(url, options, changeDetector);
         }
         function generateOptionalHTTP(type) {
             http[type] = function (url, data, headers) {
@@ -5654,10 +6020,7 @@ var HttpService = function () {
         return http;
     }
     HttpService.annotations = {
-        DI: {
-            HttpInterceptor: { factory: HttpInterceptor },
-            ChangeDetector: { factory: ChangeDetector }
-        },
+        DI: [ChangeDetector],
         module: 'HttpModule'
     };
     return HttpService;
@@ -5668,18 +6031,116 @@ var HttpModule = function () {
     }
     return HttpModule;
 }();
+var HttpCookieManager = function () {
+    'use strict';
+    function HttpCookieManager() {
+        Object.defineProperty(this, 'cookies', {
+            get: function () {
+                return this._getAll();
+            }
+        });
+    }
+    ;
+    HttpCookieManager.prototype.set = function (name, value, options) {
+        if (!isnull(value) && !isundefined(value)) {
+            if (value === null) {
+                value = '';
+                options.expires = -1;
+            }
+            var expires = '';
+            var isNumberExpires = typeof options.expires === 'number';
+            if (options.expires && (isNumberExpires || options.expires.toUTCString)) {
+                var date;
+                if (isNumberExpires) {
+                    date = new Date();
+                    date.setTime(date.getTime() + options.expires * 24 * 60 * 60 * 1000);
+                } else {
+                    date = options.expires;
+                }
+                expires = '; expires=' + date.toUTCString();
+            }
+            var path = options.path ? '; path=' + options.path : '';
+            var domain = options.domain ? '; domain=' + options.domain : '';
+            var secure = options.secure ? '; secure' : '';
+            document.cookie = [
+                name,
+                '=',
+                encodeURIComponent(value),
+                expires,
+                path,
+                domain,
+                secure
+            ].join('');
+        }
+    };
+    HttpCookieManager.prototype.get = function (name) {
+        return this.cookies[name];
+    };
+    HttpCookieManager.prototype._getAll = function () {
+        var cookieValues = {};
+        var cookies = (document.cookie || '').split(';');
+        if (cookies.length) {
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim().split('=');
+                cookieValues[cookie[0]] = cookie[1];
+            }
+        }
+        return cookieValues;
+    };
+    HttpCookieManager.annotations = { module: 'HttpCSRFModule' };
+    return HttpCookieManager;
+}();
+var csrfCookieConfig = {
+    cookieName: 'X-CSRF-TOKEN',
+    headerName: 'X-CSRF-TOKEN'
+};
+var CSRFCookieHeaderService = function () {
+    'use strict';
+    function CSRFCookieHeaderService(cookieManager) {
+        this.resolve = function (httpRequest, next) {
+            var cookie = cookieManager.get(csrfCookieConfig.cookieName);
+            if (cookie) {
+                var tokenHeader = {};
+                tokenHeader[csrfCookieConfig.headerName] = cookie;
+                httpRequest.setHeaders(tokenHeader);
+            }
+            next();
+        };
+    }
+    CSRFCookieHeaderService.annotations = { DI: [HttpCookieManager] };
+    return CSRFCookieHeaderService;
+}();
+var HttpCSRFModule = function () {
+    'use strict';
+    function HttpCSRFModule() {
+    }
+    HttpCSRFModule.setCookieValue = function (config) {
+        Object.assign(csrfCookieConfig, config);
+    };
+    HTTP_INTERCEPTORS.register({ useClass: CSRFCookieHeaderService }, true);
+    return HttpCSRFModule;
+}();
 }),
 'dist/router/bundles/jeli-router-module.js': (function(module, exports, __required, global){
 "use strict";
-__required.r(exports, 'ViewInit', function(){ return ViewInit;});
+__required.r(exports, 'RouterInitService', function(){ return RouterInitService;});
 __required.r(exports, 'JIntentContainer', function(){ return JIntentContainer;});
 __required.r(exports, 'ViewIntentService', function(){ return ViewIntentService;});
 __required.r(exports, 'OpenIntent', function(){ return OpenIntent;});
 __required.r(exports, 'jViewFn', function(){ return jViewFn;});
-__required.r(exports, 'ResolveRouteInterceptor', function(){ return ResolveRouteInterceptor;});
+__required.r(exports, 'PathStrategyService', function(){ return PathStrategyService;});
+__required.r(exports, 'AbstractStrategy', function(){ return AbstractStrategy;});
+__required.r(exports, 'HashStrategyService', function(){ return HashStrategyService;});
+__required.r(exports, 'RouteInterceptorInstance', function(){ return RouteInterceptorInstance;});
+__required.r(exports, 'getHref', function(){ return getHref;});
+__required.r(exports, 'parseUrl', function(){ return parseUrl;});
+__required.r(exports, 'getRequiredRoute', function(){ return getRequiredRoute;});
+__required.r(exports, 'getParentRoute', function(){ return getParentRoute;});
+__required.r(exports, 'routeConfig', function(){ return routeConfig;});
+__required.r(exports, 'staticRoutePrefix', function(){ return staticRoutePrefix;});
 __required.r(exports, 'ROUTE_INTERCEPTOR', function(){ return ROUTE_INTERCEPTOR;});
 __required.r(exports, 'ViewHandler', function(){ return ViewHandler;});
-__required.r(exports, 'WebStateProvider', function(){ return WebStateProvider;});
+__required.r(exports, 'LocationService', function(){ return LocationService;});
 __required.r(exports, 'WebStateService', function(){ return WebStateService;});
 __required.r(exports, 'GoFn', function(){ return GoFn;});
 __required.r(exports, 'RouterModule', function(){ return RouterModule;});
@@ -5687,62 +6148,201 @@ var utils = __required('node_modules/js-helpers/utils.js');
 var unserialize = utils['unserialize'];
 var extend = utils['extend'];
 var core = __required('dist/core/bundles/jeli-core-module.js');
-var INITIALIZERS = core['INITIALIZERS'];
+var APP_BOOTSTRAP = core['APP_BOOTSTRAP'];
+var InterceptorResolver = core['InterceptorResolver'];
+var EventManager = core['EventManager'];
 var errorBuilder = core['errorBuilder'];
-var Inject = core['Inject'];
-var _Promise = core['_Promise'];
 var ProviderToken = core['ProviderToken'];
 var DOMHelper = core['DOMHelper'];
 var ComponentFactoryResolver = core['ComponentFactoryResolver'];
-var CustomEventHandler = core['CustomEventHandler'];
-var helpers = __required('node_modules/js-helpers/helpers.js');
-var isequal = helpers['isequal'];
-var __buildOptions = { 'version': '1.0.0' };
-var WebStateProvider = function () {
-    'use strict';
-    function WebStateProvider() {
-        this.routeTrial = 0;
-        this.isLoaded = false;
-        this.intentFallback = null;
-        this.fallback = null;
-        this.html5Mode = false;
+var __buildOptions = {};
+var ROUTE_INTERCEPTOR = new ProviderToken('RouteInterceptor', true);
+var staticRoutePrefix = '^';
+var routeConfig = Object({
+    isLoaded: false,
+    intentFallback: null,
+    useHash: true,
+    fallback: {
+        url: '/',
+        name: '.'
+    },
+    restoreOnRefresh: true
+});
+var _unregistered = {};
+var $stateCollection = {};
+var $intentCollection = {};
+function createRoute(url) {
+    var replacer = '/([\\w-@!.]+)', paramsMapping = [];
+    url = url.replace(/([\/]|)([:]|)+(\w+)/g, function (match) {
+        if (match.indexOf(':') > -1) {
+            paramsMapping.push(match.split(':')[1]);
+            return replacer;
+        }
+        return match;
+    });
+    return {
+        params: {},
+        paramsMapping: paramsMapping,
+        regexp: new RegExp('(?:' + url.split('?')[0] + ')$')
+    };
+}
+function addViewMatcher(view, route) {
+    if (route.component) {
+        route.views = route.views || {};
+        if (!route.views[view]) {
+            route.views[view] = {};
+        }
+        route.views[view] = route.component;
+        delete route.component;
     }
-    WebStateProvider.prototype.getRouteObj = function (name) {
-        return $stateCollection[name];
-    };
-    WebStateProvider.prototype.getParentRoute = function (name) {
-        var parent = $stateCollection[name], fnd;
-        do {
-            if (parent) {
-                fnd = parent;
+}
+function generateRoute(route, requireParent) {
+    if (route.isIntent) {
+        $intentCollection[route.name] = route;
+        return;
+    }
+    route.route = createRoute(route.url || '^');
+    var _views = Object.keys(route.views || {});
+    if (requireParent) {
+        var parentRoute = $stateCollection[route.parent];
+        route.views = route.views || {};
+        for (var view in parentRoute.views) {
+            if (view !== route.targetView) {
+                route.views[view] = parentRoute.views[view];
+            } else if (!route.views[view]) {
+                addViewMatcher(view, route);
             }
-        } while (parent = parent.route.parent);
-        return fnd;
-    };
-    WebStateProvider.prototype.getIntent = function (intentName) {
-        return $intentCollection[intentName];
-    };
-    WebStateProvider.prototype.getRoute = function (route, params) {
-        if (this.routeTrial > 2) {
-            this.routeTrial = 0;
-            return false;
         }
-        var webRoutes = getRequiredRoute(route).checkParams(params);
-        if (webRoutes) {
-            return webRoutes;
+        if (route.targetView && !route.views[route.targetView]) {
+            addViewMatcher(route.targetView, route);
         }
-        if (this.fallback) {
-            location.hash = '#' + this.fallback;
+        route.route.parent = parentRoute;
+        if (!_views.length && !route.abstract) {
+            _views = parentRoute.route.$$views;
         }
-    };
-    WebStateProvider.annotations = { module: 'RouterModule' };
-    return WebStateProvider;
-}();
+        parentRoute = null;
+        delete route.parent;
+    }
+    if (!route.url) {
+        route.abstract = true;
+    }
+    route.route.$$views = _views;
+    $stateCollection[route.name] = route;
+    if (_unregistered.hasOwnProperty(route.name)) {
+        _unregistered[route.name].forEach(function (uName) {
+            setupRoutes($stateCollection[uName]);
+        });
+        delete _unregistered[route.name];
+    }
+}
+function setupRoutes(route) {
+    var requireParent = route.hasOwnProperty('parent');
+    if (!route.name && route.url) {
+        route.name = route.url.replace(/[/:]/g, _ => _ == '/' ? '.' : '');
+    }
+    if (!route.parent) {
+        addViewMatcher(route.targetView || staticRoutePrefix, route);
+    }
+    if (route.fallback && !routeConfig.fallback && route.url) {
+        routeConfig.fallback = {
+            name: route.name,
+            url: route.url
+        };
+    }
+    if (requireParent && !$stateCollection.hasOwnProperty(route.parent)) {
+        if (!_unregistered.hasOwnProperty(route.parent)) {
+            _unregistered[route.parent] = [];
+        }
+        _unregistered[route.parent].push(route.name);
+        $stateCollection[route.name] = route;
+        return this;
+    }
+    generateRoute(route, requireParent);
+    function addChildren(config) {
+        if (config.children) {
+            config.children.forEach(function (childConfig) {
+                if (childConfig.name) {
+                    var name = childConfig.name;
+                    childConfig.name = [
+                        config.name,
+                        name
+                    ].join('.');
+                    childConfig.url = '/' + config.name + (childConfig.url || '/' + name);
+                    childConfig.parent = config.name;
+                    generateRoute(childConfig, true);
+                    addChildren(childConfig);
+                } else {
+                    errorBuilder('unregistered child route in parent<' + config.name + '>, name is required:' + JSON.stringify(childConfig));
+                }
+            });
+        }
+    }
+    addChildren(route);
+}
+function getParentRoute(name) {
+    var parent = $stateCollection[name], fnd;
+    do {
+        if (parent) {
+            fnd = parent;
+        }
+    } while (parent = parent.route.parent);
+    return fnd;
+}
+function getRouteObj(routeName) {
+    var queryParam = routeName.split('?');
+    for (var prop in $stateCollection) {
+        if (!$stateCollection[prop].abstract && $stateCollection[prop].route.regexp.test(queryParam[0])) {
+            return $stateCollection[prop];
+        }
+    }
+    return $stateCollection[routeConfig.fallback.name] || null;
+}
+function getRequiredRoute(routeName, params) {
+    var queryParam = routeName.split('?'), foundRoute = getRouteObj(routeName);
+    if (foundRoute) {
+        foundRoute.route.params = extend({}, foundRoute.params || {}, params || {});
+        if (foundRoute.route.paramsMapping.length && !params) {
+            foundRoute.route.regexp.exec(queryParam[0]).splice(1).forEach(function (val, inc) {
+                var isNumber = Number(val);
+                foundRoute.route.params[foundRoute.route.paramsMapping[inc]] = !isNaN(isNumber) ? isNumber : val;
+            });
+        }
+        if (queryParam[1]) {
+            foundRoute.route.params = extend(foundRoute.route.params, unserialize(queryParam[1]));
+        }
+    }
+    return foundRoute;
+}
+function parseUrl(href, params) {
+    return href.replace(/\:(\w)+/g, function (index, key) {
+        var param = index.split(':')[1];
+        return param in params ? params[param] : index;
+    });
+}
+function getHref(stateName, params) {
+    var state = $stateCollection[stateName];
+    if (state) {
+        if (state.route.paramsMapping.length && !params) {
+            throw new Error(stateName + ' requires parameter, but none was provided');
+        }
+        return parseUrl(state.url, params);
+    }
+    return routeConfig.fallback.url;
+}
+function RouteInterceptorInstance(route, path, redirectMethod) {
+    this.name = route.name;
+    this.path = path;
+    this.data = route.data;
+    this.params = route.params;
+    this.originalUrl = route.url;
+    this.locals = {};
+    this.redirect = redirectMethod;
+}
 var ViewHandler = function () {
     'use strict';
-    function ViewHandler(webStateProvider, componentResolver) {
+    function ViewHandler() {
         this.viewsHolder = new Map();
-        this.currentView = '@';
+        this.currentView = staticRoutePrefix;
         this.stateInProgress;
         this.stateQueue = [];
         this.$stateTransitioned = false;
@@ -5750,8 +6350,6 @@ var ViewHandler = function () {
         this.previousState = '';
         this._pendingViewStack = new Map();
         this._resolvedParents = {};
-        this.webStateProvider = webStateProvider;
-        this.componentResolver = componentResolver;
     }
     ViewHandler.prototype.setViewReference = function (elementRef, ref) {
         this.viewsHolder.set(ref, {
@@ -5774,8 +6372,8 @@ var ViewHandler = function () {
     ViewHandler.prototype.compileViewTemplate = function (viewComponent, viewObjectInstance) {
         viewObjectInstance.cleanUp();
         if (viewComponent) {
-            this.componentResolver(viewComponent, viewObjectInstance.element, function (component, componentInstance) {
-                viewObjectInstance.compiledWith = component;
+            ComponentFactoryResolver(viewComponent, viewObjectInstance.element, function (componentRef) {
+                viewObjectInstance.compiledWith = componentRef;
             });
         }
     };
@@ -5788,11 +6386,12 @@ var ViewHandler = function () {
             }
         });
     };
-    ViewHandler.prototype.getCurrentView = function (_route, currentRoute) {
+    ViewHandler.prototype.getCurrentView = function (_route) {
         var _views = [], mView = Object.keys(_route.views).concat();
         this._resolvedParents[_route.name] = true;
         if (_route.route.parent && !this._resolvedParents[_route.route.parent.name]) {
-            this._resolvedParents[this.webStateProvider.getParentRoute(_route.route.parent.name).name] = true;
+            var parentRoute = getParentRoute(_route.route.parent.name);
+            this._resolvedParents[parentRoute.name] = true;
             this._resolvedParents[_route.route.parent.name] = true;
             return mView;
         }
@@ -5807,10 +6406,10 @@ var ViewHandler = function () {
         mView = null;
         return _views;
     };
-    ViewHandler.prototype.resolveViews = function (route, currentRoute) {
-        var _views = this.getCurrentView(route, currentRoute);
+    ViewHandler.prototype.resolveViews = function (route) {
+        var _views = this.getCurrentView(route);
         for (var idx = 0; idx < _views.length; idx++) {
-            var view = _views[idx] || '@';
+            var view = _views[idx] || staticRoutePrefix;
             var viewObj = route.views ? route.views[view] : route;
             var viewObjectInstance = this.getView(view);
             if (viewObjectInstance) {
@@ -5828,284 +6427,167 @@ var ViewHandler = function () {
     };
     ViewHandler.annotations = {
         name: 'ViewHandler',
-        DI: {
-            WebStateProvider: { factory: WebStateProvider },
-            ComponentFactoryResolver: { factory: ComponentFactoryResolver }
-        },
         module: 'RouterModule'
     };
     return ViewHandler;
 }();
-var ROUTE_INTERCEPTOR = new ProviderToken('RouteInterceptor', true);
-var _unregistered = {};
-var $stateCollection = {};
-var $intentCollection = {};
-function createRoute(url) {
-    var replacer = '/([\\w-]+)', paramsMapping = [];
-    url = url.replace(/([\/]|)([:]|)+(\w+)/g, function (match) {
-        if (match.indexOf(':') > -1) {
-            paramsMapping.push(match.split(':')[1]);
-            return replacer;
-        }
-        return match;
-    });
-    return {
-        params: {},
-        paramsMapping: paramsMapping,
-        regexp: new RegExp('(?:' + url.split('?')[0] + ')$')
-    };
+function AbstractStrategy(locationService) {
+    this.originalState = null;
+    this.locationService = locationService;
+    this.isReplaceState = false;
+    this.stateChanged = false;
 }
-function generateRoute(routeConfig, requireParent) {
-    function addViewMatcher(view) {
-        if (routeConfig.component) {
-            if (!routeConfig.views[view]) {
-                routeConfig.views[view] = {};
-            }
-            routeConfig.views[view] = routeConfig.component;
-            delete routeConfig.component;
-        }
-    }
-    if (routeConfig.isIntent) {
-        $intentCollection[routeConfig.name] = routeConfig;
-        return;
-    }
-    routeConfig.route = createRoute(routeConfig.url || '^');
-    var _views = Object.keys(routeConfig.views || {});
-    if (requireParent) {
-        var parentRoute = $stateCollection[routeConfig.parent];
-        routeConfig.views = routeConfig.views || {};
-        for (var view in parentRoute.views) {
-            if (view !== routeConfig.targetView) {
-                routeConfig.views[view] = parentRoute.views[view];
-            } else if (!routeConfig.views[view]) {
-                addViewMatcher(view);
-            }
-        }
-        if (routeConfig.targetView && !routeConfig.views[routeConfig.targetView]) {
-            addViewMatcher(routeConfig.targetView);
-        }
-        routeConfig.route.parent = parentRoute;
-        if (!_views.length && !routeConfig.abstract) {
-            _views = parentRoute.route.$$views;
-        }
-        parentRoute = null;
-        delete routeConfig.parent;
-    }
-    if (!routeConfig.url) {
-        routeConfig.abstract = true;
-    }
-    routeConfig.route.$$views = _views;
-    $stateCollection[routeConfig.name] = routeConfig;
-    if (_unregistered.hasOwnProperty(routeConfig.name)) {
-        _unregistered[routeConfig.name].forEach(function (uName) {
-            setupRoutes(uName, $stateCollection[uName]);
-        });
-        delete _unregistered[routeConfig.name];
-    }
-}
-function setupRoutes(routeConfig) {
-    var requireParent = routeConfig.hasOwnProperty('parent');
-    if (requireParent && !$stateCollection.hasOwnProperty(routeConfig.parent)) {
-        if (!_unregistered.hasOwnProperty(routeConfig.parent)) {
-            _unregistered[routeConfig.parent] = [];
-        }
-        _unregistered[routeConfig.parent].push(routeConfig.name);
-        $stateCollection[routeConfig.name] = routeConfig;
-        return this;
-    }
-    generateRoute(routeConfig, requireParent);
-    function addChildren(config) {
-        if (config.children) {
-            config.children.forEach(function (childConfig) {
-                if (childConfig.name) {
-                    var name = childConfig.name;
-                    childConfig.name = [
-                        config.name,
-                        name
-                    ].join('.');
-                    childConfig.url = '/' + config.name + (childConfig.url || '/' + name);
-                    childConfig.parent = config.name;
-                    generateRoute(childConfig, true);
-                    addChildren(childConfig);
-                } else {
-                    errorBuilder('unregistered child route in parent<' + config.name + '>, name is required:' + JSON.stringify(childConfig));
-                }
-            });
-        }
-    }
-    addChildren(routeConfig);
-}
-function getRequiredRoute(routeName) {
-    var queryParam = routeName.split('?'), foundRoute = function () {
-            for (var prop in $stateCollection) {
-                if (!$stateCollection[prop].abstract && $stateCollection[prop].route.regexp.test(queryParam[0])) {
-                    return $stateCollection[prop];
-                }
-            }
-        }();
-    return {
-        get: function () {
-            return foundRoute;
-        },
-        checkParams: function (params) {
-            if (foundRoute) {
-                foundRoute.route.params = extend({}, foundRoute.params || {}, params || {});
-                if (foundRoute.route.paramsMapping.length && !params) {
-                    foundRoute.route.regexp.exec(queryParam[0]).splice(1).forEach(function (val, inc) {
-                        var isNumber = parseInt(val);
-                        foundRoute.route.params[foundRoute.route.paramsMapping[inc]] = !isNaN(isNumber) ? isNumber : val;
-                    });
-                }
-                if (queryParam[1]) {
-                    foundRoute.route.params = extend(foundRoute.route.params, unserialize(queryParam[1]));
-                }
-            }
-            return foundRoute;
-        }
-    };
-}
-function ResolveRouteInterceptor(route, callback) {
-    var interceptors = Inject(ROUTE_INTERCEPTOR);
-    var locals = {};
-    if (!interceptors || !interceptors.length) {
-        return callback(locals);
-    }
-    var len = 0;
-    function next() {
-        var interceptor = interceptors[len];
-        len++;
-        if (interceptor) {
-            interceptor.resolve(route, locals, next);
-        } else {
-            callback(locals);
-        }
-    }
-    next();
-}
-;
-var WebStateService = function () {
+AbstractStrategy.prototype.getBaseHref = function () {
+};
+AbstractStrategy.prototype.path = function () {
+};
+var HashStrategyService = function () {
     'use strict';
-    function WebStateService(webStateProvider, viewHandler, customEventHandler) {
+    function HashStrategyService(locationService) {
+        AbstractStrategy.call(this, locationService);
         var _this = this;
-        this.locationStates = null;
-        this.lastState = null;
-        this.isReplaceState = false;
-        this.state = { route: { params: {} } };
-        this.webStateProvider = webStateProvider;
-        this.viewHandler = viewHandler;
-        function _routeEventListener(e, route, path) {
-            if (isequal('$webRouteStart', e.type)) {
-                _this.$$baseUrl = path;
-                ResolveRouteInterceptor({
-                    name: route.name,
-                    path: path,
-                    url: route.url
-                }, function () {
-                    var lastTransitionQueue = viewHandler.stateQueue.pop();
-                    if (lastTransitionQueue) {
-                        _this.$$baseUrl = lastTransitionQueue.path;
-                        route = getRequiredRoute(lastTransitionQueue.path).checkParams(lastTransitionQueue.params);
-                        viewHandler.stateQueue.length = 0;
-                    }
-                    if (!isequal(_this.$$baseUrl, _this.state.url)) {
-                        _this.events.dispatch('$webRouteSuccess', route, _this.state.route);
-                        _this.state = route;
-                        viewHandler.resolveViews(route, _this.state);
-                    } else {
-                        _this.events.dispatch('$webRouteError', route);
-                    }
-                    viewHandler.stateInProgress = false;
-                    location.hash = _this.$$baseUrl;
-                });
+        window.addEventListener('hashchange', function (e) {
+            var locHash = _this.path();
+            if (!locHash.length || !locationService.changed(locHash) || _this.isReplaceState) {
+                _this.isReplaceState = false;
+                return;
             }
+            locationService.go(locHash);
+        }, false);
+    }
+    HashStrategyService.prototype = Object.create(AbstractStrategy.prototype);
+    HashStrategyService.prototype.constructor = AbstractStrategy;
+    HashStrategyService.prototype.replace = function () {
+        var state = this.locationService.getState();
+        this.isReplaceState = true;
+        if (state.hash !== state.previousHash || stateChanged) {
+            location.replace(state.hash);
+            this.originalState = state.currentLocation;
         }
-        this.events = new customEventHandler('listener', _routeEventListener);
-        this.events.listener('replaceState', function (ev) {
-            _this.isReplaceState = true;
+    };
+    HashStrategyService.prototype.pushState = function (path) {
+        history.pushState(null, '', '#' + path);
+    };
+    HashStrategyService.prototype.path = function () {
+        return location.hash.replace(/^#/, '');
+    };
+    HashStrategyService.annotations = { static: true };
+    HashStrategyService.annotations.instance = HashStrategyService;
+    return HashStrategyService;
+}();
+var PathStrategyService = function () {
+    'use strict';
+    function PathStrategyService(locationService) {
+        AbstractStrategy.call(this, locationService);
+    }
+    PathStrategyService.prototype = Object.create(AbstractStrategy.prototype);
+    PathStrategyService.prototype.constructor = AbstractStrategy;
+    PathStrategyService.annotations = { static: true };
+    PathStrategyService.annotations.instance = PathStrategyService;
+    return PathStrategyService;
+}();
+var LocationService = function () {
+    'use strict';
+    function LocationService(viewHandler) {
+        var _this = this;
+        this.viewHandler = viewHandler;
+        this.strategy = routeConfig.useHash ? new HashStrategyService(this) : new PathStrategyService(this);
+        this.lastVisited = '';
+        this.previousState = null;
+        this.locationState = null;
+        this.previous = null;
+        this.currentRoute = Object({ route: { params: {} } });
+        this.events = new EventManager(function (e, route, path) {
+            if ('$webRouteStart' === e.type) {
+                var navigatedPath = route.name === routeConfig.fallback.name ? route.url : path;
+                var lastTransitionQueue = viewHandler.stateQueue.pop();
+                if (lastTransitionQueue) {
+                    navigatedPath = lastTransitionQueue[0];
+                    route = getRequiredRoute.apply(null, lastTransitionQueue);
+                    viewHandler.stateQueue.length = 0;
+                }
+                if (_this.changed(navigatedPath)) {
+                    _this.events.dispatch('$webRouteSuccess', route, _this.currentRoute);
+                    _this.currentRoute = route;
+                    _this.strategy.pushState(navigatedPath);
+                    viewHandler.resolveViews(route);
+                } else {
+                    _this.events.dispatch('$webRouteError', route);
+                }
+                _this.viewHandler.stateInProgress = false;
+                _this.lastVisited = navigatedPath;
+            }
         });
-        this.events.listener('view.render', function (ev, viewName) {
+        this.events.add('view.render', function (ev, viewName) {
             if (viewHandler._pendingViewStack.has(viewName)) {
                 viewHandler.compileViewTemplate(viewHandler._pendingViewStack.get(viewName), viewHandler.viewsHolder.get(viewName));
                 viewHandler._pendingViewStack.delete(viewName);
             }
         });
     }
-    ;
-    WebStateService.prototype._gotoState = function (ev, path, params) {
+    LocationService.prototype.changed = function (path) {
+        return this.lastVisited !== path;
+    };
+    LocationService.prototype.replace = function (path) {
+        if (!this.locationState && !path)
+            return;
+        this.locationState = {
+            state: 'replaceState',
+            path: path || this.locationState.previous,
+            previous: this.previousState,
+            current: this.lastVisited
+        };
+        this.previous = this.locationState.path;
+    };
+    LocationService.prototype.getState = function (state) {
+        if (state) {
+            this.locationState = state;
+            return;
+        }
+        return this.locationState;
+    };
+    LocationService.prototype.search = function (query) {
+        return window.location.search = query;
+    };
+    LocationService.prototype.go = function (path, params) {
+        var _this = this;
         if (!path) {
             return false;
         }
         this.viewHandler.previousState = this.viewHandler.currentState;
         this.viewHandler.currentState = path;
         if (this.viewHandler.stateInProgress) {
-            if (isequal(this.viewHandler.currentState, this.viewHandler.previousState)) {
+            if (this.viewHandler.currentState === this.viewHandler.previousState) {
                 return;
             }
-            this.viewHandler.stateQueue.push({
-                path: path,
-                param: params
-            });
+            this.viewHandler.stateQueue.push([
+                path,
+                params
+            ]);
             this.viewHandler.$stateTransitioned = true;
-        } else {
-            var route = this.webStateProvider.getRoute(path, params);
+        } else if (this.changed(path)) {
+            var route = getRequiredRoute(path, params);
             if (route) {
                 this.viewHandler.stateInProgress = true;
-                this.events.dispatch('$webRouteStart', route, path);
+                var routeInstance = new RouteInterceptorInstance(route, path, function (path, params) {
+                    path = getHref(path, params);
+                    if (_this.changed(path)) {
+                        _this.go(path, params);
+                    }
+                });
+                InterceptorResolver(ROUTE_INTERCEPTOR, routeInstance, function () {
+                    _this.events.dispatch('$webRouteStart', route, path);
+                });
+            } else {
+                this.events.dispatch('$webRouteNotFound', {
+                    path: path,
+                    params: params,
+                    message: 'unable to resolve route'
+                });
             }
         }
     };
-    WebStateService.prototype.go = function (path, params) {
-        path = this.$href(path, params);
-        if (this._stateChanged(path)) {
-            this._gotoState(null, path, params);
-        }
-        return this;
-    };
-    WebStateService.prototype.$href = function (stateName, params) {
-        var state = this.webStateProvider.getRouteObj(stateName);
-        if (state) {
-            if (state.route.paramsMapping.length && !params) {
-                throw new Error(stateName + ' requires parameter, but none was provided');
-            }
-            var href = state.url.replace(/\:(\w)+/g, function (index, key) {
-                var param = index.split(':')[1];
-                return param in params ? params[param] : index;
-            });
-            return href;
-        }
-        return this.webStateProvider.fallback;
-    };
-    WebStateService.prototype.replaceWebState = function (hash) {
-        if (!this.locationStates && !hash)
-            return;
-        this.locationStates = {
-            state: 'replaceState',
-            hash: '#' + (hash || this.locationStates.previousHash).replace(/^#/, ''),
-            previousHash: this.lastState,
-            currentLocation: location.hash
-        };
-        this.lastState = this.locationStates.hash;
-    };
-    WebStateService.prototype.currentState = function (state) {
-        if (state) {
-            this.locationStates = state;
-            return;
-        }
-        return this.locationStates;
-    };
-    WebStateService.prototype.search = function (query) {
-        return window.location.search = query;
-    };
-    WebStateService.prototype.getParam = function (name) {
-        return this.state.route.params[name];
-    };
-    WebStateService.prototype.getUrlParams = function () {
-        return Object(this.state.route.params);
-    };
-    WebStateService.prototype._stateChanged = function (path) {
-        return !isequal(this.$$baseUrl, path);
-    };
-    WebStateService.prototype.getRootUrl = function () {
+    LocationService.prototype.getRootUrl = function () {
         var rootUrl = document.location.protocol + '//' + (document.location.hostname || document.location.host);
         if (document.location.port || false) {
             rootUrl += ':' + document.location.port;
@@ -6113,12 +6595,41 @@ var WebStateService = function () {
         rootUrl += '/';
         return rootUrl;
     };
+    LocationService.annotations = {
+        DI: [
+            ViewHandler,
+            HashStrategyService,
+            PathStrategyService
+        ]
+    };
+    return LocationService;
+}();
+var WebStateService = function () {
+    'use strict';
+    function WebStateService(locationService) {
+        this.locationService = locationService;
+        Object.defineProperty(this, 'state', {
+            get: function () {
+                return this.locationService.currentRoute;
+            }
+        });
+    }
+    ;
+    WebStateService.prototype.go = function (path, params) {
+        path = getHref(path, params);
+        this.locationService.go(path, params);
+    };
+    WebStateService.prototype.href = function (stateName, params) {
+        return getHref(stateName, params);
+    };
+    WebStateService.prototype.getParam = function (name) {
+        return this.locationService.currentRoute.route.params[name];
+    };
+    WebStateService.prototype.getUrlParams = function () {
+        return Object(this.locationService.currentRoute.route.params);
+    };
     WebStateService.annotations = {
-        DI: {
-            WebStateProvider: { factory: WebStateProvider },
-            ViewHandler: { factory: ViewHandler },
-            CustomEventHandler: { factory: CustomEventHandler }
-        },
+        DI: [LocationService],
         module: 'RouterModule'
     };
     return WebStateService;
@@ -6133,7 +6644,7 @@ var GoFn = function () {
     }
     GoFn.annotations = {
         selector: 'go',
-        DI: { WebStateService: { factory: WebStateService } },
+        DI: [WebStateService],
         props: {
             pathName: { value: 'go' },
             params: {}
@@ -6154,23 +6665,26 @@ var GoFn = function () {
 }();
 var jViewFn = function () {
     'use strict';
-    function jViewFn(viewHandler, webStateService, elementRef) {
+    function jViewFn(viewHandler, locationService, elementRef) {
+        this.ref = staticRoutePrefix;
         this.didInit = function () {
-            this._ref = '@' + this.ref;
-            viewHandler.setViewReference(elementRef, this._ref);
-            webStateService.events.dispatch('view.render', this._ref);
+            viewHandler.setViewReference(elementRef, this.ref);
+            locationService.events.dispatch('view.render', this.ref);
         };
         this.viewDidDestroy = function () {
-            viewHandler.destroy(this._ref);
+            viewHandler.destroy(this.ref);
         };
     }
     jViewFn.annotations = {
-        selector: 'j-view',
-        DI: {
-            ViewHandler: { factory: ViewHandler },
-            WebStateService: { factory: WebStateService },
-            ElementRef: { optional: true }
-        },
+        selector: 'router-view',
+        DI: [
+            ViewHandler,
+            LocationService,
+            {
+                optional: true,
+                tokenName: 'ElementRef'
+            }
+        ],
         props: { ref: {} },
         module: 'RouterModule'
     };
@@ -6178,41 +6692,42 @@ var jViewFn = function () {
 }();
 var ViewIntentService = function () {
     'use strict';
-    function ViewIntentService(webStateProvider, componentResolver) {
+    function ViewIntentService() {
         this._currentOpenIntent = new Map();
         this.intentContainer = null;
         this.$currentIntent = '';
-        this.openIntent = function (intentName, params) {
-            if (this.$currentIntent === intentName) {
-                return;
-            }
-            var intentConfig = webStateProvider.getIntent(intentName);
-            if (intentConfig) {
-                if (!this._currentOpenIntent.has(intentName)) {
-                    var _this = this;
-                    this.$currentIntent = intentName;
-                    this._currentOpenIntent.set(intentName, {
-                        element: null,
-                        route: {
-                            name: intentName,
-                            params: params,
-                            data: intentConfig.data
-                        }
-                    });
-                    componentResolver(intentConfig.view.component, this.intentContainer, function (elementRef) {
-                        DOMHelper.insertAfter(elementRef, elementRef.nativeElement, _this.intentContainer.nativeElement);
-                        var config = _this._currentOpenIntent.get(intentName);
-                        config.element = elementRef;
-                        elementRef.class.add('view-intent');
-                        _this.transitIntent(intentName, intentConfig.transition || 50);
-                    }, false);
-                } else {
-                    this.transitIntent(intentName, 50);
-                }
-            }
-            ;
-        };
     }
+    ViewIntentService.prototype.openIntent = function (intentName, params) {
+        if (this.$currentIntent === intentName) {
+            return;
+        }
+        var intentConfig = $intentCollection[intentName];
+        if (intentConfig) {
+            if (!this._currentOpenIntent.has(intentName)) {
+                var _this = this;
+                this.$currentIntent = intentName;
+                this._currentOpenIntent.set(intentName, {
+                    element: null,
+                    route: {
+                        name: intentName,
+                        params: params,
+                        data: intentConfig.data
+                    }
+                });
+                ComponentFactoryResolver(intentConfig.view.component, this.intentContainer, function (componentRef) {
+                    DOMHelper.insertAfter(componentRef, componentRef.nativeElement, _this.intentContainer.nativeElement);
+                    var config = _this._currentOpenIntent.get(intentName);
+                    config.element = componentRef;
+                    componentRef.class.add('view-intent');
+                    _this.intentContainer.children.add(componentRef);
+                    _this.transitIntent(intentName, intentConfig.transition || 50);
+                }, true);
+            } else {
+                this.transitIntent(intentName, 50);
+            }
+        }
+        ;
+    };
     ViewIntentService.prototype.closeIntent = function () {
         var allIntents = [];
         var current = this.$currentIntent;
@@ -6278,10 +6793,6 @@ var ViewIntentService = function () {
     };
     ViewIntentService.annotations = {
         name: 'viewIntent',
-        DI: {
-            WebStateProvider: { factory: WebStateProvider },
-            ComponentFactoryResolver: { factory: ComponentFactoryResolver }
-        },
         module: 'RouterModule'
     };
     return ViewIntentService;
@@ -6290,6 +6801,7 @@ var OpenIntent = function () {
     'use strict';
     function OpenIntent(elementRef, viewIntent) {
         this.params = {};
+        this._open = null;
         this.clickHandler = function () {
             if (this.splitWhere.length) {
                 this.params = elementRef.context.evaluate(this.splitWhere.join(':'));
@@ -6300,15 +6812,22 @@ var OpenIntent = function () {
             set: function (value) {
                 this.splitWhere = (value || '').split(':');
                 this.pathName = this.splitWhere.shift();
+                this._open = value;
+            },
+            get: function () {
+                return this._open;
             }
         });
     }
     OpenIntent.annotations = {
         selector: 'open',
-        DI: {
-            ElementRef: { optional: true },
-            ViewIntentService: { factory: ViewIntentService }
-        },
+        DI: [
+            {
+                optional: true,
+                tokenName: 'ElementRef'
+            },
+            ViewIntentService
+        ],
         props: {
             open: {},
             params: {}
@@ -6336,52 +6855,29 @@ var JIntentContainer = function () {
         };
     }
     JIntentContainer.annotations = {
-        selector: 'j-intent-container',
-        DI: {
-            ViewIntentService: { factory: ViewIntentService },
-            ElementRef: { optional: true }
-        },
+        selector: 'router-intent-container',
+        DI: [
+            ViewIntentService,
+            {
+                optional: true,
+                tokenName: 'ElementRef'
+            }
+        ],
         module: 'RouterModule'
     };
     return JIntentContainer;
 }();
-function ViewInit(jeliWebProvider, webStateService) {
-    var originalState = location.hash;
-    var stateChanged = false;
-    jeliWebProvider.isLoaded = true;
-    if ('onhashchange' in window) {
-        window.addEventListener('$locationReplaceState', locationReplaceState);
-        window.addEventListener('hashchange', webRouteChangedFn);
-    }
-    function locationReplaceState(e) {
-        var state = webStateService.currentState();
-        webStateService.isReplaceState = true;
-        if (state.hash !== state.previousHash || stateChanged) {
-            location.replace(state.hash);
-            originalState = state.currentLocation;
+function RouterInitService(locationService) {
+    routeConfig.isLoaded = true;
+    var path = '';
+    if (routeConfig.restoreOnRefresh) {
+        if (routeConfig.useHash) {
+            path = (location.hash || '').replace('#', '');
+        } else {
+            path = location.pathname;
         }
     }
-    function webRouteChangedFn(e) {
-        var locHash = refineHash();
-        if (!location.hash.length || !webStateService._stateChanged(locHash) || webStateService.isReplaceState) {
-            webStateService.isReplaceState = false;
-            return;
-        }
-        webStateService._gotoState(null, locHash);
-    }
-    function refineHash() {
-        return (location.hash || '').replace('#', '');
-    }
-    return new Promise(function (resolve, reject) {
-        setTimeout(function () {
-            if (!originalState) {
-                location.hash = refineHash() || jeliWebProvider.fallback;
-            } else {
-                webStateService._gotoState(null, refineHash());
-            }
-            resolve(true);
-        }, 0);
-    });
+    locationService.go(path || routeConfig.fallback.url);
 }
 var RouterModule = function () {
     'use strict';
@@ -6394,12 +6890,9 @@ var RouterModule = function () {
             setupRoutes(routes);
         }
     };
-    INITIALIZERS.register({
-        DI: {
-            WebStateProvider: { factory: WebStateProvider },
-            WebStateService: { factory: WebStateService }
-        },
-        factory: ViewInit
+    APP_BOOTSTRAP.register({
+        DI: [LocationService],
+        factory: RouterInitService
     }, true);
     return RouterModule;
 }();
@@ -6467,7 +6960,7 @@ CalculatorComponent.annotations = {
     module: 'AppModule'
 };
 
-CalculatorComponent.view = (function(){ var _viewParser = new core["ViewParser"]([{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attr$":{"value":{"prop":"currentNumber","once":false}}},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":"element","name":"button","index":0,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"+"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"text":"+"}}]},{"type":"element","name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"-"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"text":"-"}}]},{"type":"element","name":"button","index":2,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"*"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"text":"×"}}]},{"type":"element","name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"/"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"text":"÷"}}]},{"type":"element","name":"button","index":4,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"7"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"text":"7"}}]},{"type":"element","name":"button","index":5,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"8"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"text":"8"}}]},{"type":"element","name":"button","index":6,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"9"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"text":"9"}}]},{"type":"element","name":"button","index":7,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"4"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"text":"4"}}]},{"type":"element","name":"button","index":8,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"5"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"text":"5"}}]},{"type":"element","name":"button","index":9,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"6"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"text":"6"}}]},{"type":"element","name":"button","index":10,"isc":false,"attr":{"type":"button","value":1},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"1"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"text":"1"}}]},{"type":"element","name":"button","index":11,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"2"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"text":"2"}}]},{"type":"element","name":"button","index":12,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"3"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"text":"3"}}]},{"type":"element","name":"button","index":13,"isc":false,"attr":{"type":"button","value":0},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"0"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":{"text":"0"}}]},{"type":"element","name":"button","index":14,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":"text","ast":{"text":"."}}]},{"type":"element","name":"button","index":15,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":"text","ast":{"text":"AC"}}]},{"type":"element","name":"button","index":16,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"="}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":{"text":"="}}]}]}]}], {}); return /** jeli template **/ _viewParser; /** template loader **/;})()
+CalculatorComponent.view = /** jeli template **/ (function(_viewParser){ return function(parentRef){  return _viewParser.compile([{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attr$":{"value":{"prop":"currentNumber","once":false}}},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":"element","name":"button","index":0,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"+"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["+"]}]},{"type":"element","name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"-"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["-"]}]},{"type":"element","name":"button","index":2,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"*"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["×"]}]},{"type":"element","name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"/"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["÷"]}]},{"type":"element","name":"button","index":4,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"7"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["7"]}]},{"type":"element","name":"button","index":5,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"8"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["8"]}]},{"type":"element","name":"button","index":6,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"9"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["9"]}]},{"type":"element","name":"button","index":7,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"4"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["4"]}]},{"type":"element","name":"button","index":8,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"5"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["5"]}]},{"type":"element","name":"button","index":9,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"6"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["6"]}]},{"type":"element","name":"button","index":10,"isc":false,"attr":{"type":"button","value":1},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"1"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["1"]}]},{"type":"element","name":"button","index":11,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"2"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["2"]}]},{"type":"element","name":"button","index":12,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"3"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["3"]}]},{"type":"element","name":"button","index":13,"isc":false,"attr":{"type":"button","value":0},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"0"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["0"]}]},{"type":"element","name":"button","index":14,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":"text","ast":["."]}]},{"type":"element","name":"button","index":15,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":"text","ast":["AC"]}]},{"type":"element","name":"button","index":16,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"="}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["="]}]}]}]}], parentRef);}})(new core["ViewParser"])/** template loader **/
 return CalculatorComponent;
 }();
 
@@ -6476,7 +6969,7 @@ return CalculatorComponent;
 "use strict";
 __required.r(exports, 'RouterPageElement', function(){ return RouterPageElement;});
 var common = __required('dist/common/bundles/jeli-common-module.js');
-var AppModule = __required('viewers/Todo/src/app/app.module.js', 'exports');
+var AppModule = __required('viewers/Todo/src/app/app.module.js');
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var form = __required('dist/form/bundles/jeli-form-module.js');
 var FormControlService = form['FormControlService'];
@@ -6547,16 +7040,14 @@ RouterPageElement.prototype.didInit = function () {
 
 RouterPageElement.annotations = {
     selector: 'router-form-page',
-    DI: {
-        FormControlService: {
-            factory: FormControlService
-        }
-    },
+    DI: [
+        FormControlService
+    ],
     exposeView: true,
     module: 'AppModule'
 };
 
-RouterPageElement.view = (function(){ var _viewParser = new core["ViewParser"]([{"type":"element","name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[form["FormControlDirective"]],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[form["RadioEventBinder"],form["FormFieldDirective"]]},{"type":"text","ast":{"text":" Yes"}},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[form["RadioEventBinder"],form["FormFieldDirective"]]},{"type":"text","ast":{"text":" No"}},{"type":"element","name":"br","index":5,"isc":false},{"type":"element","name":"input","index":6,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[form["CheckboxEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":7,"isc":false}]},{"type":"element","name":"textarea","index":1,"isc":false,"props":{"formField":"textarea"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":4,"isc":false},{"type":"element","name":"input","index":5,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":6,"isc":false},{"type":"element","name":"input","index":7,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[form["RangeEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":8,"isc":false},{"type":"element","name":"input","index":9,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[form["NumberEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":10,"isc":false},{"type":"element","name":"select","index":11,"isc":false,"props":{"formField":"select"},"providers":[form["SelectEventBinder"],form["FormFieldDirective"]],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":{"text":"Select 1"}}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":{"text":"Select 2"}}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":{"text":"Select 3"}}]}]},{"type":"element","name":"div","index":12,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[form["FormControlDirective"]],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]}]},{"type":"element","name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"input","index":2,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[form["NumberEventBinder"],form["FormFieldDirective"]]}]},{"type":"element","name":"div","index":13,"isc":false,"children":[{"type":"element","name":"button","index":0,"isc":false,"attr$":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":"text","ast":{"text":"Submit"}}]}]},{"type":"element","name":"item-list","index":14,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[AppModule["ItemList"]],"children":[],"templates":{"place":[{"type":"element","name":"pre","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"${0}","once":false,"templates":[["${0}",{"prop":"value","args":[],"fns":[common["jsonFilterFn"]]}]]}}]}]}},{"type":"element","name":"pre","index":15,"isc":false,"children":[{"type":"text","ast":{"text":"${0}","once":false,"templates":[["${0}",{"prop":["testForm","value"],"args":[[3]],"fns":[common["jsonFilterFn"]]}]]}}]}]}], {}); return /** jeli template **/ _viewParser; /** template loader **/;})()
+RouterPageElement.view = /** jeli template **/ (function(_viewParser){ return function(parentRef){  return _viewParser.compile([{"type":"element","name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[form["FormControlDirective"]],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[form["RadioEventBinder"],form["FormFieldDirective"]]},{"type":"text","ast":[" Yes"]},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[form["RadioEventBinder"],form["FormFieldDirective"]]},{"type":"text","ast":[" No"]},{"type":"element","name":"br","index":5,"isc":false},{"type":"element","name":"input","index":6,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[form["CheckboxEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":7,"isc":false}]},{"type":"element","name":"textarea","index":1,"isc":false,"props":{"formField":"textarea"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":4,"isc":false},{"type":"element","name":"input","index":5,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":6,"isc":false},{"type":"element","name":"input","index":7,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[form["RangeEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":8,"isc":false},{"type":"element","name":"input","index":9,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[form["NumberEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":10,"isc":false},{"type":"element","name":"select","index":11,"isc":false,"props":{"formField":"select"},"providers":[form["SelectEventBinder"],form["FormFieldDirective"]],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":["Select 1"]}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":["Select 2"]}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":["Select 3"]}]}]},{"type":"element","name":"div","index":12,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[form["FormControlDirective"]],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]}]},{"type":"element","name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"input","index":2,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[form["NumberEventBinder"],form["FormFieldDirective"]]}]},{"type":"element","name":"div","index":13,"isc":false,"children":[{"type":"element","name":"button","index":0,"isc":false,"attr$":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":"text","ast":["Submit"]}]}]},{"type":"element","name":"item-list","index":14,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[AppModule["ItemList"]],"children":[],"templates":{"place":[{"type":"element","name":"pre","index":0,"isc":false,"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"value","args":[],"fns":[common["jsonFilterFn"]]}]],false]}]}]}},{"type":"element","name":"pre","index":15,"isc":false,"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":["testForm","value"],"args":[[3]],"fns":[common["jsonFilterFn"]]}]],false]}]}]}], parentRef);}})(new core["ViewParser"])/** template loader **/
 return RouterPageElement;
 }();
 
@@ -6566,19 +7057,14 @@ return RouterPageElement;
 __required.r(exports, 'AppRouteModule', function(){ return AppRouteModule;});
 __required.r(exports, 'validatorService', function(){ return validatorService;});
 __required.r(exports, 'InitializeApp', function(){ return InitializeApp;});
-__required.r(exports, 'configureWebState', function(){ return configureWebState;});
 var RouterPageElement = __required('viewers/Todo/src/app/components/route-form-page/route-form-page.element.js', 'RouterPageElement');
 var CalculatorComponent = __required('viewers/Todo/src/app/components/calculator/calculator.js', 'CalculatorComponent');
 var core = __required('dist/core/bundles/jeli-core-module.js');
 var INITIALIZERS = core['INITIALIZERS'];
 var router = __required('dist/router/bundles/jeli-router-module.js');
 var WebStateService = router['WebStateService'];
-var WebStateProvider = router['WebStateProvider'];
 var ROUTE_INTERCEPTOR = router['ROUTE_INTERCEPTOR'];
 var RouterModule = router['RouterModule'];
-function configureWebState(webStateProvider) {
-    webStateProvider.fallback = '/';
-}
 function InitializeApp(webStateService) {
     webStateService.events.listener('$webRouteStart', console.log);
 }/** compiled validatorService **/
@@ -6608,16 +7094,15 @@ function AppRouteModule() {
         {
             name: 'welcome',
             url: '/',
+            fallback: true,
             views: { '@content': RouterPageElement }
         }
     ]);
 }
 
-INITIALIZERS.register({factory : configureWebState, DI : {WebStateProvider : {factory: WebStateProvider}}}, true);
+INITIALIZERS.register({factory: InitializeApp, DI: [WebStateService]}, true);
 
-INITIALIZERS.register({factory : InitializeApp, DI : {WebStateService : {factory: WebStateService}}}, true);
-
-ROUTE_INTERCEPTOR.register({useClass : validatorService}, true);
+ROUTE_INTERCEPTOR.register({useClass: validatorService}, true);
 
 !function(){/** bootstrap module**/[
     RouterModule
@@ -6649,7 +7134,7 @@ TestPlaceElement.annotations = {
     module: 'AppModule'
 };
 
-TestPlaceElement.view = (function(){ var _viewParser = new core["ViewParser"]([{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"place","name":"#fragment","index":0,"isc":false,"selector":["attr","modal-body"]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":1,"isc":false,"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[common["ClassDirective"]],"children":[{"type":"element","name":"p","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"${0}","once":false,"templates":[["${0}",{"prop":"opt","args":[],"fns":[common["jsonFilterFn"]]}]]}}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[common["ForDirective"]]}], {}); return /** jeli template **/ _viewParser; /** template loader **/;})()
+TestPlaceElement.view = /** jeli template **/ (function(_viewParser){ return function(parentRef){  return _viewParser.compile([{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"place","name":"#fragment","index":0,"isc":false,"selector":["attr","modal-body"]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":1,"isc":false,"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[common["ClassDirective"]],"children":[{"type":"element","name":"p","index":0,"isc":false,"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"opt","args":[],"fns":[common["jsonFilterFn"]]}]],false]}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[common["ForDirective"]]}], parentRef);}})(new core["ViewParser"])/** template loader **/
 return TestPlaceElement;
 }();
 
@@ -6675,7 +7160,7 @@ ItemList.annotations = {
     module: 'AppModule'
 };
 
-ItemList.view = (function(){ var _viewParser = new core["ViewParser"]([{"type":"place","name":"#fragment","index":0,"isc":false},{"type":"element","name":"#fragment","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[common["SwitchDirective"]],"children":[{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"Invalid form"}}]}},"providers":[common["SwitchDefaultDirective"]]},{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":1,"isc":false,"children":[{"type":"text","ast":{"text":"Valid form"}}]}},"props":{"switchCase":{"prop":{"type":"raw","value":"test"}}},"providers":[common["SwitchCaseDirective"]]}]}], {}); return /** jeli template **/ _viewParser; /** template loader **/;})()
+ItemList.view = /** jeli template **/ (function(_viewParser){ return function(parentRef){  return _viewParser.compile([{"type":"place","name":"#fragment","index":0,"isc":false},{"type":"element","name":"#fragment","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[common["SwitchDirective"]],"children":[{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":["Invalid form"]}]}},"providers":[common["SwitchDefaultDirective"]]},{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":1,"isc":false,"children":[{"type":"text","ast":["Valid form"]}]}},"props":{"switchCase":{"prop":{"type":"raw","value":"test"}}},"providers":[common["SwitchCaseDirective"]]}]}], parentRef);}})(new core["ViewParser"])/** template loader **/
 return ItemList;
 }();
 
@@ -6684,7 +7169,7 @@ return ItemList;
 "use strict";
 __required.r(exports, 'AppRootElement', function(){ return AppRootElement;});
 var datetime = __required('dist/common/bundles/jeli-common-datetime-module.js');
-var AppModule = __required('viewers/Todo/src/app/app.module.js', 'exports');
+var AppModule = __required('viewers/Todo/src/app/app.module.js');
 var common = __required('dist/common/bundles/jeli-common-module.js');
 var form = __required('dist/form/bundles/jeli-form-module.js');
 var core = __required('dist/core/bundles/jeli-core-module.js');
@@ -6769,15 +7254,13 @@ AppRootElement.prototype.generateMock = function (total) {
 
 AppRootElement.annotations = {
     selector: 'app-root',
-    DI: {
-        HttpService: {
-            factory: HttpService
-        }
-    },
+    DI: [
+        HttpService
+    ],
     module: 'AppModule'
 };
 
-AppRootElement.view = (function(){ var _viewParser = new core["ViewParser"]([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":{"text":" Todo Application "}}]}]}]}]},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[form["CheckboxEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attr$":{"checked":{"prop":true,"once":true}},"vc":[{"name":"model","type":"jModel","value":"input"},"app-root"]},{"type":"comment","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"div","index":4,"isc":false,"children":[{"type":"text","ast":{"text":"I am Test Condition"}}]},"ifElse":{"refId":"fallback","type":"element","name":"#fragment","isc":false,"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":0,"isc":false,"context":{"i":"$context"},"children":[{"type":"text","ast":{"text":"Testing_${0}","once":false,"templates":[["${0}",{"prop":"i"}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[common["ForDirective"]]}]}},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[common["IfDirective"]]},{"type":"element","name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[common["ClassDirective"]],"children":[{"type":"text","ast":{"text":"Class test"}}]},{"type":"element","name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[common["SwitchDirective"]],"children":[{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":{"text":"I am ${0} case","once":false,"templates":[["${0}",{"prop":"test"}]]}}]}},"props":{"switchCase":{"prop":true}},"providers":[common["SwitchCaseDirective"]]},{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"test-place","index":1,"isc":true,"providers":[AppModule["TestPlaceElement"]],"children":[],"templates":{"place":[{"type":"text","ast":{"text":"I am default switch element"}}]}}},"providers":[common["SwitchDefaultDirective"]]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":8,"isc":false,"context":{"item":"$context"},"attr":{"class":"annother"},"children":[{"type":"text","ast":{"text":"${0}","once":true,"templates":[["${0}",{"prop":"item","args":[],"fns":[common["jsonFilterFn"]]}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[common["FilterPipe"]]},"forTrackBy":"trackByFn"},"providers":[common["ForDirective"]]},{"type":"text","ast":{"text":"Selected: ${0}","once":false,"templates":[["${0}",{"prop":"valueBinding"}]]}},{"type":"element","name":"select","index":10,"isc":false,"props":{"model":{"prop":"valueBinding"}},"providers":[form["SelectEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding","right":"$event"}],"custom":true}],"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"option","index":0,"isc":false,"props":{"option":"","value":{"prop":"opt","once":false}},"providers":[form["OptionDirective"]],"context":{"opt":"$context"},"children":[{"type":"text","ast":{"text":"${0}","once":true,"templates":[["${0}",{"prop":"opt"}]]}}]}},"props":{"forIn":{"prop":{"type":"raw","value":[1,2,3,4,5,6]}}},"providers":[common["ForDirective"]]}]},{"type":"element","name":"br","index":12,"isc":false},{"type":"text","ast":{"text":" Selected: ${0}","once":false,"templates":[["${0}",{"prop":"valueBinding2","args":[],"fns":[common["jsonFilterFn"]]}]]}},{"type":"element","name":"select","index":14,"isc":false,"props":{"model":{"prop":"valueBinding2"}},"providers":[form["SelectEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding2","right":"$event"}],"custom":true}],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":{"text":"Select 1"}}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":{"text":"Select 2"}}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":{"text":"Select 3"}}]}]},{"type":"element","name":"p","index":16,"isc":false,"children":[{"type":"text","ast":{"text":"© ${0} FrontendOnly. All Rights Reserved ","once":false,"templates":[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[datetime["dateTimeFilterFN"]]}]]}}]}], {}); return /** jeli template **/ _viewParser; /** template loader **/;})()
+AppRootElement.view = /** jeli template **/ (function(_viewParser){ return function(parentRef){  return _viewParser.compile([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":[" Todo Application "]}]}]}]}]},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[form["CheckboxEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attr$":{"checked":{"prop":true,"once":true}},"vc":[{"name":"model","type":"jModel","value":"input"},"app-root"]},{"type":"comment","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"div","index":4,"isc":false,"children":[{"type":"text","ast":["I am Test Condition"]}]},"ifElse":{"refId":"fallback","type":"element","name":"#fragment","isc":false,"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":0,"isc":false,"context":{"i":"$context"},"children":[{"type":"text","ast":["Testing_${0}",[["${0}",{"prop":"i"}]],false]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[common["ForDirective"]]}]}},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[common["IfDirective"]]},{"type":"element","name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[common["ClassDirective"]],"children":[{"type":"text","ast":["Class test"]}]},{"type":"element","name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[common["SwitchDirective"]],"children":[{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":["I am ${0} case",[["${0}",{"prop":"test"}]],false]}]}},"props":{"switchCase":{"prop":true}},"providers":[common["SwitchCaseDirective"]]},{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"test-place","index":1,"isc":true,"providers":[AppModule["TestPlaceElement"]],"children":[],"templates":{"place":[{"type":"text","ast":["I am default switch element"]}]}}},"providers":[common["SwitchDefaultDirective"]]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":8,"isc":false,"context":{"item":"$context"},"attr":{"class":"annother"},"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"item","args":[],"fns":[common["jsonFilterFn"]]}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[common["FilterPipe"]]},"forTrackBy":"trackByFn"},"providers":[common["ForDirective"]]},{"type":"text","ast":["Selected: ${0}",[["${0}",{"prop":"valueBinding"}]],false]},{"type":"element","name":"select","index":10,"isc":false,"props":{"model":{"prop":"valueBinding"}},"providers":[form["SelectEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding","right":"$event"}],"custom":true}],"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"option","index":0,"isc":false,"props":{"option":"","value":{"prop":"opt","once":false}},"providers":[form["OptionDirective"]],"context":{"opt":"$context"},"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"opt"}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[1,2,3,4,5,6]}}},"providers":[common["ForDirective"]]}]},{"type":"element","name":"br","index":12,"isc":false},{"type":"text","ast":[" Selected: ${0}",[["${0}",{"prop":"valueBinding2","args":[],"fns":[common["jsonFilterFn"]]}]],false]},{"type":"element","name":"select","index":14,"isc":false,"props":{"model":{"prop":"valueBinding2"}},"providers":[form["SelectEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding2","right":"$event"}],"custom":true}],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":["Select 1"]}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":["Select 2"]}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":["Select 3"]}]}]},{"type":"element","name":"p","index":16,"isc":false,"children":[{"type":"text","ast":["© ${0} FrontendOnly. All Rights Reserved ",[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[datetime["dateTimeFilterFN"]]}]],false]}]}], parentRef);}})(new core["ViewParser"])/** template loader **/
 return AppRootElement;
 }();
 
