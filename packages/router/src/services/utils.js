@@ -119,6 +119,13 @@ function generateRoute(route, requireParent) {
     if (!route.url) {
         route.abstract = true;
     }
+    // check if route has fallBack flag
+    if (route.fallback) {
+        routeConfig.fallback = {
+            name: route.name,
+            url: route.url
+        };
+    }
 
     //set the current route view paths
     route.route.$$views = _views;
@@ -151,13 +158,6 @@ function setupRoutes(route) {
      */
     if (!route.parent) {
         addViewMatcher(route.targetView || staticRoutePrefix, route);
-    }
-
-    if (route.fallback && !routeConfig.fallback && route.url) {
-        routeConfig.fallback = {
-            name: route.name,
-            url: route.url
-        };
     }
 
     /**

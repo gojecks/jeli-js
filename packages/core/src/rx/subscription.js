@@ -30,10 +30,6 @@ Subscription.prototype.add = function(success, error, completed) {
         });
     }
 
-    if (replayOnSubscription) {
-
-    }
-
     return this;
 };
 
