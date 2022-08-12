@@ -8,7 +8,8 @@ export var staticInjectionToken = {
     VALIDATORS: 'VALIDATORS',
     QueryList: 'QueryList',
     Function: 'Function',
-    HostRef: 'HostRef'
+    HostRef: 'HostRef',
+    HTMLElement: 'HTMLElement'
 };
 
 /**

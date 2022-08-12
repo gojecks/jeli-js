@@ -31,7 +31,28 @@ QueryList.prototype.add = function(element, index, emitEvent) {
             type: 'add'
         });
     }
-};
+}
+
+QueryList.prototype.replace = function(from, to, emitEvent) {
+    var index = this.findIndex(from);
+    if (index > -1) {
+        this._list[index] = to;
+    }
+
+    if (emitEvent) {
+        this.onChanges.next({
+            value: to,
+            index: index,
+            type: 'replace'
+        });
+    }
+}
+
+QueryList.prototype.findIndex = function(element) {
+    return this._list.findIndex(function(elem) {
+        return element === elem;
+    });
+}
 
 QueryList.prototype.get = function(element) {
     if (element) {

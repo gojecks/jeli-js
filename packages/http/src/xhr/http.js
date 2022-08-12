@@ -21,25 +21,26 @@ function CoreHttp(url, options, changeDetection) {
      * $httpProvider Interceptor
      * Request Interceptor
      **/
-    InterceptorResolver(HTTP_INTERCEPTORS, httpRequest, function(request) {
-        if (!request) {
-            httpError.setMessage('HTTP: Interceptor should return a value');
-            return xhrPromise.error(httpError);
-        }
+    InterceptorResolver(HTTP_INTERCEPTORS, httpRequest)
+        .then(function(request) {
+            if (!request) {
+                httpError.setMessage('HTTP: Interceptor should return a value');
+                return xhrPromise.error(httpError);
+            }
 
-        /**
-         * trigger change detection 
-         */
-        if (changeDetection) {
-            changeDetection();
-        }
+            /**
+             * trigger change detection 
+             */
+            if (changeDetection) {
+                changeDetection();
+            }
 
-        if (request.processData) {
-            request.processRequest();
-        }
+            if (request.processData) {
+                request.processRequest();
+            }
 
-        sendRequest();
-    });
+            sendRequest();
+        });
 
     /**
      * 

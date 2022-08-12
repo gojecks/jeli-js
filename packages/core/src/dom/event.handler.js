@@ -95,14 +95,15 @@ EventHandler.attachEventEmitter = function(element, eventName, componentInstance
     var registeredEvent = getEventsByType(element.events._events, eventName)[0];
     if (registeredEvent && registeredEvent.value) {
         var unSubscribe = componentInstance[eventName].subscribe(function(value) {
-            _executeEventsTriggers(
-                registeredEvent.value,
-                element.parent.componentInstance,
-                element.context,
-                value
-            );
             // trigger change detector if defined
             var parentElement = element && element.parent;
+            _executeEventsTriggers(
+                registeredEvent.value,
+                parentElement.componentInstance,
+                element.hasContext ? element.context : parentElement.context,
+                value
+            );
+
             parentElement && parentElement.changeDetector && parentElement.changeDetector.detectChanges();
         });
         /**

@@ -148,9 +148,10 @@ LocationService.prototype.go = function(path, params) {
                 }
             });
 
-            InterceptorResolver(ROUTE_INTERCEPTOR, routeInstance, function() {
-                _this.events.dispatch('$webRouteStart', route, path);
-            });
+            InterceptorResolver(ROUTE_INTERCEPTOR, routeInstance)
+                .then(function() {
+                    _this.events.dispatch('$webRouteStart', route, path);
+                });
         } else {
             this.events.dispatch('$webRouteNotFound', {
                 path: path,
@@ -167,8 +168,11 @@ LocationService.prototype.getRootUrl = function() {
     if (document.location.port || false) {
         rootUrl += ':' + document.location.port;
     }
-    rootUrl += '/';
 
     // Return
     return rootUrl;
 };
+
+LocationService.prototype.getFullPath = function(path) {
+    return this.getRootUrl() + (routeConfig.useHash ? '#' : '') + path;
+}

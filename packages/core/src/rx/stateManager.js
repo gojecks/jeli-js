@@ -42,6 +42,10 @@ export function StateManager(current, callback, states) {
     this.set(current);
 }
 
+StateManager.prototype.pushStates = function(states) {
+    this.states.push.apply(this.states, states);
+};
+
 StateManager.prototype.next = function() {
     var next = this.lastStateIndex + 1;
     if (this.states.length - 1 >= next) {

@@ -21,6 +21,7 @@ export function bootStrapApplication(moduleToBootStrap) {
         try {
             CoreBootstrapContext.compiledModule = moduleToBootStrap;
             CoreBootstrapContext.injector = new AbstractInjectorInstance();
+            moduleToBootStrap.fac();
             moduleToBootStrap();
             /**
              * trigger INITIALIZERS

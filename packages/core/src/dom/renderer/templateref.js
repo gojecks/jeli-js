@@ -5,13 +5,12 @@ import { inarray, isequal } from 'js-helpers/helpers';
  * @param {*} templateId 
  */
 export function TemplateRef(templates) {
-    this.hasContext = !!templates.context;
     /**
      * build the required element based on the template definition
      * @param {*} parentNode 
      */
-    this.createElement = function(parentNode, viewContainer) {
-        return ViewParserHelper[templates.type](templates, parentNode, viewContainer);
+    this.createElement = function(parentNode, viewContainer, context) {
+        return ViewParser.builder[templates.type](templates, parentNode, viewContainer, context);
     };
 
     this.getContext = function() {
@@ -60,5 +59,14 @@ TemplateRef.factory = function(node, templateId, silent) {
         if (!silent) errorBuilder('No templates Defined #' + templateId);
         return null;
     }
+
+    /**
+     * check if templateId is function
+     * call the method to assign the value so we don't keep calling the method
+     */
+    if ((typeof templates[templateId] === 'function')) {
+        templates[templateId] = templates[templateId]();
+    }
+
     return new TemplateRef(templates[templateId]);
 };

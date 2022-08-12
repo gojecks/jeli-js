@@ -1,5 +1,4 @@
 import { isobject, isequal, isboolean, isundefined, isnull, isstring, isarray, isnumber, isfunction } from 'js-helpers/helpers';
-import { simpleBooleanParser } from 'js-helpers/utils';
 import { errorBuilder } from '../utils/errorLogger';
 import { Inject } from '../dependency.injector';
 /**
@@ -27,7 +26,7 @@ function getFilteredTemplateValue(templateModel, context, componentInstance) {
         value = templateModel.fns.reduce(function(accum, filterClass, idx) {
             var filterArgs = [];
             if (templateModel.args[idx])
-                filterArgs = generateArguments(templateModel.args[idx], context, value);
+                filterArgs = generateArguments(templateModel.args[idx], context, componentInstance);
             /**
              * add the value to args
              */
@@ -68,7 +67,7 @@ function evaluateExpression(expr, context, componentInstance) {
     /**
      * expression with filter
      */
-    if (isobject(expr) && expr.hasOwnProperty('prop')) {
+    if (isobject(expr) && expr.prop) {
         return getFilteredTemplateValue(expr, context, componentInstance);
     }
 
@@ -258,16 +257,23 @@ function parseObjectExpression(expression, context, componentInstance, event) {
  * @param {*} value 
  */
 function setModelValue(key, context, componentInstance, value) {
+    var modelContext = {};
     if (isarray(key)) {
-        context = resolveContext(key.slice(0, key.length - 1), context, componentInstance);
+        modelContext = resolveContext(key.slice(0, key.length - 1), context, componentInstance);
         key = key[key.length - 1];
     } else {
-        context = (key in context) ? context : componentInstance;
+        modelContext = (key in context) ? context : componentInstance;
     }
 
-    if (context) {
-        context[key] = value;
+    if (modelContext) {
+        if (Array.isArray(key)) {
+            key = resolveContext(key, context, componentInstance);
+        }
+        modelContext[key] = value;
     }
+
+    // free memory
+    modelContext = null;
 
     return value;
 }
@@ -293,4 +299,18 @@ function resolveContext(key, context, componentInstance) {
         }
         return resolveValueFromContext(property, accum, componentEntry);
     }, context || {});
+}
+
+/**
+ * 
+ * @param {*} delimiterRegExp 
+ * @param {*} str 
+ * @param {*} replacerData 
+ * @returns str
+ */
+export function interpolationHelper(delimiterRegExp, str, replacerData) {
+    if (typeof str === 'object' || isboolean(str) || isnumber(str)) return str;
+    return str.replace(delimiterRegExp, function(_, key) {
+        return resolveContext(key.split('.'), replacerData);
+    });
 }

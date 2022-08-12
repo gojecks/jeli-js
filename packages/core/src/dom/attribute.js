@@ -11,15 +11,32 @@ import { ElementClassList } from './classlist';
  */
 export function AttributeAppender(nativeElement, prop, value) {
     if (Node.DOCUMENT_FRAGMENT_NODE === nativeElement.nodeType) return;
-
     if (isobject(prop)) {
         for (var name in prop) {
-            nativeElement.setAttribute(name, prop[name]);
+            AttributeAppender.setValue(nativeElement, name, prop[name]);
         }
+    } else {
+        AttributeAppender.setValue(nativeElement, prop, value);
+    }
+}
+
+/**
+ * 
+ * @param {*} nativeElement 
+ * @param {*} prop 
+ * @param {*} value 
+ * @param {*} canRemoveAttr 
+ * @returns 
+ */
+AttributeAppender.setValue = function(nativeElement, prop, value, canRemoveAttr) {
+    var elementValue = nativeElement.getAttribute(prop);
+    if (elementValue === value) return;
+    if (canRemoveAttr && !value) {
+        nativeElement.removeAttribute(prop);
     } else {
         nativeElement.setAttribute(prop, value);
     }
-}
+};
 
 AttributeAppender.helpers = {
     style: function(nativeElement, value, template) {
@@ -30,23 +47,28 @@ AttributeAppender.helpers = {
         }
     },
     innerhtml: function(nativeElement, value) {
-        nativeElement.innerHTML = sce.trustAsHTML(value);
+        AttributeAppender.setValue(nativeElement, 'innerHTML', sce.trustAsHTML(value));
     },
     src: function(nativeElement, value) {
         if (!['IMG', 'IFRAME'].includes(nativeElement.tagName)) {
             errorBuilder("src is not a valid property of " + nativeElement.tagName);
         }
-        nativeElement.setAttribute('src', value);
+        AttributeAppender.setValue(nativeElement, 'src', value);
     },
     href: function(nativeElement, value) {
         if (!isequal('A', nativeElement.tagName)) {
             errorBuilder("href is not a valid property of " + nativeElement.nativeElement.tagName);
         }
-
-        nativeElement.setAttribute('href', value);
+        AttributeAppender.setValue(nativeElement, 'href', value);
     },
     class: function(nativeElement, value) {
         ElementClassList.add(nativeElement, value);
+    },
+    list: function(nativeElement, value) {
+        AttributeAppender.setValue(nativeElement, 'list', value);
+    },
+    readonly: function(nativeElement, value) {
+        AttributeAppender.setValue(nativeElement, 'readonly', value, true);
     }
 };
 
@@ -59,7 +81,7 @@ AttributeAppender.helpers = {
  * @returns 
  */
 AttributeAppender.setProp = function(nativeElement, propName, propValue, template) {
-    if (propValue === undefined || !nativeElement) return;
+    if (propValue === undefined || !nativeElement || nativeElement.nodeType !== Node.ELEMENT_NODE) return;
     if (AttributeAppender.helpers[propName]) {
         return AttributeAppender.helpers[propName](nativeElement, propValue, template);
     }
@@ -67,6 +89,6 @@ AttributeAppender.setProp = function(nativeElement, propName, propValue, templat
     if (propName in nativeElement) {
         nativeElement[propName] = propValue;
     } else {
-        nativeElement.setAttribute(propName, propValue);
+        AttributeAppender.setValue(nativeElement, propName, propValue);
     }
 };

@@ -22,13 +22,18 @@ export function WebStateService(locationService) {
 };
 
 /**
- * Method Name : GO
- * Parameter : stateName (STRING) , Params (OBJECT)
- * @returns : self
+ * 
+ * @param {*} path 
+ * @param {*} params 
+ * @param {*} targetWindow 
  */
-WebStateService.prototype.go = function(path, params) {
+WebStateService.prototype.go = function(path, params, targetWindow) {
     path = getHref(path, params);
-    this.locationService.go(path, params);
+    if (!targetWindow) {
+        this.locationService.go(path, params);
+    } else {
+        window.open(this.locationService.getFullPath(path), targetWindow);
+    }
 };
 
 /**

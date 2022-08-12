@@ -78,19 +78,17 @@ ViewRef.prototype.clearView = function() {
  */
 function EmbededViewContext(parentRef, templateRef, context) {
     var _componentRef = null;
-    this.compiledElement = templateRef.createElement(parentRef);
     this.context = context;
+    var templateContext = templateRef.getContext();
+    var componentRefContext = createLocalVariables(templateContext, context, parentRef.context);
+    this.compiledElement = templateRef.createElement(parentRef, null, componentRefContext);
+    this.compiledElement.hasContext = !!templateContext
     this.unsubscribeScheduler;
     /**
      * create the Viewcontext if templateRef has a context
      */
-    if (templateRef.hasContext) {
-        ComponentRef.create(this.compiledElement.refId, parentRef.hostRef.refId);
-        _componentRef = componentDebugContext.get(this.compiledElement.refId);
-        /**
-         * build the localVariables if context is defined
-         */
-        _componentRef._context = createLocalVariables(templateRef.getContext(), this);
+    if (this.compiledElement && this.compiledElement.hasContext) {
+        ComponentRef.create(this.compiledElement.refId, parentRef.hostRef.refId, componentRefContext);
     }
 
     /**
@@ -108,12 +106,23 @@ function EmbededViewContext(parentRef, templateRef, context) {
             if (index !== undefined && parentRef.children.hasIndex(_arrIndex)) {
                 targetNode = parentRef.children.getByIndex(_arrIndex).nativeElement;
             }
-            transverse(_this.compiledElement);
-            elementInsertAfter(parentRef, _this.compiledElement.nativeElement, targetNode);
-            parentRef.children.add(_this.compiledElement, index);
-            var changeDetector = _this.compiledElement && _this.compiledElement.changeDetector;
-            if (changeDetector) {
-                changeDetector.detectChanges();
+            // force return if compiledElement is destroyed
+            if (!_this.compiledElement) return;
+            try {
+                transverse(_this.compiledElement);
+                var nativeElement = _this.compiledElement.nativeElement || _this.compiledElement.nativeNode;
+                elementInsertAfter(parentRef, nativeElement, targetNode);
+                parentRef.children.add(_this.compiledElement, index);
+                var changeDetector = _this.compiledElement && _this.compiledElement.changeDetector;
+                if (changeDetector) {
+                    changeDetector.detectChanges();
+                }
+
+                nativeElement = null;
+                changeDetector = null;
+                targetNode = null;
+            } catch (e) {
+                // silent the error
             }
         }
         /**

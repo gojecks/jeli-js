@@ -46,7 +46,7 @@ function createRoute(url) {
  * @param {*} view 
  * @param {*} route 
  */
-function addViewMatcher(view, route) {
+function addViewMatcher(view, route, routeElements) {
     //add the required target view to the view scope
     if (route.component) {
         route.views = (route.views || {});
@@ -54,7 +54,12 @@ function addViewMatcher(view, route) {
             route.views[view] = {};
         }
 
-        route.views[view] = route.component;
+        var isStringComp = typeof route.component === 'string';
+        if (isStringComp && !routeElements || (routeElements && !routeElements.has(route.component))) {
+            errorBuilder('Invalid route configuration, missing view component', 0, route);
+        }
+
+        route.views[view] = isStringComp ? routeElements.get(route.component) : route.component;
         delete route.component;
     }
 }
@@ -63,13 +68,21 @@ function addViewMatcher(view, route) {
  * 
  * @param {*} route 
  * @param {*} requireParent 
+ * @param {*} routeElements 
+ * @returns 
  */
-function generateRoute(route, requireParent) {
+function generateRoute(route, requireParent, routeElements) {
     /**
      * register the intent
      */
     if (route.isIntent) {
         $intentCollection[route.name] = route;
+        return;
+    } else if ($stateCollection[route.name] && !(_unregistered[route.parent] && _unregistered[route.parent].includes(route.name))) {
+        console.info('[Route] Duplicate route found: ' + route.name + ', skipping to use existing');
+        return;
+    } else if (!route.views && !route.component) {
+        console.info('[Router] missing view configuration for: ' + route.name);
         return;
     }
 
@@ -91,7 +104,7 @@ function generateRoute(route, requireParent) {
             if (view !== route.targetView) {
                 route.views[view] = parentRoute.views[view];
             } else if (!route.views[view]) {
-                addViewMatcher(view, route);
+                addViewMatcher(view, route, routeElements);
             }
         }
 
@@ -102,7 +115,7 @@ function generateRoute(route, requireParent) {
          * Pardon usage errors
          */
         if (route.targetView && !route.views[route.targetView]) {
-            addViewMatcher(route.targetView, route);
+            addViewMatcher(route.targetView, route, routeElements);
         }
 
         //overwrite our route
@@ -135,7 +148,7 @@ function generateRoute(route, requireParent) {
     //check if route is parent that needs to register child
     if (_unregistered.hasOwnProperty(route.name)) {
         _unregistered[route.name].forEach(function(uName) {
-            setupRoutes($stateCollection[uName]);
+            setupRoutes($stateCollection[uName], routeElements);
         });
 
         //remove the registra
@@ -146,8 +159,10 @@ function generateRoute(route, requireParent) {
 /**
  * 
  * @param {*} route 
+ * @param {*} routeElements 
+ * @returns 
  */
-function setupRoutes(route) {
+function setupRoutes(route, routeElements) {
     var requireParent = route.hasOwnProperty('parent');
     if (!route.name && route.url) {
         route.name = route.url.replace(/[/:]/g, _ => _ == '/' ? '.' : '')
@@ -157,7 +172,7 @@ function setupRoutes(route) {
      * component without view definition
      */
     if (!route.parent) {
-        addViewMatcher(route.targetView || staticRoutePrefix, route);
+        addViewMatcher(route.targetView || staticRoutePrefix, route, routeElements);
     }
 
     /**
@@ -177,7 +192,7 @@ function setupRoutes(route) {
         return this;
     }
 
-    generateRoute(route, requireParent);
+    generateRoute(route, requireParent, routeElements);
 
     /**
      * compile children route
@@ -193,7 +208,7 @@ function setupRoutes(route) {
                     childConfig.name = [config.name, name].join('.');
                     childConfig.url = ('/' + config.name + (childConfig.url || '/' + name));
                     childConfig.parent = config.name;
-                    generateRoute(childConfig, true);
+                    generateRoute(childConfig, true, routeElements);
                     addChildren(childConfig);
                 } else {
                     errorBuilder('unregistered child route in parent<' + config.name + '>, name is required:' + JSON.stringify(childConfig));
@@ -272,7 +287,7 @@ export function getRequiredRoute(routeName, params) {
 export function parseUrl(href, params) {
     return href.replace(/\:(\w)+/g, function(index, key) {
         var param = index.split(":")[1];
-        return param in params ? params[param] : index;
+        return param in params ? params[param] : '';
     });
 }
 

@@ -14,14 +14,16 @@ import { IterableProfiler } from '@jeli/core';
 Directive({
     selector: 'for',
     DI: ['ViewRef?', 'TemplateRef?'],
-    props: ['forIn', 'forTrackBy:Function']
+    props: ['forIn', 'forOf', 'forTrackBy:Function']
 })
 export function ForDirective(viewRef, templateRef) {
     this.viewRef = viewRef;
     this.templateRef = templateRef;
     this.iterable = new IterableProfiler();
     this._forTrackBy = null;
-    this._forIn = null;
+    this._forValue = null;
+    this._isForIn = false;
+    this._isForOf = false;
 
     /**
      * add new property
@@ -29,7 +31,22 @@ export function ForDirective(viewRef, templateRef) {
     Object.defineProperties(this, {
         forIn: {
             set: function(value) {
-                this._forIn = value;
+                this._isForIn = true;
+                this._forValue = value;
+            },
+            get: function() {
+                if (!this._isForIn) return null;
+                return this._forValue;
+            }
+        },
+        forOf: {
+            set: function(value) {
+                this._isForOff = true;
+                this._forValue = value;
+            },
+            get: function() {
+                if (!this._isForOff) return null;
+                return this._forValue;
             }
         },
         forTrackBy: {
@@ -54,13 +71,13 @@ ForDirective.prototype._listenerFn = function() {
     this.iterable.forEachOperation(function(item) {
         switch (item.state) {
             case ('create'):
-                var context = new jForRow(_this._forIn[item.index], item.index, null);
+                var context = new jForRow(_this._forValue[item.index], item.index, null);
                 _this.viewRef.createEmbededView(_this.templateRef, context, item.index);
                 break;
             case ('update'):
                 var view = _this.viewRef.get(item.index);
                 view.updateContext({
-                    $context: _this._forIn[item.index]
+                    $context: _this._forValue[item.index]
                 });
                 break;
             case ('move'):
@@ -73,13 +90,13 @@ ForDirective.prototype._listenerFn = function() {
         var view = _this.viewRef.get(i);
         view.updateContext({
             index: i,
-            count: _this._forIn.length
+            count: _this._forValue.length
         });
     }
 };
 
 ForDirective.prototype.willObserve = function() {
-    var changes = this.iterable.diff(this._forIn);
+    var changes = this.iterable.diff(this._forValue);
     if (changes)
         this._listenerFn();
 }

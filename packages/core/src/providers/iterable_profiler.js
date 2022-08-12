@@ -34,7 +34,8 @@ IterableProfiler.prototype.diff = function(source) {
         order: []
     };
 
-    if ((!source || !source.length) && (!this.cacheHash || !this.cacheHash.length)) {
+    var noSource = (!source || !source.length);
+    if (noSource && (!this.cacheHash || !this.cacheHash.length)) {
         return false;
     }
 
@@ -42,7 +43,7 @@ IterableProfiler.prototype.diff = function(source) {
      * source is empty and cacheHash exists
      * empty cacheHash and return deleted keys
      */
-    if (!source.length && this.cacheHash.length) {
+    if (noSource && this.cacheHash.length) {
         this.out.deleted = Object.keys(this.cacheHash).map(Number);
         this.cacheHash.length = 0;
         return true;

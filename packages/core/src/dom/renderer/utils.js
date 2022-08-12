@@ -31,22 +31,27 @@ function addViewQuery(hostElement, option, childElement) {
         return hostElement.parent && addViewQuery(hostElement.parent.hostRef, option, childElement);
     }
 
-    switch (option[0].type) {
+    var name = option[0].name;
+    var type = option[0].type;
+    switch (type) {
         case (staticInjectionToken.QueryList):
-            if (!hostElement.componentInstance.hasOwnProperty(option[0].name)) {
-                hostElement.componentInstance[option[0].name] = new QueryList();
+            if (!hostElement.componentInstance.hasOwnProperty(name)) {
+                hostElement.componentInstance[name] = new QueryList();
             }
-            hostElement.componentInstance[option[0].name].add(childElement);
+            hostElement.componentInstance[name].add(childElement);
             break;
         case (staticInjectionToken.ElementRef):
-            hostElement.componentInstance[option[0].name] = childElement;
+            hostElement.componentInstance[name] = childElement;
+            break;
+        case (staticInjectionToken.HTMLElement):
+            hostElement.componentInstance[name] = childElement.nativeElement;
             break;
         default:
-            Object.defineProperty(hostElement.componentInstance, option[0].name, {
+            Object.defineProperty(hostElement.componentInstance, name, {
                 configurable: true,
                 enumerable: true,
                 get: function() {
-                    return (childElement.nodes.has(option[0].type) ? childElement.nodes.get(option[0].type) : childElement.context);
+                    return (childElement.nodes.has(type) ? childElement.nodes.get(type) : childElement.context);
                 }
             });
             break;
@@ -63,9 +68,24 @@ function addViewQuery(hostElement, option, childElement) {
  */
 function elementInsertAfter(hostElement, newNode, targetNode) {
     if (!targetNode || !targetNode.parentNode) return;
-    targetNode = targetNode || hostElement.nativeElement;
     targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
     hostElement.changeDetector.detectChanges();
+}
+
+/**
+ * replace an element
+ * @param {ElementRef} fromElement 
+ * @param {ElementRef} toElement 
+ */
+function replaceElement(fromElement, toElement) {
+    var targetNode = fromElement.nativeElement;
+    if (Node.DOCUMENT_FRAGMENT_NODE === targetNode.nodeType) {
+        targetNode = fromElement.children.first.nativeElement;
+    }
+    fromElement.parent.children.replace(fromElement, toElement, true);
+    targetNode.replaceWith(toElement.nativeElement);
+    removeElement(fromElement, true);
+    targetNode = null;
 }
 
 /**
@@ -102,7 +122,36 @@ function attachElementObserver(element, onDestroyListener) {
     if (onDestroyListener) {
         element.$observers.push(onDestroyListener)
     }
-};
+}
+
+/**
+ * 
+ * @param {*} elementRef 
+ * @param {*} eventListener 
+ */
+function ObserveUntilDestroyed(elementRef, eventListener) {
+    var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, eventListener.next);
+    attachElementObserver(elementRef, function() {
+        unsubscribe();
+        eventListener.done(true);
+    });
+}
+
+
+/**
+ * 
+ * @param {*} refId 
+ * @param {*} fn 
+ */
+function SubscribeObservables(refId, fn) {
+    var componentRef = componentDebugContext.get(refId);
+    var unsubscribe = null;
+    if (componentRef) {
+        unsubscribe = componentRef.observables.subscribe(fn);
+    }
+
+    return unsubscribe;
+}
 
 /**
  * 
@@ -212,11 +261,11 @@ function setupAttributeObservers(element, attrObservers) {
  * 
  * @param {*} localVariables 
  */
-function createLocalVariables(localVariables, viewContext) {
+function createLocalVariables(localVariables, localContext, parentContext) {
     var context = {};
     if (localVariables) {
         for (var propName in localVariables) {
-            if (localVariables[propName].match(/\s/)) {
+            if (!Array.isArray(localVariables[propName]) && localVariables[propName].match(/\s/)) {
                 context[propName] = localVariables[propName];
             } else {
                 writePropertyBinding(propName);
@@ -231,9 +280,8 @@ function createLocalVariables(localVariables, viewContext) {
     function writePropertyBinding(propName) {
         Object.defineProperty(context, propName, {
             get: function() {
-                if (!viewContext.context) return;
-
-                return viewContext.context[localVariables[propName]];
+                if (!localContext) return null;
+                return evaluateExpression(localVariables[propName], localContext, parentContext);
             }
         });
     }

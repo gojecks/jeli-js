@@ -5,26 +5,28 @@ import { Inject } from "../dependency.injector";
  * @param {*} interceptorToken 
  * @returns 
  */
-export function InterceptorResolver(interceptorToken, locals, callback) {
+export function InterceptorResolver(interceptorToken, locals) {
     var interceptors = Inject(interceptorToken);
-    if (!interceptors || !interceptors.length) {
-        return callback(locals);
-    }
-
-    var len = 0;
-
-    /**
-     * iterator method
-     */
-    function next() {
-        var interceptor = interceptors[len];
-        len++;
-        if (interceptor) {
-            interceptor.resolve(locals, next);
-        } else {
-            callback(locals);
+    return new Promise(function(resolve, reject) {
+        if (!interceptors || !interceptors.length) {
+            return resolve();
         }
-    }
 
-    next();
+        var len = 0;
+
+        /**
+         * iterator method
+         */
+        function next() {
+            var interceptor = interceptors[len];
+            len++;
+            if (interceptor) {
+                interceptor.resolve(locals, next, reject);
+            } else {
+                resolve();
+            }
+        }
+
+        next();
+    });
 }

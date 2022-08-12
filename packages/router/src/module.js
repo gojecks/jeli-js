@@ -33,10 +33,10 @@ jModule({
     ]
 })
 export function RouterModule() {}
-RouterModule.setRoutes = function(routes) {
+RouterModule.setRoutes = function(routes, elements) {
     if (Array.isArray(routes)) {
-        routes.forEach(setupRoutes);
+        routes.forEach(function(route) { setupRoutes(route, elements); });
     } else {
-        setupRoutes(routes);
+        setupRoutes(routes, elements);
     }
 };

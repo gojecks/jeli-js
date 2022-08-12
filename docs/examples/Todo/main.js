@@ -637,6 +637,8 @@ __required.r(exports, 'Observable', function(){ return Observable;});
 __required.r(exports, 'Subscription', function(){ return Subscription;});
 __required.r(exports, 'Subject', function(){ return Subject;});
 __required.r(exports, 'QueryList', function(){ return QueryList;});
+__required.r(exports, 'interpolationHelper', function(){ return interpolationHelper;});
+__required.r(exports, 'CustomEventHandler', function(){ return CustomEventHandler;});
 __required.r(exports, 'ElementRef', function(){ return ElementRef;});
 __required.r(exports, 'scheduler', function(){ return scheduler;});
 __required.r(exports, 'ViewRef', function(){ return ViewRef;});
@@ -666,7 +668,6 @@ __required.r(exports, 'ProviderToken', function(){ return ProviderToken;});
 __required.r(exports, 'errorBuilder', function(){ return errorBuilder;});
 var utils = __required('node_modules/js-helpers/utils.js');
 var hashcode = utils['hashcode'];
-var simpleBooleanParser = utils['simpleBooleanParser'];
 var helpers = __required('node_modules/js-helpers/helpers.js');
 var isnumber = helpers['isnumber'];
 var isarray = helpers['isarray'];
@@ -681,7 +682,7 @@ var isequal = helpers['isequal'];
 var isobject = helpers['isobject'];
 var isfunction = helpers['isfunction'];
 var __buildOptions = {};
-function errorBuilder(error, logLevel) {
+function errorBuilder(error, logLevel, stack) {
     var loggerLevel = void 0 == logLevel ? 0 : logLevel;
     var logLevelMethods = [
         'error',
@@ -693,12 +694,13 @@ function errorBuilder(error, logLevel) {
     function userException() {
         this.name = 'jEliException';
         this.message = error;
+        this.stack = stack;
     }
     userException.prototype.toString = function () {
         return this.name + ': "' + this.message + '"';
     };
     if (typeof error == 'string') {
-        error = new userException(error);
+        error = new userException();
     }
     console[logLevelMethods[loggerLevel]](error);
 }
@@ -902,9 +904,8 @@ function LifeCycle(componentInstance) {
 }
 ;
 function TemplateRef(templates) {
-    this.hasContext = !!templates.context;
     this.createElement = function (parentNode, viewContainer) {
-        return ViewParserHelper[templates.type](templates, parentNode, viewContainer);
+        return ViewParser.builder[templates.type](templates, parentNode, viewContainer);
     };
     this.getContext = function () {
         return templates.context;
@@ -942,6 +943,9 @@ TemplateRef.factory = function (node, templateId, silent) {
             errorBuilder('No templates Defined #' + templateId);
         return null;
     }
+    if (typeof templates[templateId] === 'function') {
+        templates[templateId] = templates[templateId]();
+    }
     return new TemplateRef(templates[templateId]);
 };
 var staticInjectionToken = {
@@ -953,7 +957,8 @@ var staticInjectionToken = {
     VALIDATORS: 'VALIDATORS',
     QueryList: 'QueryList',
     Function: 'Function',
-    HostRef: 'HostRef'
+    HostRef: 'HostRef',
+    HTMLElement: 'HTMLElement'
 };
 function ComponentInjectors(elementRef, selector) {
     AbstractInjectorInstance.call(this, elementRef);
@@ -1020,14 +1025,23 @@ function findParentRef(parentRef, refInstance) {
 function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
     lifeCycle.trigger('willObserve');
     var propChanges = null;
-    var registeredProperty = [];
+    var registeredProperty = {};
+    var isPrimitive = [];
     var always = false;
     if (definition.props) {
         always = _updateViewBinding();
     }
     function _updateViewBinding() {
         var hasBinding = false;
+        var context = null;
+        if (elementRef.hasContext) {
+            context = elementRef.context;
+        } else {
+            context = (isequal(elementRef.parent.type, 'comment') && !elementRef.isc ? elementRef : elementRef.parent).context;
+        }
         for (var prop in definition.props) {
+            if (isPrimitive.includes(prop))
+                continue;
             var item = definition.props[prop];
             var name = item.value || prop;
             var value;
@@ -1035,15 +1049,17 @@ function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
                 try {
                     if (isobject(elementRef.props[name])) {
                         hasBinding = true;
-                        value = getFilteredTemplateValue(elementRef.props[name], (isequal(elementRef.parent.type, 'comment') && !elementRef.isc ? elementRef : elementRef.parent).context, elementRef.parent.componentInstance);
+                        value = getFilteredTemplateValue(elementRef.props[name], context, elementRef.parent.componentInstance);
                     } else {
                         value = getPrimitiveValue(item.type, name, elementRef.props[name]);
+                        isPrimitive.push(prop);
                     }
                     setValue(prop, value);
                 } catch (e) {
                     console.error(e);
                 }
             } else if (elementRef.hasAttribute(name)) {
+                isPrimitive.push(prop);
                 setValue(prop, elementRef.attr[name]);
             }
         }
@@ -1053,16 +1069,44 @@ function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
         }
         return hasBinding;
     }
-    function setValue(property, value) {
-        if (isequal(componentInstance[property], value) && registeredProperty.includes(property)) {
-            return;
+    function hash(a, count) {
+        var count = count || 0;
+        if (a === null || a === undefined)
+            return count;
+        else if (typeof a === 'number')
+            count += a;
+        else if (typeof a === 'string')
+            count += a.length;
+        else if (typeof a === 'boolean')
+            count += a ? 1 : 0;
+        else if (typeof a === 'object' && (a.constructor === Object || a.constructor === Array)) {
+            for (var prop in a) {
+                if (typeof prop === 'number')
+                    count += prop;
+                else
+                    count += prop.length;
+                count = hash(a[prop], count);
+            }
+        } else {
+            count += 1;
         }
+        return count;
+    }
+    function setValue(property, value) {
+        var hasProp = registeredProperty.hasOwnProperty(property);
+        var hashValue = 1;
+        var sameValue = isequal(componentInstance[property], value);
+        ;
+        if (typeof value === 'object') {
+            hashValue = hash(value);
+            sameValue = hashValue === registeredProperty[property];
+        }
+        if (hasProp && sameValue)
+            return;
         if (propChanges === null) {
             propChanges = {};
         }
-        if (!registeredProperty.includes(property)) {
-            registeredProperty.push(property);
-        }
+        registeredProperty[property] = hashValue;
         propChanges[property] = value;
         componentInstance[property] = value;
     }
@@ -1083,7 +1127,8 @@ function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
     });
     attachElementObserver(elementRef, function () {
         unsubscribe();
-        registeredProperty.length = 0;
+        registeredProperty = null;
+        isPrimitive.length = 0;
     });
 }
 function SubscribeObservables(refId, fn) {
@@ -1303,14 +1348,14 @@ InternalChangeDetector.prototype.markAsOnce = function () {
     this._changeDetectorState = 2;
 };
 var componentDebugContext = new Map();
-function ComponentRef(refId) {
+function ComponentRef(refId, context) {
     this.componentRefId = refId;
     this.observables = new Observer();
     this.child = [];
     this.parent = null;
     this.changeDetector = new InternalChangeDetector(this);
     this._componentInstance = null;
-    this._context = null;
+    this._context = context || null;
     Object.defineProperties(this, {
         context: {
             get: function () {
@@ -1322,7 +1367,7 @@ function ComponentRef(refId) {
         },
         componentInstance: {
             get: function () {
-                if (!this._componentInstance && this.parent) {
+                if (!this._componentInstance && this.parent && componentDebugContext.has(this.parent)) {
                     return componentDebugContext.get(this.parent).componentInstance;
                 }
                 return this._componentInstance;
@@ -1349,6 +1394,8 @@ ComponentRef.prototype.updateModel = function (propName, value) {
     return this;
 };
 ComponentRef.prototype.destroy = function () {
+    if (!componentDebugContext.has(this.componentRefId))
+        return;
     this.changeDetector.markAsChecked();
     componentDebugContext.delete(this.componentRefId);
     if (this.parent && componentDebugContext.has(this.parent)) {
@@ -1362,9 +1409,14 @@ ComponentRef.prototype.destroy = function () {
     this.parent = null;
     this.child.length = 0;
 };
-ComponentRef.create = function (refId, parentId) {
-    var componentRef = new ComponentRef(refId);
-    componentDebugContext.set(refId, componentRef);
+ComponentRef.create = function (refId, parentId, context) {
+    var componentRef = componentDebugContext.get(refId);
+    if (!componentRef) {
+        componentRef = new ComponentRef(refId, context);
+        componentDebugContext.set(refId, componentRef);
+    } else {
+        componentRef._context = context || null;
+    }
     if (parentId && componentDebugContext.has(parentId)) {
         componentRef.parent = parentId;
         componentDebugContext.get(parentId).child.push(refId);
@@ -1388,6 +1440,7 @@ function bootStrapApplication(moduleToBootStrap) {
         try {
             CoreBootstrapContext.compiledModule = moduleToBootStrap;
             CoreBootstrapContext.injector = new AbstractInjectorInstance();
+            moduleToBootStrap.fac();
             moduleToBootStrap();
             Promise.all(Inject(INITIALIZERS, CoreBootstrapContext.injector).map(function (callback) {
                 return callback();
@@ -1425,93 +1478,105 @@ function ChangeDetector() {
     CoreBootstrapContext.bootStrapComponent.changeDetector.detectChanges();
 }
 ;
-function ViewParser() {
-    var fragment = document.createDocumentFragment();
-    this.compile = function (transpiledHTML, parent) {
-        for (var i = 0; i < transpiledHTML.length; i++) {
-            var compiled = ViewParserHelper[transpiledHTML[i].type](transpiledHTML[i], parent, this);
-            if (compiled) {
-                this.pushToView(compiled);
+var ViewParser = function () {
+    function JSONCompiler() {
+        var fragment = document.createDocumentFragment();
+        this.compile = function (transpiledHTML, parent) {
+            for (var i = 0; i < transpiledHTML.length; i++) {
+                var compiled = ViewParser.builder[transpiledHTML[i].type](transpiledHTML[i], parent, this);
+                if (compiled) {
+                    this.pushToView(compiled);
+                }
+            }
+            return fragment;
+        };
+        this.pushToView = function (compiled) {
+            compiled.parent && compiled.parent.children.add(compiled);
+            fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
+            transverse(compiled);
+        };
+    }
+    function element(definition, parent, viewContainer) {
+        var elementRef = new ElementRef(definition, parent);
+        if (definition.attr) {
+            AttributeAppender(elementRef.nativeElement, definition.attr);
+        }
+        if (definition.children) {
+            for (var i = 0; i < definition.children.length; i++) {
+                var childDefinition = typeof definition.children[i] === 'function' ? definition.children[i]() : definition.children[i];
+                var child = ViewParser.builder[childDefinition.type](childDefinition, elementRef, viewContainer, true);
+                if (child) {
+                    pushToParent(child, elementRef, i);
+                }
             }
         }
-        return fragment;
-    };
-    this.pushToView = function (compiled) {
-        compiled.parent && compiled.parent.children.add(compiled);
-        fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
-        transverse(compiled);
-    };
-}
-;
-function element(definition, parent, viewContainer) {
-    var elementRef = new ElementRef(definition, parent);
-    if (definition.attr) {
-        AttributeAppender(elementRef.nativeElement, definition.attr);
+        if (definition.vc) {
+            addViewQuery(elementRef.hostRef, definition.vc, elementRef);
+        }
+        return elementRef;
     }
-    if (definition.children) {
-        for (var i = 0; i < definition.children.length; i++) {
-            var child = ViewParserHelper[definition.children[i].type](definition.children[i], elementRef, viewContainer, true);
-            if (child) {
-                pushToParent(child, elementRef, i);
+    function pushToParent(child, parent, index) {
+        parent.children.add(child, index);
+        parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+    }
+    function comment(definition, parent) {
+        return new AbstractElementRef(definition, parent);
+    }
+    function text(definition, parent) {
+        return new TextNodeRef(definition, parent);
+    }
+    function place(definition, parent, viewContainer, appendToParent) {
+        var hostRef = parent.hostRef;
+        var createPlaceElement = !(viewContainer || appendToParent);
+        var template = TemplateRef.factory(hostRef, 'place', true);
+        var placeElement = createPlaceElement ? new AbstractElementRef({
+            name: '#fragment',
+            type: 'element'
+        }, hostRef) : null;
+        function createAndAppend(elementDefinition) {
+            var child = ViewParser.builder[elementDefinition.type](elementDefinition, hostRef.parent, viewContainer);
+            child.hostRefId = hostRef.refId;
+            if (appendToParent || createPlaceElement) {
+                pushToParent(child, placeElement || parent);
+            } else {
+                viewContainer.pushToView(child);
+            }
+            if (definition.vc && [
+                    elementDefinition.refId,
+                    child.tagName
+                ].includes(definition.vc[0].value)) {
+                addViewQuery(hostRef, definition.vc, child);
             }
         }
-    }
-    if (definition.vc) {
-        addViewQuery(elementRef.hostRef, definition.vc, elementRef);
-    }
-    return elementRef;
-}
-function pushToParent(child, parent, index) {
-    parent.children.add(child, index);
-    parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
-}
-function comment(definition, parent) {
-    return new AbstractElementRef(definition, parent);
-}
-function text(definition, parent) {
-    return new TextNodeRef(definition, parent);
-}
-function place(definition, parent, viewContainer, appendToParent) {
-    var hostRef = parent.hostRef;
-    var createPlaceElement = !(viewContainer || appendToParent);
-    var template = TemplateRef.factory(hostRef, 'place', true);
-    var placeElement = createPlaceElement ? new AbstractElementRef({
-        name: '#fragment',
-        type: 'element'
-    }, hostRef) : null;
-    function createAndAppend(elementDefinition) {
-        var child = ViewParserHelper[elementDefinition.type](elementDefinition, hostRef.parent, viewContainer);
-        child.hostRefId = hostRef.refId;
-        if (appendToParent || createPlaceElement) {
-            pushToParent(child, placeElement || parent);
-        } else {
-            viewContainer.pushToView(child);
+        if (template) {
+            template.forEach(definition.selector, createAndAppend);
         }
-        if (definition.vc && [
-                elementDefinition.refId,
-                child.tagName
-            ].includes(definition.vc[0].value)) {
-            addViewQuery(hostRef, definition.vc, child);
+        return placeElement;
+    }
+    ;
+    function outlet(definition, parent, viewContainer) {
+        var template = definition.template;
+        if (!template && parent.hostRef) {
+            template = parent.hostRef.templates[definition.templateId];
         }
+        if (template) {
+            var element = ViewParser.builder.element(template, parent, viewContainer);
+            element.context = context;
+            return element;
+        }
+        return null;
     }
-    if (template) {
-        template.forEach(definition.selector, createAndAppend);
-    }
-    return placeElement;
-}
-;
-function outlet(definition, parent, viewContainer) {
-    var template = definition.template;
-    if (!template && parent.hostRef) {
-        template = parent.hostRef.templates[definition.templateId];
-    }
-    if (template) {
-        var element = ViewParserHelper.element(template, parent, viewContainer);
-        element.context = context;
-        return element;
-    }
-    return null;
-}
+    return {
+        JSONCompiler: JSONCompiler,
+        builder: {
+            element: element,
+            text: text,
+            place: place,
+            outlet: outlet,
+            comment: comment
+        }
+    };
+}();
 function transverse(node) {
     if (node instanceof AbstractElementRef) {
         if (node._lazyCompiled)
@@ -1533,13 +1598,6 @@ function transverse(node) {
         node.children.forEach(transverse);
     }
 }
-var ViewParserHelper = {
-    element: element,
-    text: text,
-    place: place,
-    outlet: outlet,
-    comment: comment
-};
 var sce = function () {
     var element = document.createElement('div');
     function htmlEscape(str) {
@@ -1629,12 +1687,18 @@ ElementClassList.contains = function (nativeElement, className) {
 function AttributeAppender(nativeElement, prop, value) {
     if (Node.DOCUMENT_FRAGMENT_NODE === nativeElement.nodeType)
         return;
+    var setValue = function (cprop, cvalue) {
+        var elementValue = nativeElement.getAttribute(cprop);
+        if (elementValue === cvalue)
+            return;
+        nativeElement.setAttribute(cprop, cvalue);
+    };
     if (isobject(prop)) {
         for (var name in prop) {
-            nativeElement.setAttribute(name, prop[name]);
+            setValue(name, prop[name]);
         }
     } else {
-        nativeElement.setAttribute(prop, value);
+        setValue(prop, value);
     }
 }
 AttributeAppender.helpers = {
@@ -1646,6 +1710,9 @@ AttributeAppender.helpers = {
         }
     },
     innerhtml: function (nativeElement, value) {
+        var elementValue = nativeElement.getAttribute('innerHTML');
+        if (elementValue === value)
+            return;
         nativeElement.innerHTML = sce.trustAsHTML(value);
     },
     src: function (nativeElement, value) {
@@ -1655,12 +1722,18 @@ AttributeAppender.helpers = {
             ].includes(nativeElement.tagName)) {
             errorBuilder('src is not a valid property of ' + nativeElement.tagName);
         }
+        var elementValue = nativeElement.getAttribute('src');
+        if (elementValue === value)
+            return;
         nativeElement.setAttribute('src', value);
     },
     href: function (nativeElement, value) {
         if (!isequal('A', nativeElement.tagName)) {
             errorBuilder('href is not a valid property of ' + nativeElement.nativeElement.tagName);
         }
+        var elementValue = nativeElement.getAttribute('href');
+        if (elementValue === value)
+            return;
         nativeElement.setAttribute('href', value);
     },
     class: function (nativeElement, value) {
@@ -1696,22 +1769,27 @@ function addViewQuery(hostElement, option, childElement) {
     if (!isequal(option[1], hostElement.tagName)) {
         return hostElement.parent && addViewQuery(hostElement.parent.hostRef, option, childElement);
     }
-    switch (option[0].type) {
+    var name = option[0].name;
+    var type = option[0].type;
+    switch (type) {
     case staticInjectionToken.QueryList:
-        if (!hostElement.componentInstance.hasOwnProperty(option[0].name)) {
-            hostElement.componentInstance[option[0].name] = new QueryList();
+        if (!hostElement.componentInstance.hasOwnProperty(name)) {
+            hostElement.componentInstance[name] = new QueryList();
         }
-        hostElement.componentInstance[option[0].name].add(childElement);
+        hostElement.componentInstance[name].add(childElement);
         break;
     case staticInjectionToken.ElementRef:
-        hostElement.componentInstance[option[0].name] = childElement;
+        hostElement.componentInstance[name] = childElement;
+        break;
+    case staticInjectionToken.HTMLElement:
+        hostElement.componentInstance[name] = childElement.nativeElement;
         break;
     default:
-        Object.defineProperty(hostElement.componentInstance, option[0].name, {
+        Object.defineProperty(hostElement.componentInstance, name, {
             configurable: true,
             enumerable: true,
             get: function () {
-                return childElement.nodes.has(option[0].type) ? childElement.nodes.get(option[0].type) : childElement.context;
+                return childElement.nodes.has(type) ? childElement.nodes.get(type) : childElement.context;
             }
         });
         break;
@@ -1813,7 +1891,7 @@ function createLocalVariables(localVariables, viewContext) {
     var context = {};
     if (localVariables) {
         for (var propName in localVariables) {
-            if (localVariables[propName].match(/\s/)) {
+            if (!Array.isArray(localVariables[propName]) && localVariables[propName].match(/\s/)) {
                 context[propName] = localVariables[propName];
             } else {
                 writePropertyBinding(propName);
@@ -1824,8 +1902,8 @@ function createLocalVariables(localVariables, viewContext) {
         Object.defineProperty(context, propName, {
             get: function () {
                 if (!viewContext.context)
-                    return;
-                return viewContext.context[localVariables[propName]];
+                    return null;
+                return evaluateExpression(localVariables[propName], viewContext.context, viewContext.compiledElement.parent.context);
             }
         });
     }
@@ -1849,6 +1927,7 @@ function AbstractElementRef(definition, parentRef) {
     this.attr = definition.attr;
     this.props = definition.props;
     this.isc = definition.isc;
+    this.hasContext = !!definition.context;
     if (definition.providers) {
         this.providers = definition.providers;
         this.nodes = new Map();
@@ -1969,10 +2048,8 @@ function EmbededViewContext(parentRef, templateRef, context) {
     this.compiledElement = templateRef.createElement(parentRef);
     this.context = context;
     this.unsubscribeScheduler;
-    if (templateRef.hasContext) {
-        ComponentRef.create(this.compiledElement.refId, parentRef.hostRef.refId);
-        _componentRef = componentDebugContext.get(this.compiledElement.refId);
-        _componentRef._context = createLocalVariables(templateRef.getContext(), this);
+    if (this.compiledElement.hasContext) {
+        ComponentRef.create(this.compiledElement.refId, parentRef.hostRef.refId, createLocalVariables(templateRef.getContext(), this));
     }
     this.renderView = function (index) {
         var _this = this;
@@ -1982,6 +2059,8 @@ function EmbededViewContext(parentRef, templateRef, context) {
             if (index !== undefined && parentRef.children.hasIndex(_arrIndex)) {
                 targetNode = parentRef.children.getByIndex(_arrIndex).nativeElement;
             }
+            if (!_this.compiledElement)
+                return;
             transverse(_this.compiledElement);
             elementInsertAfter(parentRef, _this.compiledElement.nativeElement, targetNode);
             parentRef.children.add(_this.compiledElement, index);
@@ -2057,21 +2136,33 @@ EventHandler.prototype.destroy = function () {
     this.registeredEvents.clear();
     this._events.length = 0;
 };
+EventHandler.customRegistry = {
+    window: new CustomEventHandler(window),
+    document: new CustomEventHandler(document)
+};
 EventHandler.registerListener = function (element) {
-    if (!element.events || !element.events._events.length) {
+    if (!element.events || !element.events._events.length)
         return;
-    }
     var eventInstance = element.events;
-    function handler($ev) {
+    var handler = function ($ev) {
         handleEvent(element, $ev);
-    }
-    ;
+    };
     function _registerEvent(eventName) {
         if (!eventInstance.registeredEvents.has(eventName)) {
-            element.nativeElement.addEventListener(eventName, handler, false);
-            eventInstance.registeredEvents.set(eventName, function () {
-                element.nativeElement.removeEventListener(eventName, handler);
-            });
+            if (eventName.includes('.')) {
+                var event = eventName.split('.');
+                if (EventHandler.customRegistry[event[0]]) {
+                    var unsubscribe = EventHandler.customRegistry[event[0]].register(event[1], function (htmlEvent) {
+                        handleEvent(element, htmlEvent, eventName);
+                    });
+                    eventInstance.registeredEvents.set(eventName, unsubscribe);
+                }
+            } else {
+                element.nativeElement.addEventListener(eventName, handler, false);
+                eventInstance.registeredEvents.set(eventName, function () {
+                    element.nativeElement.removeEventListener(eventName, handler);
+                });
+            }
         }
     }
     var totalEvents = eventInstance._events.length;
@@ -2094,8 +2185,8 @@ EventHandler.attachEventEmitter = function (element, eventName, componentInstanc
     var registeredEvent = getEventsByType(element.events._events, eventName)[0];
     if (registeredEvent && registeredEvent.value) {
         var unSubscribe = componentInstance[eventName].subscribe(function (value) {
-            _executeEventsTriggers(registeredEvent.value, element.parent.componentInstance, element.context, value);
             var parentElement = element && element.parent;
+            _executeEventsTriggers(registeredEvent.value, parentElement.componentInstance, parentElement.context, value);
             parentElement && parentElement.changeDetector && parentElement.changeDetector.detectChanges();
         });
         element.events.registeredEvents.set(eventName, unSubscribe);
@@ -2155,8 +2246,9 @@ function getFnFromContext(eventInstance, componentInstance) {
     return fn;
 }
 ;
-function handleEvent(element, event) {
-    if (inarray(event.type, [
+function handleEvent(element, event, eventName) {
+    eventName = eventName || event.type;
+    if (inarray(eventName, [
             'touchstart',
             'touchend',
             'touchmove',
@@ -2165,7 +2257,7 @@ function handleEvent(element, event) {
         event.preventDefault();
     }
     try {
-        getEventsByType(element.events._events, event.type).forEach(triggerEvents);
+        getEventsByType(element.events._events, eventName).forEach(triggerEvents);
     } catch (e) {
         errorBuilder(e);
     } finally {
@@ -2185,6 +2277,45 @@ function handleEvent(element, event) {
             selectedElem = null;
         }
     }
+}
+function CustomEventHandler(element) {
+    var _this = this;
+    var trigger = function (event) {
+        _this.trigger(event);
+    };
+    this.element = element;
+    this.registeredEvents = {};
+    this.register = function (type, callback) {
+        var _this = this;
+        var index = -1;
+        if (this.element && this.registeredEvents) {
+            if (!this.registeredEvents.hasOwnProperty(type)) {
+                this.registeredEvents[type] = [];
+                this.element.addEventListener(type, trigger, false);
+            }
+            index = this.registeredEvents[type].push(callback);
+            return function () {
+                _this.registeredEvents[type].splice(index - 1, 1);
+            };
+        }
+    };
+    this.trigger = function (event) {
+        var listeners = this.registeredEvents[event.type];
+        if (listeners && listeners.length) {
+            listeners.forEach(function (listener) {
+                listener(event);
+            });
+        }
+    };
+    this.destroy = function () {
+        for (var type in this.registeredEvents) {
+            this.registeredEvents[type].length = 0;
+            delete this.registeredEvents[type];
+            this.element.removeEventListener(type, trigger, false);
+        }
+        this.element = null;
+        this.registeredEvents = null;
+    };
 }
 function filterParser(filterClass, context) {
     var filterInstance = Inject(filterClass);
@@ -2356,15 +2487,20 @@ function parseObjectExpression(expression, context, componentInstance, event) {
     return internalParser[expression.type] && internalParser[expression.type]();
 }
 function setModelValue(key, context, componentInstance, value) {
+    var modelContext = {};
     if (isarray(key)) {
-        context = resolveContext(key.slice(0, key.length - 1), context, componentInstance);
+        modelContext = resolveContext(key.slice(0, key.length - 1), context, componentInstance);
         key = key[key.length - 1];
     } else {
-        context = key in context ? context : componentInstance;
+        modelContext = key in context ? context : componentInstance;
     }
-    if (context) {
-        context[key] = value;
+    if (modelContext) {
+        if (Array.isArray(key)) {
+            key = resolveContext(key, context, componentInstance);
+        }
+        modelContext[key] = value;
     }
+    modelContext = null;
     return value;
 }
 function resolveContext(key, context, componentInstance) {
@@ -2380,6 +2516,13 @@ function resolveContext(key, context, componentInstance) {
         }
         return resolveValueFromContext(property, accum, componentEntry);
     }, context || {});
+}
+function interpolationHelper(delimiterRegExp, str, replacerData) {
+    if (typeof str === 'object' || isboolean(str) || isnumber(str))
+        return str;
+    return str.replace(delimiterRegExp, function (_, key) {
+        return resolveContext(key.split('.'), replacerData);
+    });
 }
 function Subscription(replayOnSubscription) {
     this.subscriptions = [];
@@ -2398,8 +2541,6 @@ Subscription.prototype.add = function (success, error, completed) {
             onError: error,
             onCompleted: completed
         });
-    }
-    if (replayOnSubscription) {
     }
     return this;
 };
@@ -2613,17 +2754,18 @@ AbstractEventRx.prototype.destroy = function () {
     this._hooks.length = 0;
 };
 function StateManager(current, callback, states) {
-    this.current = current;
+    this.current = '';
     this.states = states || [];
-    this.lastStateIndex = this.states.indexOf(current);
     this.set = function (name) {
-        trigger.call(this, name);
-        this.current = name;
-        this.lastStateIndex = this.states.indexOf(name);
+        if (!validateAction(this.current, name)) {
+            this.current = name;
+            this.lastStateIndex = this.states.indexOf(name);
+        }
     };
-    function trigger(name) {
-        (callback || function () {
-        })(this.current, name);
+    function validateAction(current, next) {
+        return (callback || function () {
+            return false;
+        })(current, next);
     }
     Object.defineProperties(this, {
         isLast: {
@@ -2637,6 +2779,7 @@ function StateManager(current, callback, states) {
             }
         }
     });
+    this.set(current);
 }
 StateManager.prototype.next = function () {
     var next = this.lastStateIndex + 1;
@@ -2989,10 +3132,11 @@ IterableProfiler.prototype.diff = function (source) {
         deleted: [],
         order: []
     };
-    if ((!source || !source.length) && (!this.cacheHash || !this.cacheHash.length)) {
+    var noSource = !source || !source.length;
+    if (noSource && (!this.cacheHash || !this.cacheHash.length)) {
         return false;
     }
-    if (!source.length && this.cacheHash.length) {
+    if (noSource && this.cacheHash.length) {
         this.out.deleted = Object.keys(this.cacheHash).map(Number);
         this.cacheHash.length = 0;
         return true;
@@ -3065,22 +3209,24 @@ IterableProfiler.prototype.destroy = function () {
     this.cacheHash.length = 0;
     this.out = null;
 };
-function InterceptorResolver(interceptorToken, locals, callback) {
+function InterceptorResolver(interceptorToken, locals) {
     var interceptors = Inject(interceptorToken);
-    if (!interceptors || !interceptors.length) {
-        return callback(locals);
-    }
-    var len = 0;
-    function next() {
-        var interceptor = interceptors[len];
-        len++;
-        if (interceptor) {
-            interceptor.resolve(locals, next);
-        } else {
-            callback(locals);
+    return new Promise(function (resolve, reject) {
+        if (!interceptors || !interceptors.length) {
+            return resolve();
         }
-    }
-    next();
+        var len = 0;
+        function next() {
+            var interceptor = interceptors[len];
+            len++;
+            if (interceptor) {
+                interceptor.resolve(locals, next, reject);
+            } else {
+                resolve();
+            }
+        }
+        next();
+    });
 }
 function LazyLoader(dropZone) {
     this.dropZone = dropZone;
@@ -3294,11 +3440,30 @@ var ForDirective = function () {
         this.templateRef = templateRef;
         this.iterable = new IterableProfiler();
         this._forTrackBy = null;
-        this._forIn = null;
+        this._forValue = null;
+        this._isForIn = false;
+        this._isForOf = false;
         Object.defineProperties(this, {
             forIn: {
                 set: function (value) {
-                    this._forIn = value;
+                    this._isForIn = true;
+                    this._forValue = value;
+                },
+                get: function () {
+                    if (!this._isForIn)
+                        return null;
+                    return this._forValue;
+                }
+            },
+            forOf: {
+                set: function (value) {
+                    this._isForOff = true;
+                    this._forValue = value;
+                },
+                get: function () {
+                    if (!this._isForOff)
+                        return null;
+                    return this._forValue;
                 }
             },
             forTrackBy: {
@@ -3320,12 +3485,12 @@ var ForDirective = function () {
         this.iterable.forEachOperation(function (item) {
             switch (item.state) {
             case 'create':
-                var context = new jForRow(_this._forIn[item.index], item.index, null);
+                var context = new jForRow(_this._forValue[item.index], item.index, null);
                 _this.viewRef.createEmbededView(_this.templateRef, context, item.index);
                 break;
             case 'update':
                 var view = _this.viewRef.get(item.index);
-                view.updateContext({ $context: _this._forIn[item.index] });
+                view.updateContext({ $context: _this._forValue[item.index] });
                 break;
             case 'move':
                 _this.viewRef.move(item.prevIndex, item.index);
@@ -3336,12 +3501,12 @@ var ForDirective = function () {
             var view = _this.viewRef.get(i);
             view.updateContext({
                 index: i,
-                count: _this._forIn.length
+                count: _this._forValue.length
             });
         }
     };
     ForDirective.prototype.willObserve = function () {
-        var changes = this.iterable.diff(this._forIn);
+        var changes = this.iterable.diff(this._forValue);
         if (changes)
             this._listenerFn();
     };
@@ -3365,6 +3530,7 @@ var ForDirective = function () {
         ],
         props: {
             forIn: {},
+            forOf: {},
             forTrackBy: { type: 'Function' }
         },
         module: 'CommonModule'
@@ -3623,6 +3789,8 @@ var capitalizeFilter = function () {
         this.compile = function (value) {
             if (!value)
                 return '';
+            if (typeof value !== 'string')
+                return value;
             return value.charAt(0).toUpperCase() + value.slice(1);
         };
     }
@@ -4388,7 +4556,7 @@ CurrentInstance.prototype.add = function (totalValidators) {
 };
 CurrentInstance.prototype.rem = function (passed, type) {
     this.count--;
-    if (!passed) {
+    if (passed !== true) {
         this.failed = true;
         this.errors[type] = true;
     }
@@ -4396,15 +4564,13 @@ CurrentInstance.prototype.rem = function (passed, type) {
         this.stop();
     }
 };
-CurrentInstance.prototype.registerAsyncValidator = function (asyncInstance, Request, name) {
+CurrentInstance.prototype.registerAsyncValidator = function (asyncInstance, name) {
     this.hasAsync = true;
     var _this = this;
-    var callback = function (type, ret) {
-        return function (response) {
-            _this.rem(Request[type] ? Request[type](response) : ret, name);
-        };
+    var callback = function (value) {
+        _this.rem(value, name);
     };
-    asyncInstance.then(callback('onsuccess', true), callback('onerror', false));
+    asyncInstance.then(callback, callback);
 };
 var formValidationStack = Object.create({
     MINLENGTH: function (value, requiredLength) {
@@ -4438,12 +4604,6 @@ var formValidationStack = Object.create({
     },
     PATTERN: function (value, pattern) {
         return new RegExp(pattern).test(value);
-    },
-    ASYNC: function (val, def) {
-        if (!isobject(def) || !isfunction(def.resolve)) {
-            return false;
-        }
-        return def.resolve(val);
     },
     REQUIRED: function (value, required) {
         if (required) {
@@ -4481,14 +4641,15 @@ function FormValidatorService(callback, validators) {
         currentProcess.add(_criteria.length);
         for (var i = 0; i < _criteria.length; i++) {
             var validatorName = _criteria[i];
-            var passed = false, validatorFn = formValidationStack[validatorName.toUpperCase()];
+            var passed = false;
+            var validatorFn = formValidationStack[validatorName.toUpperCase()];
             if (validatorFn) {
                 passed = validatorFn(value, criteria[validatorName]);
             } else if (isfunction(criteria[validatorName])) {
                 passed = criteria[validatorName](value);
             }
-            if (isobject(passed) && isequal('async', validatorName)) {
-                currentProcess.registerAsyncValidator(passed, criteria[validatorName], validatorName);
+            if (isequal('async', validatorName)) {
+                currentProcess.registerAsyncValidator(passed, validatorName);
             } else {
                 currentProcess.rem(passed, validatorName);
                 if (!passed) {
@@ -4803,10 +4964,12 @@ var FormControlService = function () {
         }
     };
     FormControlService.prototype.setValue = function (values, options) {
+        if (!values)
+            return;
         this._allValuePresent(values);
         for (var field in values) {
             this._isControlPresent(field);
-            this.formFieldControls[field].setValue(values[key], { self: options && options.self });
+            this.formFieldControls[field].setValue(values[field], { self: options && options.self });
         }
     };
     FormControlService.prototype.forEachField = function (callback) {
@@ -4854,7 +5017,7 @@ var FormControlService = function () {
     };
     FormControlService.prototype._allValuePresent = function (values) {
         this.forEachField(function (control, field) {
-            if (!isundefined(values[field])) {
+            if (isundefined(values[field])) {
                 errorBuilder('value for formField(' + field + ') is missing');
             }
         });
@@ -5936,7 +6099,7 @@ function CoreHttp(url, options, changeDetection) {
     var xhrPromise = new Subject();
     var httpRequest = new HttpRequest(url, options);
     var httpError = new HttpRequestError('');
-    InterceptorResolver(HTTP_INTERCEPTORS, httpRequest, function (request) {
+    InterceptorResolver(HTTP_INTERCEPTORS, httpRequest).then(function (request) {
         if (!request) {
             httpError.setMessage('HTTP: Interceptor should return a value');
             return xhrPromise.error(httpError);
@@ -6186,19 +6349,29 @@ function createRoute(url) {
         regexp: new RegExp('(?:' + url.split('?')[0] + ')$')
     };
 }
-function addViewMatcher(view, route) {
+function addViewMatcher(view, route, routeElements) {
     if (route.component) {
         route.views = route.views || {};
         if (!route.views[view]) {
             route.views[view] = {};
         }
-        route.views[view] = route.component;
+        var isStringComp = typeof route.component === 'string';
+        if (isStringComp && !routeElements || routeElements && !routeElements.has(route.component)) {
+            errorBuilder('Invalid route configuration, missing view component', 0, route);
+        }
+        route.views[view] = isStringComp ? routeElements.get(route.component) : route.component;
         delete route.component;
     }
 }
-function generateRoute(route, requireParent) {
+function generateRoute(route, requireParent, routeElements) {
     if (route.isIntent) {
         $intentCollection[route.name] = route;
+        return;
+    } else if ($stateCollection[route.name]) {
+        console.info('[Route] Duplicate route found: ' + route.name + ', skipping to use existing');
+        return;
+    } else if (!route.views && !route.component) {
+        console.info('[Router] missing view configuration for: ' + route.name);
         return;
     }
     route.route = createRoute(route.url || '^');
@@ -6210,11 +6383,11 @@ function generateRoute(route, requireParent) {
             if (view !== route.targetView) {
                 route.views[view] = parentRoute.views[view];
             } else if (!route.views[view]) {
-                addViewMatcher(view, route);
+                addViewMatcher(view, route, routeElements);
             }
         }
         if (route.targetView && !route.views[route.targetView]) {
-            addViewMatcher(route.targetView, route);
+            addViewMatcher(route.targetView, route, routeElements);
         }
         route.route.parent = parentRoute;
         if (!_views.length && !route.abstract) {
@@ -6226,28 +6399,28 @@ function generateRoute(route, requireParent) {
     if (!route.url) {
         route.abstract = true;
     }
+    if (route.fallback) {
+        routeConfig.fallback = {
+            name: route.name,
+            url: route.url
+        };
+    }
     route.route.$$views = _views;
     $stateCollection[route.name] = route;
     if (_unregistered.hasOwnProperty(route.name)) {
         _unregistered[route.name].forEach(function (uName) {
-            setupRoutes($stateCollection[uName]);
+            setupRoutes($stateCollection[uName], routeElements);
         });
         delete _unregistered[route.name];
     }
 }
-function setupRoutes(route) {
+function setupRoutes(route, routeElements) {
     var requireParent = route.hasOwnProperty('parent');
     if (!route.name && route.url) {
         route.name = route.url.replace(/[/:]/g, _ => _ == '/' ? '.' : '');
     }
     if (!route.parent) {
-        addViewMatcher(route.targetView || staticRoutePrefix, route);
-    }
-    if (route.fallback && !routeConfig.fallback && route.url) {
-        routeConfig.fallback = {
-            name: route.name,
-            url: route.url
-        };
+        addViewMatcher(route.targetView || staticRoutePrefix, route, routeElements);
     }
     if (requireParent && !$stateCollection.hasOwnProperty(route.parent)) {
         if (!_unregistered.hasOwnProperty(route.parent)) {
@@ -6257,7 +6430,7 @@ function setupRoutes(route) {
         $stateCollection[route.name] = route;
         return this;
     }
-    generateRoute(route, requireParent);
+    generateRoute(route, requireParent, routeElements);
     function addChildren(config) {
         if (config.children) {
             config.children.forEach(function (childConfig) {
@@ -6269,7 +6442,7 @@ function setupRoutes(route) {
                     ].join('.');
                     childConfig.url = '/' + config.name + (childConfig.url || '/' + name);
                     childConfig.parent = config.name;
-                    generateRoute(childConfig, true);
+                    generateRoute(childConfig, true, routeElements);
                     addChildren(childConfig);
                 } else {
                     errorBuilder('unregistered child route in parent<' + config.name + '>, name is required:' + JSON.stringify(childConfig));
@@ -6316,7 +6489,7 @@ function getRequiredRoute(routeName, params) {
 function parseUrl(href, params) {
     return href.replace(/\:(\w)+/g, function (index, key) {
         var param = index.split(':')[1];
-        return param in params ? params[param] : index;
+        return param in params ? params[param] : '';
     });
 }
 function getHref(stateName, params) {
@@ -6575,7 +6748,7 @@ var LocationService = function () {
                         _this.go(path, params);
                     }
                 });
-                InterceptorResolver(ROUTE_INTERCEPTOR, routeInstance, function () {
+                InterceptorResolver(ROUTE_INTERCEPTOR, routeInstance).then(function () {
                     _this.events.dispatch('$webRouteStart', route, path);
                 });
             } else {
@@ -6615,9 +6788,13 @@ var WebStateService = function () {
         });
     }
     ;
-    WebStateService.prototype.go = function (path, params) {
+    WebStateService.prototype.go = function (path, params, targetWindow) {
         path = getHref(path, params);
-        this.locationService.go(path, params);
+        if (!targetWindow) {
+            this.locationService.go(path, params);
+        } else {
+            window.open(path, targetWindow);
+        }
     };
     WebStateService.prototype.href = function (stateName, params) {
         return getHref(stateName, params);
@@ -6883,11 +7060,13 @@ var RouterModule = function () {
     'use strict';
     function RouterModule() {
     }
-    RouterModule.setRoutes = function (routes) {
+    RouterModule.setRoutes = function (routes, elements) {
         if (Array.isArray(routes)) {
-            routes.forEach(setupRoutes);
+            routes.forEach(function (route) {
+                setupRoutes(route, elements);
+            });
         } else {
-            setupRoutes(routes);
+            setupRoutes(routes, elements);
         }
     };
     APP_BOOTSTRAP.register({
@@ -6960,7 +7139,7 @@ CalculatorComponent.annotations = {
     module: 'AppModule'
 };
 
-CalculatorComponent.view = /** jeli template **/ (function(_viewParser){ return function(parentRef){  return _viewParser.compile([{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attr$":{"value":{"prop":"currentNumber","once":false}}},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":"element","name":"button","index":0,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"+"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["+"]}]},{"type":"element","name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"-"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["-"]}]},{"type":"element","name":"button","index":2,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"*"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["×"]}]},{"type":"element","name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"/"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["÷"]}]},{"type":"element","name":"button","index":4,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"7"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["7"]}]},{"type":"element","name":"button","index":5,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"8"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["8"]}]},{"type":"element","name":"button","index":6,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"9"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["9"]}]},{"type":"element","name":"button","index":7,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"4"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["4"]}]},{"type":"element","name":"button","index":8,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"5"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["5"]}]},{"type":"element","name":"button","index":9,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"6"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["6"]}]},{"type":"element","name":"button","index":10,"isc":false,"attr":{"type":"button","value":1},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"1"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["1"]}]},{"type":"element","name":"button","index":11,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"2"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["2"]}]},{"type":"element","name":"button","index":12,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"3"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["3"]}]},{"type":"element","name":"button","index":13,"isc":false,"attr":{"type":"button","value":0},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"0"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["0"]}]},{"type":"element","name":"button","index":14,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":"text","ast":["."]}]},{"type":"element","name":"button","index":15,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":"text","ast":["AC"]}]},{"type":"element","name":"button","index":16,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"="}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["="]}]}]}]}], parentRef);}})(new core["ViewParser"])/** template loader **/
+CalculatorComponent.view = /** jeli template **/ function(compiler){ return function(viewRef){ var $tmpl={}; return compiler.compile([{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attr$":{"value":{"prop":"currentNumber","once":false}}},{"type":"element","name":"div","index":1,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":"element","name":"button","index":0,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"+"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["+"]}]},{"type":"element","name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"-"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["-"]}]},{"type":"element","name":"button","index":2,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"*"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["×"]}]},{"type":"element","name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"/"}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["÷"]}]},{"type":"element","name":"button","index":4,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"7"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["7"]}]},{"type":"element","name":"button","index":5,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"8"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["8"]}]},{"type":"element","name":"button","index":6,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"9"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["9"]}]},{"type":"element","name":"button","index":7,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"4"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["4"]}]},{"type":"element","name":"button","index":8,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"5"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["5"]}]},{"type":"element","name":"button","index":9,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"6"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["6"]}]},{"type":"element","name":"button","index":10,"isc":false,"attr":{"type":"button","value":1},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"1"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["1"]}]},{"type":"element","name":"button","index":11,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"2"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["2"]}]},{"type":"element","name":"button","index":12,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"3"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["3"]}]},{"type":"element","name":"button","index":13,"isc":false,"attr":{"type":"button","value":0},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"0"}],"fn":"getNumber"}]}],"children":[{"type":"text","ast":["0"]}]},{"type":"element","name":"button","index":14,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":"text","ast":["."]}]},{"type":"element","name":"button","index":15,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":"text","ast":["AC"]}]},{"type":"element","name":"button","index":16,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"="}],"fn":"getOperation"}]}],"children":[{"type":"text","ast":["="]}]}]}]}], viewRef);}}(new core["ViewParser"].JSONCompiler)/** template loader **/
 return CalculatorComponent;
 }();
 
@@ -7047,7 +7226,7 @@ RouterPageElement.annotations = {
     module: 'AppModule'
 };
 
-RouterPageElement.view = /** jeli template **/ (function(_viewParser){ return function(parentRef){  return _viewParser.compile([{"type":"element","name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[form["FormControlDirective"]],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[form["RadioEventBinder"],form["FormFieldDirective"]]},{"type":"text","ast":[" Yes"]},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[form["RadioEventBinder"],form["FormFieldDirective"]]},{"type":"text","ast":[" No"]},{"type":"element","name":"br","index":5,"isc":false},{"type":"element","name":"input","index":6,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[form["CheckboxEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":7,"isc":false}]},{"type":"element","name":"textarea","index":1,"isc":false,"props":{"formField":"textarea"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":4,"isc":false},{"type":"element","name":"input","index":5,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":6,"isc":false},{"type":"element","name":"input","index":7,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[form["RangeEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":8,"isc":false},{"type":"element","name":"input","index":9,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[form["NumberEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":10,"isc":false},{"type":"element","name":"select","index":11,"isc":false,"props":{"formField":"select"},"providers":[form["SelectEventBinder"],form["FormFieldDirective"]],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":["Select 1"]}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":["Select 2"]}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":["Select 3"]}]}]},{"type":"element","name":"div","index":12,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[form["FormControlDirective"]],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]}]},{"type":"element","name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"input","index":2,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[form["NumberEventBinder"],form["FormFieldDirective"]]}]},{"type":"element","name":"div","index":13,"isc":false,"children":[{"type":"element","name":"button","index":0,"isc":false,"attr$":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":"text","ast":["Submit"]}]}]},{"type":"element","name":"item-list","index":14,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[AppModule["ItemList"]],"children":[],"templates":{"place":[{"type":"element","name":"pre","index":0,"isc":false,"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"value","args":[],"fns":[common["jsonFilterFn"]]}]],false]}]}]}},{"type":"element","name":"pre","index":15,"isc":false,"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":["testForm","value"],"args":[[3]],"fns":[common["jsonFilterFn"]]}]],false]}]}]}], parentRef);}})(new core["ViewParser"])/** template loader **/
+RouterPageElement.view = /** jeli template **/ function(compiler){ return function(viewRef){ var $tmpl={}; return compiler.compile([{"type":"element","name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[form["FormControlDirective"]],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[form["RadioEventBinder"],form["FormFieldDirective"]]},{"type":"text","ast":[" Yes"]},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[form["RadioEventBinder"],form["FormFieldDirective"]]},{"type":"text","ast":[" No"]},{"type":"element","name":"br","index":5,"isc":false},{"type":"element","name":"input","index":6,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[form["CheckboxEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":7,"isc":false}]},{"type":"element","name":"textarea","index":1,"isc":false,"props":{"formField":"textarea"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":2,"isc":false},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":4,"isc":false},{"type":"element","name":"input","index":5,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":6,"isc":false},{"type":"element","name":"input","index":7,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[form["RangeEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":8,"isc":false},{"type":"element","name":"input","index":9,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[form["NumberEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"br","index":10,"isc":false},{"type":"element","name":"select","index":11,"isc":false,"props":{"formField":"select"},"providers":[form["SelectEventBinder"],form["FormFieldDirective"]],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":["Select 1"]}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":["Select 2"]}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":["Select 3"]}]}]},{"type":"element","name":"div","index":12,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[form["FormControlDirective"]],"children":[{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"element","name":"input","index":0,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]}]},{"type":"element","name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[form["DefaultEventBinder"],form["FormFieldDirective"]]},{"type":"element","name":"input","index":2,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[form["NumberEventBinder"],form["FormFieldDirective"]]}]},{"type":"element","name":"div","index":13,"isc":false,"children":[{"type":"element","name":"button","index":0,"isc":false,"attr$":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":"text","ast":["Submit"]}]}]},{"type":"element","name":"item-list","index":14,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[AppModule["ItemList"]],"children":[],"templates":{"place":[{"type":"element","name":"pre","index":0,"isc":false,"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"value","args":[],"fns":[common["jsonFilterFn"]]}]],false]}]}]}},{"type":"element","name":"pre","index":15,"isc":false,"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":["testForm","value"],"args":[[3]],"fns":[common["jsonFilterFn"]]}]],false]}]}]}], viewRef);}}(new core["ViewParser"].JSONCompiler)/** template loader **/
 return RouterPageElement;
 }();
 
@@ -7104,10 +7283,10 @@ INITIALIZERS.register({factory: InitializeApp, DI: [WebStateService]}, true);
 
 ROUTE_INTERCEPTOR.register({useClass: validatorService}, true);
 
-!function(){/** bootstrap module**/[
+AppRouteModule.fac = function(){/** bootstrap module**/[
     RouterModule
-].forEach(function(_module){ _module()});
-}();
+].forEach(function(m){ if(m.fac){ m.fac()} m()});
+};
 return AppRouteModule;
 }();
 
@@ -7134,7 +7313,7 @@ TestPlaceElement.annotations = {
     module: 'AppModule'
 };
 
-TestPlaceElement.view = /** jeli template **/ (function(_viewParser){ return function(parentRef){  return _viewParser.compile([{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"place","name":"#fragment","index":0,"isc":false,"selector":["attr","modal-body"]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":1,"isc":false,"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[common["ClassDirective"]],"children":[{"type":"element","name":"p","index":0,"isc":false,"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"opt","args":[],"fns":[common["jsonFilterFn"]]}]],false]}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[common["ForDirective"]]}], parentRef);}})(new core["ViewParser"])/** template loader **/
+TestPlaceElement.view = /** jeli template **/ function(compiler){ return function(viewRef){ var $tmpl={}; return compiler.compile([{"type":"element","name":"div","index":0,"isc":false,"children":[{"type":"place","name":"#fragment","index":0,"isc":false,"selector":["attr","modal-body"]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":1,"isc":false,"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[common["ClassDirective"]],"children":[{"type":"element","name":"p","index":0,"isc":false,"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"opt","args":[],"fns":[common["jsonFilterFn"]]}]],false]}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[common["ForDirective"]]}], viewRef);}}(new core["ViewParser"].JSONCompiler)/** template loader **/
 return TestPlaceElement;
 }();
 
@@ -7160,7 +7339,7 @@ ItemList.annotations = {
     module: 'AppModule'
 };
 
-ItemList.view = /** jeli template **/ (function(_viewParser){ return function(parentRef){  return _viewParser.compile([{"type":"place","name":"#fragment","index":0,"isc":false},{"type":"element","name":"#fragment","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[common["SwitchDirective"]],"children":[{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":["Invalid form"]}]}},"providers":[common["SwitchDefaultDirective"]]},{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":1,"isc":false,"children":[{"type":"text","ast":["Valid form"]}]}},"props":{"switchCase":{"prop":{"type":"raw","value":"test"}}},"providers":[common["SwitchCaseDirective"]]}]}], parentRef);}})(new core["ViewParser"])/** template loader **/
+ItemList.view = /** jeli template **/ function(compiler){ return function(viewRef){ var $tmpl={}; return compiler.compile([{"type":"place","name":"#fragment","index":0,"isc":false},{"type":"element","name":"#fragment","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[common["SwitchDirective"]],"children":[{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":["Invalid form"]}]}},"providers":[common["SwitchDefaultDirective"]]},{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":1,"isc":false,"children":[{"type":"text","ast":["Valid form"]}]}},"props":{"switchCase":{"prop":{"type":"raw","value":"test"}}},"providers":[common["SwitchCaseDirective"]]}]}], viewRef);}}(new core["ViewParser"].JSONCompiler)/** template loader **/
 return ItemList;
 }();
 
@@ -7260,7 +7439,7 @@ AppRootElement.annotations = {
     module: 'AppModule'
 };
 
-AppRootElement.view = /** jeli template **/ (function(_viewParser){ return function(parentRef){  return _viewParser.compile([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":[" Todo Application "]}]}]}]}]},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[form["CheckboxEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attr$":{"checked":{"prop":true,"once":true}},"vc":[{"name":"model","type":"jModel","value":"input"},"app-root"]},{"type":"comment","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"div","index":4,"isc":false,"children":[{"type":"text","ast":["I am Test Condition"]}]},"ifElse":{"refId":"fallback","type":"element","name":"#fragment","isc":false,"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":0,"isc":false,"context":{"i":"$context"},"children":[{"type":"text","ast":["Testing_${0}",[["${0}",{"prop":"i"}]],false]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[common["ForDirective"]]}]}},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[common["IfDirective"]]},{"type":"element","name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[common["ClassDirective"]],"children":[{"type":"text","ast":["Class test"]}]},{"type":"element","name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[common["SwitchDirective"]],"children":[{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":["I am ${0} case",[["${0}",{"prop":"test"}]],false]}]}},"props":{"switchCase":{"prop":true}},"providers":[common["SwitchCaseDirective"]]},{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"test-place","index":1,"isc":true,"providers":[AppModule["TestPlaceElement"]],"children":[],"templates":{"place":[{"type":"text","ast":["I am default switch element"]}]}}},"providers":[common["SwitchDefaultDirective"]]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":8,"isc":false,"context":{"item":"$context"},"attr":{"class":"annother"},"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"item","args":[],"fns":[common["jsonFilterFn"]]}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[common["FilterPipe"]]},"forTrackBy":"trackByFn"},"providers":[common["ForDirective"]]},{"type":"text","ast":["Selected: ${0}",[["${0}",{"prop":"valueBinding"}]],false]},{"type":"element","name":"select","index":10,"isc":false,"props":{"model":{"prop":"valueBinding"}},"providers":[form["SelectEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding","right":"$event"}],"custom":true}],"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"option","index":0,"isc":false,"props":{"option":"","value":{"prop":"opt","once":false}},"providers":[form["OptionDirective"]],"context":{"opt":"$context"},"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"opt"}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[1,2,3,4,5,6]}}},"providers":[common["ForDirective"]]}]},{"type":"element","name":"br","index":12,"isc":false},{"type":"text","ast":[" Selected: ${0}",[["${0}",{"prop":"valueBinding2","args":[],"fns":[common["jsonFilterFn"]]}]],false]},{"type":"element","name":"select","index":14,"isc":false,"props":{"model":{"prop":"valueBinding2"}},"providers":[form["SelectEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding2","right":"$event"}],"custom":true}],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":["Select 1"]}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":["Select 2"]}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":["Select 3"]}]}]},{"type":"element","name":"p","index":16,"isc":false,"children":[{"type":"text","ast":["© ${0} FrontendOnly. All Rights Reserved ",[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[datetime["dateTimeFilterFN"]]}]],false]}]}], parentRef);}})(new core["ViewParser"])/** template loader **/
+AppRootElement.view = /** jeli template **/ function(compiler){ return function(viewRef){ var $tmpl={"fallback":{"type":"element","name":"#fragment","index":6,"isc":false,"refId":"fallback","children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":0,"isc":false,"context":{"i":"$context"},"children":[{"type":"text","ast":["Testing_${0}",[["${0}",{"prop":"i"}]],false]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[common["ForDirective"]]}]}}; return compiler.compile([{"type":"element","name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":"element","name":"div","index":0,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":"element","name":"a","index":0,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":"text","ast":[" Todo Application "]}]}]}]}]},{"type":"element","name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[form["CheckboxEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attr$":{"checked":{"prop":true,"once":true}},"vc":[{"name":"model","type":"jModel","value":"input"},"app-root"]},{"type":"comment","name":"#comment","text":"if","templates":{"if":{"type":"element","name":"div","index":4,"isc":false,"children":[{"type":"text","ast":["I am Test Condition"]}]},"ifElse":$tmpl.fallback},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[common["IfDirective"]]},{"type":"element","name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[common["ClassDirective"]],"children":[{"type":"text","ast":["Class test"]}]},{"type":"element","name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[common["SwitchDirective"]],"children":[{"type":"comment","name":"#comment","text":"switchCase","templates":{"switchCase":{"type":"element","name":"h5","index":0,"isc":false,"children":[{"type":"text","ast":["I am ${0} case",[["${0}",{"prop":"test"}]],false]}]}},"props":{"switchCase":{"prop":true}},"providers":[common["SwitchCaseDirective"]]},{"type":"comment","name":"#comment","text":"switchDefault","templates":{"switchDefault":{"type":"element","name":"test-place","index":1,"isc":true,"providers":[AppModule["TestPlaceElement"]],"children":[],"templates":{"place":[{"type":"text","ast":["I am default switch element"]}]}}},"providers":[common["SwitchDefaultDirective"]]}]},{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"div","index":8,"isc":false,"context":{"item":"$context"},"attr":{"class":"annother"},"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"item","args":[],"fns":[common["jsonFilterFn"]]}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[common["FilterPipe"]]},"forTrackBy":"trackByFn"},"providers":[common["ForDirective"]]},{"type":"text","ast":["Selected: ${0}",[["${0}",{"prop":"valueBinding"}]],false]},{"type":"element","name":"select","index":10,"isc":false,"props":{"model":{"prop":"valueBinding"}},"providers":[form["SelectEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding","right":"$event"}],"custom":true}],"children":[{"type":"comment","name":"#comment","text":"for","templates":{"for":{"type":"element","name":"option","index":0,"isc":false,"props":{"option":"","value":{"prop":"opt","once":false}},"providers":[form["OptionDirective"]],"context":{"opt":"$context"},"children":[{"type":"text","ast":["${0}",[["${0}",{"prop":"opt"}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[1,2,3,4,5,6]}}},"providers":[common["ForDirective"]]}]},{"type":"element","name":"br","index":12,"isc":false},{"type":"text","ast":[" Selected: ${0}",[["${0}",{"prop":"valueBinding2","args":[],"fns":[common["jsonFilterFn"]]}]],false]},{"type":"element","name":"select","index":14,"isc":false,"props":{"model":{"prop":"valueBinding2"}},"providers":[form["SelectEventBinder"],form["ModelDirective"]],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding2","right":"$event"}],"custom":true}],"attr":{"multiple":""},"children":[{"type":"element","name":"option","index":0,"isc":false,"attr":{"value":"select_1"},"children":[{"type":"text","ast":["Select 1"]}]},{"type":"element","name":"option","index":1,"isc":false,"attr":{"value":"select_2"},"children":[{"type":"text","ast":["Select 2"]}]},{"type":"element","name":"option","index":2,"isc":false,"attr":{"value":"select_3"},"children":[{"type":"text","ast":["Select 3"]}]}]},{"type":"element","name":"p","index":16,"isc":false,"children":[{"type":"text","ast":["© ${0} FrontendOnly. All Rights Reserved ",[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[datetime["dateTimeFilterFN"]]}]],false]}]}], viewRef);}}(new core["ViewParser"].JSONCompiler)/** template loader **/
 return AppRootElement;
 }();
 
@@ -7293,14 +7472,14 @@ function AppModule() {
 
 AppModule.rootElement = AppRootElement;
 
-!function(){/** bootstrap module**/[
+AppModule.fac = function(){/** bootstrap module**/[
     CommonModule,
     DateTimeModule,
     FormModule,
     HttpModule,
     AppRouteModule
-].forEach(function(_module){ _module()});
-}();
+].forEach(function(m){ if(m.fac){ m.fac()} m()});
+};
 return AppModule;
 }();
 

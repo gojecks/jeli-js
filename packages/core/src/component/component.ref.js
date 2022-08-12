@@ -82,20 +82,21 @@ var componentDebugContext = new Map();
 /**
  * 
  * @param {*} refId 
+ * @param {*} context 
  */
-function ComponentRef(refId) {
+function ComponentRef(refId, context) {
     this.componentRefId = refId;
     this.observables = new Observer();
     this.child = [];
     this.parent = null;
     this.changeDetector = new InternalChangeDetector(this);
     this._componentInstance = null;
-    this._context = null;
+    this._context = context || null;
     Object.defineProperties(this, {
         context: {
             get: function() {
                 if (this._context) {
-                    return this._context
+                    return this._context;
                 }
 
                 return this.componentInstance;
@@ -103,7 +104,7 @@ function ComponentRef(refId) {
         },
         componentInstance: {
             get: function() {
-                if (!this._componentInstance && this.parent) {
+                if (!this._componentInstance && this.parent && componentDebugContext.has(this.parent)) {
                     return componentDebugContext.get(this.parent).componentInstance;
                 }
 
@@ -136,6 +137,7 @@ ComponentRef.prototype.updateModel = function(propName, value) {
 };
 
 ComponentRef.prototype.destroy = function() {
+    if (!componentDebugContext.has(this.componentRefId)) return;
     this.changeDetector.markAsChecked();
     // destroy observables
     componentDebugContext.delete(this.componentRefId);
@@ -155,10 +157,18 @@ ComponentRef.prototype.destroy = function() {
  * 
  * @param {*} refId 
  * @param {*} parentId 
+ * @param {*} context 
  */
-ComponentRef.create = function(refId, parentId) {
-    var componentRef = new ComponentRef(refId);
-    componentDebugContext.set(refId, componentRef);
+ComponentRef.create = function(refId, parentId, context) {
+    var componentRef = componentDebugContext.get(refId)
+    if (!componentRef) {
+        componentRef = new ComponentRef(refId, context);
+        componentDebugContext.set(refId, componentRef);
+    } else {
+        // only update context if componentRef already exists
+        componentRef._context = context || null;
+    }
+
     if (parentId && componentDebugContext.has(parentId)) {
         componentRef.parent = parentId;
         // add child to parent

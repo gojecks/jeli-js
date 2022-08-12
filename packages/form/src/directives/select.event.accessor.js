@@ -112,6 +112,7 @@ SelectEventBinder.prototype._getOptionId = function(value) {
 };
 
 SelectEventBinder.prototype._markAsSelectedMultiple = function(callback) {
+    if (!this.element.nativeElement) return;
     Array.from(this.element.nativeElement.options).forEach(callback);
 }
 

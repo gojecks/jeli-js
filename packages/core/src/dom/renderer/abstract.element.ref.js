@@ -24,6 +24,7 @@ function AbstractElementRef(definition, parentRef) {
     this.attr = definition.attr;
     this.props = definition.props;
     this.isc = definition.isc;
+    this.hasContext = !!definition.context;
     if (definition.providers) {
         this.providers = definition.providers;
         this.nodes = new Map();
