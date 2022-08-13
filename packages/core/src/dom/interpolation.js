@@ -161,7 +161,7 @@ function parseObjectExpression(expression, context, componentInstance, event) {
             if (expression.namespaces) {
                 dcontext = resolveContext(expression.namespaces, context, componentInstance);
             } else {
-                dcontext = (expression.fn in dcontext) ? context : componentInstance;
+                dcontext = (dcontext && (expression.fn in dcontext) ? context : componentInstance);
             }
 
             if (dcontext && isfunction(dcontext[expression.fn])) {
