@@ -130,11 +130,13 @@ function attachElementObserver(element, onDestroyListener) {
  * @param {*} eventListener 
  */
 function ObserveUntilDestroyed(elementRef, eventListener) {
-    var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, eventListener.next);
-    attachElementObserver(elementRef, function() {
-        unsubscribe();
-        eventListener.done(true);
-    });
+    if (elementRef.hostRef) {
+        var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, eventListener.next);
+        attachElementObserver(elementRef, function() {
+            unsubscribe();
+            eventListener.done(true);
+        });
+    }
 }
 
 
@@ -165,7 +167,7 @@ function textNodeCompiler(textNodeRef) {
         });
     }
 
-    if (!textNodeRef.ast.once) {
+    if (!textNodeRef.ast.once && textNodeRef.parent && textNodeRef.parent.hostRef) {
         attachElementObserver(textNodeRef.parent, SubscribeObservables(textNodeRef.parent.hostRef.refId, _compiler));
     };
 

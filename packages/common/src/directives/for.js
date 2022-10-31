@@ -24,6 +24,7 @@ export function ForDirective(viewRef, templateRef) {
     this._forValue = null;
     this._isForIn = false;
     this._isForOf = false;
+    this.inProgress = false;
 
     /**
      * add new property
@@ -33,6 +34,7 @@ export function ForDirective(viewRef, templateRef) {
             set: function(value) {
                 this._isForIn = true;
                 this._forValue = value;
+                this.willObserve();
             },
             get: function() {
                 if (!this._isForIn) return null;
@@ -43,6 +45,7 @@ export function ForDirective(viewRef, templateRef) {
             set: function(value) {
                 this._isForOff = true;
                 this._forValue = value;
+                this.willObserve();
             },
             get: function() {
                 if (!this._isForOff) return null;
@@ -93,12 +96,15 @@ ForDirective.prototype._listenerFn = function() {
             count: _this._forValue.length
         });
     }
+    // set progress to false
+    this.inProgress = false;
 };
 
 ForDirective.prototype.willObserve = function() {
     var changes = this.iterable.diff(this._forValue);
-    if (changes)
-        this._listenerFn();
+    if (changes && !this.inProgress)
+        this.inProgress = true;
+    this._listenerFn();
 }
 
 /**

@@ -3,6 +3,7 @@
  * textNodes are ignored
  */
 var $eUID = 1;
+var $elementContext = '__jContext__';
 /**
  * Abstract element ref for generating components
  * @param {*} definition 
@@ -24,7 +25,7 @@ function AbstractElementRef(definition, parentRef) {
     this.attr = definition.attr;
     this.props = definition.props;
     this.isc = definition.isc;
-    this.hasContext = !!definition.context;
+    this.hasContext = ((!!definition.context) || (!definition.isc && parentRef && parentRef.hasContext));
     if (definition.providers) {
         this.providers = definition.providers;
         this.nodes = new Map();
@@ -74,6 +75,12 @@ function AbstractElementRef(definition, parentRef) {
             get: function() {
                 return definition.data;
             }
+        }
+    });
+
+    Object.defineProperty(this.nativeElement, $elementContext, {
+        get: () => {
+            return this;
         }
     });
 };

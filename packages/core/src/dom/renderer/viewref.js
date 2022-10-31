@@ -82,7 +82,7 @@ function EmbededViewContext(parentRef, templateRef, context) {
     var templateContext = templateRef.getContext();
     var componentRefContext = createLocalVariables(templateContext, context, parentRef.context);
     this.compiledElement = templateRef.createElement(parentRef, null, componentRefContext);
-    this.compiledElement.hasContext = !!templateContext
+    this.compiledElement.hasContext = !!templateContext;
     this.unsubscribeScheduler;
     /**
      * create the Viewcontext if templateRef has a context

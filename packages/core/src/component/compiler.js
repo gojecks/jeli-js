@@ -117,8 +117,8 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
             compileEventsRegistry(componentInstance);
             lifeCycle = new LifeCycle(componentInstance);
             ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition);
-            registerDirectiveInstance(componentInstance);
             lifeCycle.trigger('didInit');
+            registerDirectiveInstance(componentInstance);
             next(componentInstance);
             CoreComponentCompiler(componentInstance);
         });

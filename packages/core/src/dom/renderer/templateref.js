@@ -44,9 +44,11 @@ export function TemplateRef(templates) {
         for (var i = 0; i < templates.length; i++) {
             var template = templates[i];
             if (_selectable(template)) {
-                if (isequal(template.name, '#fragment'))
-                    template.children.forEach(callback)
-                else
+                if (isequal(template.name, '#fragment')) {
+                    if (template.children) {
+                        template.children.forEach(callback);
+                    }
+                } else
                     callback(template);
             }
         }

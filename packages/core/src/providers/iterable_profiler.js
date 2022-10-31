@@ -50,64 +50,73 @@ IterableProfiler.prototype.diff = function(source) {
     }
 
     var len = source.length;
-    var newCacheHash = [];
+    var totalCacheItem = this.cacheHash.length;
+    var newCacheHash = new Array(source.length).fill('').map((_, idx) => this.trackBy(source[idx], idx));
     var operationOrder = [];
     var isDirty = false;
+    var skipCheck = [];
     for (var inc = 0; inc < len; inc++) {
-        var item = source[inc];
-        var hash = this.trackBy(item, inc);
+        if (skipCheck.includes(inc)) continue;
+        var prevIndex = this.cacheHash.indexOf(newCacheHash[inc]);
+        var cacheHashIndex = newCacheHash.indexOf(this.cacheHash[inc]);
+        var existsInCache = prevIndex > -1;
+        var cacheIndexExistsInSource = cacheHashIndex > -1;
+        var outOfCacheRange = (inc > totalCacheItem - 1);
+
         /**
          * find the hash in the cacheHash
          * if hash exists means the object was moved to different index
          * assign to new position
          */
-        var outOfCacheRange = (inc > (this.cacheHash.length - 1));
-        if (this.cacheHash.includes(hash)) {
-            /***
-             * cacheHash[key] changed
+        if (existsInCache) {
+            /**
+             * check if currentIndex is > prevIndex
+             * eg: [a,b] => [a,c,b]
+             * true: new Data was added in previous index to the collection
+             * false: we move the item to correct index
              */
-            if (!Object.is(this.cacheHash[inc], hash)) {
+            if (prevIndex !== inc) {
                 isDirty = true;
-                /**
-                 * update changes
-                 */
-                var prevIndex = this.cacheHash.indexOf(hash);
-                /**
-                 * check if currentIndex is > prevIndex
-                 * eg: [a,b] => [a,c,b]
-                 * true: new Data was added in previous index to the collection
-                 * false: we move the item to correct index
-                 */
-                if ((prevIndex > -1 && prevIndex !== inc)) {
+                if (!cacheIndexExistsInSource) {
+                    // push the index for deletion
+                    // remove the element from cacheHash
+                    if (!outOfCacheRange) {
+                        this.cacheHash.splice(inc, 1);
+                        totalCacheItem--;
+                        this.out.deleted.push(inc);
+                    }
+                } else {
                     operationOrder.push({
                         index: inc,
                         prevIndex: prevIndex,
-                        /**
-                         * check if currentIncrement > prevIndex
-                         * true: create a new record
-                         * false: move it
-                         */
-                        state: (outOfCacheRange ? 'create' : 'update')
+                        state: "move"
                     });
-                    isDirty = true;
                 }
             }
-        } else {
+        }
+        // item doesn't exist in cache but the current cache item at index exists in source
+        // create a move record
+        else {
             isDirty = true;
+            // push to cacheHash
+            var isCreateMode = (outOfCacheRange || cacheIndexExistsInSource);
+            if (isCreateMode) {
+                this.cacheHash.splice(inc, 0, newCacheHash[inc]);
+                totalCacheItem++;
+            }
+
             operationOrder.push({
                 index: inc,
-                state: outOfCacheRange ? 'create' : 'update'
+                state: (isCreateMode ? 'create' : 'update')
             });
         }
-
-        newCacheHash.push(hash);
     }
 
     /**
-     * Validate cacheHash
+     * Check if cacheHash > newCacheHash
      */
-    if (isDirty || this.cacheHash.length > newCacheHash.length) {
-        for (var i = newCacheHash.length; i < this.cacheHash.length; i++) {
+    if (totalCacheItem > len) {
+        for (var i = len; i < totalCacheItem; i++) {
             isDirty = true;
             this.out.deleted.push(i);
         }
@@ -117,6 +126,7 @@ IterableProfiler.prototype.diff = function(source) {
     this.out.order = operationOrder;
     newCacheHash = null;
     operationOrder = null;
+    skipCheck = null;
 
     return isDirty;
 };

@@ -300,6 +300,7 @@ export function parseUrl(href, params) {
 export function getHref(stateName, params) {
     var state = $stateCollection[stateName];
     if (state) {
+        params = params || state.params;
         if (state.route.paramsMapping.length && !params) {
             throw new Error(stateName + " requires parameter, but none was provided");
         }
@@ -316,12 +317,31 @@ export function getHref(stateName, params) {
  * @param {*} path 
  * @param {*} redirectMethod 
  */
-export function RouteInterceptorInstance(route, path, redirectMethod) {
+export function RouteInterceptorInstance(route, path, currentRoute, redirectMethod) {
     this.name = route.name;
     this.path = path;
-    this.data = route.data;
-    this.params = route.params;
-    this.originalUrl = route.url;
     this.locals = {};
+    Object.defineProperties(this, {
+        currentRoute: {
+            get: function() {
+                return currentRoute
+            }
+        },
+        originalUrl: {
+            get: function() {
+                return route.url;
+            }
+        },
+        params: {
+            get: function() {
+                return route.params;
+            }
+        },
+        data: {
+            get: function() {
+                return route.data;
+            }
+        }
+    });
     this.redirect = redirectMethod;
 }

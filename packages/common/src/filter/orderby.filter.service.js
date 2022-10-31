@@ -10,8 +10,9 @@ export function orderByFilterFn() {
         }
 
         // model, propertyName, reverse
-        var _queryApi = new QueryFactory(value),
-            newList;
+        var _queryApi = new QueryFactory(value);
+        var newList;
+        var reverse;
 
         /**
          * set reverse options if defined

@@ -126,6 +126,23 @@ LocationService.prototype.go = function(path, params) {
     //set the current State
     this.viewHandler.previousState = this.viewHandler.currentState;
     this.viewHandler.currentState = path;
+    /**
+     * 
+     * @param {*} path 
+     * @param {*} params 
+     */
+    function redirect(path, params) {
+        /**
+         * binded to redirect 
+         */
+        path = getHref(path, params);
+        if (_this.changed(path)) {
+            _this.go(path, params);
+        } else {
+            stopped = true;
+        }
+    }
+
     if (this.viewHandler.stateInProgress) {
         // check if previous and current state are same
         if ((this.viewHandler.currentState === this.viewHandler.previousState)) {
@@ -136,21 +153,15 @@ LocationService.prototype.go = function(path, params) {
     } else if (this.changed(path)) {
         //set up new events
         var route = getRequiredRoute(path, params);
+        var stopped = false;
         if (route) {
             this.viewHandler.stateInProgress = true;
-            var routeInstance = new RouteInterceptorInstance(route, path, function(path, params) {
-                /**
-                 * binded to redirect 
-                 */
-                path = getHref(path, params);
-                if (_this.changed(path)) {
-                    _this.go(path, params);
-                }
-            });
-
+            var routeInstance = new RouteInterceptorInstance(route, path, this.currentRoute, redirect);
             InterceptorResolver(ROUTE_INTERCEPTOR, routeInstance)
                 .then(function() {
-                    _this.events.dispatch('$webRouteStart', route, path);
+                    if (!stopped) {
+                        _this.events.dispatch('$webRouteStart', route, path);
+                    }
                 });
         } else {
             this.events.dispatch('$webRouteNotFound', {

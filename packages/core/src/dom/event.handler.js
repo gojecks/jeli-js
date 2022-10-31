@@ -97,10 +97,11 @@ EventHandler.attachEventEmitter = function(element, eventName, componentInstance
         var unSubscribe = componentInstance[eventName].subscribe(function(value) {
             // trigger change detector if defined
             var parentElement = element && element.parent;
+            parentElement = (parentElement.isc ? parentElement : parentElement.hostRef);
             _executeEventsTriggers(
                 registeredEvent.value,
                 parentElement.componentInstance,
-                element.hasContext ? element.context : parentElement.context,
+                element.hasContext ? element.context : element.parent.hasContext ? element.parent.context : parentElement.context,
                 value
             );
 
@@ -239,6 +240,10 @@ function handleEvent(element, event, eventName) {
         element && element.changeDetector && element.changeDetector.detectChanges();
     }
 
+    function isClosest(target) {
+        return target.some(query => event.target.closest(query));
+    }
+
     /**
      * 
      * @param {*} registeredEvent 
@@ -250,8 +255,8 @@ function handleEvent(element, event, eventName) {
         } else {
             var selectedElem = element;
             if (registeredEvent.target) {
-                if (!event.target.closest(registeredEvent.target)) return;
-                selectedElem = jeliQuerySelector(element, event.target) || element;
+                if (!isClosest(registeredEvent.target)) return;
+                selectedElem = event.target[$elementContext];
             }
 
             _executeEventsTriggers(

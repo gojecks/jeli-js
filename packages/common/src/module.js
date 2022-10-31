@@ -12,6 +12,7 @@ import { upperCaseFilter } from './filter/uppercase';
 import { whereFilterFn } from './filter/where.filter';
 import { QueryFactory } from './services/query.service';
 import { FilterPipe } from './filter/filter';
+import { ReversePipe } from './filter/reverse';
 /**
  * set up common Module
  * that other Module could inject
@@ -28,7 +29,8 @@ jModule({
         whereFilterFn,
         CurrencyFilter,
         QueryFactory,
-        FilterPipe
+        FilterPipe,
+        ReversePipe
     ],
     selectors: [
         ForDirective,

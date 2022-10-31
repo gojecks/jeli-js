@@ -1,4 +1,3 @@
-import { errorBuilder } from "@jeli/core";
 import { isobject, isfunction, isundefined } from "js-helpers/helpers";
 
 Service({

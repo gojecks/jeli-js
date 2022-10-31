@@ -1,6 +1,19 @@
 import { isempty, isobject, isundefined, isfunction, isarray } from 'js-helpers/helpers';
 import { errorBuilder } from '@jeli/core';
 import { FormControlAbstract } from './form-control.abstract';
+
+/**
+ * 
+ * @param {*} context 
+ * @param {*} controls 
+ */
+function addFields(context, formFields) {
+    if (!isobject(formFields)) return;
+    for (var field in formFields) {
+        context.addField(field, formFields[field]);
+    }
+}
+
 Service({
     static: true,
 })
@@ -16,11 +29,7 @@ export function FormControlService(formFields, validators) {
     /**
      * create the formField and validations
      */
-    if (!isempty(formFields)) {
-        for (var field in formFields) {
-            this.addField(field, formFields[field]);
-        }
-    }
+    addFields(this, formFields);
     this.updateValueAndStatus();
 }
 
@@ -40,6 +49,14 @@ FormControlService.prototype.addField = function(name, fieldControl) {
 
     this._setupControl(this.formFieldControls[name]);
 };
+
+/**
+ * add multple fields to the contol instance
+ * @param {*} fieldControls 
+ */
+FormControlService.prototype.addFields = function(fieldControls) {
+    addFields(this, fieldControls)
+}
 
 
 FormControlService.prototype.hasField = function(controlName) {

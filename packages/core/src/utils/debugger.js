@@ -29,7 +29,7 @@ function jeliQuerySelector(b, c) {
  */
 function jeliDebugger(element) {
     if (element && CoreBootstrapContext.enableDebugger) {
-        return jeliQuerySelector(CoreBootstrapContext.bootStrapComponent, element);
+        return element[$elementContext];
     }
 
     return null;

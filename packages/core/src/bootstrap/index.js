@@ -1,8 +1,9 @@
+import { bootstrapFromDOM } from '../component/custom.dom';
 import { Inject } from '../dependency.injector';
 /**
  * JELI LOCAL VARIABLES
  */
-var CoreBootstrapContext = ({
+var CoreBootstrapContext = Object({
     bootStrapComponent: null,
     compiledModule: null,
     $isCompiled: false,
@@ -20,7 +21,6 @@ export function bootStrapApplication(moduleToBootStrap) {
     return new Promise(function(resolve, reject) {
         try {
             CoreBootstrapContext.compiledModule = moduleToBootStrap;
-            CoreBootstrapContext.injector = new AbstractInjectorInstance();
             moduleToBootStrap.fac();
             moduleToBootStrap();
             /**
@@ -44,25 +44,12 @@ export function bootStrapApplication(moduleToBootStrap) {
     function bootStrapElement() {
         if (moduleToBootStrap.rootElement) {
             var selector = moduleToBootStrap.rootElement.annotations.selector;
-            CoreBootstrapContext.bootStrapComponent = new ElementRef({
-                name: selector,
-                isc: true,
-                type: 'element',
-                fromDOM: true
-            }, null);
-
-            /**
-             * bootstrap application
-             */
-            ElementCompiler(
-                moduleToBootStrap.rootElement,
-                CoreBootstrapContext.bootStrapComponent,
-                CoreBootstrapContext.injector,
-                function() {
-                    Inject(APP_BOOTSTRAP, CoreBootstrapContext.injector).forEach(function(callback) {
-                        callback();
-                    });
+            bootstrapFromDOM(moduleToBootStrap.rootElement, selector, function(elementRef) {
+                CoreBootstrapContext.bootStrapComponent = elementRef;
+                Inject(APP_BOOTSTRAP, CoreBootstrapContext.injector).forEach(function(callback) {
+                    callback();
                 });
+            });
         }
     }
 };
