@@ -1,17 +1,18 @@
 import { errorBuilder } from '../utils/errorLogger';
 import { AutoWire, wireResolvers } from '../dependency.injector';
 import './lifecycle';
-import { ϕjeliLinker } from './linker';
+import { elementInputLinker } from './linker';
+import { LifeCycleConst } from './lifecycle';
 /**
  * 
- * @param {*} ctrl 
+ * @param {*} factory 
  * @param {*} elementRef 
  * @param {*} componentInjectors 
  * @param {*} next 
  */
-function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
-    var definition = ctrl.annotations,
-        lifeCycle;
+function ElementCompiler(factory, elementRef, componentInjectors, next) {
+    var ctors = factory.ctors;
+    var lifeCycle;
     /**
      * 
      * @param {*} componentInstance 
@@ -25,16 +26,18 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
          * add two way binding between components 
          */
         componentRef.componentInstance = componentInstance;
-        if (ctrl.view) {
+        if (factory.view) {
             try {
                 // set the refID of the directive
-                var renderedElement = ctrl.view(elementRef);
+                var renderedElement = factory.view(elementRef);
                 // attach mutationObserver
-                elementMutationObserver(elementRef.nativeElement, function(mutaionList, observer) {
-                    lifeCycle && lifeCycle.trigger('viewDidLoad');
+                elementMutationObserver(elementRef.nativeElement, function (mutationList, observer) {
+                    // attach contentChild(ren)
+                    AttachComponentContentQuery(elementRef);
+                    lifeCycle && lifeCycle.trigger(LifeCycleConst.viewDidLoad);
                     observer.disconnect();
                 });
-
+                
                 elementRef.nativeElement.appendChild(renderedElement);
                 elementRef.changeDetector.detectChanges();
             } catch (e) {
@@ -43,9 +46,9 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
         }
 
         // Add event Watcher to the ele
-        attachElementObserver(elementRef, function() {
+        attachElementObserver(elementRef, function () {
             // do cleanup when component is destroyed
-            lifeCycle.trigger('viewDidDestroy');
+            lifeCycle.trigger(LifeCycleConst.viewDidDestroy);
             componentRef.destroy();
             lifeCycle = null;
             componentRef = null;
@@ -61,8 +64,8 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
      * @param {*} componentInstance 
      */
     function compileEventsRegistry(componentInstance) {
-        if (definition.events) {
-            Object.keys(definition.events).forEach(_registry);
+        if (ctors.events) {
+            Object.keys(ctors.events).forEach(_registry);
         }
 
         /**
@@ -70,9 +73,9 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
          * @param {*} option 
          */
         function _registry(evName) {
-            switch (definition.events[evName].type) {
+            switch (ctors.events[evName].type) {
                 case ('event'):
-                    EventHandler.attachEvent(elementRef.events, evName, definition.events[evName].value, componentInstance);
+                    EventHandler.attachEvent(elementRef.events, evName, ctors.events[evName].value, componentInstance);
                     break;
                 case ('emitter'):
                     /**
@@ -94,16 +97,16 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
             /**
              * remove the Attribute from element
              */
-            elementRef.nodes.set(ctrl.annotations.exportAs || definition.selector, componentInstance);
-            lifeCycle && lifeCycle.trigger('viewDidLoad');
-            attachElementObserver(elementRef, function() {
-                lifeCycle.trigger('viewDidDestroy');
-                elementRef.nodes.delete(definition.selector);
+            elementRef.nodes.set(factory.ctors.exportAs || ctors.selector, componentInstance);
+            lifeCycle && lifeCycle.trigger(LifeCycleConst.viewDidLoad);
+            attachElementObserver(elementRef, function () {
+                lifeCycle.trigger(LifeCycleConst.viewDidDestroy);
+                elementRef.nodes.delete(ctors.selector);
             });
         }
     }
 
-    ComponentFactoryInitializer(ctrl, componentInjectors,
+    ComponentFactoryInitializer(factory, componentInjectors,
         /**
          * 
          * @param {*} componentInstance 
@@ -116,8 +119,8 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
              */
             compileEventsRegistry(componentInstance);
             lifeCycle = new LifeCycle(componentInstance);
-            ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition);
-            lifeCycle.trigger('didInit');
+            elementInputLinker(componentInstance, elementRef, lifeCycle, ctors);
+            lifeCycle.trigger(LifeCycleConst.didInit);
             registerDirectiveInstance(componentInstance);
             next(componentInstance);
             CoreComponentCompiler(componentInstance);
@@ -129,7 +132,7 @@ function ElementCompiler(ctrl, elementRef, componentInjectors, next) {
  * @param {*} node 
  * @param {*} nextTick 
  */
-ElementCompiler.resolve = function(node, nextTick) {
+ElementCompiler.resolve = function (node, nextTick) {
     /**
      * 
      * @param {*} isDetachedElement 
@@ -141,7 +144,7 @@ ElementCompiler.resolve = function(node, nextTick) {
         var factory = node.providers[inc];
         inc++;
         if (factory) {
-            componentInjectors.set('Selector', factory.annotations.selector);
+            componentInjectors.set('Selector', factory.ctors.selector);
             try {
                 ElementCompiler(factory, node, componentInjectors, next);
             } catch (e) {
@@ -158,13 +161,13 @@ ElementCompiler.resolve = function(node, nextTick) {
 
 /**
  * 
- * @param {*} ctrl 
+ * @param {*} factory 
  * @param {*} locals 
  * @param {*} CB 
  */
-function ComponentFactoryInitializer(ctrl, injectorInstance, CB) {
-    wireResolvers(ctrl.annotations.resolve, injectorInstance);
-    AutoWire(ctrl, injectorInstance, function(instance) {
+function ComponentFactoryInitializer(factory, injectorInstance, CB) {
+    wireResolvers(factory.ctors.resolve, injectorInstance);
+    AutoWire(factory, injectorInstance, function (instance) {
         try {
             CB(instance);
         } catch (e) {

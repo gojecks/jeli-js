@@ -9,8 +9,8 @@ import { noop } from "../utils/closure";
  * @returns 
  */
 export function ComponentFactoryResolver(componentFactory, viewComponent, callback, skipElementInsert) {
-    if (!componentFactory || !componentFactory.annotations.exposeView) {
-        errorBuilder('No exported factory found for <' + componentFactory.annotations.selector + '> in ' + componentFactory.annotations.module);
+    if (!componentFactory || !componentFactory.ctors.exposeView) {
+        errorBuilder('No exported factory found for <' + componentFactory.ctors.selector + '>');
         return null;
     }
 
@@ -19,7 +19,7 @@ export function ComponentFactoryResolver(componentFactory, viewComponent, callba
     }
 
     var viewDefinition = {
-        name: componentFactory.annotations.selector,
+        name: componentFactory.ctors.selector,
         type: 'element',
         isc: true,
         providers: [componentFactory]

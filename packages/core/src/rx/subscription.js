@@ -1,5 +1,13 @@
 import { isobject, isfunction } from "js-helpers/helpers";
 
+export var SubscriptionStates = {
+    onError: 0,
+    onSuccess: 1,
+    onCompleted:  2
+};
+
+var statedIDs = Object.keys(SubscriptionStates);
+
 /**
  * 
  * @param {*} replayOnSubscription 
@@ -9,7 +17,7 @@ export function Subscription(replayOnSubscription) {
     this.state = {
         pending: false,
         value: null,
-        resolveWith: ''
+        resolveWith: -1
     };
 }
 
@@ -38,19 +46,21 @@ Subscription.prototype.add = function(success, error, completed) {
  * @param {*} type 
  * @param {*} args 
  */
-Subscription.prototype.notify = function(type, args) {
-    if (!this.state || this.state.resolveWith === 'completed') {
+Subscription.prototype.notify = function(state, args) {
+    if (!this.state || this.state.resolveWith === SubscriptionStates.onCompleted) {
         return;
     }
 
-    this.subscriptions.forEach(function(subscription) {
-        if (subscription[type] && isfunction(subscription[type])) {
-            subscription[type](args);
+    var stateId = statedIDs[state];
+    for(var subscription of this.subscriptions) {
+        var callback  = subscription[stateId];
+        if (callback && isfunction(callback)) {
+            callback(args);
         }
-    });
+    }
 
     this.state.pending = this.subscriptions.length < 1;
-    this.state.resolveWith = type;
+    this.state.resolveWith = state;
     this.state.value = args;
 };
 

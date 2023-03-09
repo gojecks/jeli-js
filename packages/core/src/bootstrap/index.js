@@ -21,8 +21,7 @@ export function bootStrapApplication(moduleToBootStrap) {
     return new Promise(function(resolve, reject) {
         try {
             CoreBootstrapContext.compiledModule = moduleToBootStrap;
-            moduleToBootStrap.fac();
-            moduleToBootStrap();
+            compileModule(moduleToBootStrap)
             /**
              * trigger INITIALIZERS
              */
@@ -43,7 +42,7 @@ export function bootStrapApplication(moduleToBootStrap) {
 
     function bootStrapElement() {
         if (moduleToBootStrap.rootElement) {
-            var selector = moduleToBootStrap.rootElement.annotations.selector;
+            var selector = moduleToBootStrap.rootElement.ctors.selector;
             bootstrapFromDOM(moduleToBootStrap.rootElement, selector, function(elementRef) {
                 CoreBootstrapContext.bootStrapComponent = elementRef;
                 Inject(APP_BOOTSTRAP, CoreBootstrapContext.injector).forEach(function(callback) {
@@ -53,6 +52,15 @@ export function bootStrapApplication(moduleToBootStrap) {
         }
     }
 };
+
+/**
+ * 
+ * @param {*} dModule 
+ */
+export function compileModule(dModule) {
+    dModule.fac();
+    dModule();
+}
 
 /**
  * Change detector

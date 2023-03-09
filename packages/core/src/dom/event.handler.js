@@ -182,7 +182,7 @@ function _executeEventsTriggers(eventTriggers, componentInstance, context, ev) {
             parseObjectExpression(event, context, componentInstance, ev);
         } else if (event.fn) {
             // set nameSpaces
-            var fn = getFnFromContext(event, componentInstance);
+            var fn = getFnFromContext(event, componentInstance, context);
             if (fn) {
                 // Check if Arguments is required
                 var narg = generateArguments(event.args, context || componentInstance, null, ev);
@@ -195,13 +195,16 @@ function _executeEventsTriggers(eventTriggers, componentInstance, context, ev) {
 }
 
 /**
- * @param {*} componentInstance
+ * 
  * @param {*} eventInstance 
+ * @param {*} componentInstance 
+ * @param {*} context 
+ * @returns 
  */
-function getFnFromContext(eventInstance, componentInstance) {
+function getFnFromContext(eventInstance, componentInstance, context) {
     var instance = componentInstance;
     if (eventInstance.namespaces) {
-        instance = resolveContext(eventInstance.namespaces, componentInstance);
+        instance = resolveContext(eventInstance.namespaces, componentInstance, context);
     }
 
     var fn = instance[eventInstance.fn];
@@ -256,7 +259,7 @@ function handleEvent(element, event, eventName) {
             var selectedElem = element;
             if (registeredEvent.target) {
                 if (!isClosest(registeredEvent.target)) return;
-                selectedElem = event.target[$elementContext];
+                selectedElem = event.target[$elementContext] || element;
             }
 
             _executeEventsTriggers(

@@ -36,9 +36,7 @@ export function ElementStyle(nativeElement, name, value) {
 ElementStyle.set = function(nativeElement, name, value, suffix) {
     if (typeof value === 'number' && ElementStyle.props.WithSuffix.includes(name)) {
         value += suffix || 'px';
-    }
-
-    if (ElementStyle.props.background.includes(name) && value.includes('.') && !value.startsWith('url')) {
+    } else if (ElementStyle.props.background.includes(name) && value.includes('.') && !value.startsWith('url')) {
         value = 'url(' + value + ')';
     }
 
@@ -47,5 +45,5 @@ ElementStyle.set = function(nativeElement, name, value, suffix) {
 
 ElementStyle.props = {
     WithSuffix: 'width|height|top|bottom|left|right|marginTop|marginBottom|marginLeft|marginRight|paddingRight|paddingLeft|paddingTop|paddingBottom|fontSize'.split('|'),
-    background: 'backgroundImage|background'.split('|')
+    background: 'backgroundImage'.split('|')
 };

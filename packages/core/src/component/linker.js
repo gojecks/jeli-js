@@ -1,16 +1,17 @@
 import { isobject, isequal } from 'js-helpers/helpers';
 import { TemplateRef } from '../dom/renderer/templateref';
 import { staticInjectionToken } from './injectors';
+import { LifeCycleConst } from './lifecycle';
 /**
- * structure require Model 
- * Useful in Directive Compiler
+ * assign all props binding from parent to child component 
+ * lifeCyles to trigger  @willObserve and  @didChange
  * @param {*} componentInstance 
  * @param {*} elementRef 
  * @param {*} lifeCycle 
  * @param {*} definition
  */
-export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definition) {
-    lifeCycle.trigger('willObserve');
+export function elementInputLinker(componentInstance, elementRef, lifeCycle, definition) {
+    lifeCycle.trigger(LifeCycleConst.willObserve);
     var propChanges = null;
     var registeredProperty = {};
     var isPrimitive = [];
@@ -25,7 +26,7 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
         if (elementRef.hasContext) {
             context = elementRef.context;
         } else {
-            context = ((isequal(elementRef.parent.type, 'comment') && !elementRef.isc) ? elementRef : elementRef.parent).context;
+            context = ((isequal(elementRef.parent.type, 8) && !elementRef.isc) ? elementRef : elementRef.parent).context;
         }
 
         for (var prop in definition.props) {
@@ -51,7 +52,7 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
         }
 
         if (propChanges) {
-            lifeCycle.trigger('didChange', propChanges);
+            lifeCycle.trigger(LifeCycleConst.didChange, propChanges);
             propChanges = null;
         }
 
@@ -92,13 +93,7 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
      */
     function setValue(property, value) {
         var hasProp = registeredProperty.hasOwnProperty(property);
-        var hashValue = 1;
-        var sameValue = isequal(componentInstance[property], value);;
-        if (typeof value === 'object') {
-            hashValue = hash(value);
-            sameValue = hashValue === registeredProperty[property]
-        }
-
+        var sameValue = isequal(componentInstance[property], value);
         if (hasProp && sameValue) return;
 
         if (propChanges === null) {
@@ -107,7 +102,7 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
         /**
          * register the property to lookup object
          */
-        registeredProperty[property] = hashValue;
+        registeredProperty[property] = true;
         propChanges[property] = value;
         componentInstance[property] = value;
     }
@@ -135,7 +130,7 @@ export function ϕjeliLinker(componentInstance, elementRef, lifeCycle, definitio
     ObserveUntilDestroyed(elementRef, {
         next: function() {
             if (always) _updateViewBinding();
-            lifeCycle.trigger('willObserve');
+            lifeCycle.trigger(LifeCycleConst.willObserve);
         },
         done: function() {
             registeredProperty = null;

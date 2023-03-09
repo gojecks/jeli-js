@@ -10,7 +10,7 @@ import { ElementClassList } from './classlist';
  * @param {*} value 
  */
 export function AttributeAppender(nativeElement, prop, value) {
-    if (Node.DOCUMENT_FRAGMENT_NODE === nativeElement.nodeType) return;
+    if (11 === nativeElement.nodeType) return;
     if (isobject(prop)) {
         for (var name in prop) {
             if (AttributeAppender.helpers[name]) {
@@ -87,7 +87,7 @@ AttributeAppender.helpers = {
  * @returns 
  */
 AttributeAppender.setProp = function(nativeElement, propName, propValue, template) {
-    if (propValue === undefined || !nativeElement || nativeElement.nodeType !== Node.ELEMENT_NODE) return;
+    if (propValue === undefined || !nativeElement || nativeElement.nodeType !== 1) return;
     if (AttributeAppender.helpers[propName]) {
         return AttributeAppender.helpers[propName](nativeElement, propValue, template);
     }

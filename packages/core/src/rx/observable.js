@@ -1,3 +1,5 @@
+import { Subscription, SubscriptionStates } from "./subscription";
+
 /**
  * Pass a function that is called when observable instance is created
  * @param {*} callback 
@@ -40,19 +42,19 @@ export function AbstractObserver() {
 
 AbstractObserver.prototype.next = function(value) {
     this._forEach(function(subscription) {
-        subscription.notify('onSuccess', value);
+        subscription.notify(SubscriptionStates.onCompleted, value);
     });
 };
 
 AbstractObserver.prototype.error = function(errorObject) {
     this._forEach(function(subscription) {
-        subscription.notify('onError', errorObject);
+        subscription.notify(SubscriptionStates.onError, errorObject);
     });
 };
 
 AbstractObserver.prototype.completed = function() {
     this._forEach(function(subscription) {
-        subscription.notify('onCompleted');
+        subscription.notify(SubscriptionStates.onCompleted);
     });
 };
 

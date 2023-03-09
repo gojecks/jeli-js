@@ -1,10 +1,10 @@
-import { inarray, isequal } from 'js-helpers/helpers';
+import { isfunction } from 'js-helpers/helpers';
 /**
  * 
  * @param {*} templates 
- * @param {*} templateId 
+ * @param {*} isContentChild 
  */
-export function TemplateRef(templates) {
+export function TemplateRef(templates, isContentChild) {
     /**
      * build the required element based on the template definition
      * @param {*} parentNode 
@@ -23,40 +23,15 @@ export function TemplateRef(templates) {
      * @param {*} callback 
      */
     this.forEach = function(selector, callback) {
-        /**
-         * returns the required template to compile
-         */
-        function _selectable(template) {
-            if (!selector) {
-                return true;
-            } else if (inarray(selector[0], ['id', 'class'])) {
-                return (
-                    (template.attr && inarray(template.attr[selector[0]], selector[1])) ||
-                    (selector[0] === "id" && template.refId === selector[1])
-                );
-            } else if (isequal(selector[0], 'attr')) {
-                return (template.attr && template.attr.hasOwnProperty(selector[1]));
-            } else {
-                return isequal(selector[1], template.name);
-            }
-        }
-
-        for (var i = 0; i < templates.length; i++) {
-            var template = templates[i];
-            if (_selectable(template)) {
-                if (isequal(template.name, '#fragment')) {
-                    if (template.children) {
-                        template.children.forEach(callback);
-                    }
-                } else
-                    callback(template);
-            }
+        if (templates.hasOwnProperty(selector)) {
+            // initialize templates as function
+            templates[selector].forEach(tmpl => callback((isfunction(tmpl) ? tmpl() : tmpl)));
         }
     }
 }
 
 TemplateRef.factory = function(node, templateId, silent) {
-    var templates = node["[[TEMPLATES]]"];
+    var templates = node["[[tmpl]]"];
     if (!templates || !templates.hasOwnProperty(templateId)) {
         if (!silent) errorBuilder('No templates Defined #' + templateId);
         return null;

@@ -63,18 +63,18 @@ function rxNotify(subscription, model, ignoreCheck) {
     if (subscription.watchKey) {
         if (model) {
             var value;
-            if (isfunction(suscription.watchKey)) {
-                value = suscription.watchKey(model);
+            if (isfunction(subscription.watchKey)) {
+                value = subscription.watchKey(model);
             } else {
-                value = resolveValueFromContext(suscription.watchKey, model);
+                value = resolveValueFromContext(subscription.watchKey, model);
             }
 
-            if (suscription.core && isfunction(suscription.core)) {
-                if (suscription.core(value)) {
-                    _trigger(suscription.handler, value);
+            if (subscription.core && isfunction(subscription.core)) {
+                if (subscription.core(value)) {
+                    _trigger(subscription.handler, value);
                 }
-            } else if (ignoreCheck || _comparison(value, suscription)) {
-                _trigger(suscription.handler, value);
+            } else if (ignoreCheck || _comparison(value, subscription)) {
+                _trigger(subscription.handler, value);
             }
         }
     } else {
@@ -98,9 +98,6 @@ function _trigger(handlers, value) {
 }
 
 function _comparison(value, suscription) {
-    if (isobject(value)) {
-        value = hashcode(JSON.stringify(value));
-    }
     var noChanges = !isequal(value, suscription.lastValue);
     suscription.lastValue = value;
     return noChanges;

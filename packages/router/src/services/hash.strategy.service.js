@@ -1,24 +1,21 @@
 import { AbstractStrategy } from "./abstract.strategy";
-
-
-Service({
-    static: true
-})
+import { parseDelimeter } from "./utils";
 export function HashStrategyService(locationService) {
     AbstractStrategy.call(this, locationService);
-    var _this = this;
+    this.hashRegEx = new RegExp(parseDelimeter());
     /**
      * set the hash Functionality
      * First checked to see if window supports onhashchange Event
-     * @Function window.addEeventListener("haschange", callback ,false)
+     * @Function window.addEventListener("haschange", callback ,false)
      */
-    window.addEventListener("hashchange", function(e) {
-        var locHash = _this.path();
-        if (!locHash.length || !locationService.changed(locHash) || _this.isReplaceState) {
-            _this.isReplaceState = false;
+    window.addEventListener("hashchange", e => {
+        var locHash = location.hash.split(/#/)[1];
+        if (!locHash.length || !locationService.changed(locHash) || this.isReplaceState) {
+            this.isReplaceState = false;
             return;
         }
         //go to the required hash
+        e.preventDefault();
         locationService.go(locHash);
     }, false);
 }
@@ -35,10 +32,10 @@ HashStrategyService.prototype.replace = function() {
     }
 }
 
-HashStrategyService.prototype.pushState = function(path) {
-    history.pushState(null, '', '#' + path);
-}
-
-HashStrategyService.prototype.path = function() {
-    return location.hash.replace(/^#/, '');
+HashStrategyService.prototype.path = function(path) {
+    //construct location path
+    if (path) return routeConfig.delimiter.join(path);
+    // extract path from location
+    var execPath = this.hashRegEx.exec(location.hash);
+    return execPath ? execPath[1] : '';
 }

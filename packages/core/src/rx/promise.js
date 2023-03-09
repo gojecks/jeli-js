@@ -165,4 +165,4 @@ Promise2.all = function(resolve) {
             }
         }
     });
-};
+}

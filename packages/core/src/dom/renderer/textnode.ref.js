@@ -3,9 +3,9 @@
  * @param {*} definition
  * @param {*} parent 
  */
-function TextNodeRef(definition, parent) {
+export function TextNodeRef(definition, parent) {
     this.nativeNode = document.createTextNode(definition.ast[0]);
-    this.type = 'text';
+    this.type = 3;
     this.hasBinding = definition.ast.length > 1;
 
     if (this.hasBinding) {

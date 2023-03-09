@@ -21,21 +21,21 @@ import { isarray } from "js-helpers/helpers";
  */
 export function LazyLoader(dropZone) {
     this.dropZone = dropZone;
-    this.setPath = function(path) {
+    this.setPath = function (path) {
         this.sourcePath = path;
         return this;
     };
 }
 
-LazyLoader.prototype.js = function(obj, callback) {
+LazyLoader.prototype.js = function (obj, callback) {
     this._resolve(obj, callback, 'js');
 };
 
-LazyLoader.prototype.css = function(obj) {
+LazyLoader.prototype.css = function (obj) {
     this._resolve(obj, null, 'css')
 };
 
-LazyLoader.prototype.jscs = function(obj, callback) {
+LazyLoader.prototype.jscs = function (obj, callback) {
     for (var type in obj) {
         this._resolve(obj[type], callback, type);
     }
@@ -49,113 +49,84 @@ LazyLoader.prototype.jscs = function(obj, callback) {
  * @param {*} callback 
  * @param {*} type 
  */
-LazyLoader.prototype._resolve = function(filePaths, callback, type) {
-    var stack = [],
-        self = this;
-    //start the js process
-    if (typeof callback !== 'function') {
-        callback = function() {};
-    }
-
-    if (filePaths && isarray(filePaths) && filePaths.length > 0) {
-        for (var i = 0; i < filePaths.length; i++) {
-            /**
-             * check if file is already resolved else don't load
-             */
-            if (LazyLoader.cached.hasOwnProperty(filePaths[i])) {
-                break;
-            }
-
-            LazyLoader.cached[filePaths[i]] = "" + Math.random();
-            switch (type) {
-                case ('css'):
-                    _createCss(filePaths[i]);
-                    break;
-                case ('js'):
-                    _createJs(filePaths[i]);
-                    break;
-            };
-        }
-
-        if (type === 'js' && stack.length) {
-            process(callback);
-        } else {
-            callback();
-        }
-    }
-
-    /**
-     * 
-     * @param {*} cssPath 
-     */
-    function _createCss(cssPath) {
-        var styleElement = document.createElement('link');
-        styleElement.setAttribute('type', 'text/css');
-        styleElement.setAttribute('href', clink(cssPath));
-        styleElement.setAttribute('rel', 'stylesheet');
-        styleElement.setAttribute('id', LazyLoader.cached[cssPath]);
-        append(styleElement);
-    }
-
-    /**
-     * 
-     * @param {*} jsPath 
-     */
-    function _createJs(jsPath) {
-        var scriptElement = document.createElement('script');
-        scriptElement.setAttribute('src', clink(jsPath));
-        scriptElement.setAttribute('type', 'text/javascript');
-        scriptElement.async = true;
-        scriptElement.setAttribute('id', LazyLoader.cached[jsPath]);
-        stack.push(scriptElement);
-    }
-
+LazyLoader.prototype._resolve = function (filePaths, callback, type) {
+    var totalFiles = 0,resolved = 0;
     /**
      * path generator
      * @param {*} path 
      */
-    function clink(path) {
+    var clink = (path) => {
         if (path.includes("//")) {
             return path;
         }
 
-        return [self.sourcePath, path, ".", type].join('');
+        return [this.sourcePath, path, ".", type].join('');
     }
 
-    /**
-     * function to append the created element to dom
-     * @param {*} scriptElement 
-     */
-    function append(scriptElement) {
-        (self.dropZone || document.getElementsByTagName('head')[0]).appendChild(scriptElement);
+    //start the js process
+    if (typeof callback !== 'function') {
+        callback = function () { };
     }
 
-    /**
-     * 
-     * @param {*} isCallback 
-     */
-    function process(isCallback) {
-        var currentElement = stack.shift();
-        append(currentElement);
-        currentElement.onreadystatechange = currentElement.onload = function() {
-            var state = currentElement.readyState;
-            if (!isCallback.done && (!state || /loaded|complete/.test(state))) {
-                if (stack.length) {
-                    process(isCallback);
-                } else {
-                    isCallback.done = true;
-                    //trigger callback
-                    isCallback();
-                }
+    if (Array.isArray(filePaths)) {
+        for (var filePath of filePaths) {
+            /**
+             * check if file is already resolved else don't load
+             */
+            if (LazyLoader.cached.includes(filePath)) {
+                break;
+            }
+            
+            totalFiles++;
+            LazyLoader.cached.push(filePath);
+            var element = _createElement(filePath, type);
+            attachListener(element);
+            (this.dropZone || document.getElementsByTagName('head')[0]).appendChild(element);
+        }
+    }
+
+    function _createElement(filePath, type) {
+        var element = null;
+        if (type === 'js') {
+            element = document.createElement('script');
+            element.src = clink(filePath)
+           // element.type = "module";
+        } else {
+            element = document.createElement('link');
+            element.setAttribute('type', 'text/css');
+            element.setAttribute('href', clink(filePath));
+            element.setAttribute('rel', 'stylesheet');
+        }
+
+        element.charset = "utf-8";
+        element.timeout = 120;
+        element.async = true;
+        return element;
+    }
+
+    function attachListener(element) {
+        element.onreadystatechange = element.onload = function () {
+            var state = element.readyState;
+            resolved++;
+            if (!state || /loaded|complete/.test(state)) {
+                triggerCallack();
+                element.parentNode.removeChild(element);
             }
         };
-    };
+    }
+
+    function triggerCallack(){
+        if (totalFiles == resolved)
+            callback();
+    }
+
+    triggerCallack();
 }
 
 /**
  * static property for holding already resolve paths
  */
-LazyLoader.cached = {};
-LazyLoader.staticLoader = function() {
+LazyLoader.cached = [];
+LazyLoader.staticLoader = function () {
     LazyLoader.prototype._resolve.apply({}, arguments);
 }

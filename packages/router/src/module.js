@@ -6,9 +6,11 @@ import { ViewIntentService } from './services/intent.service';
 import { ViewHandler } from './services/jWebViewHandler.service';
 import { WebStateService } from './services/jwebstate.service';
 import { APP_BOOTSTRAP } from '@jeli/core';
-import './services/utils';
 import { RouterInitService } from './services/router.init.service';
 import { LocationService } from './services/route.location.service';
+import  './services/hash.strategy.service';
+import './services/path.strategy.service';
+import './services/utils';
 
 // jeli route manager
 // created 10-11-15 7:00pm
@@ -33,10 +35,18 @@ jModule({
     ]
 })
 export function RouterModule() {}
-RouterModule.setRoutes = function(routes, elements) {
+RouterModule.setRoutes = function(routes) {
     if (Array.isArray(routes)) {
-        routes.forEach(function(route) { setupRoutes(route, elements); });
+        routes.forEach(route => setupRoute(route));
     } else {
-        setupRoutes(routes, elements);
+        setupRoute(routes);
     }
 };
+
+RouterModule.lazyLoad = function(routes){
+    if (Array.isArray(routes))  {
+        routes.forEach(lazyLoadRoute);
+    } else {
+        lazyLoadRoute(routes);
+    }
+}

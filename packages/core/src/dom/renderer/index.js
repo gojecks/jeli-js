@@ -1,31 +1,50 @@
 import { scheduler } from "../../utils/scheduler";
+import { ElementRef } from "./element.ref";
 import { TemplateRef } from "./templateref";
 
-export var ViewParser = function() {
-
-    function JSONCompiler() {
+export var ViewParser = function () {
+    function JSONCompiler(templates) {
+        var fragment = document.createDocumentFragment();
         /**
          * 
-         * @param {*} parent 
+         * @param {*} elementRef 
          * @param {*} viewChild 
          */
-        var fragment = document.createDocumentFragment();
-        this.compile = function(transpiledHTML, parent) {
+        this.compile = function (transpiledHTML, elementRef) {
             for (var i = 0; i < transpiledHTML.length; i++) {
-                var compiled = ViewParser.builder[transpiledHTML[i].type](transpiledHTML[i], parent, this);
+                var compiled = ViewParser.builder[transpiledHTML[i].type](transpiledHTML[i], elementRef, this);
                 if (compiled) {
                     this.pushToView(compiled);
                 }
             }
 
             return fragment;
-        }
+        };
 
-        this.pushToView = function(compiled) {
+        /**
+         * 
+         * @param {*} compiled 
+         */
+        this.pushToView = function (compiled) {
             compiled.parent && compiled.parent.children.add(compiled);
             fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
             transverse(compiled);
         };
+
+        /**
+         * 
+         * @param {*} tid 
+         * @param {*} mtl 
+         * @returns 
+         */
+        this._GT = function (tid, mtl) {
+            // extract the templates
+            if (mtl && mtl.type) return mtl;
+            var tmpl = templates(tid);
+            if (!tmpl) return null;
+            if (mtl) return Object.assign(mtl, tmpl);
+            return (typeof tmpl === 'object') ? tmpl : tmpl();
+        }
     }
 
 
@@ -48,8 +67,7 @@ export var ViewParser = function() {
                 var childDefinition = (typeof definition.children[i] === 'function' ? definition.children[i]() : definition.children[i]);
                 if (!childDefinition) continue;
                 // conditional template checker
-                childDefinition.appendToParent = true;
-                var child = ViewParser.builder[childDefinition.type](childDefinition, elementRef, viewContainer, context);
+                var child = ViewParser.builder[childDefinition.type](childDefinition, elementRef, viewContainer, context, true);
                 if (child) {
                     pushToParent(child, elementRef, i);
                 }
@@ -93,20 +111,21 @@ export var ViewParser = function() {
     }
 
     /**
-     * <j-template #testContent></j-template>
+     * <j-place selector=refId|attr|tag|*></j-template>
+     * render light dom in shadow dom
      * @param {*} definition
      * @param {*} parent
      * @param {*} viewContainer
      * @param {*} context
+     * @param {*} appendToParent
      */
-    function place(definition, parent, viewContainer, context) {
+    function place(definition, parent, viewContainer, context, appendToParent) {
         var hostRef = parent.hostRef;
-        var appendToParent = definition.appendToParent;
         var createPlaceElement = !(viewContainer || appendToParent);
         var template = TemplateRef.factory(hostRef, 'place', true);
         var placeElement = (createPlaceElement) ? new AbstractElementRef({
-            name: "#fragment",
-            type: "element"
+            name: "#",
+            type: 11
         }, hostRef) : null
 
         /**
@@ -133,11 +152,11 @@ export var ViewParser = function() {
         }
 
         if (template) {
-            template.forEach(definition.selector, createAndAppend);
+            template.forEach(definition.refId, createAndAppend);
         }
 
         return placeElement;
-    };
+    }
 
     /**
      * <j-fragment {template}="binding" />
@@ -153,10 +172,12 @@ export var ViewParser = function() {
     function outlet(def, parent, viewContainer, context) {
         var currentValue = null;
         var element = null;
+        var unsubscribeScheduler = noop();
 
         function checkAndCompileTemplate(fromObserver) {
-            var templateId = getFilteredTemplateValue(def.$templateId, context, parent.componentInstance);
+            var templateId = getFilteredTemplateValue(def.$templateId, context || parent.context, parent.componentInstance);
             if (currentValue != templateId) {
+                unsubscribeScheduler();
                 currentValue = templateId;
                 var template = def._GT && def._GT(templateId);
                 if (template) {
@@ -166,7 +187,7 @@ export var ViewParser = function() {
                         return element;
 
                     // process  and replace
-                    scheduler.schedule(function() {
+                    unsubscribeScheduler = scheduler.schedule(function () {
                         transverse(element);
                         replaceElement(oldElement, element);
                         oldElement = null;
@@ -182,10 +203,10 @@ export var ViewParser = function() {
              */
             if (!def.context) {
                 ObserveUntilDestroyed(parent, {
-                    next: function() {
+                    next: function () {
                         checkAndCompileTemplate(true);
                     },
-                    done: function() {
+                    done: function () {
                         element = null;
                     }
                 });
@@ -200,11 +221,11 @@ export var ViewParser = function() {
     return {
         JSONCompiler: JSONCompiler,
         builder: {
-            element: element,
-            text: text,
-            place: place,
-            outlet: outlet,
-            comment: comment
+            1: element,
+            3: text,
+            11: place,
+            13: outlet,
+            8: comment
         }
     };
 }();
@@ -214,8 +235,8 @@ export var ViewParser = function() {
  * @param {*} node
  */
 function transverse(node) {
+    if (node._lazyCompiled) return;
     if (node instanceof AbstractElementRef) {
-        if (node._lazyCompiled) return;
         if (node.providers && node.providers.length) {
             ElementCompiler.resolve(node, proceedWithCompilation);
         } else {
@@ -230,7 +251,7 @@ function transverse(node) {
      * @param {*} node 
      */
     function proceedWithCompilation(node) {
-        if (isequal(node.nativeElement.nodeType, 8)) {
+        if (isequal(node.type, 8)) {
             return;
         };
         /**

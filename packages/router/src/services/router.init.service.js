@@ -12,11 +12,7 @@ export function RouterInitService(locationService) {
      */
     var path = "";
     if (routeConfig.restoreOnRefresh) {
-        if (routeConfig.useHash) {
-            path = (location.hash || '').replace('#', '');
-        } else {
-            path = location.pathname;
-        }
+        path = locationService.strategy.path();
     }
 
     /**

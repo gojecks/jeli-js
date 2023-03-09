@@ -77,6 +77,7 @@ export function ProviderToken(tokenName, multiple, provide) {
  * @param {*} localInjector 
  */
 export function Inject(dep, localInjector) {
+    if (!dep) return null;
     if (dep.instance) {
         return dep.instance;
     } else if (dep instanceof ProviderToken) {
@@ -87,15 +88,15 @@ export function Inject(dep, localInjector) {
         /**
          * static dep
          */
-        if (!dep.annotations) {
+        if (!dep.ctors) {
             return resolveClosureRef(dep);
         }
 
-        var instance = dep.annotations.instance;
+        var instance = dep.ctors.instance;
         if (!instance) {
             instance = AutoWire(resolveClosureRef(dep), localInjector);
-            if (!dep.annotations.noSingleton) {
-                dep.annotations.instance = instance;
+            if (!dep.ctors.noSingleton) {
+                dep.ctors.instance = instance;
             }
         }
 
@@ -114,7 +115,7 @@ export function Inject(dep, localInjector) {
  */
 export function AutoWire(factory, localInjector, callback) {
     if (isfunction(factory)) {
-        var deps = resolveDeps(factory.annotations && factory.annotations.DI, localInjector);
+        var deps = resolveDeps(factory.ctors && factory.ctors.DI, localInjector);
         //initialize the defined function
         //only initializes when its defined
         var protos = Object.create(factory.prototype);
@@ -216,7 +217,7 @@ function resolveReference(reference, localInjector) {
          * at this stage the reference is not resolved
          * cases apply to directive and component or services that re not registered to a module
          */
-        else if (reference.annotations) {
+        else if (reference.ctors) {
             existingInstance.set(reference, null);
             return function() {
                 return existingInstance.get(reference);

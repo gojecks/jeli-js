@@ -24,6 +24,7 @@ function getFilteredTemplateValue(templateModel, context, componentInstance) {
     var value = resolveValueFromContext(templateModel.prop, context, componentInstance);
     if (templateModel.fns) {
         value = templateModel.fns.reduce(function(accum, filterClass, idx) {
+            if (!filterClass) return accum;
             var filterArgs = [];
             if (templateModel.args[idx])
                 filterArgs = generateArguments(templateModel.args[idx], context, componentInstance);

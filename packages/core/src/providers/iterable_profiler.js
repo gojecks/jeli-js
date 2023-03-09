@@ -14,8 +14,8 @@ export function IterableProfiler(trackBy) {
     this.cacheHash = [];
     this.out = null;
     this.trackBy = trackBy || function(item, index) {
-        return item;
-    }
+        return item || index;
+    };
 }
 
 IterableProfiler.prototype.diff = function(source) {

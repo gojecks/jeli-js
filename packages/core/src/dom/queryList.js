@@ -2,28 +2,25 @@ import { Subject } from '../rx/subject';
 import { removeFromArray, addToArray } from 'js-helpers/helpers';
 
 export function QueryList() {
-    this._list = [];
     Object.defineProperties(this, {
-        length: {
-            get: function() {
-                return this._list.length;
-            }
-        },
         first: {
             get: function() {
-                return this._list[0];
+                return this[0];
             }
         },
         last: {
             get: function() {
-                return this._list[this.length - 1];
+                return this[this.length - 1];
             }
         }
     });
 }
+// extend Array Method
+QueryList.constructor = Array;
+QueryList.prototype = Object.create(Array.prototype);
 
 QueryList.prototype.add = function(element, index, emitEvent) {
-    addToArray(this._list, element, index);
+    addToArray(this, element, index);
     if (emitEvent) {
         this.onChanges.next({
             value: element,
@@ -34,9 +31,9 @@ QueryList.prototype.add = function(element, index, emitEvent) {
 }
 
 QueryList.prototype.replace = function(from, to, emitEvent) {
-    var index = this.findIndex(from);
+    var index = this.indexOf(from);
     if (index > -1) {
-        this._list[index] = to;
+        this[index] = to;
     }
 
     if (emitEvent) {
@@ -48,76 +45,40 @@ QueryList.prototype.replace = function(from, to, emitEvent) {
     }
 }
 
-QueryList.prototype.findIndex = function(element) {
-    return this._list.findIndex(function(elem) {
-        return element === elem;
-    });
-}
-
 QueryList.prototype.get = function(element) {
     if (element) {
-        return this._list.find(function(ele) {
+        return this.find(function(ele) {
             return ele === element;
         });
     }
 
-    return this._list;
-};
-
-QueryList.prototype.filter = function(callback) {
-    return this._list.filter(callback);
-};
-
-QueryList.prototype.forEach = function(callback) {
-    this._list.forEach(callback);
-};
-
-QueryList.prototype.reduce = function(callback, accumulator) {
-    return this._list.reduce(callback, accumulator);
-};
-
-QueryList.prototype.some = function(callback) {
-    return this._list.some(callback);
-};
-
-QueryList.prototype.map = function(callback) {
-    return this._list.map(callback);
+    return this;
 };
 
 QueryList.prototype.getByIndex = function(index) {
-    return this._list[index];
-};
-
-QueryList.prototype.find = function(callback) {
-    return this._list.find(callback);
-};
-
-QueryList.prototype.toString = function() {
-    return JSON.stringify(this._list);
-};
+    return this[index];
+}
 
 QueryList.prototype.destroy = function() {
-    while (this._list.length) {
-        var element = this._list.pop();
+    while (this.length) {
+        var element = this.pop();
         if (element) removeElement(element);
     }
     this.onChanges.destroy();
 };
 
 QueryList.prototype.remove = function(element) {
-    var index = this._list.findIndex(function(ele) {
-        return ele === element;
-    });
+    var index = this.indexOf(element);
 
     return this.removeByIndex(index);
 };
 
 QueryList.prototype.hasIndex = function(index) {
-    return this._list.length - 1 > index;
+    return this.length - 1 > index;
 }
 
 QueryList.prototype.removeByIndex = function(index) {
-    var element = removeFromArray(this._list, index);
+    var element = removeFromArray(this, index);
     this.onChanges.next({
         value: element,
         index: index,
@@ -128,3 +89,15 @@ QueryList.prototype.removeByIndex = function(index) {
 };
 
 QueryList.prototype.onChanges = new Subject();
+
+QueryList.from = function(iterable){
+    if (!Array.isArray(iterable)) throw new Error(typeof iterable + ' ' + iterable + ' is not iterable');
+    var instance = new QueryList(iterable);
+    // push all values
+    iterable.forEach(it => instance.push(it));
+    return instance;
+}
+
+QueryList.is = function(instance) {
+    return instance instanceof QueryList;
+}

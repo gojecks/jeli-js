@@ -13,6 +13,7 @@ function AbstractElementRef(definition, parentRef) {
     /**
      * extend the definition
      */
+    var locaVariables = null;
     this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
     this.$observers = [];
     this.refId = '__eid_' + $eUID++;
@@ -25,18 +26,29 @@ function AbstractElementRef(definition, parentRef) {
     this.attr = definition.attr;
     this.props = definition.props;
     this.isc = definition.isc;
-    this.hasContext = ((!!definition.context) || (!definition.isc && parentRef && parentRef.hasContext));
+    this.hasContext = (!!definition.context || (!definition.isc && parentRef && parentRef.hasContext));
     if (definition.providers) {
         this.providers = definition.providers;
         this.nodes = new Map();
     }
 
+    /**
+     * compile local vairables if defined
+     */
+    if (definition.ctx$) {
+        locaVariables = createLocalVariables(definition.ctx$, parentRef.context, parentRef.componentInstance);
+    }
+
     Object.defineProperties(this, {
         context: {
             get: function() {
+                // template context
+                if (locaVariables) return locaVariables;
+                // component context or custom context
                 if (componentDebugContext.has(this.refId)) {
                     return componentDebugContext.get(this.refId).context;
                 }
+                // parent context
                 return this.parent && this.parent.context;
             }
         },
@@ -61,28 +73,35 @@ function AbstractElementRef(definition, parentRef) {
                 return this.parent && this.parent.hostRef;
             }
         },
-        "[[TEMPLATES]]": {
+        "[[tmpl]]": {
             get: function() {
                 return definition.templates;
             }
         },
         nativeNode: {
             get: function() {
-                return this.nativeElement.nodeType === 8 ? this.nativeElement : null;
+                return this.type === 8 ? this.nativeElement : null;
             }
         },
         data: {
             get: function() {
                 return definition.data;
             }
+        },
+        cq: {
+            get: function(){
+                return definition.cq;
+            }
         }
     });
 
-    Object.defineProperty(this.nativeElement, $elementContext, {
-        get: () => {
-            return this;
-        }
-    });
+    if (11 !== this.nativeElement.nodeType) {
+        Object.defineProperty(this.nativeElement, $elementContext, {
+            get: () => {
+                return this;
+            }
+        });
+    }
 };
 
 AbstractElementRef.prototype.hasAttribute = function(name) {

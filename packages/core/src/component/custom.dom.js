@@ -1,3 +1,4 @@
+import {ElementRef} from '../dom/renderer/element.ref';
 /**
  * 
  * @param {*} componentClass 
@@ -8,7 +9,7 @@ export function bootstrapFromDOM(componentClass, selector, callback) {
     var elementRef = new ElementRef({
         name: selector,
         isc: true,
-        type: 'element',
+        type: 1,
         fromDOM: true
     }, null);
 

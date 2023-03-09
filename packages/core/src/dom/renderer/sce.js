@@ -2,7 +2,7 @@ export var sce = (function() {
     // trustAsHTML
     // this prevents any overhead from creating the object each time
     var element = document.createElement('div');
-
+    
     function htmlEscape(str) {
         return str
             .replace(/&/g, '&amp;')

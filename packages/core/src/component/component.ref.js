@@ -17,7 +17,7 @@ function InternalChangeDetector(context) {
         if (this._changeDetectorState == 3) {
             tick.apply(null, arguments);
         }
-    };
+    }
 
     /**
      * @method tick
@@ -53,7 +53,7 @@ function InternalChangeDetector(context) {
                 var refId = children[i];
                 if (!ignore.includes(refId) && componentDebugContext.has(refId)) {
                     var child = componentDebugContext.get(refId);
-                    child.changeDetector.detectChanges(false, true);
+                    child.changeDetector.onlySelf();
                 }
             }
         }
@@ -67,6 +67,7 @@ InternalChangeDetector.prototype.onlySelf = function() {
 InternalChangeDetector.prototype.markAsChecked = function() {
     this._changeDetectorState = 1;
 };
+
 InternalChangeDetector.prototype.markAsUnChecked = function() {
     this._changeDetectorState = 3;
 };

@@ -2,6 +2,7 @@ import { AbstractInjectorInstance } from '../dependency.injector';
 export var staticInjectionToken = {
     ElementRef: 'ElementRef',
     TemplateRef: 'TemplateRef',
+    ContentData: 'ContentData',
     changeDetector: 'changeDetector',
     ViewRef: 'ViewRef',
     ParentRef: 'ParentRef',

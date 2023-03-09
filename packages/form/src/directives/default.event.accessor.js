@@ -8,7 +8,7 @@ export var ResolveDefaultBinder = {
     })
 };
 Directive({
-    selector: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl]',
+    selector: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl],input:list:[model|formField|fieldControl]',
     events: [
         "input:event=onChange($event.target.value)",
         "blur:event=onBlur($event)"

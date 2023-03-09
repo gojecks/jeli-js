@@ -2,12 +2,14 @@ import { isequal, isfunction } from 'js-helpers/helpers';
 import { isequal } from 'js-helpers/helpers';
 import { staticInjectionToken } from '../../component/injectors';
 import { AttributeAppender } from '../attribute';
+import { QueryList } from '../queryList';
+import { TemplateRef } from './templateref';
 /**
  * 
  * @param {*} nativeElement 
  * @param {*} callback 
  */
-function elementMutationObserver(nativeElement, callback) {
+export function elementMutationObserver(nativeElement, callback) {
     // Create an observer instance linked to the callback function
     var observer = new MutationObserver(function(mutationsList, observer) {
         if (mutationsList.length) {
@@ -17,7 +19,75 @@ function elementMutationObserver(nativeElement, callback) {
 
     // Start observing the target node for configured mutations
     observer.observe(nativeElement, { attributes: false, childList: true, subtree: true });
-};
+}
+
+/**
+ * Process light dom attachment
+ * @param {*} elementRef 
+ */
+function AttachComponentContentQuery(elementRef){
+    var querySet = elementRef.cq;
+    if (querySet){
+        var componentInstance = elementRef.componentInstance;
+        var props = Object.keys(querySet);
+        props.forEach(attachQueryValue);
+        /**
+         * 
+         * @param {*} prop 
+         */
+        function attachQueryValue(prop){
+            var mapping = querySet[prop];
+            var value = null;
+            // sinlgleton mapping
+            if (!mapping[3]){
+                if (Array.isArray(mapping[2])) {
+                    value = QueryList.from(mapping[2].map(ast => processTmpl(ast, mapping[0])));
+                } else {
+                   value = processTmpl(mapping[2], mapping[0]);
+                }
+
+                // preserve the generated value
+                if (mapping[0] === staticInjectionToken.TemplateRef){
+                    mapping[2] = value;
+                    mapping[3] = true;
+                }
+            } else {
+                value = mapping[2];
+            }
+
+            // attach the content child value
+            componentInstance[prop] = value;
+            value = null;
+        }
+
+        /**
+         * 
+         * @param {*} ast 
+         * @param {*} type 
+         */
+        function processTmpl(ast, type){
+            // structural element
+            switch(type) {
+                case(staticInjectionToken.TemplateRef):
+                    return new TemplateRef(ast, true);
+                case(staticInjectionToken.ContentData):
+                    return {}
+            }
+        }
+
+        // attach element obsserver
+        // clean up all mappings
+        attachElementObserver(elementRef, function(){
+            props.forEach(prop => {
+                if (QueryList.is(componentInstance[prop])) {
+                    componentInstance[prop].destroy();
+                } else {
+                    componentInstance[prop] = null;
+                }
+            })
+        });
+    }
+}
 
 /**
  * 
@@ -66,10 +136,10 @@ function addViewQuery(hostElement, option, childElement) {
  * @param {*} targetNode 
  * @returns 
  */
-function elementInsertAfter(hostElement, newNode, targetNode) {
+function elementInsertAfter(hostElement, newNode, targetNode, ignoreDetector) {
     if (!targetNode || !targetNode.parentNode) return;
     targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
-    hostElement.changeDetector.detectChanges();
+    if (!ignoreDetector) hostElement.changeDetector.onlySelf();
 }
 
 /**
@@ -79,7 +149,7 @@ function elementInsertAfter(hostElement, newNode, targetNode) {
  */
 function replaceElement(fromElement, toElement) {
     var targetNode = fromElement.nativeElement;
-    if (Node.DOCUMENT_FRAGMENT_NODE === targetNode.nodeType) {
+    if (11 === targetNode.nodeType) {
         targetNode = fromElement.children.first.nativeElement;
     }
     fromElement.parent.children.replace(fromElement, toElement, true);
@@ -105,7 +175,7 @@ function removeElement(elementRef, removeFromParent) {
         }
 
         cleanupElementRef(elementRef);
-    } else {
+    } else if(elementRef instanceof TextNodeRef){
         elementRef.nativeNode.remove();
     }
 }
@@ -115,7 +185,7 @@ function removeElement(elementRef, removeFromParent) {
  * from the DOM
  * remove all watchList
  * Destroy Model observer if any
- * 
+ * @param {*} element
  * @param {*} onDestroyListener
  */
 function attachElementObserver(element, onDestroyListener) {
@@ -129,7 +199,7 @@ function attachElementObserver(element, onDestroyListener) {
  * @param {*} elementRef 
  * @param {*} eventListener 
  */
-function ObserveUntilDestroyed(elementRef, eventListener) {
+export function ObserveUntilDestroyed(elementRef, eventListener) {
     if (elementRef.hostRef) {
         var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, eventListener.next);
         attachElementObserver(elementRef, function() {
@@ -211,9 +281,9 @@ function createElementByType(tag, text, fromDOM) {
     }
 
     switch (tag) {
-        case ('#comment'):
+        case ('##'):
             return document.createComment(text);
-        case ('#fragment'):
+        case ('#'):
             return document.createDocumentFragment();
         default:
             return document.createElement(tag);
@@ -227,7 +297,8 @@ function createElementByType(tag, text, fromDOM) {
  */
 function setupAttributeObservers(element, attrObservers) {
     var observerStarted = false;
-    attachElementObserver(element, SubscribeObservables(element.hostRef.refId, observe));
+    var unsubscribe = SubscribeObservables(element.hostRef.refId, observe);
+    attachElementObserver(element, unsubscribe);
 
     function observe() {
         for (var propName in attrObservers) {
@@ -235,7 +306,7 @@ function setupAttributeObservers(element, attrObservers) {
              * remove the config
              */
             if (attrObservers[propName].once && observerStarted) {
-                break;
+                return;
             }
             attributeEvaluator(propName, attrObservers[propName]);
         }
@@ -263,7 +334,7 @@ function setupAttributeObservers(element, attrObservers) {
  * 
  * @param {*} localVariables 
  */
-function createLocalVariables(localVariables, localContext, parentContext) {
+export function createLocalVariables(localVariables, localContext, parentContext) {
     var context = {};
     if (localVariables) {
         for (var propName in localVariables) {
@@ -295,5 +366,6 @@ function createLocalVariables(localVariables, localContext, parentContext) {
  */
 export var DOMHelper = {
     insert: elementInsertAfter,
-    remove: removeElement
+    remove: removeElement,
+    replace: replaceElement
 };
