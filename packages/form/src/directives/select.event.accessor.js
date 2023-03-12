@@ -60,17 +60,16 @@ SelectEventBinder.prototype._handleSelection = function(value) {
 
 SelectEventBinder.prototype.writeValue = function(value) {
     this.selectedValue = value;
-    var _this = this;
     if (!this.element.hasAttribute('multiple')) {
-        var optionId = this._getOptionId(value);
-        if (optionId === null) {
-            AttributeAppender.setProp(this.element.nativeElement, 'selectedIndex', -1);
+        var currentSelectedValue = this.element.nativeElement.value
+        if (!this._compare(this._getOptionValue(currentSelectedValue), value)) {
+            var optionId = this._getOptionId(value);
+            AttributeAppender.setProp(this.element.nativeElement, 'value', _buildValueToString(optionId, value));
         }
-        AttributeAppender.setProp(this.element.nativeElement, 'value', _buildValueToString(optionId, value));
     } else {
         var markAsSelected = function(opt) { AttributeAppender.setProp(opt, 'selected', false); };
         if (Array.isArray(value)) {
-            var optionIds = value.map(function(v) { return _this._getOptionId(v) || v; });
+            var optionIds = value.map(v => (this._getOptionId(v) || v));
             markAsSelected = function(opt) {
                 AttributeAppender.setProp(opt, 'selected', inarray(opt.value, optionIds));
             };
@@ -104,8 +103,8 @@ SelectEventBinder.prototype.genOptionId = function() {
 
 SelectEventBinder.prototype._getOptionId = function(value) {
     var keys = this._optionValueMap.keys();
-    for (var i in keys) {
-        if (this._compare(this._optionValueMap.get(keys[i]), value)) return keys[i];
+    for (var key of keys) {
+        if (this._compare(this._optionValueMap.get(key), value)) return key;
     }
 
     return null;
@@ -125,11 +124,14 @@ Directive({
 export function OptionDirective(selectInstance, elementRef) {
     if (selectInstance) this.id = selectInstance.genOptionId();
     // getterSetter for value and jValue
+    this._value = null;
     Object.defineProperty(this, 'value', {
         set: function(value) {
             this.setValue(value);
             if (selectInstance) selectInstance.writeValue(selectInstance.selectedValue);
-        }
+            this._value = value;
+        },
+        get: ()  => this._value
     });
 
     Object.defineProperty(this, 'jValue', {
@@ -138,11 +140,15 @@ export function OptionDirective(selectInstance, elementRef) {
             selectInstance._optionValueMap.set(this.id, value);
             this.setValue(_buildValueToString(this.id, value));
             selectInstance.writeValue(selectInstance.selectedValue);
-        }
+            this._value = value;
+        },
+        get: ()  => this._value
     });
 
     this.setValue = function(value) {
-        AttributeAppender.setProp(elementRef.nativeElement, 'value', value);
+        if (value && typeof value !== 'object') {
+            AttributeAppender.setProp(elementRef.nativeElement, 'value', value);
+        }
     };
 
     this.viewDidDestroy = function() {
