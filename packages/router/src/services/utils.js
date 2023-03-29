@@ -1,4 +1,4 @@
-import { extend, unserialize } from 'js-helpers/utils';
+import { extend, unserialize } from '@jeli/helpers/utils';
 import { ProviderToken, errorBuilder } from '@jeli/core';
 
 export var ROUTE_INTERCEPTOR = new ProviderToken('RouteInterceptor', true);

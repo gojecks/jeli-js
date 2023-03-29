@@ -1,4 +1,4 @@
-import { isobject, isequal } from 'js-helpers/helpers';
+import { isobject, isequal } from '@jeli/helpers';
 import { TemplateRef } from '../dom/renderer/templateref';
 import { staticInjectionToken } from './injectors';
 import { LifeCycleConst } from './lifecycle';

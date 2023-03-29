@@ -1,5 +1,5 @@
 import { scheduler } from '../../utils/scheduler';
-import { removeFromArray, addToArray } from 'js-helpers/helpers';
+import { removeFromArray, addToArray } from '@jeli/helpers';
 /**
  * Element ViewRef
  */

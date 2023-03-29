@@ -1,5 +1,5 @@
-import { serialize } from 'js-helpers/utils';
-import { isobject, isundefined, isstring } from 'js-helpers/helpers';
+import { serialize } from '@jeli/helpers/utils';
+import { isobject, isundefined, isstring } from '@jeli/helpers';
 
 /**
  * unsafe http headers

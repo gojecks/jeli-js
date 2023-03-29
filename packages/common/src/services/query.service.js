@@ -1,4 +1,4 @@
-import { isarray, isobject } from 'js-helpers/helpers';
+import { isarray, isobject } from '@jeli/helpers';
 
 Service()
 

@@ -1,4 +1,4 @@
-import { isarray } from "js-helpers/helpers";
+import { isarray } from "@jeli/helpers";
 
 /**
  * LazyLoader class

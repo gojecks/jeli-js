@@ -1,4 +1,4 @@
-import { isobject, isfunction, isundefined } from "js-helpers/helpers";
+import { isobject, isfunction, isundefined } from "@jeli/helpers";
 
 Service({
     name: 'filter'

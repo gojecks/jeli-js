@@ -1,4 +1,4 @@
-import { isfunction } from 'js-helpers/helpers';
+import { isfunction } from '@jeli/helpers';
 
 export var LifeCycleConst = {
     willObserve: 0,

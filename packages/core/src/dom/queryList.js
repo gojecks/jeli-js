@@ -1,5 +1,5 @@
 import { Subject } from '../rx/subject';
-import { removeFromArray, addToArray } from 'js-helpers/helpers';
+import { removeFromArray, addToArray } from '@jeli/helpers';
 
 export function QueryList() {
     Object.defineProperties(this, {

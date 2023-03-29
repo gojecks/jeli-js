@@ -1,5 +1,5 @@
-import { isequal, isfunction } from 'js-helpers/helpers';
-import { isequal } from 'js-helpers/helpers';
+import { isequal, isfunction } from '@jeli/helpers';
+import { isequal } from '@jeli/helpers';
 import { staticInjectionToken } from '../../component/injectors';
 import { AttributeAppender } from '../attribute';
 import { QueryList } from '../queryList';

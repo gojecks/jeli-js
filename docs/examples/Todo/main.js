@@ -3,7 +3,7 @@
     /** trigged factory **/ 
     factory(__required);
 }(function(__required) {
-    var core = __required(1153);
+    var core = __required(1133);
 var bootStrapApplication = core.bootStrapApplication;
 var AppModule = __required(1165, 'AppModule');
 bootStrapApplication(AppModule);
@@ -39,8 +39,8 @@ bootStrapApplication(AppModule);
         scriptElement.src = path;
         scriptElement.type = "module";
         scriptElement.async = true;
-        scriptElement.charset = "utf-8",
-        scriptElement.timeout = 120,
+        scriptElement.charset = "utf-8";
+        scriptElement.timeout = 120;
         (document.getElementsByTagName('head')[0]).appendChild(scriptElement);
         if (0 > scriptElement.src.indexOf(window.location.origin + "/")) {
             scriptElement.crossOrigin = "use-credentials"
@@ -256,511 +256,61 @@ exports.inarray = __required(1117, 'default');
 },
 1133 : (module, exports, __required, global) => {
 "use strict";
-exports.default = function () {
-    return {
-        encode: function (str) {
-            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
-                return String.fromCharCode('0x' + p1);
-            }));
-        },
-        decode: function (str) {
-            return decodeURIComponent(Array.prototype.map.call(atob(str), function (c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-        }
-    };
-}
-},
-1134 : (module, exports, __required, global) => {
-"use strict";
-exports.default = function (str) {
-    return str(/^([A-Z])|[\s-_](\w)/g, function (match, p1, p2, offset) {
-        if (p2) {
-            return p2.toUpperCase();
-        }
-        return p1.toLowerCase();
-    });
-}
-},
-1135 : (module, exports, __required, global) => {
-"use strict";
-var camelCase = __required(1134, 'default');
-exports.default = function (str) {
-    return str.charAt(0).toUpperCase() + camelCase(str.substring(1));
-}
-},
-1136 : (module, exports, __required, global) => {
-"use strict";
-exports.default = function (str) {
-    return str.split('').map(function (char, idx) {
-        if (/[A-Z]/.test(char)) {
-            return '-' != str[idx - 1] ? '-' + char.toLowerCase() : char.toLowerCase();
-        }
-        return char;
-    }).join('');
-}
-;
-},
-1137 : (module, exports, __required, global) => {
-"use strict";
-exports.default = function (name, value) {
-    if (typeof value != 'undefined') {
-        setCookie.apply(null, arguments);
-    } else {
-        return getCookie(name);
-    }
-}
-;
-function setCookie(name, value, options) {
-    options = options || {};
-    if (value === null) {
-        value = '';
-        options.expires = -1;
-    }
-    var expires = '', isNumberExpires = typeof options.expires === 'number';
-    if (options.expires && (isNumberExpires || options.expires.toUTCString)) {
-        var date;
-        if (isNumberExpires) {
-            date = new Date();
-            date.setTime(date.getTime() + options.expires * 24 * 60 * 60 * 1000);
-        } else {
-            date = options.expires;
-        }
-        expires = '; expires=' + date.toUTCString();
-    }
-    var path = options.path ? '; path=' + options.path : '';
-    var domain = options.domain ? '; domain=' + options.domain : '';
-    var secure = options.secure ? '; secure' : '';
-    document.cookie = [
-        name,
-        '=',
-        encodeURIComponent(value),
-        expires,
-        path,
-        domain,
-        secure
-    ].join('');
-}
-function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie != '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) == name + '=') {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-},
-1138 : (module, exports, __required, global) => {
-"use strict";
-exports.default = extend;
-function extend() {
-    var extended = {};
-    var deep = typeof arguments[0] === 'boolean';
-    var i = 0;
-    var length = arguments.length;
-    if (deep) {
-        i++;
-        deep = arguments[0];
-    }
-    if (!deep && Object.assign) {
-        return Object.assign.apply(Object, arguments);
-    }
-    if (Object.prototype.toString.call(arguments[i]) === '[object Array]') {
-        extended = Array(arguments[i].length);
-    }
-    var merger = function (source) {
-        for (var name in source) {
-            if (source.hasOwnProperty(name)) {
-                if (deep && (source[name] && typeof source[name] === 'object') && !Object.keys(source[name]).length) {
-                    extended[name] = extend(true, extended[name], source[name]);
-                } else {
-                    extended[name] = source[name];
-                }
-            }
-        }
-    };
-    for (; i < length; i++) {
-        merger(arguments[i]);
-    }
-    return extended;
-}
-},
-1139 : (module, exports, __required, global) => {
-"use strict";
-var extend = __required(1138, 'default');
-exports.default = function (item, deep) {
-    var type = {};
-    if (Object.prototype.toString.call(item) === '[object Array]') {
-        type = [];
-    }
-    if (item && item.nodeType)
-        return item.cloneNode(true);
-    if (typeof item === 'object' && !deep)
-        return item;
-    if (item instanceof Date)
-        return new Date(item.getTime());
-    if (item instanceof RegExp)
-        return new RegExp(item);
-    if (typeof item !== 'object')
-        return item;
-    if (deep) {
-        var ret;
-        try {
-            ret = JSON.parse(JSON.stringify(item));
-        } catch (e) {
-            ret = extend(true, item);
-        }
-        return ret;
-    }
-    return extend(type, item);
-}
-},
-1140 : (module, exports, __required, global) => {
-"use strict";
-exports.default = copyFrom;
-function copyFrom(to, from) {
-    for (var key in to) {
-        if (from.hasOwnProperty(key)) {
-            if (typeof to[key] === 'object') {
-                to[key] = copyFrom(to[key], from[key]);
-            } else {
-                to[key] = from[key];
-            }
-        }
-    }
-    return to;
-}
-},
-1141 : (module, exports, __required, global) => {
-"use strict";
-exports.default = function (obj) {
-    return Object.keys(obj).length;
-}
-},
-1142 : (module, exports, __required, global) => {
-"use strict";
-var isobject = __required(1128, 'default');
-exports.default = function (objToInspect) {
-    var isObject = isobject(objToInspect);
-    function contains(ins) {
-        if (isObject) {
-            return objToInspect.hasOwnProperty(ins) || ins in objToInspect;
-        } else {
-            return objToInspect.indexOf(ins) > -1;
-        }
-    }
-    function search(str, iteratorFn) {
-        if (!objToInspect) {
-            return false;
-        }
-        var found = false, len = 0, trigger = function (prop) {
-                if (iteratorFn && typeof iteratorFn === 'function') {
-                    if (iteratorFn(objToInspect[prop], prop, len)) {
-                        found = objToInspect[prop];
-                    }
-                } else {
-                    if (JSON.stringify(objToInspect[prop]) === JSON.stringify(str)) {
-                        found = objToInspect[len];
-                    }
-                }
-                len++;
-            };
-        if (isObject) {
-            var ObjKeys = Object.keys(objToInspect);
-            while (ObjKeys.length > len) {
-                trigger(ObjKeys[len]);
-            }
-            ObjKeys = null;
-        } else {
-            while (objToInspect.length > len) {
-                trigger(len);
-            }
-            ;
-        }
-        return found;
-    }
-    function each(iterator) {
-        this.search(null, iterator);
-    }
-    return {
-        search: search,
-        contains: contains,
-        each: each
-    };
-}
-},
-1143 : (module, exports, __required, global) => {
-"use strict";
-exports.default = function (code) {
-    var hash = 0, i, chr, len;
-    if (!code || code.length === 0)
-        return hash;
-    for (i = 0, len = code.length; i < len; i++) {
-        chr = code.charCodeAt(i);
-        hash = (hash << 5) - hash + chr;
-        hash |= 0;
-    }
-    return hash;
-}
-},
-1144 : (module, exports, __required, global) => {
-"use strict";
-exports.default = logger;
-var logLevels = {
-    DEBUG: 4,
-    LOG: 3,
-    INFO: 2,
-    WARN: 1,
-    ERROR: 0
-};
-var logger = {
-    _log: function logger(mockOptions, args, level) {
-        var loggerLevel = 2;
-        var logLevelMethods = [
-            'error',
-            'warn',
-            'info',
-            'log',
-            'debug'
-        ];
-        if (mockOptions && typeof mockOptions.logging !== 'undefined') {
-            loggerLevel = mockOptions.logging;
-        }
-        level = level === 0 ? level : level || logLevels.LOG;
-        args = args.splice ? args : [args];
-        if (loggerLevel === false || loggerLevel < level) {
-            return;
-        }
-        if (mockOptions.log) {
-            return mockOptions.log(args[1] || args[0]);
-        } else if (mockOptions.logger && mockOptions.logger[logLevelMethods[level]]) {
-            return mockOptions.logger[logLevelMethods[level]].apply(mockOptions.logger, args);
-        }
-    },
-    debug: function (m, a) {
-        return this._log(m, a, logLevels.DEBUG);
-    },
-    log: function (m, a) {
-        return this._log(m, a, logLevels.LOG);
-    },
-    info: function (m, a) {
-        return this._log(m, a, logLevels.INFO);
-    },
-    warn: function (m, a) {
-        return this._log(m, a, logLevels.WARN);
-    },
-    error: function (m, a) {
-        return this._log(m, a, logLevels.ERROR);
-    }
-};
-},
-1145 : (module, exports, __required, global) => {
-"use strict";
-exports.default = function (e) {
-    var uid = '';
-    var f = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (var g = 0; g < e; g++) {
-        uid += f.charAt(Math.floor(Math.random() * f.length));
-    }
-    return uid;
-}
-},
-1146 : (module, exports, __required, global) => {
-"use strict";
-exports.default = function (arr) {
-    return arr.reduce(function (all, item, index) {
-        if (arr.indexOf(arr[index]) === index) {
-            all.push(item);
-        }
-        return all;
-    }, []);
-}
-},
-1147 : (module, exports, __required, global) => {
-"use strict";
-var isFunction = __required(1124, 'default');
-var isObject = __required(1128, 'default');
-var isArray = __required(1116, 'default');
-exports.default = serialize;
-function serialize(obj) {
-    if (!obj)
-        return;
-    var param = [];
-    function buildParams(prefix, dn) {
-        if (isArray(dn)) {
-            dn.forEach(function (n) {
-                if (/\[\]$/.test(prefix)) {
-                    add(prefix, n);
-                } else {
-                    buildParams(prefix + '[' + (isObject(n) ? prefix : '') + ']', n);
-                }
-            });
-        } else if (isObject(dn)) {
-            for (var name in dn) {
-                buildParams(prefix + '[' + name + ']', dn[name]);
-            }
-        } else {
-            add(prefix, dn);
-        }
-    }
-    function add(key, value) {
-        value = isFunction(value) ? value() : value === '' ? '' : value;
-        param[param.length] = encodeURIComponent(key) + '=' + encodeURIComponent(value);
-    }
-    ;
-    return Object.keys(obj).map(function (key) {
-        return buildParams(key, obj[key]);
-    }).join('&').replace(/%20/g, '+');
-}
-},
-1148 : (module, exports, __required, global) => {
-"use strict";
-exports.default = function (str, regexp) {
-    return (str || '').split(regexp).map(function (val) {
-        return val.trim();
-    });
-}
-},
-1149 : (module, exports, __required, global) => {
-"use strict";
-exports.default = function (str, replacerObj) {
-    var newObj;
-    var splitedStr = str.match(new RegExp('\\' + str.charAt(0) + '(.*?)' + '\\' + str.charAt(str.length - 1)));
-    var newObj = '{' === str.charAt(0) ? {} : [];
-    splitedStr = (splitedStr && splitedStr[1] || '').split(',');
-    replacerObj = replacerObj || {};
-    for (var j in splitedStr) {
-        var xSplitedStr = splitedStr[j].split(':');
-        newObj[xSplitedStr.shift()] = replacerObj[xSplitedStr.join(':')] || xSplitedStr.pop();
-    }
-    return newObj;
-}
-},
-1150 : (module, exports, __required, global) => {
-"use strict";
-exports.default = function (par) {
-    if (!par || typeof par !== 'string')
-        return {};
-    return par.split('&').reduce(function (accum, val) {
-        if (val) {
-            var splitPairs = val.split('=');
-            accum[splitPairs[0]] = splitPairs[1] ? parseJSON(splitPairs[1]) : splitPairs[1];
-        }
-        return accum;
-    }, {});
-    function parseJSON(str) {
-        try {
-            str = JSON.parse(str);
-        } catch (e) {
-        }
-        return str;
-    }
-}
-},
-1151 : (module, exports, __required, global) => {
-"use strict";
-exports.default = function ($boolValue) {
-    return {
-        'true': true,
-        '1': true,
-        'on': true,
-        'yes': true,
-        'false': false,
-        '0': false,
-        'off': false,
-        'no': false,
-        'null': null,
-        'undefined': undefined
-    }[$boolValue];
-}
-},
-1152 : (module, exports, __required, global) => {
-"use strict";
-
-exports.simpleBooleanParser = __required(1151, 'default');
-exports.kebabCase = __required(1136, 'default');
-exports.pascalCase = __required(1135, 'default');
-exports.camelcase = __required(1134, 'default');
-exports.unserialize = __required(1150, 'default');
-exports.toobject = __required(1149, 'default');
-exports.splitntrim = __required(1148, 'default');
-exports.serialize = __required(1147, 'default');
-exports.nodubs = __required(1146, 'default');
-exports.makeuid = __required(1145, 'default');
-exports.logger = __required(1144, 'default');
-exports.hashcode = __required(1143, 'default');
-exports.extend = __required(1138, 'default');
-exports.expect = __required(1142, 'default');
-exports.count = __required(1141, 'default');
-exports.copyfrom = __required(1140, 'default');
-exports.copy = __required(1139, 'default');
-exports.cookie = __required(1137, 'default');
-exports.base64 = __required(1133, 'default');
-},
-1153 : (module, exports, __required, global) => {
-"use strict";
-__required.r(exports, 'LazyLoader', () => { return LazyLoader;});
-__required.r(exports, 'InterceptorResolver', () => { return InterceptorResolver;});
-__required.r(exports, 'IterableProfiler', () => { return IterableProfiler;});
-__required.r(exports, 'ComponentFactoryResolver', () => { return ComponentFactoryResolver;});
-__required.r(exports, 'rxInterval', () => { return rxInterval;});
-__required.r(exports, 'rxTimeout', () => { return rxTimeout;});
-__required.r(exports, 'rxWhile', () => { return rxWhile;});
-__required.r(exports, 'rxDebounceTime', () => { return rxDebounceTime;});
-__required.r(exports, 'debounce', () => { return debounce;});
-__required.r(exports, 'EventManager', () => { return EventManager;});
-__required.r(exports, 'Promise2', () => { return Promise2;});
-__required.r(exports, 'EventEmitter', () => { return EventEmitter;});
-__required.r(exports, 'StateManager', () => { return StateManager;});
-__required.r(exports, 'interpolationHelper', () => { return interpolationHelper;});
-__required.r(exports, 'CustomEventHandler', () => { return CustomEventHandler;});
-__required.r(exports, 'TextNodeRef', () => { return TextNodeRef;});
-__required.r(exports, 'ViewRef', () => { return ViewRef;});
-__required.r(exports, 'AbstractObserver', () => { return AbstractObserver;});
-__required.r(exports, 'Observable', () => { return Observable;});
-__required.r(exports, 'Subscription', () => { return Subscription;});
-__required.r(exports, 'SubscriptionStates', () => { return SubscriptionStates;});
-__required.r(exports, 'Subject', () => { return Subject;});
-__required.r(exports, 'QueryList', () => { return QueryList;});
-__required.r(exports, 'ElementClassList', () => { return ElementClassList;});
-__required.r(exports, 'ElementStyle', () => { return ElementStyle;});
-__required.r(exports, 'AttributeAppender', () => { return AttributeAppender;});
-__required.r(exports, 'DOMHelper', () => { return DOMHelper;});
-__required.r(exports, 'ObserveUntilDestroyed', () => { return ObserveUntilDestroyed;});
-__required.r(exports, 'elementMutationObserver', () => { return elementMutationObserver;});
-__required.r(exports, 'sce', () => { return sce;});
-__required.r(exports, 'scheduler', () => { return scheduler;});
-__required.r(exports, 'ViewParser', () => { return ViewParser;});
-__required.r(exports, 'ElementRef', () => { return ElementRef;});
-__required.r(exports, 'bootstrapFromDOM', () => { return bootstrapFromDOM;});
-__required.r(exports, 'ChangeDetector', () => { return ChangeDetector;});
-__required.r(exports, 'compileModule', () => { return compileModule;});
-__required.r(exports, 'bootStrapApplication', () => { return bootStrapApplication;});
-__required.r(exports, 'APP_BOOTSTRAP', () => { return APP_BOOTSTRAP;});
-__required.r(exports, 'INITIALIZERS', () => { return INITIALIZERS;});
-__required.r(exports, 'Observer', () => { return Observer;});
-__required.r(exports, 'staticInjectionToken', () => { return staticInjectionToken;});
-__required.r(exports, 'TemplateRef', () => { return TemplateRef;});
-__required.r(exports, 'elementInputLinker', () => { return elementInputLinker;});
-__required.r(exports, 'LifeCycle', () => { return LifeCycle;});
-__required.r(exports, 'LifeCycleConst', () => { return LifeCycleConst;});
-__required.r(exports, 'noop', () => { return noop;});
-__required.r(exports, 'resolveClosureRef', () => { return resolveClosureRef;});
-__required.r(exports, 'closureRef', () => { return closureRef;});
-__required.r(exports, 'AbstractInjectorInstance', () => { return AbstractInjectorInstance;});
-__required.r(exports, 'wireResolvers', () => { return wireResolvers;});
-__required.r(exports, 'AutoWire', () => { return AutoWire;});
-__required.r(exports, 'Inject', () => { return Inject;});
-__required.r(exports, 'ProviderToken', () => { return ProviderToken;});
-__required.r(exports, 'errorBuilder', () => { return errorBuilder;});
-var utils = __required(1152);
-var hashcode = utils.hashcode;
+__required.r(exports, 'LazyLoader', () => LazyLoader);
+__required.r(exports, 'InterceptorResolver', () => InterceptorResolver);
+__required.r(exports, 'IterableProfiler', () => IterableProfiler);
+__required.r(exports, 'ComponentFactoryResolver', () => ComponentFactoryResolver);
+__required.r(exports, 'rxInterval', () => rxInterval);
+__required.r(exports, 'rxTimeout', () => rxTimeout);
+__required.r(exports, 'rxWhile', () => rxWhile);
+__required.r(exports, 'rxDebounceTime', () => rxDebounceTime);
+__required.r(exports, 'debounce', () => debounce);
+__required.r(exports, 'EventManager', () => EventManager);
+__required.r(exports, 'Promise2', () => Promise2);
+__required.r(exports, 'EventEmitter', () => EventEmitter);
+__required.r(exports, 'StateManager', () => StateManager);
+__required.r(exports, 'interpolationHelper', () => interpolationHelper);
+__required.r(exports, 'CustomEventHandler', () => CustomEventHandler);
+__required.r(exports, 'TextNodeRef', () => TextNodeRef);
+__required.r(exports, 'ViewRef', () => ViewRef);
+__required.r(exports, 'AbstractObserver', () => AbstractObserver);
+__required.r(exports, 'Observable', () => Observable);
+__required.r(exports, 'Subscription', () => Subscription);
+__required.r(exports, 'SubscriptionStates', () => SubscriptionStates);
+__required.r(exports, 'Subject', () => Subject);
+__required.r(exports, 'QueryList', () => QueryList);
+__required.r(exports, 'ElementClassList', () => ElementClassList);
+__required.r(exports, 'ElementStyle', () => ElementStyle);
+__required.r(exports, 'AttributeAppender', () => AttributeAppender);
+__required.r(exports, 'DOMHelper', () => DOMHelper);
+__required.r(exports, 'createLocalVariables', () => createLocalVariables);
+__required.r(exports, 'ObserveUntilDestroyed', () => ObserveUntilDestroyed);
+__required.r(exports, 'elementMutationObserver', () => elementMutationObserver);
+__required.r(exports, 'sce', () => sce);
+__required.r(exports, 'scheduler', () => scheduler);
+__required.r(exports, 'ViewParser', () => ViewParser);
+__required.r(exports, 'ElementRef', () => ElementRef);
+__required.r(exports, 'bootstrapFromDOM', () => bootstrapFromDOM);
+__required.r(exports, 'ChangeDetector', () => ChangeDetector);
+__required.r(exports, 'compileModule', () => compileModule);
+__required.r(exports, 'bootStrapApplication', () => bootStrapApplication);
+__required.r(exports, 'APP_BOOTSTRAP', () => APP_BOOTSTRAP);
+__required.r(exports, 'INITIALIZERS', () => INITIALIZERS);
+__required.r(exports, 'Observer', () => Observer);
+__required.r(exports, 'staticInjectionToken', () => staticInjectionToken);
+__required.r(exports, 'TemplateRef', () => TemplateRef);
+__required.r(exports, 'elementInputLinker', () => elementInputLinker);
+__required.r(exports, 'LifeCycle', () => LifeCycle);
+__required.r(exports, 'LifeCycleConst', () => LifeCycleConst);
+__required.r(exports, 'noop', () => noop);
+__required.r(exports, 'resolveClosureRef', () => resolveClosureRef);
+__required.r(exports, 'closureRef', () => closureRef);
+__required.r(exports, 'AbstractInjectorInstance', () => AbstractInjectorInstance);
+__required.r(exports, 'wireResolvers', () => wireResolvers);
+__required.r(exports, 'AutoWire', () => AutoWire);
+__required.r(exports, 'Inject', () => Inject);
+__required.r(exports, 'ProviderToken', () => ProviderToken);
+__required.r(exports, 'errorBuilder', () => errorBuilder);
 var helpers = __required(1132);
 var isnumber = helpers.isnumber;
 var isarray = helpers.isarray;
@@ -1401,7 +951,7 @@ function InternalChangeDetector(context) {
                 var refId = children[i];
                 if (!ignore.includes(refId) && componentDebugContext.has(refId)) {
                     var child = componentDebugContext.get(refId);
-                    child.changeDetector.detectChanges(false, true);
+                    child.changeDetector.onlySelf();
                 }
             }
         }
@@ -1590,7 +1140,7 @@ var scheduler = {
     }
 };
 var ViewParser = function () {
-    function JSONCompiler() {
+    function JSONCompiler(templates) {
         var fragment = document.createDocumentFragment();
         this.compile = function (transpiledHTML, elementRef) {
             for (var i = 0; i < transpiledHTML.length; i++) {
@@ -1605,6 +1155,16 @@ var ViewParser = function () {
             compiled.parent && compiled.parent.children.add(compiled);
             fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
             transverse(compiled);
+        };
+        this._GT = function (tid, mtl) {
+            if (mtl && mtl.type)
+                return mtl;
+            var tmpl = templates(tid);
+            if (!tmpl)
+                return null;
+            if (mtl)
+                return Object.assign(mtl, tmpl);
+            return typeof tmpl === 'object' ? tmpl : tmpl();
         };
     }
     function element(definition, parent, viewContainer, context) {
@@ -2343,6 +1903,7 @@ var DOMHelper = {
 var $eUID = 1;
 var $elementContext = '__jContext__';
 function AbstractElementRef(definition, parentRef) {
+    var locaVariables = null;
     this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
     this.$observers = [];
     this.refId = '__eid_' + $eUID++;
@@ -2360,9 +1921,14 @@ function AbstractElementRef(definition, parentRef) {
         this.providers = definition.providers;
         this.nodes = new Map();
     }
+    if (definition.ctx$) {
+        locaVariables = createLocalVariables(definition.ctx$, parentRef.context, parentRef.componentInstance);
+    }
     Object.defineProperties(this, {
         context: {
             get: function () {
+                if (locaVariables)
+                    return locaVariables;
                 if (componentDebugContext.has(this.refId)) {
                     return componentDebugContext.get(this.refId).context;
                 }
@@ -2492,7 +2058,7 @@ function EmbededViewContext(parentRef, templateRef, context) {
                 transverse(this.compiledElement);
                 elementInsertAfter(parentRef, nativeElement, targetNode, true);
                 if (changeDetector) {
-                    changeDetector.onlySelf();
+                    changeDetector.detectChanges();
                 }
                 nativeElement = null;
                 changeDetector = null;
@@ -2640,7 +2206,7 @@ function _executeEventsTriggers(eventTriggers, componentInstance, context, ev) {
         if (event.left) {
             parseObjectExpression(event, context, componentInstance, ev);
         } else if (event.fn) {
-            var fn = getFnFromContext(event, componentInstance);
+            var fn = getFnFromContext(event, componentInstance, context);
             if (fn) {
                 var narg = generateArguments(event.args, context || componentInstance, null, ev);
                 fn.apply(fn.context, narg);
@@ -2650,10 +2216,10 @@ function _executeEventsTriggers(eventTriggers, componentInstance, context, ev) {
         }
     }
 }
-function getFnFromContext(eventInstance, componentInstance) {
+function getFnFromContext(eventInstance, componentInstance, context) {
     var instance = componentInstance;
     if (eventInstance.namespaces) {
-        instance = resolveContext(eventInstance.namespaces, componentInstance);
+        instance = resolveContext(eventInstance.namespaces, componentInstance, context);
     }
     var fn = instance[eventInstance.fn];
     if (instance instanceof Array || !componentInstance[eventInstance.fn]) {
@@ -3525,81 +3091,67 @@ LazyLoader.prototype.jscs = function (obj, callback) {
     return this;
 };
 LazyLoader.prototype._resolve = function (filePaths, callback, type) {
-    var stack = [], self = this;
-    if (typeof callback !== 'function') {
-        callback = function () {
-        };
-    }
-    if (filePaths && isarray(filePaths) && filePaths.length > 0) {
-        for (var i = 0; i < filePaths.length; i++) {
-            if (LazyLoader.cached.hasOwnProperty(filePaths[i])) {
-                break;
-            }
-            LazyLoader.cached[filePaths[i]] = '' + Math.random();
-            switch (type) {
-            case 'css':
-                _createCss(filePaths[i]);
-                break;
-            case 'js':
-                _createJs(filePaths[i]);
-                break;
-            }
-            ;
-        }
-        if (type === 'js' && stack.length) {
-            process(callback);
-        } else {
-            callback();
-        }
-    }
-    function _createCss(cssPath) {
-        var styleElement = document.createElement('link');
-        styleElement.setAttribute('type', 'text/css');
-        styleElement.setAttribute('href', clink(cssPath));
-        styleElement.setAttribute('rel', 'stylesheet');
-        styleElement.setAttribute('id', LazyLoader.cached[cssPath]);
-        append(styleElement);
-    }
-    function _createJs(jsPath) {
-        var scriptElement = document.createElement('script');
-        scriptElement.setAttribute('src', clink(jsPath));
-        scriptElement.setAttribute('type', 'text/javascript');
-        scriptElement.async = true;
-        scriptElement.setAttribute('id', LazyLoader.cached[jsPath]);
-        stack.push(scriptElement);
-    }
-    function clink(path) {
+    var totalFiles = 0, resolved = 0;
+    var clink = path => {
         if (path.includes('//')) {
             return path;
         }
         return [
-            self.sourcePath,
+            this.sourcePath,
             path,
             '.',
             type
         ].join('');
+    };
+    if (typeof callback !== 'function') {
+        callback = function () {
+        };
     }
-    function append(scriptElement) {
-        (self.dropZone || document.getElementsByTagName('head')[0]).appendChild(scriptElement);
+    if (Array.isArray(filePaths)) {
+        for (var filePath of filePaths) {
+            if (LazyLoader.cached.includes(filePath)) {
+                break;
+            }
+            totalFiles++;
+            LazyLoader.cached.push(filePath);
+            var element = _createElement(filePath, type);
+            attachListener(element);
+            (this.dropZone || document.getElementsByTagName('head')[0]).appendChild(element);
+        }
     }
-    function process(isCallback) {
-        var currentElement = stack.shift();
-        append(currentElement);
-        currentElement.onreadystatechange = currentElement.onload = function () {
-            var state = currentElement.readyState;
-            if (!isCallback.done && (!state || /loaded|complete/.test(state))) {
-                if (stack.length) {
-                    process(isCallback);
-                } else {
-                    isCallback.done = true;
-                    isCallback();
-                }
+    function _createElement(filePath, type) {
+        var element = null;
+        if (type === 'js') {
+            element = document.createElement('script');
+            element.src = clink(filePath);
+        } else {
+            element = document.createElement('link');
+            element.setAttribute('type', 'text/css');
+            element.setAttribute('href', clink(filePath));
+            element.setAttribute('rel', 'stylesheet');
+        }
+        element.charset = 'utf-8';
+        element.timeout = 120;
+        element.async = true;
+        return element;
+    }
+    function attachListener(element) {
+        element.onreadystatechange = element.onload = function () {
+            var state = element.readyState;
+            resolved++;
+            if (!state || /loaded|complete/.test(state)) {
+                triggerCallack();
+                element.parentNode.removeChild(element);
             }
         };
     }
-    ;
+    function triggerCallack() {
+        if (totalFiles == resolved)
+            callback();
+    }
+    triggerCallack();
 };
-LazyLoader.cached = {};
+LazyLoader.cached = [];
 LazyLoader.staticLoader = function () {
     LazyLoader.prototype._resolve.apply({}, arguments);
 };
@@ -3645,33 +3197,33 @@ function trigger(fn, trigerDetector) {
 }
 ;
 },
-1154 : (module, exports, __required, global) => {
+1134 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'ReversePipe', () => { return ReversePipe;});
-__required.r(exports, 'FilterPipe', () => { return FilterPipe;});
-__required.r(exports, 'whereFilterFn', () => { return whereFilterFn;});
-__required.r(exports, 'upperCaseFilter', () => { return upperCaseFilter;});
-__required.r(exports, 'QueryFactory', () => { return QueryFactory;});
-__required.r(exports, 'orderByFilterFn', () => { return orderByFilterFn;});
-__required.r(exports, 'lowerCaseFilter', () => { return lowerCaseFilter;});
-__required.r(exports, 'jsonFilterFn', () => { return jsonFilterFn;});
-__required.r(exports, 'NumberFilter', () => { return NumberFilter;});
-__required.r(exports, 'CurrencyFilter', () => { return CurrencyFilter;});
-__required.r(exports, 'capitalizeFilter', () => { return capitalizeFilter;});
-__required.r(exports, 'ClassDirective', () => { return ClassDirective;});
-__required.r(exports, 'SwitchDefaultDirective', () => { return SwitchDefaultDirective;});
-__required.r(exports, 'SwitchCaseDirective', () => { return SwitchCaseDirective;});
-__required.r(exports, 'SwitchDirective', () => { return SwitchDirective;});
-__required.r(exports, 'IfDirective', () => { return IfDirective;});
-__required.r(exports, 'ForDirective', () => { return ForDirective;});
-__required.r(exports, 'CommonModule', () => { return CommonModule;});
+__required.r(exports, 'ReversePipe', () => ReversePipe);
+__required.r(exports, 'FilterPipe', () => FilterPipe);
+__required.r(exports, 'whereFilterFn', () => whereFilterFn);
+__required.r(exports, 'upperCaseFilter', () => upperCaseFilter);
+__required.r(exports, 'QueryFactory', () => QueryFactory);
+__required.r(exports, 'orderByFilterFn', () => orderByFilterFn);
+__required.r(exports, 'lowerCaseFilter', () => lowerCaseFilter);
+__required.r(exports, 'jsonFilterFn', () => jsonFilterFn);
+__required.r(exports, 'NumberFilter', () => NumberFilter);
+__required.r(exports, 'CurrencyFilter', () => CurrencyFilter);
+__required.r(exports, 'capitalizeFilter', () => capitalizeFilter);
+__required.r(exports, 'ClassDirective', () => ClassDirective);
+__required.r(exports, 'SwitchDefaultDirective', () => SwitchDefaultDirective);
+__required.r(exports, 'SwitchCaseDirective', () => SwitchCaseDirective);
+__required.r(exports, 'SwitchDirective', () => SwitchDirective);
+__required.r(exports, 'IfDirective', () => IfDirective);
+__required.r(exports, 'ForDirective', () => ForDirective);
+__required.r(exports, 'CommonModule', () => CommonModule);
 var helpers = __required(1132);
 var isundefined = helpers.isundefined;
 var isfunction = helpers.isfunction;
 var isarray = helpers.isarray;
 var isobject = helpers.isobject;
 var isequal = helpers.isequal;
-var core = __required(1153);
+var core = __required(1133);
 var ElementClassList = core.ElementClassList;
 var IterableProfiler = core.IterableProfiler;
 var __buildOptions = {};
@@ -4273,23 +3825,23 @@ var CommonModule = function () {
     return CommonModule;
 }();
 },
-1155 : (module, exports, __required, global) => {
+1135 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'TimeAgoFilterFn', () => { return TimeAgoFilterFn;});
-__required.r(exports, 'dateTimeFilterFN', () => { return dateTimeFilterFN;});
-__required.r(exports, 'DAYS_FULL', () => { return DAYS_FULL;});
-__required.r(exports, 'DAYS_HALF', () => { return DAYS_HALF;});
-__required.r(exports, 'MONTHS_FULL', () => { return MONTHS_FULL;});
-__required.r(exports, 'MONTHS_HALF', () => { return MONTHS_HALF;});
-__required.r(exports, 'CalendarService', () => { return CalendarService;});
-__required.r(exports, 'setText', () => { return setText;});
-__required.r(exports, 'DateStringConverter', () => { return DateStringConverter;});
-__required.r(exports, 'getDays', () => { return getDays;});
-__required.r(exports, 'leapYear', () => { return leapYear;});
-__required.r(exports, 'DatetimeService', () => { return DatetimeService;});
-__required.r(exports, 'calendarFN', () => { return calendarFN;});
-__required.r(exports, 'DateTimeModule', () => { return DateTimeModule;});
-var core = __required(1153);
+__required.r(exports, 'TimeAgoFilterFn', () => TimeAgoFilterFn);
+__required.r(exports, 'dateTimeFilterFN', () => dateTimeFilterFN);
+__required.r(exports, 'DAYS_FULL', () => DAYS_FULL);
+__required.r(exports, 'DAYS_HALF', () => DAYS_HALF);
+__required.r(exports, 'MONTHS_FULL', () => MONTHS_FULL);
+__required.r(exports, 'MONTHS_HALF', () => MONTHS_HALF);
+__required.r(exports, 'CalendarService', () => CalendarService);
+__required.r(exports, 'setText', () => setText);
+__required.r(exports, 'DateStringConverter', () => DateStringConverter);
+__required.r(exports, 'getDays', () => getDays);
+__required.r(exports, 'leapYear', () => leapYear);
+__required.r(exports, 'DatetimeService', () => DatetimeService);
+__required.r(exports, 'calendarFN', () => calendarFN);
+__required.r(exports, 'DateTimeModule', () => DateTimeModule);
+var core = __required(1133);
 var ProviderToken = core.ProviderToken;
 var __buildOptions = {};
 var leapYear = function (year) {
@@ -4647,40 +4199,489 @@ var DateTimeModule = function () {
     return DateTimeModule;
 }();
 },
+1136 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function () {
+    return {
+        encode: function (str) {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
+                return String.fromCharCode('0x' + p1);
+            }));
+        },
+        decode: function (str) {
+            return decodeURIComponent(Array.prototype.map.call(atob(str), function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        }
+    };
+}
+},
+1137 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function (str) {
+    return str(/^([A-Z])|[\s-_](\w)/g, function (match, p1, p2, offset) {
+        if (p2) {
+            return p2.toUpperCase();
+        }
+        return p1.toLowerCase();
+    });
+}
+},
+1138 : (module, exports, __required, global) => {
+"use strict";
+var camelCase = __required(1137, 'default');
+exports.default = function (str) {
+    return str.charAt(0).toUpperCase() + camelCase(str.substring(1));
+}
+},
+1139 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function (str) {
+    return str.split('').map(function (char, idx) {
+        if (/[A-Z]/.test(char)) {
+            return '-' != str[idx - 1] ? '-' + char.toLowerCase() : char.toLowerCase();
+        }
+        return char;
+    }).join('');
+}
+;
+},
+1140 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function (name, value) {
+    if (typeof value != 'undefined') {
+        setCookie.apply(null, arguments);
+    } else {
+        return getCookie(name);
+    }
+}
+;
+function setCookie(name, value, options) {
+    options = options || {};
+    if (value === null) {
+        value = '';
+        options.expires = -1;
+    }
+    var expires = '', isNumberExpires = typeof options.expires === 'number';
+    if (options.expires && (isNumberExpires || options.expires.toUTCString)) {
+        var date;
+        if (isNumberExpires) {
+            date = new Date();
+            date.setTime(date.getTime() + options.expires * 24 * 60 * 60 * 1000);
+        } else {
+            date = options.expires;
+        }
+        expires = '; expires=' + date.toUTCString();
+    }
+    var path = options.path ? '; path=' + options.path : '';
+    var domain = options.domain ? '; domain=' + options.domain : '';
+    var secure = options.secure ? '; secure' : '';
+    document.cookie = [
+        name,
+        '=',
+        encodeURIComponent(value),
+        expires,
+        path,
+        domain,
+        secure
+    ].join('');
+}
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) == name + '=') {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+},
+1141 : (module, exports, __required, global) => {
+"use strict";
+exports.default = extend;
+function extend() {
+    var extended = {};
+    var deep = typeof arguments[0] === 'boolean';
+    var i = 0;
+    var length = arguments.length;
+    if (deep) {
+        i++;
+        deep = arguments[0];
+    }
+    if (!deep && Object.assign) {
+        return Object.assign.apply(Object, arguments);
+    }
+    if (Object.prototype.toString.call(arguments[i]) === '[object Array]') {
+        extended = Array(arguments[i].length);
+    }
+    var merger = function (source) {
+        for (var name in source) {
+            if (source.hasOwnProperty(name)) {
+                if (deep && (source[name] && typeof source[name] === 'object') && !Object.keys(source[name]).length) {
+                    extended[name] = extend(true, extended[name], source[name]);
+                } else {
+                    extended[name] = source[name];
+                }
+            }
+        }
+    };
+    for (; i < length; i++) {
+        merger(arguments[i]);
+    }
+    return extended;
+}
+},
+1142 : (module, exports, __required, global) => {
+"use strict";
+var extend = __required(1141, 'default');
+exports.default = function (item, deep) {
+    var type = {};
+    if (Object.prototype.toString.call(item) === '[object Array]') {
+        type = [];
+    }
+    if (item && item.nodeType)
+        return item.cloneNode(true);
+    if (typeof item === 'object' && !deep)
+        return item;
+    if (item instanceof Date)
+        return new Date(item.getTime());
+    if (item instanceof RegExp)
+        return new RegExp(item);
+    if (typeof item !== 'object')
+        return item;
+    if (deep) {
+        var ret;
+        try {
+            ret = JSON.parse(JSON.stringify(item));
+        } catch (e) {
+            ret = extend(true, item);
+        }
+        return ret;
+    }
+    return extend(type, item);
+}
+},
+1143 : (module, exports, __required, global) => {
+"use strict";
+exports.default = copyFrom;
+function copyFrom(to, from) {
+    for (var key in to) {
+        if (from.hasOwnProperty(key)) {
+            if (typeof to[key] === 'object') {
+                to[key] = copyFrom(to[key], from[key]);
+            } else {
+                to[key] = from[key];
+            }
+        }
+    }
+    return to;
+}
+},
+1144 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function (obj) {
+    return Object.keys(obj).length;
+}
+},
+1145 : (module, exports, __required, global) => {
+"use strict";
+var isobject = __required(1128, 'default');
+exports.default = function (objToInspect) {
+    var isObject = isobject(objToInspect);
+    function contains(ins) {
+        if (isObject) {
+            return objToInspect.hasOwnProperty(ins) || ins in objToInspect;
+        } else {
+            return objToInspect.indexOf(ins) > -1;
+        }
+    }
+    function search(str, iteratorFn) {
+        if (!objToInspect) {
+            return false;
+        }
+        var found = false, len = 0, trigger = function (prop) {
+                if (iteratorFn && typeof iteratorFn === 'function') {
+                    if (iteratorFn(objToInspect[prop], prop, len)) {
+                        found = objToInspect[prop];
+                    }
+                } else {
+                    if (JSON.stringify(objToInspect[prop]) === JSON.stringify(str)) {
+                        found = objToInspect[len];
+                    }
+                }
+                len++;
+            };
+        if (isObject) {
+            var ObjKeys = Object.keys(objToInspect);
+            while (ObjKeys.length > len) {
+                trigger(ObjKeys[len]);
+            }
+            ObjKeys = null;
+        } else {
+            while (objToInspect.length > len) {
+                trigger(len);
+            }
+            ;
+        }
+        return found;
+    }
+    function each(iterator) {
+        this.search(null, iterator);
+    }
+    return {
+        search: search,
+        contains: contains,
+        each: each
+    };
+}
+},
+1146 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function (code) {
+    var hash = 0, i, chr, len;
+    if (!code || code.length === 0)
+        return hash;
+    for (i = 0, len = code.length; i < len; i++) {
+        chr = code.charCodeAt(i);
+        hash = (hash << 5) - hash + chr;
+        hash |= 0;
+    }
+    return hash;
+}
+},
+1147 : (module, exports, __required, global) => {
+"use strict";
+exports.default = logger;
+var logLevels = {
+    DEBUG: 4,
+    LOG: 3,
+    INFO: 2,
+    WARN: 1,
+    ERROR: 0
+};
+var logger = {
+    _log: function logger(mockOptions, args, level) {
+        var loggerLevel = 2;
+        var logLevelMethods = [
+            'error',
+            'warn',
+            'info',
+            'log',
+            'debug'
+        ];
+        if (mockOptions && typeof mockOptions.logging !== 'undefined') {
+            loggerLevel = mockOptions.logging;
+        }
+        level = level === 0 ? level : level || logLevels.LOG;
+        args = args.splice ? args : [args];
+        if (loggerLevel === false || loggerLevel < level) {
+            return;
+        }
+        if (mockOptions.log) {
+            return mockOptions.log(args[1] || args[0]);
+        } else if (mockOptions.logger && mockOptions.logger[logLevelMethods[level]]) {
+            return mockOptions.logger[logLevelMethods[level]].apply(mockOptions.logger, args);
+        }
+    },
+    debug: function (m, a) {
+        return this._log(m, a, logLevels.DEBUG);
+    },
+    log: function (m, a) {
+        return this._log(m, a, logLevels.LOG);
+    },
+    info: function (m, a) {
+        return this._log(m, a, logLevels.INFO);
+    },
+    warn: function (m, a) {
+        return this._log(m, a, logLevels.WARN);
+    },
+    error: function (m, a) {
+        return this._log(m, a, logLevels.ERROR);
+    }
+};
+},
+1148 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function (e) {
+    var uid = '';
+    var f = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (var g = 0; g < e; g++) {
+        uid += f.charAt(Math.floor(Math.random() * f.length));
+    }
+    return uid;
+}
+},
+1149 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function (arr) {
+    return arr.reduce(function (all, item, index) {
+        if (arr.indexOf(arr[index]) === index) {
+            all.push(item);
+        }
+        return all;
+    }, []);
+}
+},
+1150 : (module, exports, __required, global) => {
+"use strict";
+var isFunction = __required(1124, 'default');
+var isObject = __required(1128, 'default');
+var isArray = __required(1116, 'default');
+exports.default = serialize;
+function serialize(obj) {
+    if (!obj)
+        return;
+    var param = [];
+    function buildParams(prefix, dn) {
+        if (isArray(dn)) {
+            dn.forEach(function (n) {
+                if (/\[\]$/.test(prefix)) {
+                    add(prefix, n);
+                } else {
+                    buildParams(prefix + '[' + (isObject(n) ? prefix : '') + ']', n);
+                }
+            });
+        } else if (isObject(dn)) {
+            for (var name in dn) {
+                buildParams(prefix + '[' + name + ']', dn[name]);
+            }
+        } else {
+            add(prefix, dn);
+        }
+    }
+    function add(key, value) {
+        value = isFunction(value) ? value() : value === '' ? '' : value;
+        param[param.length] = encodeURIComponent(key) + '=' + encodeURIComponent(value);
+    }
+    ;
+    return Object.keys(obj).map(function (key) {
+        return buildParams(key, obj[key]);
+    }).join('&').replace(/%20/g, '+');
+}
+},
+1151 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function (str, regexp) {
+    return (str || '').split(regexp).map(function (val) {
+        return val.trim();
+    });
+}
+},
+1152 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function (str, replacerObj) {
+    var newObj;
+    var splitedStr = str.match(new RegExp('\\' + str.charAt(0) + '(.*?)' + '\\' + str.charAt(str.length - 1)));
+    var newObj = '{' === str.charAt(0) ? {} : [];
+    splitedStr = (splitedStr && splitedStr[1] || '').split(',');
+    replacerObj = replacerObj || {};
+    for (var j in splitedStr) {
+        var xSplitedStr = splitedStr[j].split(':');
+        newObj[xSplitedStr.shift()] = replacerObj[xSplitedStr.join(':')] || xSplitedStr.pop();
+    }
+    return newObj;
+}
+},
+1153 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function (par) {
+    if (!par || typeof par !== 'string')
+        return {};
+    return par.split('&').reduce(function (accum, val) {
+        if (val) {
+            var splitPairs = val.split('=');
+            accum[splitPairs[0]] = splitPairs[1] ? parseJSON(splitPairs[1]) : splitPairs[1];
+        }
+        return accum;
+    }, {});
+    function parseJSON(str) {
+        try {
+            str = JSON.parse(str);
+        } catch (e) {
+        }
+        return str;
+    }
+}
+},
+1154 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function ($boolValue) {
+    return {
+        'true': true,
+        '1': true,
+        'on': true,
+        'yes': true,
+        'false': false,
+        '0': false,
+        'off': false,
+        'no': false,
+        'null': null,
+        'undefined': undefined
+    }[$boolValue];
+}
+},
+1155 : (module, exports, __required, global) => {
+"use strict";
+
+exports.simpleBooleanParser = __required(1154, 'default');
+exports.kebabCase = __required(1139, 'default');
+exports.pascalCase = __required(1138, 'default');
+exports.camelcase = __required(1137, 'default');
+exports.unserialize = __required(1153, 'default');
+exports.toobject = __required(1152, 'default');
+exports.splitntrim = __required(1151, 'default');
+exports.serialize = __required(1150, 'default');
+exports.nodubs = __required(1149, 'default');
+exports.makeuid = __required(1148, 'default');
+exports.logger = __required(1147, 'default');
+exports.hashcode = __required(1146, 'default');
+exports.extend = __required(1141, 'default');
+exports.expect = __required(1145, 'default');
+exports.count = __required(1144, 'default');
+exports.copyfrom = __required(1143, 'default');
+exports.copy = __required(1142, 'default');
+exports.cookie = __required(1140, 'default');
+exports.base64 = __required(1136, 'default');
+},
 1156 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'FormRepeaterService', () => { return FormRepeaterService;});
-__required.r(exports, 'RangeEventBinder', () => { return RangeEventBinder;});
-__required.r(exports, 'ResolveRangeBinder', () => { return ResolveRangeBinder;});
-__required.r(exports, 'NumberEventBinder', () => { return NumberEventBinder;});
-__required.r(exports, 'ResolveNumberBinder', () => { return ResolveNumberBinder;});
-__required.r(exports, 'getValueAccessor', () => { return getValueAccessor;});
-__required.r(exports, 'ModelDirective', () => { return ModelDirective;});
-__required.r(exports, 'OptionDirective', () => { return OptionDirective;});
-__required.r(exports, 'SelectEventBinder', () => { return SelectEventBinder;});
-__required.r(exports, 'ResolveSelectBinder', () => { return ResolveSelectBinder;});
-__required.r(exports, 'RadioEventBinder', () => { return RadioEventBinder;});
-__required.r(exports, 'RadioEventContainer', () => { return RadioEventContainer;});
-__required.r(exports, 'ResolveRadioBinder', () => { return ResolveRadioBinder;});
-__required.r(exports, 'CheckboxEventBinder', () => { return CheckboxEventBinder;});
-__required.r(exports, 'ResolveCheckboxBinder', () => { return ResolveCheckboxBinder;});
-__required.r(exports, 'DefaultEventBinder', () => { return DefaultEventBinder;});
-__required.r(exports, 'ResolveDefaultBinder', () => { return ResolveDefaultBinder;});
-__required.r(exports, 'FormFieldDirective', () => { return FormFieldDirective;});
-__required.r(exports, 'FormFieldControlService', () => { return FormFieldControlService;});
-__required.r(exports, 'AbstractValueAccessor', () => { return AbstractValueAccessor;});
-__required.r(exports, 'VALUE_ACCESSOR', () => { return VALUE_ACCESSOR;});
-__required.r(exports, 'FormFieldControlDirective', () => { return FormFieldControlDirective;});
-__required.r(exports, 'formValidationStack', () => { return formValidationStack;});
-__required.r(exports, 'customFormValidator', () => { return customFormValidator;});
-__required.r(exports, 'FormValidatorService', () => { return FormValidatorService;});
-__required.r(exports, 'FormControlAbstract', () => { return FormControlAbstract;});
-__required.r(exports, 'FormControlService', () => { return FormControlService;});
-__required.r(exports, 'AbstractFormControl', () => { return AbstractFormControl;});
-__required.r(exports, 'FormControlNameDirective', () => { return FormControlNameDirective;});
-__required.r(exports, 'FormControlDirective', () => { return FormControlDirective;});
-__required.r(exports, 'FormModule', () => { return FormModule;});
-var utils = __required(1152);
+__required.r(exports, 'FormRepeaterService', () => FormRepeaterService);
+__required.r(exports, 'RangeEventBinder', () => RangeEventBinder);
+__required.r(exports, 'ResolveRangeBinder', () => ResolveRangeBinder);
+__required.r(exports, 'NumberEventBinder', () => NumberEventBinder);
+__required.r(exports, 'ResolveNumberBinder', () => ResolveNumberBinder);
+__required.r(exports, 'getValueAccessor', () => getValueAccessor);
+__required.r(exports, 'ModelDirective', () => ModelDirective);
+__required.r(exports, 'OptionDirective', () => OptionDirective);
+__required.r(exports, 'SelectEventBinder', () => SelectEventBinder);
+__required.r(exports, 'ResolveSelectBinder', () => ResolveSelectBinder);
+__required.r(exports, 'RadioEventBinder', () => RadioEventBinder);
+__required.r(exports, 'RadioEventContainer', () => RadioEventContainer);
+__required.r(exports, 'ResolveRadioBinder', () => ResolveRadioBinder);
+__required.r(exports, 'CheckboxEventBinder', () => CheckboxEventBinder);
+__required.r(exports, 'ResolveCheckboxBinder', () => ResolveCheckboxBinder);
+__required.r(exports, 'DefaultEventBinder', () => DefaultEventBinder);
+__required.r(exports, 'ResolveDefaultBinder', () => ResolveDefaultBinder);
+__required.r(exports, 'FormFieldDirective', () => FormFieldDirective);
+__required.r(exports, 'FormFieldControlService', () => FormFieldControlService);
+__required.r(exports, 'AbstractValueAccessor', () => AbstractValueAccessor);
+__required.r(exports, 'VALUE_ACCESSOR', () => VALUE_ACCESSOR);
+__required.r(exports, 'FormFieldControlDirective', () => FormFieldControlDirective);
+__required.r(exports, 'formValidationStack', () => formValidationStack);
+__required.r(exports, 'customFormValidator', () => customFormValidator);
+__required.r(exports, 'FormValidatorService', () => FormValidatorService);
+__required.r(exports, 'FormControlAbstract', () => FormControlAbstract);
+__required.r(exports, 'FormControlService', () => FormControlService);
+__required.r(exports, 'AbstractFormControl', () => AbstractFormControl);
+__required.r(exports, 'FormControlNameDirective', () => FormControlNameDirective);
+__required.r(exports, 'FormControlDirective', () => FormControlDirective);
+__required.r(exports, 'FormModule', () => FormModule);
+var utils = __required(1155);
 var extend = utils.extend;
 var helpers = __required(1132);
 var inarray = helpers.inarray;
@@ -4694,7 +4695,7 @@ var isfunction = helpers.isfunction;
 var isundefined = helpers.isundefined;
 var isobject = helpers.isobject;
 var isempty = helpers.isempty;
-var core = __required(1153);
+var core = __required(1133);
 var ProviderToken = core.ProviderToken;
 var AttributeAppender = core.AttributeAppender;
 var closureRef = core.closureRef;
@@ -5741,21 +5742,18 @@ var SelectEventBinder = function () {
     };
     SelectEventBinder.prototype.writeValue = function (value) {
         this.selectedValue = value;
-        var _this = this;
         if (!this.element.hasAttribute('multiple')) {
-            var optionId = this._getOptionId(value);
-            if (optionId === null) {
-                AttributeAppender.setProp(this.element.nativeElement, 'selectedIndex', -1);
+            var currentSelectedValue = this.element.nativeElement.value;
+            if (!this._compare(this._getOptionValue(currentSelectedValue), value)) {
+                var optionId = this._getOptionId(value);
+                AttributeAppender.setProp(this.element.nativeElement, 'value', _buildValueToString(optionId, value));
             }
-            AttributeAppender.setProp(this.element.nativeElement, 'value', _buildValueToString(optionId, value));
         } else {
             var markAsSelected = function (opt) {
                 AttributeAppender.setProp(opt, 'selected', false);
             };
             if (Array.isArray(value)) {
-                var optionIds = value.map(function (v) {
-                    return _this._getOptionId(v) || v;
-                });
+                var optionIds = value.map(v => this._getOptionId(v) || v);
                 markAsSelected = function (opt) {
                     AttributeAppender.setProp(opt, 'selected', inarray(opt.value, optionIds));
                 };
@@ -5783,9 +5781,9 @@ var SelectEventBinder = function () {
     };
     SelectEventBinder.prototype._getOptionId = function (value) {
         var keys = this._optionValueMap.keys();
-        for (var i in keys) {
-            if (this._compare(this._optionValueMap.get(keys[i]), value))
-                return keys[i];
+        for (var key of keys) {
+            if (this._compare(this._optionValueMap.get(key), value))
+                return key;
         }
         return null;
     };
@@ -5832,12 +5830,15 @@ var OptionDirective = function () {
     function OptionDirective(selectInstance, elementRef) {
         if (selectInstance)
             this.id = selectInstance.genOptionId();
+        this._value = null;
         Object.defineProperty(this, 'value', {
             set: function (value) {
                 this.setValue(value);
                 if (selectInstance)
                     selectInstance.writeValue(selectInstance.selectedValue);
-            }
+                this._value = value;
+            },
+            get: () => this._value
         });
         Object.defineProperty(this, 'jValue', {
             set: function (value) {
@@ -5846,10 +5847,14 @@ var OptionDirective = function () {
                 selectInstance._optionValueMap.set(this.id, value);
                 this.setValue(_buildValueToString(this.id, value));
                 selectInstance.writeValue(selectInstance.selectedValue);
-            }
+                this._value = value;
+            },
+            get: () => this._value
         });
         this.setValue = function (value) {
-            AttributeAppender.setProp(elementRef.nativeElement, 'value', value);
+            if (value && typeof value !== 'object') {
+                AttributeAppender.setProp(elementRef.nativeElement, 'value', value);
+            }
         };
         this.viewDidDestroy = function () {
             if (selectInstance) {
@@ -6197,17 +6202,17 @@ var FormModule = function () {
 },
 1157 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'CSRFCookieHeaderService', () => { return CSRFCookieHeaderService;});
-__required.r(exports, 'csrfCookieConfig', () => { return csrfCookieConfig;});
-__required.r(exports, 'HttpCookieManager', () => { return HttpCookieManager;});
-__required.r(exports, 'HttpCSRFModule', () => { return HttpCSRFModule;});
-__required.r(exports, 'HTTP_INTERCEPTORS', () => { return HTTP_INTERCEPTORS;});
-__required.r(exports, 'HttpResponse', () => { return HttpResponse;});
-__required.r(exports, 'HttpRequest', () => { return HttpRequest;});
-__required.r(exports, 'HttpRequestError', () => { return HttpRequestError;});
-__required.r(exports, 'HttpService', () => { return HttpService;});
-__required.r(exports, 'HttpModule', () => { return HttpModule;});
-var utils = __required(1152);
+__required.r(exports, 'CSRFCookieHeaderService', () => CSRFCookieHeaderService);
+__required.r(exports, 'csrfCookieConfig', () => csrfCookieConfig);
+__required.r(exports, 'HttpCookieManager', () => HttpCookieManager);
+__required.r(exports, 'HttpCSRFModule', () => HttpCSRFModule);
+__required.r(exports, 'HTTP_INTERCEPTORS', () => HTTP_INTERCEPTORS);
+__required.r(exports, 'HttpResponse', () => HttpResponse);
+__required.r(exports, 'HttpRequest', () => HttpRequest);
+__required.r(exports, 'HttpRequestError', () => HttpRequestError);
+__required.r(exports, 'HttpService', () => HttpService);
+__required.r(exports, 'HttpModule', () => HttpModule);
+var utils = __required(1155);
 var serialize = utils.serialize;
 var helpers = __required(1132);
 var isnull = helpers.isnull;
@@ -6215,7 +6220,7 @@ var isstring = helpers.isstring;
 var isundefined = helpers.isundefined;
 var isobject = helpers.isobject;
 var inarray = helpers.inarray;
-var core = __required(1153);
+var core = __required(1133);
 var ProviderToken = core.ProviderToken;
 var InterceptorResolver = core.InterceptorResolver;
 var Subject = core.Subject;
@@ -6519,33 +6524,34 @@ var HttpCSRFModule = function () {
 },
 1158 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'PathStrategyService', () => { return PathStrategyService;});
-__required.r(exports, 'AbstractStrategy', () => { return AbstractStrategy;});
-__required.r(exports, 'HashStrategyService', () => { return HashStrategyService;});
-__required.r(exports, 'RouterInitService', () => { return RouterInitService;});
-__required.r(exports, 'JIntentContainer', () => { return JIntentContainer;});
-__required.r(exports, 'ViewIntentService', () => { return ViewIntentService;});
-__required.r(exports, 'OpenIntent', () => { return OpenIntent;});
-__required.r(exports, 'jViewFn', () => { return jViewFn;});
-__required.r(exports, 'RouteInterceptorInstance', () => { return RouteInterceptorInstance;});
-__required.r(exports, 'getHref', () => { return getHref;});
-__required.r(exports, 'parseUrl', () => { return parseUrl;});
-__required.r(exports, 'getRequiredRoute', () => { return getRequiredRoute;});
-__required.r(exports, 'getParentRoute', () => { return getParentRoute;});
-__required.r(exports, 'ROUTE_EVENT_ENUMS', () => { return ROUTE_EVENT_ENUMS;});
-__required.r(exports, 'routeConfig', () => { return routeConfig;});
-__required.r(exports, 'staticRoutePrefix', () => { return staticRoutePrefix;});
-__required.r(exports, 'ROUTE_LOCATION_STRATEGY', () => { return ROUTE_LOCATION_STRATEGY;});
-__required.r(exports, 'ROUTE_INTERCEPTOR', () => { return ROUTE_INTERCEPTOR;});
-__required.r(exports, 'ViewHandler', () => { return ViewHandler;});
-__required.r(exports, 'LocationService', () => { return LocationService;});
-__required.r(exports, 'WebStateService', () => { return WebStateService;});
-__required.r(exports, 'GoFn', () => { return GoFn;});
-__required.r(exports, 'RouterModule', () => { return RouterModule;});
-var utils = __required(1152);
+__required.r(exports, 'PathStrategyService', () => PathStrategyService);
+__required.r(exports, 'AbstractStrategy', () => AbstractStrategy);
+__required.r(exports, 'HashStrategyService', () => HashStrategyService);
+__required.r(exports, 'RouterInitService', () => RouterInitService);
+__required.r(exports, 'JIntentContainer', () => JIntentContainer);
+__required.r(exports, 'ViewIntentService', () => ViewIntentService);
+__required.r(exports, 'OpenIntent', () => OpenIntent);
+__required.r(exports, 'jViewFn', () => jViewFn);
+__required.r(exports, 'RouteInterceptorInstance', () => RouteInterceptorInstance);
+__required.r(exports, 'getHref', () => getHref);
+__required.r(exports, 'parseUrl', () => parseUrl);
+__required.r(exports, 'getRequiredRoute', () => getRequiredRoute);
+__required.r(exports, 'parseDelimeter', () => parseDelimeter);
+__required.r(exports, 'getParentRoute', () => getParentRoute);
+__required.r(exports, 'ROUTE_EVENT_ENUMS', () => ROUTE_EVENT_ENUMS);
+__required.r(exports, 'routeConfig', () => routeConfig);
+__required.r(exports, 'staticRoutePrefix', () => staticRoutePrefix);
+__required.r(exports, 'ROUTE_LOCATION_STRATEGY', () => ROUTE_LOCATION_STRATEGY);
+__required.r(exports, 'ROUTE_INTERCEPTOR', () => ROUTE_INTERCEPTOR);
+__required.r(exports, 'ViewHandler', () => ViewHandler);
+__required.r(exports, 'LocationService', () => LocationService);
+__required.r(exports, 'WebStateService', () => WebStateService);
+__required.r(exports, 'GoFn', () => GoFn);
+__required.r(exports, 'RouterModule', () => RouterModule);
+var utils = __required(1155);
 var unserialize = utils.unserialize;
 var extend = utils.extend;
-var core = __required(1153);
+var core = __required(1133);
 var APP_BOOTSTRAP = core.APP_BOOTSTRAP;
 var EventEmitter = core.EventEmitter;
 var InterceptorResolver = core.InterceptorResolver;
@@ -6569,7 +6575,7 @@ var routeConfig = Object({
     },
     restoreOnRefresh: true,
     delimiter: [
-        '!#',
+        '#!',
         ''
     ]
 });
@@ -6580,7 +6586,7 @@ var ROUTE_EVENT_ENUMS = {
     NOTFOUND: '$webRouteNotFound'
 };
 var _unregistered = {};
-var $stateCollection = {};
+var routeCollections = {};
 var $intentCollection = {};
 function createRoute(url) {
     var replacer = '/([\\w-@!.]+)', paramsMapping = [];
@@ -6597,54 +6603,44 @@ function createRoute(url) {
         regexp: new RegExp('(?:' + url.split('?')[0] + ')$')
     };
 }
-function addViewMatcher(view, route, routeElements) {
-    route.views = route.views || {};
-    if (!route.views[view]) {
-        route.views[view] = null;
-    }
+function addViewMatcher(view, route) {
     if (route.component) {
-        var isStringComp = typeof route.component === 'string';
-        if (isStringComp && !routeElements || routeElements && !routeElements.has(route.component)) {
-            errorBuilder('Invalid route configuration, missing view component', 0, route);
-        }
-        route.views[view] = isStringComp ? routeElements.get(route.component) : route.component;
+        route.views = route.views || {};
+        route.views[view] = route.component;
         delete route.component;
-    } else if (route.loadModule) {
-        route.views[view] = route.loadModule;
-        delete route.loadModule;
     }
 }
-function generateRoute(route, requireParent, routeElements) {
+function generateRoute(route, requireParent) {
     if (route.isIntent) {
         $intentCollection[route.name] = route;
         return;
     }
-    if ($stateCollection[route.name] && !(_unregistered[route.parent] && _unregistered[route.parent].includes(route.name))) {
+    if (routeCollections[route.name] && !(_unregistered[route.parent] && _unregistered[route.parent].includes(route.name))) {
         console.info('[Route] Duplicate route found: ' + route.name + ', skipping to use existing');
         return;
     }
-    if (!route.views && (!route.component || !route.loadModule)) {
+    if (!route.views && (!route.component && !route.loadModule)) {
         console.info('[Router] missing view configuration for: ' + route.name);
         return;
     }
     route.route = createRoute(route.url || '^');
     var _views = Object.keys(route.views || {});
     if (requireParent) {
-        var parentRoute = $stateCollection[route.parent];
+        var parentRoute = routeCollections[route.parent];
         route.views = route.views || {};
         for (var view in parentRoute.views) {
             if (view !== route.targetView) {
                 route.views[view] = parentRoute.views[view];
             } else if (!route.views[view]) {
-                addViewMatcher(view, route, routeElements);
+                addViewMatcher(view, route);
             }
         }
         if (route.targetView && !route.views[route.targetView]) {
-            addViewMatcher(route.targetView, route, routeElements);
+            addViewMatcher(route.targetView, route);
         }
         route.route.parent = parentRoute;
         if (!_views.length && !route.abstract) {
-            _views = parentRoute.route.$$views;
+            _views = parentRoute.route._views;
         }
         parentRoute = null;
         delete route.parent;
@@ -6658,55 +6654,71 @@ function generateRoute(route, requireParent, routeElements) {
             url: route.url
         };
     }
-    route.route.$$views = _views;
-    $stateCollection[route.name] = route;
+    route.route._views = _views;
+    routeCollections[route.name] = route;
     if (_unregistered.hasOwnProperty(route.name)) {
         _unregistered[route.name].forEach(function (uName) {
-            setupRoutes($stateCollection[uName], routeElements);
+            setupRoute(routeCollections[uName]);
         });
         delete _unregistered[route.name];
     }
 }
-function setupRoutes(route, routeElements) {
+function setRouteChildren(config) {
+    if (config.children) {
+        for (var childConfig of config.children) {
+            if (childConfig.name) {
+                var name = childConfig.name;
+                childConfig.name = [
+                    config.name,
+                    name
+                ].join('.');
+                childConfig.url = '/' + config.name + (childConfig.url || '/' + name);
+                childConfig.parent = config.name;
+                generateRoute(childConfig, true);
+                setRouteChildren(childConfig);
+            } else {
+                errorBuilder('unregistered child route in parent<' + config.name + '>, name is required:' + JSON.stringify(childConfig));
+            }
+        }
+    }
+}
+function setupRoute(route) {
     var requireParent = route.hasOwnProperty('parent');
     if (!route.name && route.url) {
         route.name = route.url.replace(/[/:]/g, _ => _ == '/' ? '.' : '');
     }
     if (!route.parent) {
-        addViewMatcher(route.targetView || staticRoutePrefix, route, routeElements);
+        addViewMatcher(route.targetView || staticRoutePrefix, route);
     }
-    if (requireParent && !$stateCollection.hasOwnProperty(route.parent)) {
+    if (requireParent && !routeCollections.hasOwnProperty(route.parent)) {
         if (!_unregistered.hasOwnProperty(route.parent)) {
             _unregistered[route.parent] = [];
         }
         _unregistered[route.parent].push(route.name);
-        $stateCollection[route.name] = route;
+        routeCollections[route.name] = route;
         return this;
     }
-    generateRoute(route, requireParent, routeElements);
-    function addChildren(config) {
-        if (config.children) {
-            config.children.forEach(function (childConfig) {
-                if (childConfig.name) {
-                    var name = childConfig.name;
-                    childConfig.name = [
-                        config.name,
-                        name
-                    ].join('.');
-                    childConfig.url = '/' + config.name + (childConfig.url || '/' + name);
-                    childConfig.parent = config.name;
-                    generateRoute(childConfig, true, routeElements);
-                    addChildren(childConfig);
-                } else {
-                    errorBuilder('unregistered child route in parent<' + config.name + '>, name is required:' + JSON.stringify(childConfig));
-                }
-            });
+    generateRoute(route, requireParent);
+    setRouteChildren(route);
+}
+function lazyLoadRoute(route) {
+    if (route.name) {
+        var mainRoute = routeCollections[route.name];
+        if (mainRoute) {
+            Object.assign(mainRoute, route);
+            if (mainRoute.targetView) {
+                addViewMatcher(mainRoute.targetView, mainRoute);
+            } else if (route.views) {
+                mainRoute.route._views = Object.keys(route.views);
+            }
+            setRouteChildren(mainRoute);
+        } else {
+            setupRoute(route);
         }
     }
-    addChildren(route);
 }
 function getParentRoute(name) {
-    var parent = $stateCollection[name], fnd;
+    var parent = routeCollections[name], fnd;
     do {
         if (parent) {
             fnd = parent;
@@ -6716,12 +6728,15 @@ function getParentRoute(name) {
 }
 function getRouteObj(routeName) {
     var queryParam = routeName.split('?');
-    for (var prop in $stateCollection) {
-        if (!$stateCollection[prop].abstract && $stateCollection[prop].route.regexp.test(queryParam[0])) {
-            return $stateCollection[prop];
+    for (var prop in routeCollections) {
+        if (!routeCollections[prop].abstract && routeCollections[prop].route.regexp.test(queryParam[0])) {
+            return routeCollections[prop];
         }
     }
-    return $stateCollection[routeConfig.fallback.name] || null;
+    return routeCollections[routeConfig.fallback.name] || null;
+}
+function parseDelimeter() {
+    return routeConfig.delimiter.map(a => (a = a.split(''), a.unshift(''), a.join('\\'))).join('(.*?)');
 }
 function getRequiredRoute(routeName, params) {
     var queryParam = routeName.split('?'), foundRoute = getRouteObj(routeName);
@@ -6746,7 +6761,7 @@ function parseUrl(href, params) {
     });
 }
 function getHref(stateName, params) {
-    var state = $stateCollection[stateName];
+    var state = routeCollections[stateName];
     if (state) {
         params = params || state.params;
         if (state.route.paramsMapping.length && !params) {
@@ -6760,28 +6775,10 @@ function RouteInterceptorInstance(route, path, currentRoute, redirectMethod) {
     this.name = route.name;
     this.path = path;
     this.locals = {};
-    Object.defineProperties(this, {
-        currentRoute: {
-            get: function () {
-                return currentRoute;
-            }
-        },
-        originalUrl: {
-            get: function () {
-                return route.url;
-            }
-        },
-        params: {
-            get: function () {
-                return route.params;
-            }
-        },
-        data: {
-            get: function () {
-                return route.data;
-            }
-        }
-    });
+    this.currentRoute = currentRoute;
+    this.originalUrl = route.url;
+    this.params = route.params;
+    this.data = route.data;
     this.redirect = redirectMethod;
 }
 var ViewHandler = function () {
@@ -6811,10 +6808,7 @@ var ViewHandler = function () {
     ViewHandler.prototype.compileViewTemplate = function (viewComponent, viewObjectInstance) {
         this.cleanUp(viewObjectInstance);
         if (viewComponent.loadModule) {
-            viewComponent.loadModule().then(module => {
-                compileModule(module);
-                compileComponent(module.rootElement);
-            });
+            this._loadModule(viewComponent.loadModule, compileComponent);
         } else {
             compileComponent(viewComponent);
         }
@@ -6835,10 +6829,11 @@ var ViewHandler = function () {
     ViewHandler.prototype.getCurrentView = function (_route) {
         var _views = [], mView = Object.keys(_route.views).concat();
         this._resolvedParents[_route.name] = true;
-        if (_route.route.parent && !this._resolvedParents[_route.route.parent.name]) {
-            var parentRoute = getParentRoute(_route.route.parent.name);
+        var parentName = _route.route.parent ? _route.route.parent.name : null;
+        if (parentName && !this._resolvedParents[parentName]) {
+            var parentRoute = getParentRoute(parentName);
             this._resolvedParents[parentRoute.name] = true;
-            this._resolvedParents[_route.route.parent.name] = true;
+            this._resolvedParents[parentName] = true;
             return mView;
         }
         if (_route.targetView) {
@@ -6847,7 +6842,7 @@ var ViewHandler = function () {
             }
             return mView;
         }
-        _views = _views.concat(_route.route.$$views);
+        _views = _views.concat(_route.route._views);
         this.removeViews(_views);
         mView = null;
         return _views;
@@ -6859,6 +6854,8 @@ var ViewHandler = function () {
             var viewObj = route.views ? route.views[view] : route;
             var viewObjectInstance = this.getView(view);
             if (viewObjectInstance) {
+                if (!viewObj)
+                    throw new TypeError('[Router] No view definition for ' + route.name);
                 this.compileViewTemplate(viewObj, viewObjectInstance);
             } else {
                 this._pendingViewStack.set(view, viewObj);
@@ -6886,6 +6883,14 @@ var ViewHandler = function () {
             viewInstance.element.children.forEach(DOMHelper.remove);
         }
     };
+    ViewHandler.prototype._loadModule = function (mLoader, callback) {
+        if (!mLoader)
+            return callback(null);
+        mLoader().then(module => {
+            compileModule(module);
+            callback(module.rootElement);
+        });
+    };
     ViewHandler.ctors = { name: 'ViewHandler' };
     return ViewHandler;
 }();
@@ -6899,7 +6904,15 @@ var LocationService = function () {
         this.locationState = null;
         this.previous = null;
         this.currentRoute = Object({ route: { params: {} } });
-        this.events = new EventManager((e, route, path) => this._processState(e, route, path));
+        this.events = new EventManager((e, route, path) => {
+            if (route.loadModule) {
+                this.viewHandler._loadModule(route.loadModule, rootElement => {
+                    this._processState(e, route, path, rootElement);
+                });
+            } else {
+                this._processState(e, route, path);
+            }
+        });
     }
     LocationService.prototype.changed = function (path) {
         return this.lastVisited !== path;
@@ -6978,7 +6991,7 @@ var LocationService = function () {
     LocationService.prototype.getFullPath = function (path) {
         return this.getRootUrl() + this.strategy.path(path);
     };
-    LocationService.prototype._processState = function (event, route, path) {
+    LocationService.prototype._processState = function (event, route, path, rootElement) {
         if (ROUTE_EVENT_ENUMS.START === event.type) {
             var navigatedPath = route.name === routeConfig.fallback.name ? route.url : path;
             var lastTransitionQueue = this.viewHandler.stateQueue.pop();
@@ -6994,7 +7007,7 @@ var LocationService = function () {
                     name: route.name,
                     params: route.params
                 }, navigatedPath);
-                this.viewHandler.resolveViews(route);
+                this.viewHandler.resolveViews(route, rootElement);
             } else {
                 this.events.dispatch(ROUTE_EVENT_ENUMS.ERROR, route);
             }
@@ -7309,13 +7322,14 @@ AbstractStrategy.prototype.pushState = function (data, path) {
 };
 function HashStrategyService(locationService) {
     AbstractStrategy.call(this, locationService);
-    this.hashRegEx = new RegExp(routeConfig.delimiter.join('(.*)'));
-    window.addEventListener('hashchange', () => {
-        var locHash = location.hash;
+    this.hashRegEx = new RegExp(parseDelimeter());
+    window.addEventListener('hashchange', e => {
+        var locHash = location.hash.split(/#/)[1];
         if (!locHash.length || !locationService.changed(locHash) || this.isReplaceState) {
             this.isReplaceState = false;
             return;
         }
+        e.preventDefault();
         locationService.go(locHash);
     }, false);
 }
@@ -7347,13 +7361,18 @@ var RouterModule = function () {
     'use strict';
     function RouterModule() {
     }
-    RouterModule.setRoutes = function (routes, elements) {
+    RouterModule.setRoutes = function (routes) {
         if (Array.isArray(routes)) {
-            routes.forEach(function (route) {
-                setupRoutes(route, elements);
-            });
+            routes.forEach(route => setupRoute(route));
         } else {
-            setupRoutes(routes, elements);
+            setupRoute(routes);
+        }
+    };
+    RouterModule.lazyLoad = function (routes) {
+        if (Array.isArray(routes)) {
+            routes.forEach(lazyLoadRoute);
+        } else {
+            lazyLoadRoute(routes);
         }
     };
     APP_BOOTSTRAP.register({
@@ -7365,8 +7384,8 @@ var RouterModule = function () {
 },
 1159 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'CalculatorComponent', () => { return CalculatorComponent;});
-var core = __required(1153);
+__required.r(exports, 'CalculatorComponent', () => CalculatorComponent);
+var core = __required(1133);
 /** compiled CalculatorComponent **/
 var CalculatorComponent = function(){
 "use strict";
@@ -7425,17 +7444,17 @@ CalculatorComponent.ctors = {
     exposeView: true
 };
 
-CalculatorComponent.view = /** jeli template **/ function(compiler){ 'use strict'; return function(viewRef){  var _GT = function(tid, mtl){ if (mtl && mtl.type){return mtl;} var tmp=$tmpl[tid]; if (mtl){ return Object.assign(mtl, tmp);}  return tmp ? ((typeof tmp ==='object')?tmp : tmp()): null;}; var $tmpl={}; return compiler.compile([{"type":1,"name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attr$":{"value":{"prop":"currentNumber","once":false}}},{"type":1,"name":"div","index":3,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":1,"name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"+"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["+"]}]},{"type":1,"name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"-"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["-"]}]},{"type":1,"name":"button","index":5,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"*"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["×"]}]},{"type":1,"name":"button","index":7,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"/"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["÷"]}]},{"type":1,"name":"button","index":9,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"7"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["7"]}]},{"type":1,"name":"button","index":11,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"8"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["8"]}]},{"type":1,"name":"button","index":13,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"9"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["9"]}]},{"type":1,"name":"button","index":15,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"4"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["4"]}]},{"type":1,"name":"button","index":17,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"5"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["5"]}]},{"type":1,"name":"button","index":19,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"6"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["6"]}]},{"type":1,"name":"button","index":21,"isc":false,"attr":{"type":"button","value":1},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"1"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["1"]}]},{"type":1,"name":"button","index":23,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"2"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["2"]}]},{"type":1,"name":"button","index":25,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"3"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["3"]}]},{"type":1,"name":"button","index":27,"isc":false,"attr":{"type":"button","value":0},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"0"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["0"]}]},{"type":1,"name":"button","index":29,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":3,"ast":["."]}]},{"type":1,"name":"button","index":31,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":3,"ast":["AC"]}]},{"type":1,"name":"button","index":33,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"="}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["="]}]}]}]}], viewRef);}}(new core["ViewParser"].JSONCompiler)/** template loader **/
+CalculatorComponent.view = /** jeli template **/ function(){ 'use strict'; var compiler = new core["ViewParser"].JSONCompiler( (id) => ({}[id]) );  return function(viewRef){ return compiler.compile([{"type":1,"name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attr$":{"value":{"prop":"currentNumber","once":false}}},{"type":1,"name":"div","index":3,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":1,"name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"+"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["+"]}]},{"type":1,"name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"-"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["-"]}]},{"type":1,"name":"button","index":5,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"*"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["×"]}]},{"type":1,"name":"button","index":7,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"/"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["÷"]}]},{"type":1,"name":"button","index":9,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"7"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["7"]}]},{"type":1,"name":"button","index":11,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"8"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["8"]}]},{"type":1,"name":"button","index":13,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"9"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["9"]}]},{"type":1,"name":"button","index":15,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"4"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["4"]}]},{"type":1,"name":"button","index":17,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"5"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["5"]}]},{"type":1,"name":"button","index":19,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"6"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["6"]}]},{"type":1,"name":"button","index":21,"isc":false,"attr":{"type":"button","value":1},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"1"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["1"]}]},{"type":1,"name":"button","index":23,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"2"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["2"]}]},{"type":1,"name":"button","index":25,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"3"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["3"]}]},{"type":1,"name":"button","index":27,"isc":false,"attr":{"type":"button","value":0},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"0"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["0"]}]},{"type":1,"name":"button","index":29,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":3,"ast":["."]}]},{"type":1,"name":"button","index":31,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":3,"ast":["AC"]}]},{"type":1,"name":"button","index":33,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"="}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["="]}]}]}]}], viewRef);}}()/** template loader **/
 return CalculatorComponent;
 }();
 
 },
 1160 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'RouterPageElement', () => { return RouterPageElement;});
-var common = __required(1154);
-var AppModule = __required(1165);
-var core = __required(1153);
+__required.r(exports, 'RouterPageElement', () => RouterPageElement);
+var common = __required(1134);
+var ItemList = __required(1163, 'ItemList');
+var core = __required(1133);
 var form = __required(1156);
 var FormControlService = form.FormControlService;
 /** compiled RouterPageElement **/
@@ -7511,19 +7530,19 @@ RouterPageElement.ctors = {
     ]
 };
 
-RouterPageElement.view = /** jeli template **/ function(compiler){ 'use strict'; return function(viewRef){  var _GT = function(tid, mtl){ if (mtl && mtl.type){return mtl;} var tmp=$tmpl[tid]; if (mtl){ return Object.assign(mtl, tmp);}  return tmp ? ((typeof tmp ==='object')?tmp : tmp()): null;}; var $tmpl={}; return compiler.compile([{"type":1,"name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" Yes"]},{"type":1,"name":"br","index":3,"isc":false},{"type":1,"name":"input","index":5,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" No"]},{"type":1,"name":"br","index":7,"isc":false},{"type":1,"name":"input","index":9,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[form.CheckboxEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false}]},{"type":1,"name":"textarea","index":3,"isc":false,"props":{"formField":"textarea"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":4,"isc":false},{"type":1,"name":"input","index":6,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":7,"isc":false},{"type":1,"name":"input","index":9,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false},{"type":1,"name":"input","index":12,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[form.RangeEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":13,"isc":false},{"type":1,"name":"input","index":15,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[form.NumberEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":16,"isc":false},{"type":1,"name":"select","index":18,"isc":false,"props":{"formField":"select"},"providers":[form.SelectEventBinder,form.FormFieldDirective],"attr":{"multiple":""},"children":[{"type":1,"name":"option","index":1,"isc":false,"attr":{"value":"select_1"},"children":[{"type":3,"ast":["Select 1"]}]},{"type":1,"name":"option","index":3,"isc":false,"attr":{"value":"select_2"},"children":[{"type":3,"ast":["Select 2"]}]},{"type":1,"name":"option","index":5,"isc":false,"attr":{"value":"select_3"},"children":[{"type":3,"ast":["Select 3"]}]}]},{"type":1,"name":"div","index":20,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"input","index":3,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"input","index":5,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[form.NumberEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"div","index":22,"isc":false,"children":[{"type":1,"name":"button","index":0,"isc":false,"attr$":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":3,"ast":["Submit"]}]}]},{"type":1,"name":"item-list","index":24,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[AppModule.ItemList],"children":[],"templates":{"place":{"@":[{"type":1,"name":"pre","index":1,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"value","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}}},{"type":1,"name":"pre","index":26,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":["testForm","value"],"args":[[3]],"fns":[common.jsonFilterFn]}]],false]}]}]}], viewRef);}}(new core["ViewParser"].JSONCompiler)/** template loader **/
+RouterPageElement.view = /** jeli template **/ function(){ 'use strict'; var compiler = new core["ViewParser"].JSONCompiler( (id) => ({}[id]) );  return function(viewRef){ return compiler.compile([{"type":1,"name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" Yes"]},{"type":1,"name":"br","index":3,"isc":false},{"type":1,"name":"input","index":5,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" No"]},{"type":1,"name":"br","index":7,"isc":false},{"type":1,"name":"input","index":9,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[form.CheckboxEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false}]},{"type":1,"name":"textarea","index":3,"isc":false,"props":{"formField":"textarea"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":4,"isc":false},{"type":1,"name":"input","index":6,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":7,"isc":false},{"type":1,"name":"input","index":9,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false},{"type":1,"name":"input","index":12,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[form.RangeEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":13,"isc":false},{"type":1,"name":"input","index":15,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[form.NumberEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":16,"isc":false},{"type":1,"name":"select","index":18,"isc":false,"props":{"formField":"select"},"providers":[form.SelectEventBinder,form.FormFieldDirective],"attr":{"multiple":""},"children":[{"type":1,"name":"option","index":1,"isc":false,"attr":{"value":"select_1"},"children":[{"type":3,"ast":["Select 1"]}]},{"type":1,"name":"option","index":3,"isc":false,"attr":{"value":"select_2"},"children":[{"type":3,"ast":["Select 2"]}]},{"type":1,"name":"option","index":5,"isc":false,"attr":{"value":"select_3"},"children":[{"type":3,"ast":["Select 3"]}]}]},{"type":1,"name":"div","index":20,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"input","index":3,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"input","index":5,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[form.NumberEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"div","index":22,"isc":false,"children":[{"type":1,"name":"button","index":0,"isc":false,"attr$":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":3,"ast":["Submit"]}]}]},{"type":1,"name":"item-list","index":24,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[ItemList],"children":[],"templates":{"place":{"@":[{"type":1,"name":"pre","index":1,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"value","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}}},{"type":1,"name":"pre","index":26,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":["testForm","value"],"args":[[3]],"fns":[common.jsonFilterFn]}]],false]}]}]}], viewRef);}}()/** template loader **/
 return RouterPageElement;
 }();
 
 },
 1161 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'AppRouteModule', () => { return AppRouteModule;});
-__required.r(exports, 'validatorService', () => { return validatorService;});
-__required.r(exports, 'InitializeApp', () => { return InitializeApp;});
+__required.r(exports, 'AppRouteModule', () => AppRouteModule);
+__required.r(exports, 'validatorService', () => validatorService);
+__required.r(exports, 'InitializeApp', () => InitializeApp);
 var RouterPageElement = __required(1160, 'RouterPageElement');
 var CalculatorComponent = __required(1159, 'CalculatorComponent');
-var core = __required(1153);
+var core = __required(1133);
 var INITIALIZERS = core.INITIALIZERS;
 var router = __required(1158);
 var WebStateService = router.WebStateService;
@@ -7570,7 +7589,7 @@ ROUTE_INTERCEPTOR.register({useClass: validatorService}, true);
 
 AppRouteModule.fac = () =>/** bootstrap module**/[
     RouterModule
-].forEach(m => { if(!m.k) return (m.fac && m.fac(), m(), m.k = 1); });
+].forEach(m => { if(!m.k && typeof m == 'function') return (m.fac && m.fac(), m(), m.k = 1); });
 ;
 return AppRouteModule;
 }();
@@ -7578,9 +7597,9 @@ return AppRouteModule;
 },
 1162 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'TestPlaceElement', () => { return TestPlaceElement;});
-var common = __required(1154);
-var core = __required(1153);
+__required.r(exports, 'TestPlaceElement', () => TestPlaceElement);
+var common = __required(1134);
+var core = __required(1133);
 /** compiled TestPlaceElement **/
 var TestPlaceElement = function(){
 "use strict";
@@ -7597,16 +7616,16 @@ TestPlaceElement.ctors = {
     }
 };
 
-TestPlaceElement.view = /** jeli template **/ function(compiler){ 'use strict'; return function(viewRef){  var _GT = function(tid, mtl){ if (mtl && mtl.type){return mtl;} var tmp=$tmpl[tid]; if (mtl){ return Object.assign(mtl, tmp);}  return tmp ? ((typeof tmp ==='object')?tmp : tmp()): null;}; var $tmpl={}; return compiler.compile([{"type":1,"name":"div","index":0,"isc":false,"children":[{"type":11,"name":"#","index":0,"isc":false,"refId":"modal-body"}]},{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":1,"isc":false,"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[common.ClassDirective],"children":[{"type":1,"name":"p","index":0,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"opt","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[common.ForDirective]}], viewRef);}}(new core["ViewParser"].JSONCompiler)/** template loader **/
+TestPlaceElement.view = /** jeli template **/ function(){ 'use strict'; var compiler = new core["ViewParser"].JSONCompiler( (id) => ({}[id]) );  return function(viewRef){ return compiler.compile([{"type":1,"name":"div","index":0,"isc":false,"children":[{"type":11,"name":"#","index":0,"isc":false,"refId":"modal-body"}]},{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":1,"isc":false,"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[common.ClassDirective],"children":[{"type":1,"name":"p","index":0,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"opt","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[common.ForDirective]}], viewRef);}}()/** template loader **/
 return TestPlaceElement;
 }();
 
 },
 1163 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'ItemList', () => { return ItemList;});
-var common = __required(1154);
-var core = __required(1153);
+__required.r(exports, 'ItemList', () => ItemList);
+var common = __required(1134);
+var core = __required(1133);
 /** compiled ItemList **/
 var ItemList = function(){
 "use strict";
@@ -7622,19 +7641,19 @@ ItemList.ctors = {
     }
 };
 
-ItemList.view = /** jeli template **/ function(compiler){ 'use strict'; return function(viewRef){  var _GT = function(tid, mtl){ if (mtl && mtl.type){return mtl;} var tmp=$tmpl[tid]; if (mtl){ return Object.assign(mtl, tmp);}  return tmp ? ((typeof tmp ==='object')?tmp : tmp()): null;}; var $tmpl={}; return compiler.compile([{"type":11,"name":"#","index":0,"isc":false,"refId":"@"},{"type":1,"name":"#","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[common.SwitchDirective],"children":[{"type":8,"name":"##","text":"switchDefault","templates":{"switchDefault":{"type":1,"name":"h5","index":1,"isc":false,"children":[{"type":3,"ast":["Invalid form"]}]}},"providers":[common.SwitchDefaultDirective]},{"type":8,"name":"##","text":"switchCase","templates":{"switchCase":{"type":1,"name":"h5","index":3,"isc":false,"children":[{"type":3,"ast":["Valid form"]}]}},"props":{"switchCase":{"prop":{"type":"raw","value":"test"}}},"providers":[common.SwitchCaseDirective]}]}], viewRef);}}(new core["ViewParser"].JSONCompiler)/** template loader **/
+ItemList.view = /** jeli template **/ function(){ 'use strict'; var compiler = new core["ViewParser"].JSONCompiler( (id) => ({}[id]) );  return function(viewRef){ return compiler.compile([{"type":11,"name":"#","index":0,"isc":false,"refId":"@"},{"type":1,"name":"#","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[common.SwitchDirective],"children":[{"type":8,"name":"##","text":"switchDefault","templates":{"switchDefault":{"type":1,"name":"h5","index":1,"isc":false,"children":[{"type":3,"ast":["Invalid form"]}]}},"providers":[common.SwitchDefaultDirective]},{"type":8,"name":"##","text":"switchCase","templates":{"switchCase":{"type":1,"name":"h5","index":3,"isc":false,"children":[{"type":3,"ast":["Valid form"]}]}},"props":{"switchCase":{"prop":{"type":"raw","value":"test"}}},"providers":[common.SwitchCaseDirective]}]}], viewRef);}}()/** template loader **/
 return ItemList;
 }();
 
 },
 1164 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'AppRootElement', () => { return AppRootElement;});
-var datetime = __required(1155);
-var AppModule = __required(1165);
-var common = __required(1154);
+__required.r(exports, 'AppRootElement', () => AppRootElement);
+var datetime = __required(1135);
+var TestPlaceElement = __required(1162, 'TestPlaceElement');
+var common = __required(1134);
 var form = __required(1156);
-var core = __required(1153);
+var core = __required(1133);
 var http = __required(1157);
 var HttpService = http.HttpService;
 /** compiled AppRootElement **/
@@ -7721,16 +7740,14 @@ AppRootElement.ctors = {
     ]
 };
 
-AppRootElement.view = /** jeli template **/ function(compiler){ 'use strict'; return function(viewRef){  var _GT = function(tid, mtl){ if (mtl && mtl.type){return mtl;} var tmp=$tmpl[tid]; if (mtl){ return Object.assign(mtl, tmp);}  return tmp ? ((typeof tmp ==='object')?tmp : tmp()): null;}; var $tmpl={"fallback":{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":1,"isc":false,"context":{"i":"$context"},"children":[{"type":3,"ast":["Testing_${0}",[["${0}",{"prop":"i"}]],false]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[common.ForDirective],"refId":"fallback"}}; return compiler.compile([{"type":1,"name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":1,"name":"a","index":1,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":3,"ast":["                Todo Application              "]}]}]}]}]},{"type":1,"name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[form.CheckboxEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attr$":{"checked":{"prop":true,"once":true}},"vc":[{"name":"model","type":"jModel","value":"input"},"app-root"]},{"type":8,"name":"##","text":"if","templates":{"if":{"type":1,"name":"div","index":4,"isc":false,"children":[{"type":3,"ast":["I am Test Condition"]}]},"ifElse":_GT('fallback', null)},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[common.IfDirective]},{"type":1,"name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[common.ClassDirective],"children":[{"type":3,"ast":["Class test"]}]},{"type":1,"name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[common.SwitchDirective],"children":[{"type":8,"name":"##","text":"switchCase","templates":{"switchCase":{"type":1,"name":"h5","index":1,"isc":false,"children":[{"type":3,"ast":["I am ${0} case",[["${0}",{"prop":"test"}]],false]}]}},"props":{"switchCase":{"prop":true}},"providers":[common.SwitchCaseDirective]},{"type":8,"name":"##","text":"switchDefault","templates":{"switchDefault":{"type":1,"name":"test-place","index":3,"isc":true,"providers":[AppModule.TestPlaceElement],"children":[]}},"providers":[common.SwitchDefaultDirective]}]},{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":8,"isc":false,"context":{"item":"$context"},"attr":{"class":"another"},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"item","args":[],"fns":[common.jsonFilterFn]}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[common.FilterPipe]},"forTrackBy":"trackByFn"},"providers":[common.ForDirective]},{"type":3,"ast":["Selected: ${0}",[["${0}",{"prop":"valueBinding"}]],false]},{"type":1,"name":"select","index":10,"isc":false,"props":{"model":{"prop":"valueBinding"}},"providers":[form.SelectEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding","right":"$event"}],"custom":true}],"children":[{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"option","index":1,"isc":false,"props":{"option":"","value":{"prop":"opt","once":false}},"providers":[form.OptionDirective],"context":{"opt":"$context"},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"opt"}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[1,2,3,4,5,6]}}},"providers":[common.ForDirective]}]},{"type":1,"name":"br","index":12,"isc":false},{"type":3,"ast":[" Selected: ${0}",[["${0}",{"prop":"valueBinding2","args":[],"fns":[common.jsonFilterFn]}]],false]},{"type":1,"name":"select","index":14,"isc":false,"props":{"model":{"prop":"valueBinding2"}},"providers":[form.SelectEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding2","right":"$event"}],"custom":true}],"attr":{"multiple":""},"children":[{"type":1,"name":"option","index":1,"isc":false,"attr":{"value":"select_1"},"children":[{"type":3,"ast":["Select 1"]}]},{"type":1,"name":"option","index":3,"isc":false,"attr":{"value":"select_2"},"children":[{"type":3,"ast":["Select 2"]}]},{"type":1,"name":"option","index":5,"isc":false,"attr":{"value":"select_3"},"children":[{"type":3,"ast":["Select 3"]}]}]},{"type":1,"name":"p","index":16,"isc":false,"children":[{"type":3,"ast":["© ${0} FrontendOnly. All Rights Reserved ",[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[datetime.dateTimeFilterFN]}]],false]}]}], viewRef);}}(new core["ViewParser"].JSONCompiler)/** template loader **/
+AppRootElement.view = /** jeli template **/ function(){ 'use strict'; var compiler = new core["ViewParser"].JSONCompiler( (id) => ({"fallback":{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":1,"isc":false,"context":{"i":"$context"},"children":[{"type":3,"ast":["Testing_${0}",[["${0}",{"prop":"i"}]],false]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[common.ForDirective],"refId":"fallback"}}[id]) );  return function(viewRef){ return compiler.compile([{"type":1,"name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":1,"name":"a","index":1,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":3,"ast":["                Todo Application              "]}]}]}]}]},{"type":1,"name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[form.CheckboxEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attr$":{"checked":{"prop":true,"once":true}},"vc":[{"name":"model","type":"jModel","value":"input"},"app-root"]},{"type":8,"name":"##","text":"if","templates":{"if":{"type":1,"name":"div","index":4,"isc":false,"children":[{"type":3,"ast":["I am Test Condition"]}]},"ifElse":compiler._GT('fallback', null)},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[common.IfDirective]},{"type":1,"name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[common.ClassDirective],"children":[{"type":3,"ast":["Class test"]}]},{"type":1,"name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[common.SwitchDirective],"children":[{"type":8,"name":"##","text":"switchCase","templates":{"switchCase":{"type":1,"name":"h5","index":1,"isc":false,"children":[{"type":3,"ast":["I am ${0} case",[["${0}",{"prop":"test"}]],false]}]}},"props":{"switchCase":{"prop":true}},"providers":[common.SwitchCaseDirective]},{"type":8,"name":"##","text":"switchDefault","templates":{"switchDefault":{"type":1,"name":"test-place","index":3,"isc":true,"providers":[TestPlaceElement],"children":[]}},"providers":[common.SwitchDefaultDirective]}]},{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":8,"isc":false,"context":{"item":"$context"},"attr":{"class":"another"},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"item","args":[],"fns":[common.jsonFilterFn]}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[common.FilterPipe]},"forTrackBy":"trackByFn"},"providers":[common.ForDirective]},{"type":3,"ast":["Selected: ${0}",[["${0}",{"prop":"valueBinding"}]],false]},{"type":1,"name":"select","index":10,"isc":false,"props":{"model":{"prop":"valueBinding"}},"providers":[form.SelectEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding","right":"$event"}],"custom":true}],"children":[{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"option","index":1,"isc":false,"props":{"option":"","value":{"prop":"opt","once":false}},"providers":[form.OptionDirective],"context":{"opt":"$context"},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"opt"}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[1,2,3,4,5,6]}}},"providers":[common.ForDirective]}]},{"type":1,"name":"br","index":12,"isc":false},{"type":3,"ast":[" Selected: ${0}",[["${0}",{"prop":"valueBinding2","args":[],"fns":[common.jsonFilterFn]}]],false]},{"type":1,"name":"select","index":14,"isc":false,"props":{"model":{"prop":"valueBinding2"}},"providers":[form.SelectEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding2","right":"$event"}],"custom":true}],"attr":{"multiple":""},"children":[{"type":1,"name":"option","index":1,"isc":false,"attr":{"value":"select_1"},"children":[{"type":3,"ast":["Select 1"]}]},{"type":1,"name":"option","index":3,"isc":false,"attr":{"value":"select_2"},"children":[{"type":3,"ast":["Select 2"]}]},{"type":1,"name":"option","index":5,"isc":false,"attr":{"value":"select_3"},"children":[{"type":3,"ast":["Select 3"]}]}]},{"type":1,"name":"p","index":16,"isc":false,"children":[{"type":3,"ast":["© ${0} FrontendOnly. All Rights Reserved ",[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[datetime.dateTimeFilterFN]}]],false]}]}], viewRef);}}()/** template loader **/
 return AppRootElement;
 }();
 
 },
 1165 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'ItemList', () => { return ItemList;});
-__required.r(exports, 'TestPlaceElement', () => { return TestPlaceElement;});
-__required.r(exports, 'AppModule', () => { return AppModule;});
+__required.r(exports, 'AppModule', () => AppModule);
 var RouterPageElement = __required(1160, 'RouterPageElement');
 var CalculatorComponent = __required(1159, 'CalculatorComponent');
 var AppRootElement = __required(1164, 'AppRootElement');
@@ -7741,9 +7758,9 @@ var http = __required(1157);
 var HttpModule = http.HttpModule;
 var form = __required(1156);
 var FormModule = form.FormModule;
-var datetime = __required(1155);
+var datetime = __required(1135);
 var DateTimeModule = datetime.DateTimeModule;
-var common = __required(1154);
+var common = __required(1134);
 var CommonModule = common.CommonModule;
 /** compiled AppModule **/
 var AppModule = function(){
@@ -7760,7 +7777,7 @@ AppModule.fac = () =>/** bootstrap module**/[
     FormModule,
     HttpModule,
     AppRouteModule
-].forEach(m => { if(!m.k) return (m.fac && m.fac(), m(), m.k = 1); });
+].forEach(m => { if(!m.k && typeof m == 'function') return (m.fac && m.fac(), m(), m.k = 1); });
 ;
 return AppModule;
 }();

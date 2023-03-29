@@ -1,4 +1,4 @@
-import { isobject } from 'js-helpers/helpers';
+import { isobject } from '@jeli/helpers';
 /**
  * 
  * @param {*} element 

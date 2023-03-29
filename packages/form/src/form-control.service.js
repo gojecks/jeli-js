@@ -1,4 +1,4 @@
-import { isempty, isobject, isundefined, isfunction, isarray } from 'js-helpers/helpers';
+import { isempty, isobject, isundefined, isfunction, isarray } from '@jeli/helpers';
 import { errorBuilder } from '@jeli/core';
 import { FormControlAbstract } from './form-control.abstract';
 

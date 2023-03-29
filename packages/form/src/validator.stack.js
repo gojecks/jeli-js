@@ -1,4 +1,4 @@
-import { isnumber, isstring, isempty, isobject, isfunction, isundefined, isnull, isboolean, isequal } from 'js-helpers/helpers';
+import { isnumber, isstring, isempty, isobject, isfunction, isundefined, isnull, isboolean, isequal } from '@jeli/helpers';
 
 /**
  * Core FormvalidationStack

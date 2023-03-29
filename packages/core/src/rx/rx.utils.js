@@ -1,5 +1,4 @@
-import { hashcode } from 'js-helpers/utils';
-import { isobject, isfunction, isequal } from 'js-helpers/helpers';
+import { isfunction, isequal } from '@jeli/helpers';
 
 /**
  * Returns a function, that, as long as it continues to be invoked, will not

@@ -1,4 +1,4 @@
-import { isequal, isarray, inarray } from 'js-helpers/helpers';
+import { isequal, isarray, inarray } from '@jeli/helpers';
 import { VALUE_ACCESSOR } from './abstract.event.accessor';
 import { closureRef, AttributeAppender } from '@jeli/core';
 

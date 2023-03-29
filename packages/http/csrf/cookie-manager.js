@@ -1,4 +1,4 @@
-import { isundefined, isnull } from 'js-helpers/helpers';
+import { isundefined, isnull } from '@jeli/helpers';
 
 Service()
     /**

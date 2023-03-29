@@ -1,4 +1,4 @@
-import { isequal, inarray } from 'js-helpers/helpers';
+import { isequal, inarray } from '@jeli/helpers';
 import { errorBuilder, ProviderToken } from '@jeli/core';
 import { CheckboxEventBinder } from './directives/checkbox.event.accessor';
 import { SelectEventBinder } from './directives/select.event.accessor';

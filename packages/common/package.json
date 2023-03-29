@@ -1,26 +1,26 @@
 {
-    "name": "@jeli/common",
-    "version": "0.0.0-PLACEHOLDER",
-    "description": "jeli-js common",
-    "main": "public.api.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/gojecks/jeli-js.git"
-    },
-    "keywords": [
-        "jeli",
-        "common"
-    ],
-    "author": "jeli",
-    "license": "MIT",
-    "peerDependencies": {
-        "@jeli/core": "0.0.0-PLACEHOLDER"
-    },
-    "bugs": {
-        "url": "https://github.com/gojecks/jeli-js/issues"
-    },
-    "homepage": "https://github.com/gojecks/jeli-js#readme"
+  "name": "@jeli/common",
+  "version": "1.0.0",
+  "description": "jeli-js common",
+  "main": "public.api.js",
+  "files": [
+    "dist/common"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gojecks/jeli-js.git"
+  },
+  "keywords": [
+    "jeli",
+    "common"
+  ],
+  "author": "jeli",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gojecks/jeli-js/issues"
+  },
+  "homepage": "https://github.com/gojecks/jeli-js#readme"
 }

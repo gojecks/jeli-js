@@ -1,4 +1,4 @@
-import { isobject, isfunction } from "js-helpers/helpers";
+import { isobject, isfunction } from "@jeli/helpers";
 
 export var SubscriptionStates = {
     onError: 0,

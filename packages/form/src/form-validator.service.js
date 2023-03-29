@@ -1,6 +1,6 @@
 import './form-validator-current-instance';
-import { isobject, isfunction, isequal } from 'js-helpers/helpers';
-import { extend } from 'js-helpers/utils';
+import { isobject, isfunction, isequal } from '@jeli/helpers';
+import { extend } from '@jeli/helpers/utils';
 import { formValidationStack } from './validator.stack';
 
 /**

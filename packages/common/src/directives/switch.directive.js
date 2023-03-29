@@ -1,4 +1,4 @@
-import { isequal } from 'js-helpers/helpers';
+import { isequal } from '@jeli/helpers';
 /**
  * 
  * @param {*} viewRef 

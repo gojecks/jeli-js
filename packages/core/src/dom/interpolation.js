@@ -1,4 +1,4 @@
-import { isobject, isequal, isboolean, isundefined, isnull, isstring, isarray, isnumber, isfunction } from 'js-helpers/helpers';
+import { isobject, isequal, isboolean, isundefined, isnull, isstring, isarray, isnumber, isfunction } from '@jeli/helpers';
 import { errorBuilder } from '../utils/errorLogger';
 import { Inject } from '../dependency.injector';
 /**

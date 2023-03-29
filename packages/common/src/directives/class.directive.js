@@ -1,4 +1,4 @@
-import { isobject } from 'js-helpers/helpers';
+import { isobject } from '@jeli/helpers';
 import { ElementClassList } from '@jeli/core';
 /**
  * @Directive :style | :class

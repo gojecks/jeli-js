@@ -1,4 +1,4 @@
-import { isobject, isstring, inarray } from 'js-helpers/helpers';
+import { isobject, isstring, inarray } from '@jeli/helpers';
 /**
  * 
  * @param {*} nativeElement 

@@ -1,4 +1,4 @@
-import { isfunction } from 'js-helpers/helpers';
+import { isfunction } from '@jeli/helpers';
 /**
  * IterableProfiler
  * Compare Two Objects or Array<Objects>

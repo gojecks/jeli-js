@@ -1,5 +1,5 @@
 import { Subject, InterceptorResolver } from '@jeli/core';
-import { inarray } from 'js-helpers/helpers';
+import { inarray } from '@jeli/helpers';
 import { HttpRequestError } from '../http.error';
 import { HttpRequest } from '../http.request';
 import { HttpResponse } from '../http.response';

@@ -1,4 +1,4 @@
-import { isequal, isarray } from 'js-helpers/helpers';
+import { isequal, isarray } from '@jeli/helpers';
 import { EventEmitter } from '@jeli/core';
 import { FormValidatorService } from './form-validator.service';
 

@@ -1,4 +1,4 @@
-import { isobject, isequal } from 'js-helpers/helpers';
+import { isobject, isequal } from '@jeli/helpers';
 import { errorBuilder } from '../utils/errorLogger';
 import { sce } from './renderer/sce';
 import { ElementStyle } from './style';

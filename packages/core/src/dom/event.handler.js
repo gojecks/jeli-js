@@ -1,4 +1,4 @@
-import { inarray, isequal } from 'js-helpers/helpers';
+import { inarray, isequal } from '@jeli/helpers';
 import { errorBuilder } from '../utils/errorLogger';
 
 
