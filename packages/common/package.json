@@ -1,10 +1,11 @@
 {
   "name": "@jeli/common",
-  "version": "1.0.3",
+  "version": "1.0.4-0",
   "description": "jeli-js common",
   "main": "public.api.js",
   "files": [
     "bundles",
+    "datetime",
     "metadata.json"
   ],
   "scripts": {
