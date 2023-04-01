@@ -1,6 +1,6 @@
 {
   "name": "@jeli/router",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "jeli-js router",
   "main": "public.api.js",
   "files": [

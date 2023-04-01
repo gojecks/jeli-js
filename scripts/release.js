@@ -3,7 +3,9 @@ const path = require('path');
 
 async function runTask() {
     const cliVersion = require('@jeli/cli/package.json').version;
-    const taskRunner = new ReleaseTaskRunner(path.resolve(__dirname, '../packages'), 'npm', '', cliVersion);
+    const dirPath  = path.resolve(__dirname, '../packages');
+    const distPath = path.resolve(__dirname, '../dist');
+    const taskRunner = new ReleaseTaskRunner(dirPath, 'npm', '', cliVersion, distPath);
     const confirmRelease = await taskRunner.versionPrompt();
     if (!confirmRelease) return;
     await taskRunner.updatePackageVersionTask('Updating package versions...');
