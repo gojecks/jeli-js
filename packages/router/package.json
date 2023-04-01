@@ -1,10 +1,11 @@
 {
   "name": "@jeli/router",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "jeli-js router",
   "main": "public.api.js",
   "files": [
-    "dist/route"
+    "bundles",
+    "metadata.json"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
