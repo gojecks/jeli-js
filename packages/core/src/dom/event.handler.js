@@ -279,12 +279,10 @@ function handleEvent(element, event, eventName) {
  * @param {*} element 
  */
 export function CustomEventHandler(element) {
-    var _this = this;
-    var trigger = function(event) { _this.trigger(event); };
+    var trigger = (event) => { this.trigger(event); };
     this.element = element;
     this.registeredEvents = {};
     this.register = function(type, callback) {
-        var _this = this;
         var index = -1;
         if (this.element && this.registeredEvents) {
             if (!this.registeredEvents.hasOwnProperty(type)) {
@@ -295,9 +293,7 @@ export function CustomEventHandler(element) {
             /**
              * unregister
              */
-            return function() {
-                _this.registeredEvents[type].splice(index - 1, 1);
-            }
+            return ()  => this.registeredEvents[type].splice(index - 1, 1);
         }
     };
 

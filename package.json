@@ -44,7 +44,7 @@
   },
   "scripts": {
     "test": "mocha './test/**/*.spec.js'",
-    "build": "node ./node_modules/@jeli/compiler-cli/bin/compiler.js --all",
+    "build:all": "node ./node_modules/@jeli/compiler-cli/bin/compiler.js --all",
     "release": "node scripts/release.js"
   },
   "dependencies": {

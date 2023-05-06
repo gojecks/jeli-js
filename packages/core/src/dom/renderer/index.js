@@ -134,8 +134,9 @@ export var ViewParser = function () {
          */
         function createAndAppend(elementDefinition) {
             var child = ViewParser.builder[elementDefinition.type](elementDefinition, hostRef.parent, viewContainer, context);
-            // store the origin
-            child.hostRefId = hostRef.refId;
+             // Attach the child element to the origin, used for getting the right componentRef
+             // TODO: uncomment this line if <j-place> starts breaking
+            // child.hostRefId = hostRef.refId;
             if (appendToParent || createPlaceElement) {
                 pushToParent(child, placeElement || parent);
             } else {
@@ -144,7 +145,7 @@ export var ViewParser = function () {
 
             /**
              * check if VC property is defined in placeTemplate
-             * register the required to the child
+             * register the child to the hostRef viewQuery
              */
             if (definition.vc && ([elementDefinition.refId, child.tagName].includes(definition.vc[0].value))) {
                 addViewQuery(hostRef, definition.vc, child);
@@ -183,13 +184,14 @@ export var ViewParser = function () {
                 if (template) {
                     var oldElement = element;
                     element = ViewParser.builder[template.type](template, parent, viewContainer, context);
-                    if (!fromObserver)
+                    if (!fromObserver || !element)
                         return element;
-
                     // process  and replace
                     unsubscribeScheduler = scheduler.schedule(function () {
-                        transverse(element);
-                        replaceElement(oldElement, element);
+                        if(element){
+                            transverse(element);
+                            replaceElement(oldElement, element);
+                        }
                         oldElement = null;
                     });
                 }

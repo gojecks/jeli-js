@@ -16,10 +16,10 @@ function AbstractElementRef(definition, parentRef) {
     var locaVariables = null;
     this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
     this.$observers = [];
-    this.refId = '__eid_' + $eUID++;
+    this.refId = $eUID++;
     this.children = new QueryList();
     this.parent = parentRef;
-    this.hostRefId = (parentRef) ? parentRef.isc ? parentRef.refId : parentRef.hostRefId || this.refId : this.refId;
+    this.hostRefId = (parentRef ? (parentRef.isc ? parentRef.refId : (parentRef.hostRefId || this.refId)) : this.refId);
     this.type = definition.type;
     this.tagName = definition.name.toLowerCase();
     this.index = definition.index;

@@ -1,4 +1,3 @@
-import { isequal, isfunction } from '@jeli/helpers';
 import { isequal } from '@jeli/helpers';
 import { staticInjectionToken } from '../../component/injectors';
 import { AttributeAppender } from '../attribute';
@@ -295,18 +294,19 @@ function createElementByType(tag, text, fromDOM) {
  * @param {*} element 
  * @param {*} observers 
  */
-function setupAttributeObservers(element, attrObservers) {
+export function setupAttributeObservers(element, attrObservers) {
     var observerStarted = false;
+    var observerKeys = Object.keys(attrObservers);
     var unsubscribe = SubscribeObservables(element.hostRef.refId, observe);
     attachElementObserver(element, unsubscribe);
 
     function observe() {
-        for (var propName in attrObservers) {
+        for (var propName of observerKeys) {
             /**
              * remove the config
              */
             if (attrObservers[propName].once && observerStarted) {
-                return;
+                continue;
             }
             attributeEvaluator(propName, attrObservers[propName]);
         }
