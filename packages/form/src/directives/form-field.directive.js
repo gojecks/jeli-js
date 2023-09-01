@@ -1,6 +1,5 @@
 import { VALUE_ACCESSOR } from "./abstract.event.accessor";
 import { errorBuilder } from "@jeli/core";
-import { FormControlDirective } from "./form-control.directive";
 
 Directive({
     selector: 'formField',

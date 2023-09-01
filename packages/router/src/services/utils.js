@@ -19,15 +19,22 @@ export var routeConfig = Object({
         name: '.'
     },
     restoreOnRefresh: true,
-    delimiter: ['#!', '']
+    delimiter: ['#!', ''],
+    autoInitialize: true,
+    allowChangeFromLocationBar: true,
+    scrollTop: true
 });
 
 // $webRouteStart|$webRouteNotFound|$webRouteSuccess|$webRouteError
 export var ROUTE_EVENT_ENUMS = {
-    SUCCESS: "$webRouteSuccess",
-    ERROR: "$webRouteError",
-    START: "$webRouteStart",
-    NOTFOUND: "$webRouteNotFound"
+    SUCCESS: "WEB_ROUTE_SUCCESS",
+    ERROR: "WEB_ROUTE_ERROR",
+    START: "WEB_ROUTE_START",
+    NOTFOUND: "WEB_ROUTE_NOT_FOUND",
+    GUARDCHECK: "WEB_ROUTE_GUARD_CHECK",
+    REDIRECT: "WEB_ROUTE_REDIRECT",
+    RENDER: "WEB_ROUTE_RENDER",
+    LME: "WEB_ROUTE_MODULE_LOAD_ERROR"
 };
 
 /**
@@ -41,7 +48,7 @@ var $intentCollection = {};
  * @param {*} url 
  */
 function createRoute(url) {
-    var replacer = "\/([\\w-@!.]+)",
+    var replacer = "\/([\\w-@!.\s%]+)",
         paramsMapping = [];
     url = url.replace(/([\/]|)([:]|)+(\w+)/g, function (match) {
         if (match.indexOf(":") > -1) {
@@ -60,52 +67,29 @@ function createRoute(url) {
 
 /**
  * attach view to a route configuration
- * @param {*} view 
+ * @param {*} viewId 
  * @param {*} route 
  */
-function addViewMatcher(view, route) {
+function addViewMatcher(viewId, route, viewsArray) {
     if (route.component) {
         //add the required target view to the view scope
         route.views = (route.views || {});
-        route.views[view] = route.component;
+        route.views[viewId] = route.component;
         delete route.component;
+        if (viewsArray) viewsArray.push(viewId);
     }
 }
 
 /**
  * 
  * @param {*} route 
- * @param {*} requireParent 
- * @returns 
+ * @param {*} views 
  */
-function generateRoute(route, requireParent) {
-    /**
-     * register the intent
-     */
-    if (route.isIntent) {
-        $intentCollection[route.name] = route;
-        return;
-    }
-    if (routeCollections[route.name] && !(_unregistered[route.parent] && _unregistered[route.parent].includes(route.name))) {
-        console.info('[Route] Duplicate route found: ' + route.name + ', skipping to use existing');
-        return;
-    }
-
-    if (!route.views && (!route.component && !route.loadModule)) {
-        console.info('[Router] missing view configuration for: ' + route.name);
-        return;
-    }
-
-    // check for abstract route
-    route.route = createRoute(route.url || '^');
+function attachRouteViews(route) {
     // get the view names
     // used to track multiple views
-    var _views = Object.keys(route.views || {});
-
-    /**
-     * compile parent
-     */
-    if (requireParent) {
+    var views = Object.keys(route.views || {});
+    if (route.parent) {
         var parentRoute = routeCollections[route.parent];
         route.views = route.views || {}; // create new view
         //copy all views except for
@@ -128,20 +112,52 @@ function generateRoute(route, requireParent) {
             addViewMatcher(route.targetView, route);
         }
 
-        //overwrite our route
-        route.route.parent = parentRoute;
         //check if parent views exist in child views
-        if (!_views.length && !route.abstract) {
-            _views = parentRoute.route._views;
+        if (!views.length && !route.abstract) {
+            views = parentRoute.route._views;
         }
-
         parentRoute = null;
-        delete route.parent;
+    } else {
+        addViewMatcher(route.targetView || staticRoutePrefix, route, views);
+    }
+
+    //set the current route view paths
+    route.route._views = views;
+}
+
+/**
+ * 
+ * @param {*} route 
+ * @param {*} requireParent 
+ * @returns 
+ */
+function generateRoute(route, requireParent) {
+    /**
+     * register the intent
+     */
+    if (route.isIntent) {
+        $intentCollection[route.name] = route;
+        return;
+    }
+    if (routeCollections[route.name] && !(_unregistered[route.parent] && _unregistered[route.parent].includes(route.name))) {
+        console.info('[Route] Duplicate route found: ' + route.name + ', skipping to use existing');
+        return;
+    }
+
+    // check for abstract route
+    route.route = createRoute(route.url || '^');
+    // attach views
+    attachRouteViews(route);
+
+    if (!route.views && (!route.component && !route.loadModule) && !requireParent) {
+        console.info('[Router] Skipping view configuration for: ' + route.name);
+        return;
     }
 
     if (!route.url) {
         route.abstract = true;
     }
+
     // check if route has fallBack flag
     if (route.fallback) {
         routeConfig.fallback = {
@@ -150,18 +166,25 @@ function generateRoute(route, requireParent) {
         };
     }
 
-    //set the current route view paths
-    route.route._views = _views;
+    // register authorities if defined in parent
+    if (route.parent && routeCollections.hasOwnProperty(route.parent)){
+        var parent = routeCollections[route.parent];
+        if (parent.data && parent.data.authorities && (!route.data || !route.data.authorities)){
+            route.data = route.data || {};
+            route.data.authorities = parent.data.authorities;
+        }
+    }
+
     //set the route
     routeCollections[route.name] = route;
 
     //check if route is parent that needs to register child
     if (_unregistered.hasOwnProperty(route.name)) {
         _unregistered[route.name].forEach(function (uName) {
-            setupRoute(routeCollections[uName]);
+            setupRoute(routeCollections[uName], true);
         });
 
-        //remove the registra
+        //remove the registration
         delete _unregistered[route.name];
     }
 }
@@ -170,21 +193,23 @@ function generateRoute(route, requireParent) {
  * generate route children
  * @param {*} config 
  */
-function setRouteChildren(config) {
-    if (config.children) {
-        for (var childConfig of config.children) {
-            if (childConfig.name) {
-                var name = childConfig.name;
-                /**
-                 * concat the parentName with the childName
-                 */
-                childConfig.name = [config.name, name].join('.');
-                childConfig.url = ('/' + config.name + (childConfig.url || '/' + name));
-                childConfig.parent = config.name;
-                generateRoute(childConfig, true);
-                setRouteChildren(childConfig);
+function setRouteChildren(route, fromLazyLoad) {
+    if (route.children) {
+        for (var childRoute of route.children) {
+            if (childRoute.name) {
+                var name = childRoute.name;
+                // concat the parentName with the childName
+                childRoute.name = [route.name, name].join('.');
+                if (!routeCollections[childRoute.name]) {
+                    childRoute.url = ((route.url || ('/' + route.name)) + (childRoute.url || '/' + name));
+                    childRoute.parent = route.name;
+                    generateRoute(childRoute, true);
+                    setRouteChildren(childRoute);
+                } else if (fromLazyLoad) {
+                    lazyLoadRoute(childRoute);
+                }
             } else {
-                errorBuilder('unregistered child route in parent<' + config.name + '>, name is required:' + JSON.stringify(childConfig));
+                errorBuilder('unregistered child route in parent<' + route.name + '>, name is required:' + JSON.stringify(childRoute));
             }
         }
     }
@@ -203,13 +228,6 @@ function setupRoute(route) {
     }
 
     /**
-     * component without view definition
-     */
-    if (!route.parent) {
-        addViewMatcher(route.targetView || staticRoutePrefix, route);
-    }
-
-    /**
      * current route is binded to a parent
      * check if parent is resolve
      * else move to unregistered holder
@@ -223,7 +241,7 @@ function setupRoute(route) {
         //push to the unregistered watchlist
         _unregistered[route.parent].push(route.name);
         routeCollections[route.name] = route;
-        return this;
+        return;
     }
 
     generateRoute(route, requireParent);
@@ -244,16 +262,28 @@ function lazyLoadRoute(route) {
         if (mainRoute) {
             Object.assign(mainRoute, route);
             // attach the targetView
-            if (mainRoute.targetView) {
-                addViewMatcher(mainRoute.targetView, mainRoute);
-            } else if(route.views)  {
-                mainRoute.route._views = Object.keys(route.views);
-            }
+            attachRouteViews(mainRoute);
             // compile children
-            setRouteChildren(mainRoute);
+            setRouteChildren(mainRoute, true);
         } else {
             setupRoute(route);
         }
+    }
+}
+
+/**
+ * patch routeParams to route
+ * @param {*} route 
+ * @param {*} params 
+ */
+function patchParams(route, params, queryParam) {
+    route.route.params = extend({}, route.params || {}, params || {});
+    if (queryParam && route.route.paramsMapping.length && !params) {
+        route.route.regexp.exec(queryParam).splice(1)
+            .forEach(function (val, inc) {
+                var isNumber = Number(val);
+                route.route.params[route.route.paramsMapping[inc]] = !isNaN(isNumber) ? isNumber : decodeURIComponent(val);
+            });
     }
 }
 
@@ -263,24 +293,17 @@ function lazyLoadRoute(route) {
  * @returns 
  */
 export function getParentRoute(name) {
-    var parent = routeCollections[name],
-        fnd;
-    do {
-        if (parent) { fnd = parent; }
-    } while (parent = parent.route.parent);
-
-    return fnd;
+    return routeCollections[name];
 }
 
 /**
  * 
- * @param {*} routeName 
+ * @param {*} urlPath
  * @returns 
  */
-function getRouteObj(routeName) {
-    var queryParam = routeName.split("?");
+function getRouteObj(urlPath) {
     for (var prop in routeCollections) {
-        if (!routeCollections[prop].abstract && routeCollections[prop].route.regexp.test(queryParam[0])) {
+        if (!routeCollections[prop].abstract && routeCollections[prop].route.regexp.test(urlPath)) {
             return routeCollections[prop];
         }
     }
@@ -288,35 +311,40 @@ function getRouteObj(routeName) {
     return routeCollections[routeConfig.fallback.name] || null;
 }
 
-export function parseDelimeter(){
-    return routeConfig.delimiter.map(a => (a=a.split(''), a.unshift(''),a.join('\\'))).join('(.*?)');
+export function parseDelimeter() {
+    return routeConfig.delimiter.map(a => (a = a.split(''), a.unshift(''), a.join('\\'))).join('(.*)');
 }
 
 /**
  * 
  * @param {*} routeName 
  * @param {*} params 
+ */
+export function getRoute(routeName, params) {
+    var route = routeCollections[routeName];
+    if (!route){
+        route  = routeCollections[routeConfig.fallback.name] || null;
+    }
+    // patch params
+    patchParams(route, params || route.params);
+    var url = parseUrl(route.url, route.route.params);
+    return  {route, url};
+}
+
+/**
+ * 
+ * @param {*} url 
+ * @param {*} params 
  * @returns 
  */
-export function getRequiredRoute(routeName, params) {
-    var queryParam = routeName.split("?"),
-        foundRoute = getRouteObj(routeName);
+export function getRequiredRoute(url, params) {
+    var queryParam = url.split("?");
+    var foundRoute = getRouteObj(url, queryParam);
     if (foundRoute) {
-        foundRoute.route.params = extend({}, foundRoute.params || {}, params || {});
-        if (foundRoute.route.paramsMapping.length && !params) {
-            foundRoute.route.regexp.exec(queryParam[0]).splice(1)
-                .forEach(function (val, inc) {
-                    var isNumber = Number(val);
-                    foundRoute.route.params[foundRoute.route.paramsMapping[inc]] = !isNaN(isNumber) ? isNumber : val;
-                });
-        }
-
+        patchParams(foundRoute, params, queryParam[0]);
         // route contains queryParam
         if (queryParam[1]) {
-            foundRoute.route.params = extend(
-                foundRoute.route.params,
-                unserialize(queryParam[1])
-            );
+            foundRoute.route.params = extend(  foundRoute.route.params, unserialize(queryParam[1]));
         }
     }
 
@@ -326,43 +354,26 @@ export function getRequiredRoute(routeName, params) {
 export function parseUrl(href, params) {
     return href.replace(/\:(\w)+/g, function (index, key) {
         var param = index.split(":")[1];
-        return param in params ? params[param] : '';
+        return param in params ? encodeURIComponent(params[param]) : '';
     });
 }
 
 /**
  * 
- * @param {*} stateName 
+ * @param {*} routeName 
  * @param {*} params 
  * @returns 
  */
-export function getHref(stateName, params) {
-    var state = routeCollections[stateName];
-    if (state) {
-        params = params || state.params;
-        if (state.route.paramsMapping.length && !params) {
-            throw new Error(stateName + " requires parameter, but none was provided");
+export function getHref(routeName, params) {
+    var route = routeCollections[routeName];
+    if (route) {
+        params = params || route.params;
+        if (route.route.paramsMapping.length && !params) {
+            return errorBuilder(routeName + " requires parameter, but none was provided");
         }
 
-        return parseUrl(state.url, params);
+        return parseUrl(route.url, params);
     }
 
     return routeConfig.fallback.url;
-}
-
-/**
- * 
- * @param {*} route 
- * @param {*} path 
- * @param {*} redirectMethod 
- */
-export function RouteInterceptorInstance(route, path, currentRoute, redirectMethod) {
-    this.name = route.name;
-    this.path = path;
-    this.locals = {};
-    this.currentRoute = currentRoute;
-    this.originalUrl = route.url;
-    this.params = route.params;
-    this.data = route.data;
-    this.redirect = redirectMethod;
 }

@@ -1,5 +1,5 @@
 import { AbstractStrategy } from "./abstract.strategy";
-import { parseDelimeter } from "./utils";
+import { parseDelimeter, routeConfig } from "./utils";
 export function HashStrategyService(locationService) {
     AbstractStrategy.call(this, locationService);
     this.hashRegEx = new RegExp(parseDelimeter());
@@ -9,6 +9,7 @@ export function HashStrategyService(locationService) {
      * @Function window.addEventListener("haschange", callback ,false)
      */
     window.addEventListener("hashchange", e => {
+        if (!routeConfig.allowChangeFromLocationBar) return;
         var locHash = location.hash.split(/#/)[1];
         if (!locHash.length || !locationService.changed(locHash) || this.isReplaceState) {
             this.isReplaceState = false;
@@ -16,7 +17,7 @@ export function HashStrategyService(locationService) {
         }
         //go to the required hash
         e.preventDefault();
-        locationService.go(locHash);
+        locationService.byUrl(locHash);
     }, false);
 }
 

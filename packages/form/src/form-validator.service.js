@@ -7,9 +7,40 @@ import { formValidationStack } from './validator.stack';
  * 
  * @param {*} callback 
  * @param {*} validators 
+ * @returns 
  */
-export function FormValidatorService(callback, validators) {
-    var currentProcess = new CurrentInstance(callback);
+export function FormValidatorService(callback, validators, isDeep) {
+    var currentProcess = new CurrentInstance(callback, isDeep);
+    var validatorPaths =  [];
+
+    /**
+     * 
+     * @param {*} vRecords 
+     * @returns 
+     */
+    function flattenValdators(vRecords){
+        var flatten = function(field, record, paths) {
+            if (isobject(record)){
+                paths.push(field);
+                var _reqStacks = Object.keys(record);
+                if(!formValidationStack[_reqStacks[0].toUpperCase()] && !isfunction(record[_reqStacks[0]])){
+                    _reqStacks.forEach(field => flatten(field, record[field], paths.slice()))
+                } else {
+                    validatorPaths.push([paths, record]);
+                }
+            }
+        };
+
+        if (vRecords) {
+            var keys = Object.keys(vRecords);
+            if (keys.length) {
+                if (!!formValidationStack[keys[0].toUpperCase()] || isfunction(vRecords[keys[0]])) return;
+                keys.forEach(field => flatten(field, vRecords[field], []));
+                currentProcess.isDeep = true;
+            }
+        }
+    }
+
     /**
      * 
      * @param {*} validatorsObj 
@@ -23,87 +54,79 @@ export function FormValidatorService(callback, validators) {
     /**
      * 
      * @param {*} value 
-     * @param {*} criteria 
      */
-    function _validate(value, criteria) {
+    function _formFieldValidator(value, criteria, fieldName) {
         //iterate through the criteria
-        var _criteria = Object.keys(criteria);
-        currentProcess.add(_criteria.length);
-        for (var i = 0; i < _criteria.length; i++) {
-            var validatorName = _criteria[i];
+        var criteriaKeys = Object.keys(criteria);
+        currentProcess.add(criteriaKeys.length);
+        for (var i = 0; i < criteriaKeys.length; i++) {
+            var validatorName = criteriaKeys[i];
             var passed = false;
             var validatorFn = formValidationStack[validatorName.toUpperCase()];
+            var isAsync = isequal('async', validatorName);
             if (validatorFn) {
                 passed = validatorFn(value, criteria[validatorName]);
             }
             //if is custom function
             else if (isfunction(criteria[validatorName])) {
-                passed = criteria[validatorName](value);
+                try {
+                    passed = criteria[validatorName](value);
+                } catch (e) {
+                    passed = isAsync ? Promise.resolve(false) : false;
+                }
             }
 
             /**
              * check if passed && passed is a promise
              */
-            if (isequal('async', validatorName)) {
-                currentProcess.registerAsyncValidator(passed, validatorName);
+            if (isAsync) {
+                currentProcess.registerAsyncValidator(passed, validatorName, fieldName);
             } else {
-                currentProcess.rem(passed, validatorName);
+                currentProcess.rec(passed, validatorName, fieldName);
                 if (!passed) {
-                    return currentProcess.stop();
+                    currentProcess.stop();
+                    return true;
                 }
             }
         }
+
+        return false;
     }
 
     /**
      * 
      * @param {*} formValues 
      */
-    function _validateObjectTypes(formValues) {
-        //iterate through the postBody data
-        //Make sure it passes validation
-        if (!Object.keys(formValues).length) {
-            validationInstance.emptyFormFields = true;
-            trigger();
-        } else {
-            //check if validationObj exists in 
-            // set the formFields
-            var _fieldsToValidate = Object.keys(validators);
-            var err = _fieldsToValidate.reduce(function(ret, key) {
-                if (!formValues.hasOwnProperty(key)) {
-                    ret++;
-                    ErrorHandler(key, ['required']);
-                }
-                return ret;
-            }, 0);
-
-            if (!err) {
-                currentProcess.pending.count = _fieldsToValidate.length;
-                _fieldsToValidate.forEach(function(field) {
-                    _validateField(formValues[field], validators[field], field);
-                });
-            } else {
-                trigger();
+    function _formControlValidator(formValues) {
+        for(var path of validatorPaths){
+            if(_formFieldValidator(getValueByPath(formValues, path[0]), path[1], path[0].join('.'))){
+                break
             }
         }
     }
 
-    /**
-     * 
-     * @param {*} formValue 
-     * @param {*} field 
-     */
+   /**
+    * 
+    * @param {*} formValue 
+    * @param {*} deep set to true to run formControl validations
+    * @returns 
+    */
     function formValidator(formValue) {
         if (!validators) {
             return callback(null);
         }
 
         _throwErrorIfNoValidators(validators);
-        _validate(formValue, validators);
+        if (!currentProcess.isDeep)
+            _formFieldValidator(formValue, validators);
+        else 
+            _formControlValidator(formValue);
     }
 
     /**
-     * Add validators
+     * 
+     * @param {*} newValidators 
+     * @param {*} isDeep 
      */
     formValidator.addValidators = function(newValidators) {
         _throwErrorIfNoValidators(newValidators);
@@ -112,7 +135,11 @@ export function FormValidatorService(callback, validators) {
         } else {
             validators = extend(true, validators, newValidators);
         }
+
+        flattenValdators(newValidators);
     };
+
+    flattenValdators(validators);
 
     return formValidator;
 }

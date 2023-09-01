@@ -94,7 +94,7 @@ function generateArguments(args, context, componentInstance, event) {
         if (isarray(node)) {
             if (!node.length) return node;
             var isEvent = isequal(node[0], '$event');
-            return resolveContext(node.slice(isEvent ? 1 : 0), isEvent ? event : context, componentInstance);
+            return resolveContext(node.slice(isEvent ? 1 : 0), isEvent ? event : context, componentInstance, isEvent);
         } else if (isobject(node) && node.arg)
             return generateArguments(node.arg, context, componentInstance, event);
         else if (isstring(node))
@@ -286,8 +286,7 @@ function setModelValue(key, context, componentInstance, value) {
  * @param {*} context 
  * @param {*} componentInstance 
  */
-function resolveContext(key, context, componentInstance) {
-    var isEventType = context instanceof Event;
+function resolveContext(key, context, componentInstance, isEventType) {
     return key.reduce(function(accum, property, idx) {
         if (isEventType) {
             return accum[property];

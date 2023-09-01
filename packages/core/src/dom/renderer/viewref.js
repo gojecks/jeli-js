@@ -1,5 +1,5 @@
 import { scheduler } from '../../utils/scheduler';
-import { removeFromArray, addToArray } from '@jeli/helpers';
+import { removeFromArray, addToArray, moveItemInArray } from '@jeli/helpers';
 /**
  * Element ViewRef
  */
@@ -34,14 +34,12 @@ ViewRef.prototype = Object.create(Array.prototype);
  * @param {*} curr 
  */
 ViewRef.prototype.move = function(prev, curr) {
-    var view = this.get(prev);
-    scheduler.schedule(function() {
-        if (view) {
-            var parent = view.compiledElement.parent;
-            var targetNode = parent.children.getByIndex(curr - 1);
-            if (targetNode) {
-                elementInsertAfter(parent, view.compiledElement.nativeElement, targetNode.nativeElement);
-            }
+    moveItemInArray(this, prev, curr);
+    scheduler.schedule(() => {
+        var view = this.get(prev);
+        var targetNode = this.get(curr);
+        if (targetNode && view) {
+            elementBefore(view.compiledElement.nativeElement, targetNode.compiledElement.nativeElement);
         }
     });
 };

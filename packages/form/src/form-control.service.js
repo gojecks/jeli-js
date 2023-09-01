@@ -1,4 +1,4 @@
-import { isempty, isobject, isundefined, isfunction, isarray } from '@jeli/helpers';
+import { isobject, isundefined, isarray } from '@jeli/helpers';
 import { errorBuilder } from '@jeli/core';
 import { FormControlAbstract } from './form-control.abstract';
 
@@ -24,13 +24,12 @@ Service({
  * @param {*} validators 
  */
 export function FormControlService(formFields, validators) {
-    FormControlAbstract.call(this, validators);
+    FormControlAbstract.call(this, validators, true);
     this.formFieldControls = {};
     /**
      * create the formField and validations
      */
     addFields(this, formFields);
-    this.updateValueAndStatus();
 }
 
 FormControlService.prototype = Object.create(FormControlAbstract.prototype);

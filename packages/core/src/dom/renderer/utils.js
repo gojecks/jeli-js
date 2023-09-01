@@ -127,6 +127,14 @@ function addViewQuery(hostElement, option, childElement) {
     }
 }
 
+function elementBefore(targetNode, insertNode){
+    if (!targetNode || !targetNode.parentNode) return;
+    if (targetNode.before)
+        targetNode.before(insertNode)
+    else 
+        targetNode.parentNode.insertBefore(insertNode, targetNode);
+}
+
 
 /**
  * 

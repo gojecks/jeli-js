@@ -1,29 +1,30 @@
-import { ComponentFactoryResolver, DOMHelper, compileModule } from '@jeli/core';
-import { getParentRoute, staticRoutePrefix } from './utils';
+import { ComponentFactoryResolver, DOMHelper, compileModule, errorBuilder } from '@jeli/core';
+import { routeConfig, staticRoutePrefix } from './utils';
 Service({
     name: 'ViewHandler'
 })
 export function ViewHandler() {
     this.viewsHolder = new Map();
-    this.currentView = staticRoutePrefix;
-    this.stateInProgress;
-    this.stateQueue = [];
-    this.$stateTransitioned = false;
-    this.currentState = "";
-    this.previousState = "";
     this._pendingViewStack = new Map();
-    this._resolvedParents = {};
+    this.currentView = staticRoutePrefix;
+    this._resolvedRoute = {};
+}
+
+ViewHandler.prototype.isResolved = function (parentName, setValue) {
+    var isResolved = this._resolvedRoute[parentName];
+    this._resolvedRoute[parentName] = setValue || false;
+    return isResolved;
 }
 
 
-ViewHandler.prototype.setViewReference = function(elementRef, ref) {
+ViewHandler.prototype.setViewReference = function (elementRef, ref) {
     this.viewsHolder.set(ref, {
         element: elementRef,
         compiledWith: null
     });
 
     this.handlePendingView(ref);
-};
+}
 
 
 /**
@@ -31,7 +32,7 @@ ViewHandler.prototype.setViewReference = function(elementRef, ref) {
  * @param {*} view 
  * @param {*} name 
  */
-ViewHandler.prototype.getView = function(view, name) {
+ViewHandler.prototype.getView = function (view, name) {
     var _viewHolder = this.viewsHolder.get(view);
     return ((name) ? _viewHolder[name] : _viewHolder);
 };
@@ -42,22 +43,19 @@ ViewHandler.prototype.getView = function(view, name) {
  * @param {*} viewObjectInstance 
  * compile the template when loaded
  */
-ViewHandler.prototype.compileViewTemplate = function(viewComponent, viewObjectInstance) {
+ViewHandler.prototype.compileViewTemplate = function (viewComponent, viewObjectInstance) {
     //remove cache
     this.cleanUp(viewObjectInstance);
     // lazyloaded modules
-    if (viewComponent.loadModule) {
-        this._loadModule(viewComponent.loadModule, compileComponent)
-    } else {
-        compileComponent(viewComponent);
-    }
-
-    // compileElement
-    function compileComponent(componentFactory){
-        ComponentFactoryResolver(componentFactory, viewObjectInstance.element, componentRef => {
+    var isLazyLoaded = !!viewComponent.loadModule;
+    this._loadModule(viewComponent.loadModule).then(componentFactory => {
+        ComponentFactoryResolver(isLazyLoaded ? componentFactory : viewComponent, viewObjectInstance.element, componentRef => {
             viewObjectInstance.compiledWith = componentRef;
+            if (routeConfig.scrollTop) {
+                window.scrollTo(0, 0);
+            }
         });
-    }
+    });
 };
 
 /**
@@ -65,9 +63,9 @@ ViewHandler.prototype.compileViewTemplate = function(viewComponent, viewObjectIn
  * @param {*} _views 
  * @param {*} mView 
  */
-ViewHandler.prototype.removeViews = function(_views) {
+ViewHandler.prototype.removeViews = function (views) {
     this.viewsHolder.forEach((view, key) => {
-        if (!_views.includes(key)) {
+        if (!views.includes(key)) {
             this.cleanUp(view);
             this.viewsHolder.delete(key);
         }
@@ -76,52 +74,53 @@ ViewHandler.prototype.removeViews = function(_views) {
 
 /**
  * getCurrentView
- * @param {*} _route 
+ * @param {*} route 
  */
-ViewHandler.prototype.getCurrentView = function(_route) {
-    var _views = [],
-        mView = Object.keys(_route.views).concat();
+ViewHandler.prototype.getCurrentView = function (route) {
+    var views = [];
+    var mView = Object.keys(route.views).concat();
     // register route to resolved
-    this._resolvedParents[_route.name] = true;
-    var parentName =  _route.route.parent ? _route.route.parent.name : null;
-    if (parentName && !this._resolvedParents[parentName]) {
-        var parentRoute = getParentRoute(parentName);
-        this._resolvedParents[parentRoute.name] = true;
-        this._resolvedParents[parentName] = true;
+    this.isResolved(route.name, true);
+    if (route.parent && !this.isResolved(route.parent, true)) {
         return mView;
     }
 
-    if (_route.targetView) {
+    if (route.targetView) {
         //concat the target view
-        if (this.viewsHolder.has(_route.targetView)) {
-            //concat the views
-            return _views.concat(_route.targetView);
-        }
+        if (this.viewsHolder.has(route.targetView))
+            return views.concat(route.targetView);
+        // lazyLoadedModule will not contain views
+        else if (!mView.includes(route.targetView))
+            mView.push(route.targetView);
 
         return mView
     }
 
-    _views = _views.concat(_route.route._views);
-    this.removeViews(_views);
+    views = views.concat(route.route._views);
+    this.removeViews(views);
     mView = null;
 
-    return _views;
+    return views;
 }
 
 /**
  * trigger the resolved route views
  */
-ViewHandler.prototype.resolveViews = function(route) {
-    var _views = this.getCurrentView(route);
-    for (var idx = 0; idx < _views.length; idx++) {
-        var view = _views[idx] || staticRoutePrefix;
-        var viewObj = ((route.views) ? route.views[view] : route);
+ViewHandler.prototype.resolveViews = function (route) {
+    var views = this.getCurrentView(route);
+    for (var idx = 0; idx < views.length; idx++) {
+        var view = views[idx] || staticRoutePrefix;
+        var viewObj = route.views[view] || route;
         var viewObjectInstance = this.getView(view);
         /**
          * Open Activity
          */
+        if (!viewObj) {
+            errorBuilder('[Router] No view definition for ' + route.name);
+            continue;
+        }
+
         if (viewObjectInstance) {
-            if (!viewObj) throw new TypeError('[Router] No view definition for '+ route.name);
             this.compileViewTemplate(viewObj, viewObjectInstance);
         } else {
             //Push pending view to stack
@@ -130,7 +129,7 @@ ViewHandler.prototype.resolveViews = function(route) {
     }
 };
 
-ViewHandler.prototype.destroy = function(ref) {
+ViewHandler.prototype.destroy = function (ref) {
     var viewInstance = this.viewsHolder.get(ref);
     if (!viewInstance) return;
     this.cleanUp(viewInstance);
@@ -138,7 +137,7 @@ ViewHandler.prototype.destroy = function(ref) {
     viewInstance = null;
 };
 
-ViewHandler.prototype.handlePendingView = function(viewName) {
+ViewHandler.prototype.handlePendingView = function (viewName) {
     if (this._pendingViewStack.has(viewName)) {
         this.compileViewTemplate(this._pendingViewStack.get(viewName), this.viewsHolder.get(viewName));
         this._pendingViewStack.delete(viewName);
@@ -149,7 +148,7 @@ ViewHandler.prototype.handlePendingView = function(viewName) {
  * 
  * @param {*} viewInstance 
  */
-ViewHandler.prototype.cleanUp = function(viewInstance) {
+ViewHandler.prototype.cleanUp = function (viewInstance) {
     if (viewInstance.compiledWith) {
         DOMHelper.remove(viewInstance.compiledWith);
     } else {
@@ -162,11 +161,11 @@ ViewHandler.prototype.cleanUp = function(viewInstance) {
  * 
  * @param {*} factory 
  */
-ViewHandler.prototype._loadModule = function(mLoader, callback){
-    if(!mLoader) return callback(null);
-    mLoader()
-    .then(module => {
-        compileModule(module);
-        callback(module.rootElement);
-    });
+ViewHandler.prototype._loadModule = function (mLoader) {
+    if (!mLoader) return Promise.resolve(null);
+    return mLoader()
+        .then(module => {
+            compileModule(module);
+            return module.rootElement;
+        });
 }

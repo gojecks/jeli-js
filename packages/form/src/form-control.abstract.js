@@ -10,9 +10,9 @@ var PENDING = 'PENDING';
 /**
  * 
  * @param {*} validators 
+ * @param {*} deepValidation for formControls only
  */
-export function FormControlAbstract(validators) {
-    var _this = this;
+export function FormControlAbstract(validators, deepValidation) {
     this._parent = null;
     this.status = INVALID;
     this.value = null;
@@ -21,9 +21,9 @@ export function FormControlAbstract(validators) {
     this._pendingValue = null;
     this._onDisableEvents = [];
     this._onControlChangeListener = function() {};
-    this.validator = FormValidatorService(function(errors) {
-        _this.setError(errors, true);
-    }, validators);
+    this.validator = FormValidatorService(errors => {
+        this.setError(errors, true);
+    }, validators, deepValidation);
 
 
     /**

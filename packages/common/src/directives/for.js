@@ -43,12 +43,12 @@ export function ForDirective(viewRef, templateRef) {
         },
         forOf: {
             set: function(value) {
-                this._isForOff = true;
+                this._isForOf = true;
                 this._forValue = value;
                 this.willObserve();
             },
             get: function() {
-                if (!this._isForOff) return null;
+                if (!this._isForOf) return null;
                 return this._forValue;
             }
         },
@@ -65,35 +65,34 @@ export function ForDirective(viewRef, templateRef) {
 }
 
 ForDirective.prototype._listenerFn = function() {
-    var _this = this;
     // remove cache element and free up memory
-    this.iterable.forEachDeleted(function(index) {
-        _this.viewRef.remove(index);
+    this.iterable.forEachDeleted(index => {
+        this.viewRef.remove(index);
     });
 
-    this.iterable.forEachOperation(function(item) {
+    this.iterable.forEachOperation((item) => {
         switch (item.state) {
             case ('create'):
-                var context = new jForRow(_this._forValue[item.index], item.index, null);
-                _this.viewRef.createEmbededView(_this.templateRef, context, item.index);
+                var context = new jForRow(this._forValue[item.index], item.index, null);
+                this.viewRef.createEmbededView(this.templateRef, context, item.index);
                 break;
             case ('update'):
-                var view = _this.viewRef.get(item.index);
+                var view = this.viewRef.get(item.index);
                 view.updateContext({
-                    $context: _this._forValue[item.index]
+                    $context: this._forValue[item.index]
                 });
                 break;
             case ('move'):
-                _this.viewRef.move(item.prevIndex, item.index);
+                this.viewRef.move(item.prevIndex, item.index);
                 break;
         }
     });
 
     for (var i = 0; i < this.viewRef.length; i++) {
-        var view = _this.viewRef.get(i);
+        var view = this.viewRef.get(i);
         view.updateContext({
             index: i,
-            count: _this._forValue.length
+            count: this._forValue.length
         });
     }
     // set progress to false
@@ -102,9 +101,10 @@ ForDirective.prototype._listenerFn = function() {
 
 ForDirective.prototype.willObserve = function() {
     var changes = this.iterable.diff(this._forValue);
-    if (changes && !this.inProgress)
+    if (changes && !this.inProgress){
         this.inProgress = true;
-    this._listenerFn();
+        this._listenerFn();
+    }
 }
 
 /**

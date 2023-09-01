@@ -1,6 +1,12 @@
-import { inarray, isequal } from '@jeli/helpers';
+import { inarray } from '@jeli/helpers';
 import { errorBuilder } from '../utils/errorLogger';
+import { CustomEventHandler } from './custom.event.handler';
+import { ProxyEvent } from './event.proxy';
 
+var customEventRegistry = new Map([
+    ['window', new CustomEventHandler(window)],
+    ['document', new CustomEventHandler(document)]
+]);
 
 /**
  * 
@@ -12,58 +18,52 @@ function EventHandler(events) {
     this.registeredEvents = new Map();
 }
 
-EventHandler.prototype.destroy = function() {
-    this.registeredEvents.forEach(function(removeListenerFn) {
+EventHandler.prototype.destroy = function () {
+    this.registeredEvents.forEach(function (removeListenerFn) {
         removeListenerFn();
     });
     this.registeredEvents.clear();
     this._events.length = 0;
 };
 
-/**
- * this property holds registry for custom events
- */
-EventHandler.customRegistry = {
-    window: new CustomEventHandler(window),
-    document: new CustomEventHandler(document)
-};
 
-
-EventHandler.registerListener = function(element) {
+EventHandler.registerListener = function (element) {
     if (!element.events || !element.events._events.length) return;
     var eventInstance = element.events;
-    var handler = function($ev) { handleEvent(element, $ev); };
+    var handler = function ($ev) { handleEvent(element, $ev); };
 
     /**
      * 
      * @param {*} eventName 
+     * @param {*} useCapture 
      */
-    function _registerEvent(eventName) {
+    function _registerEvent(eventName, useCapture) {
         if (!eventInstance.registeredEvents.has(eventName)) {
             /**
              * events that goes with a . e.g (window.message)
              */
             if (eventName.includes('.')) {
                 var event = eventName.split('.');
-                if (EventHandler.customRegistry[event[0]]) {
-                    var unsubscribe = EventHandler.customRegistry[event[0]].register(event[1], function(htmlEvent) {
+                var customRegistry = customEventRegistry.get(event[0]);
+                if (customRegistry) {
+                    var unsubscribe = customRegistry.register(event[1], function (htmlEvent) {
                         handleEvent(element, htmlEvent, eventName);
                     });
                     eventInstance.registeredEvents.set(eventName, unsubscribe);
+                    customRegistry = null;
                 }
             } else {
-                element.nativeElement.addEventListener(eventName, handler, false);
-                eventInstance.registeredEvents.set(eventName, function() {
+                element.nativeElement.addEventListener(eventName, handler, useCapture);
+                eventInstance.registeredEvents.set(eventName, function () {
                     element.nativeElement.removeEventListener(eventName, handler);
                 });
             }
         }
     }
-    var totalEvents = eventInstance._events.length;
-    while (totalEvents--) {
-        var event = eventInstance._events[totalEvents];
+
+    for (var event of eventInstance._events) {
         if (!event.custom) {
-            event.name.split(' ').forEach(_registerEvent);
+            event.name.split(' ').forEach(eventName => _registerEvent(eventName, !!event.target));
         }
     }
 };
@@ -76,10 +76,10 @@ EventHandler.registerListener = function(element) {
  * @param {*} eventValue 
  * @param {*} componentInstance 
  */
-EventHandler.attachEvent = function(eventInstance, eventName, eventValue, componentInstance) {
+EventHandler.attachEvent = function (eventInstance, eventName, eventValue, componentInstance) {
     eventInstance._events.push({
         name: eventName,
-        handler: function($event) {
+        handler: function ($event) {
             return _executeEventsTriggers(eventValue, componentInstance, null, $event);
         }
     });
@@ -91,10 +91,10 @@ EventHandler.attachEvent = function(eventInstance, eventName, eventValue, compon
  * @param {*} eventName 
  * @param {*} componentInstance 
  */
-EventHandler.attachEventEmitter = function(element, eventName, componentInstance) {
+EventHandler.attachEventEmitter = function (element, eventName, componentInstance) {
     var registeredEvent = getEventsByType(element.events._events, eventName)[0];
     if (registeredEvent && registeredEvent.value) {
-        var unSubscribe = componentInstance[eventName].subscribe(function(value) {
+        var unSubscribe = componentInstance[eventName].subscribe(function (value) {
             // trigger change detector if defined
             var parentElement = element && element.parent;
             parentElement = (parentElement.isc ? parentElement : parentElement.hostRef);
@@ -120,7 +120,7 @@ EventHandler.attachEventEmitter = function(element, eventName, componentInstance
  * @param {*} eventName 
  * @param {*} componentInstance 
  */
-EventHandler.attachEventDispatcher = function(element, eventName, componentInstance) {
+EventHandler.attachEventDispatcher = function (element, eventName, componentInstance) {
     var registeredEvent = getEventsByType(element.events._events, eventName)[0];
     var context = null;
     if (registeredEvent && registeredEvent.value) {
@@ -135,7 +135,7 @@ EventHandler.attachEventDispatcher = function(element, eventName, componentInsta
          * replace the default handler with dispatcher event handler
          */
         if (context.hasOwnProperty(eventName)) {
-            var unSubscribe = context[eventName].subscribe(function(value) {
+            var unSubscribe = context[eventName].subscribe(function (value) {
                 _executeEventsTriggers(
                     registeredEvent.value,
                     componentInstance,
@@ -158,7 +158,7 @@ EventHandler.attachEventDispatcher = function(element, eventName, componentInsta
  * static APIs
  */
 function getEventsByType(events, type) {
-    return events.filter(function(event) {
+    return events.filter(function (event) {
         return event.name.split(/\s/g).includes(type);
     });
 };
@@ -183,13 +183,13 @@ function _executeEventsTriggers(eventTriggers, componentInstance, context, ev) {
         } else if (event.fn) {
             // set nameSpaces
             var fn = getFnFromContext(event, componentInstance, context);
-            if (fn) {
-                // Check if Arguments is required
-                var narg = generateArguments(event.args, context || componentInstance, null, ev);
-                fn.apply(fn.context, narg);
-                fn.context = null;
-                fn = null;
-            }
+            if (!fn) return errorBuilder('No context found for this event');
+
+            // Check if Arguments is required
+            var narg = generateArguments(event.args, context, componentInstance, ev);
+            fn.apply(fn.context, narg);
+            fn.context = null;
+            fn = null;
         }
     }
 }
@@ -211,11 +211,8 @@ function getFnFromContext(eventInstance, componentInstance, context) {
     /**
      * Array instance
      */
-    if ((instance instanceof Array) || !componentInstance[eventInstance.fn]) {
-        fn.context = instance;
-    } else {
-        fn.context = componentInstance;
-    }
+    if (fn)
+        fn.context = ((instance instanceof Array || !componentInstance[eventInstance.fn]) ? instance : componentInstance);
 
     instance = null;
 
@@ -243,8 +240,13 @@ function handleEvent(element, event, eventName) {
         element && element.changeDetector && element.changeDetector.detectChanges();
     }
 
-    function isClosest(target) {
-        return target.some(query => event.target.closest(query));
+    function getClosest(target) {
+        for(var query of target){
+            var ele = event.target.closest(query);
+            if(ele) return ele;
+        }
+        
+        return null;
     }
 
     /**
@@ -253,66 +255,29 @@ function handleEvent(element, event, eventName) {
      * @param {*} event 
      */
     function triggerEvents(registeredEvent) {
+        var _event = null;
+        var context = element.context;
         if (registeredEvent.handler) {
             return registeredEvent.handler(event);
-        } else {
-            var selectedElem = element;
-            if (registeredEvent.target) {
-                if (!isClosest(registeredEvent.target)) return;
-                selectedElem = event.target[$elementContext] || element;
-            }
+        } else if (registeredEvent.target) {
+            var mainElement = getClosest(registeredEvent.target);
+            if (!mainElement) return;
+            context = (mainElement[$elementContext] || element).context;
+            // overwrite the event target to return the right element
+            _event = ProxyEvent(event, mainElement);
+        }
 
-            _executeEventsTriggers(
-                registeredEvent.value,
-                element.hostRef.componentInstance,
-                selectedElem.context,
-                event
-            );
+        _executeEventsTriggers(
+            registeredEvent.value,
+            element.hostRef.componentInstance,
+            context,
+            _event || event
+        );
 
-            selectedElem = null;
+        // clean proxyEvent
+        context = null;
+        if (_event){
+            _event.target = _event.preventDefault =  null;
         }
     }
-}
-
-/**
- * Jeli event manager
- * @param {*} element 
- */
-export function CustomEventHandler(element) {
-    var trigger = (event) => { this.trigger(event); };
-    this.element = element;
-    this.registeredEvents = {};
-    this.register = function(type, callback) {
-        var index = -1;
-        if (this.element && this.registeredEvents) {
-            if (!this.registeredEvents.hasOwnProperty(type)) {
-                this.registeredEvents[type] = [];
-                this.element.addEventListener(type, trigger, false);
-            }
-            index = this.registeredEvents[type].push(callback);
-            /**
-             * unregister
-             */
-            return ()  => this.registeredEvents[type].splice(index - 1, 1);
-        }
-    };
-
-    this.trigger = function(event) {
-        var listeners = this.registeredEvents[event.type];
-        if (listeners && listeners.length) {
-            listeners.forEach(function(listener) {
-                listener(event);
-            })
-        }
-    };
-
-    this.destroy = function() {
-        for (var type in this.registeredEvents) {
-            this.registeredEvents[type].length = 0;
-            delete this.registeredEvents[type];
-            this.element.removeEventListener(type, trigger, false);
-        }
-        this.element = null;
-        this.registeredEvents = null;
-    };
 }

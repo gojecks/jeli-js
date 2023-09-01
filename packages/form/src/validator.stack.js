@@ -1,22 +1,24 @@
-import { isnumber, isstring, isempty, isobject, isfunction, isundefined, isnull, isboolean, isequal } from '@jeli/helpers';
+import { isempty, isboolean, isequal } from '@jeli/helpers';
 
+var emptyCheck = value => [null, undefined, ""].includes(value);
 /**
  * Core FormvalidationStack
  */
 export var formValidationStack = Object.create({
     MINLENGTH: function(value, requiredLength) {
-        if (null !== value && undefined !== value)
+        if (!emptyCheck(value))
             return String(value).length >= requiredLength;
 
         return true;
     },
     MAXLENGTH: function(value, requiredLength) {
-        if (value)
+        if (!emptyCheck(value))
             return String(value).length <= requiredLength;
 
         return true;
     },
     EMAILVALIDATION: function(value) {
+        if(emptyCheck(value)) return true;
         var regExp = "^(([\\w]+(\\.[\\w]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
         return formValidationStack.PATTERN(value, regExp);
     },
@@ -48,11 +50,12 @@ export var formValidationStack = Object.create({
      * @returns 
      */
     PATTERN: function(value, pattern) {
+        if (emptyCheck(value)) return true
         return new RegExp(pattern).test(value);
     },
     REQUIRED: function(value, required) {
         if (required) {
-            return !isundefined(value) && !isnull(value) && ("" !== value);
+            return !emptyCheck(value);
         }
 
         return !required;
@@ -61,7 +64,7 @@ export var formValidationStack = Object.create({
      * validator for strict true value
      */
     REQUIREDTRUE: function(value) {
-        return isboolean(value) && value === true;
+        return !emptyCheck(value) && isboolean(value) && value === true;
     },
     /**
      * 
@@ -70,7 +73,7 @@ export var formValidationStack = Object.create({
      * @returns 
      */
     MINNUMBER: function(value, minNumber) {
-        if (null !== value && undefined !== value) {
+        if (!emptyCheck(value)) {
             value = Number(value);
             return !isNaN(value) && minNumber <= value;
         }
@@ -85,7 +88,7 @@ export var formValidationStack = Object.create({
      * @returns 
      */
     MAXNUMBER: function(value, maxNumber) {
-        if (value) {
+        if (!emptyCheck(value)) {
             value = Number(value);
             return !isNaN(value) && value <= maxNumber;
         }

@@ -1,6 +1,7 @@
 function AbstractEventRx() {
     this._listeners = [];
     this._hooks = [];
+    this._callback = null;
 }
 
 AbstractEventRx.prototype.when = function() {
@@ -13,7 +14,6 @@ AbstractEventRx.prototype.when = function() {
 
 AbstractEventRx.prototype.subscribe = function(fn) {
     var index = this._listeners.length;
-    var _this = this;
     if (typeof fn !== 'function') {
         errorBuilder('Expected a function got ' + typeof fn);
         return;
@@ -23,8 +23,8 @@ AbstractEventRx.prototype.subscribe = function(fn) {
     /**
      * remove subscription
      */
-    return function() {
-        _this._listeners.splice(index, 1);
+    return () => {
+        this._listeners.splice(index, 1);
     }
 };
 

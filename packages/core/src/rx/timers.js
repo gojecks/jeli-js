@@ -31,7 +31,7 @@ export function rxInterval(){
   this.subscription = new Subscription(false);
   this.intervalId = null;
   this.play = function(interval){
-    this.intervalId = nativeInterval(()=>this.subscription.notify(SubscriptionStates.onSuccess), interval || 100);
+    this.intervalId = nativeInterval(()=> this.subscription.notify(SubscriptionStates.onSuccess), interval || 100);
     return this;
   };
 }

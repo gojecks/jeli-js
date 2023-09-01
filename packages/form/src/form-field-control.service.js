@@ -10,11 +10,10 @@ Service({
  * @param {*} fieldControl 
  */
 export function FormFieldControlService(fieldControl) {
-    FormControlAbstract.call(this, fieldControl ? fieldControl.validators : null);
+    FormControlAbstract.call(this, fieldControl ? fieldControl.validators : null, false);
     this.eventType = 'default';
     this._onChangeEvents = [];
     this._setInitialState(fieldControl);
-    this.updateValueAndStatus({ self: true, emitEvent: false });
 }
 
 FormFieldControlService.prototype = Object.create(FormControlAbstract.prototype);

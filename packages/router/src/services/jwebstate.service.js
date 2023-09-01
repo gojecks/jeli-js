@@ -5,14 +5,14 @@
 // jeliWebState Service
 import { LocationService } from './route.location.service';
 import { EventEmitter } from '@jeli/core';
-import { ROUTE_EVENT_ENUMS } from './utils';
+import { getHref } from './utils';
 Service({
     DI: [LocationService]
 })
 
 /**
  * 
- * @param {*} viewHandler 
+ * @param {*} locationService 
  */
 export function WebStateService(locationService) {
     this.onParamsChanged = new EventEmitter();
@@ -26,27 +26,18 @@ export function WebStateService(locationService) {
 
 /**
  * 
- * @param {*} path 
+ * @param {*} routeName 
  * @param {*} params 
  * @param {*} targetWindow 
  */
-WebStateService.prototype.go = function(path, params, targetWindow) {
-    path = getHref(path, params);
+WebStateService.prototype.go = function(routeName, params, targetWindow) {
     if (!targetWindow) {
-        this.locationService.go(path, params);
+        this.locationService.byName(routeName, params);
     } else {
-        window.open(this.locationService.getFullPath(path), targetWindow);
+        var url = getHref(routeName, params);
+        window.open(this.locationService.getFullPath(url), targetWindow);
     }
 }
-
-/**
- * Method Name : $href
- * @param {*} stateName 
- * @param {*} params 
- */
-WebStateService.prototype.href = function(stateName, params) {
-    return getHref(stateName, params);
-};
 
 /**
  * getState param
@@ -74,17 +65,4 @@ WebStateService.prototype.setParam = function(name, value){
  */
 WebStateService.prototype.getUrlParams = function() {
     return Object.assign({}, this.locationService.currentRoute.route.params);
-}
-
-
-/**
- * 
- * @param {*} eventName 
- * @param {*} callback 
- * @returns Subscription
- */
-WebStateService.prototype.subscribe = function(eventName, callback){
-    var eventList = Object.values(ROUTE_EVENT_ENUMS);
-    if (!eventList.includes(eventName)) throw new TypeError(eventName + ' does not exist, please use '+ eventList.join('|'));
-    return this.locationService.events.add(eventName, callback);
 }

@@ -47,10 +47,21 @@ export function rxDebounceTime(timeout, immediate) {
  * @returns 
  */
 export function rxWhile(callback) {
-    return function(value, listener) {
-        listener(callback(value));
+    return function(value, next) {
+        next(callback(value));
     }
 };
+
+export function rxUntilChanged(){
+    var oldValue = null;
+    return function(value, next) {
+        var noChanges = !isequal(value, oldValue);
+        oldValue = value;
+        next(noChanges);
+    }
+}
+
+export function rxWait(){ }
 
 /**
  * 
@@ -72,7 +83,7 @@ function rxNotify(subscription, model, ignoreCheck) {
                 if (subscription.core(value)) {
                     _trigger(subscription.handler, value);
                 }
-            } else if (ignoreCheck || _comparison(value, subscription)) {
+            } else if (ignoreCheck || _valueComparison(value, subscription)) {
                 _trigger(subscription.handler, value);
             }
         }
@@ -96,7 +107,7 @@ function _trigger(handlers, value) {
     }
 }
 
-function _comparison(value, suscription) {
+function _valueComparison(value, suscription) {
     var noChanges = !isequal(value, suscription.lastValue);
     suscription.lastValue = value;
     return noChanges;
@@ -115,20 +126,20 @@ function triggerWhen(operators, args, callback) {
     }
 
     var inc = 0;
-    var failed = false;
+    var passed = true;
 
     function next() {
-        var fn = operators[inc];
-        if (fn) {
+        if (operators.length > inc) {
+            var fn = operators[inc];
             fn(args, function(value) {
                 if (!value) {
-                    failed = true;
+                    passed = false;
                 }
                 inc++;
                 next();
             });
         } else {
-            callback(!failed);
+            callback(passed);
         }
     }
 

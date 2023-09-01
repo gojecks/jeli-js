@@ -17,7 +17,6 @@ export function FormRepeaterService(fields, autoGenerate, validators) {
     this.formFieldControls = [];
     this._defaultfields = fields;
     this._autoSetup(autoGenerate);
-    this.updateValueAndStatus();
 }
 FormRepeaterService.prototype = Object.create(FormControlService.prototype);
 FormRepeaterService.prototype.constructor = FormControlAbstract;

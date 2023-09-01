@@ -1,22 +1,24 @@
 /**
  * 
  * @param {*} next 
+ * @param {*} isDeep 
  */
-function CurrentInstance(next) {
+function CurrentInstance(next, isDeep) {
     this.pending = null;
     this.hasAsync = false;
+    this.isDeep = isDeep;
     this.failed = false;
     this.errors = null;
     this.count = 0;
-    this.stop = function() {
+    this.stop = function () {
         next(this.failed ? this.errors : null);
-    }
+    };
 }
 
 /**
  * @param len
  */
-CurrentInstance.prototype.add = function(totalValidators) {
+CurrentInstance.prototype.add = function (totalValidators) {
     this.count = totalValidators;
     this.errors = {};
     this.failed = false;
@@ -29,11 +31,16 @@ CurrentInstance.prototype.add = function(totalValidators) {
  * @param field
  * @param type
  */
-CurrentInstance.prototype.rem = function(passed, type) {
+CurrentInstance.prototype.rec = function (passed, type, fieldName) {
     this.count--;
     if (passed !== true) {
         this.failed = true;
-        this.errors[type] = true;
+        if (this.isDeep){
+            this.errors[fieldName] = this.errors[fieldName] || {};
+            this.errors[fieldName][type] = true;
+        } else {
+            this.errors[type] = true;
+        }
     }
 
     /**
@@ -50,11 +57,10 @@ CurrentInstance.prototype.rem = function(passed, type) {
  * @param {*} asyncInstance 
  * @param {*} name 
  */
-CurrentInstance.prototype.registerAsyncValidator = function(asyncInstance, name) {
+CurrentInstance.prototype.registerAsyncValidator = function (asyncInstance, name, fieldName) {
     this.hasAsync = true;
-    var _this = this;
-    var callback = function(value) {
-        _this.rem(value, name);
+    var callback = (value) => {
+        this.rec(value, name, fieldName);
     };
 
     asyncInstance.then(callback, callback);

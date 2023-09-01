@@ -23,7 +23,6 @@ Directive({
 })
 export function ModelDirective(eventBinder, parentControl, validators) {
     this.eventBinder = getValueAccessor(eventBinder);
-    this.fieldControl = new FormFieldControlService();
     this._parentControl = parentControl;
     this._validators = validators;
     this.modelChange = new EventEmitter();
@@ -32,8 +31,9 @@ export function ModelDirective(eventBinder, parentControl, validators) {
 
 ModelDirective.prototype.didChange = function(changes) {
     if (this._isViewModelChanged(changes)) {
-        this.fieldControl.setValue(changes.model, { emitToView: true });
         this._model = changes.model;
+        if (!this.fieldControl) return;
+            this.fieldControl.setValue(this._model, { emitToView: true });
     }
 }
 
@@ -47,6 +47,7 @@ ModelDirective.prototype.didInit = function() {
      * set the viewReferenceIndex
      * used to remove Object from the collector when element is removed from DOM
      **/
+    this.fieldControl = new FormFieldControlService(Object.assign({value: this._model}, this.modelOptions));
     setupControl(this.fieldControl, this);
 };
 
@@ -58,4 +59,10 @@ ModelDirective.prototype.viewDidDestroy = function() {
 
 ModelDirective.prototype._isViewModelChanged = function(changes) {
     return changes.hasOwnProperty('model') && changes.model !== this._model;
+}
+
+ModelDirective.prototype._setValueToModel = function(value) {
+    if (!this.fieldControl) return;
+    this.fieldControl.setValue(value, { emitToView: true });
+    this._model = changes.model;
 }

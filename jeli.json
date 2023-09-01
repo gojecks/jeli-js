@@ -11,10 +11,7 @@
                 "files": {
                     "@jeli/core": "./public.api.js"
                 }
-            },
-            "concat": [
-                "../jeli.helpers/eval.js"
-            ]
+            }
         },
         "common": {
             "type": "library",
@@ -100,6 +97,11 @@
                     "@jeli/common/datetime": "./dist/common/datetime"
                 }
             }
+        }
+    },
+    "resolve": {
+        "alias": {
+            "@jeli/helpers":  "../js-helpers/"
         }
     },
     "default": "core"

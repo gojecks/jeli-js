@@ -7,3 +7,4 @@ export * from './promise';
 export * from './event.manager';
 export * from './rx.utils';
 export * from './timers';
+export * from './rx-debounce';

@@ -11,6 +11,7 @@ import { isfunction } from '@jeli/helpers';
  */
 export function IterableProfiler(trackBy) {
     this._destroyed = false;
+    this._typeError = false;
     this.cacheHash = [];
     this.out = null;
     this.trackBy = trackBy || function(item, index) {
@@ -19,20 +20,25 @@ export function IterableProfiler(trackBy) {
 }
 
 IterableProfiler.prototype.diff = function(source) {
-    if (this._destroyed) {
+    if (this._destroyed) return false;
+    if (source && !(source instanceof Array)) {
+        if (!this._typeError) {
+            this._typeError = true;
+            return errorBuilder(new TypeError('Collection should be an array'));
+        }
+
         return false;
     }
 
-    if (source && !(source instanceof Array)) {
-        throw new Error('Collection should be an array');
-    }
+
     /**
-     * reset out
+     * reset caches
      */
     this.out = {
         deleted: [],
         order: []
     };
+    this._typeError = false;
 
     var noSource = (!source || !source.length);
     if (noSource && (!this.cacheHash || !this.cacheHash.length)) {
@@ -51,18 +57,15 @@ IterableProfiler.prototype.diff = function(source) {
 
     var len = source.length;
     var totalCacheItem = this.cacheHash.length;
-    var newCacheHash = new Array(source.length).fill('').map((_, idx) => this.trackBy(source[idx], idx));
+    var newCacheHash = new Array(source.length).fill('-').map((_, idx) => this.trackBy(source[idx], idx));
     var operationOrder = [];
     var isDirty = false;
-    var skipCheck = [];
     for (var inc = 0; inc < len; inc++) {
-        if (skipCheck.includes(inc)) continue;
         var prevIndex = this.cacheHash.indexOf(newCacheHash[inc]);
         var cacheHashIndex = newCacheHash.indexOf(this.cacheHash[inc]);
         var existsInCache = prevIndex > -1;
         var cacheIndexExistsInSource = cacheHashIndex > -1;
         var outOfCacheRange = (inc > totalCacheItem - 1);
-
         /**
          * find the hash in the cacheHash
          * if hash exists means the object was moved to different index
@@ -86,6 +89,11 @@ IterableProfiler.prototype.diff = function(source) {
                         this.out.deleted.push(inc);
                     }
                 } else {
+                    var prev = operationOrder[operationOrder.length-1];
+                    if (prev && prev.state == 'move' && [prev.index, prev.prevIndex].includes(prevIndex)) {
+                        continue;
+                    }
+
                     operationOrder.push({
                         index: inc,
                         prevIndex: prevIndex,
@@ -126,7 +134,6 @@ IterableProfiler.prototype.diff = function(source) {
     this.out.order = operationOrder;
     newCacheHash = null;
     operationOrder = null;
-    skipCheck = null;
 
     return isDirty;
 };

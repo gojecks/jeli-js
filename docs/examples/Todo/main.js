@@ -284,6 +284,7 @@ __required.r(exports, 'ElementStyle', () => ElementStyle);
 __required.r(exports, 'AttributeAppender', () => AttributeAppender);
 __required.r(exports, 'DOMHelper', () => DOMHelper);
 __required.r(exports, 'createLocalVariables', () => createLocalVariables);
+__required.r(exports, 'setupAttributeObservers', () => setupAttributeObservers);
 __required.r(exports, 'ObserveUntilDestroyed', () => ObserveUntilDestroyed);
 __required.r(exports, 'elementMutationObserver', () => elementMutationObserver);
 __required.r(exports, 'sce', () => sce);
@@ -1208,7 +1209,6 @@ var ViewParser = function () {
         }, hostRef) : null;
         function createAndAppend(elementDefinition) {
             var child = ViewParser.builder[elementDefinition.type](elementDefinition, hostRef.parent, viewContainer, context);
-            child.hostRefId = hostRef.refId;
             if (appendToParent || createPlaceElement) {
                 pushToParent(child, placeElement || parent);
             } else {
@@ -1239,11 +1239,13 @@ var ViewParser = function () {
                 if (template) {
                     var oldElement = element;
                     element = ViewParser.builder[template.type](template, parent, viewContainer, context);
-                    if (!fromObserver)
+                    if (!fromObserver || !element)
                         return element;
                     unsubscribeScheduler = scheduler.schedule(function () {
-                        transverse(element);
-                        replaceElement(oldElement, element);
+                        if (element) {
+                            transverse(element);
+                            replaceElement(oldElement, element);
+                        }
                         oldElement = null;
                     });
                 }
@@ -1852,12 +1854,13 @@ function createElementByType(tag, text, fromDOM) {
 ;
 function setupAttributeObservers(element, attrObservers) {
     var observerStarted = false;
+    var observerKeys = Object.keys(attrObservers);
     var unsubscribe = SubscribeObservables(element.hostRef.refId, observe);
     attachElementObserver(element, unsubscribe);
     function observe() {
-        for (var propName in attrObservers) {
+        for (var propName of observerKeys) {
             if (attrObservers[propName].once && observerStarted) {
-                return;
+                continue;
             }
             attributeEvaluator(propName, attrObservers[propName]);
         }
@@ -1906,7 +1909,7 @@ function AbstractElementRef(definition, parentRef) {
     var locaVariables = null;
     this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
     this.$observers = [];
-    this.refId = '__eid_' + $eUID++;
+    this.refId = $eUID++;
     this.children = new QueryList();
     this.parent = parentRef;
     this.hostRefId = parentRef ? parentRef.isc ? parentRef.refId : parentRef.hostRefId || this.refId : this.refId;
@@ -2267,14 +2270,12 @@ function handleEvent(element, event, eventName) {
     }
 }
 function CustomEventHandler(element) {
-    var _this = this;
-    var trigger = function (event) {
-        _this.trigger(event);
+    var trigger = event => {
+        this.trigger(event);
     };
     this.element = element;
     this.registeredEvents = {};
     this.register = function (type, callback) {
-        var _this = this;
         var index = -1;
         if (this.element && this.registeredEvents) {
             if (!this.registeredEvents.hasOwnProperty(type)) {
@@ -2282,9 +2283,7 @@ function CustomEventHandler(element) {
                 this.element.addEventListener(type, trigger, false);
             }
             index = this.registeredEvents[type].push(callback);
-            return function () {
-                _this.registeredEvents[type].splice(index - 1, 1);
-            };
+            return () => this.registeredEvents[type].splice(index - 1, 1);
         }
     };
     this.trigger = function (event) {
@@ -6092,7 +6091,6 @@ var ModelDirective = function () {
     'use strict';
     function ModelDirective(eventBinder, parentControl, validators) {
         this.eventBinder = getValueAccessor(eventBinder);
-        this.fieldControl = new FormFieldControlService();
         this._parentControl = parentControl;
         this._validators = validators;
         this.modelChange = new EventEmitter();
@@ -6100,14 +6098,17 @@ var ModelDirective = function () {
     }
     ModelDirective.prototype.didChange = function (changes) {
         if (this._isViewModelChanged(changes)) {
-            this.fieldControl.setValue(changes.model, { emitToView: true });
             this._model = changes.model;
+            if (!this.fieldControl)
+                return;
+            this.fieldControl.setValue(this._model, { emitToView: true });
         }
     };
     ModelDirective.prototype.modelToViewUpdate = function (value) {
         this.modelChange.emit(value);
     };
     ModelDirective.prototype.didInit = function () {
+        this.fieldControl = new FormFieldControlService(Object.assign({ value: this._model }, this.modelOptions));
         setupControl(this.fieldControl, this);
     };
     ModelDirective.prototype.viewDidDestroy = function () {
@@ -6115,6 +6116,12 @@ var ModelDirective = function () {
     };
     ModelDirective.prototype._isViewModelChanged = function (changes) {
         return changes.hasOwnProperty('model') && changes.model !== this._model;
+    };
+    ModelDirective.prototype._setValueToModel = function (value) {
+        if (!this.fieldControl)
+            return;
+        this.fieldControl.setValue(value, { emitToView: true });
+        this._model = changes.model;
     };
     ModelDirective.ctors = {
         selector: 'model',

@@ -2,8 +2,8 @@ import { WebStateService } from '../services/jwebstate.service';
 Directive({
     selector: 'go',
     DI: [WebStateService],
-    props: ['pathName=go', "params"],
-    events: ['click:event=clickHandler()']
+    props: ['pathName=go', "params", "target"],
+    events: ['click:event=clickHandler($event)']
 })
 
 /**
@@ -12,7 +12,8 @@ Directive({
  */
 export function GoFn(webStateService) {
     this.params = {};
-    this.clickHandler = function() {
-        webStateService.go(this.pathName, this.params);
+    this.clickHandler = function(event) {
+        event.preventDefault();
+        webStateService.go(this.pathName, this.params, this.target);
     };
 }

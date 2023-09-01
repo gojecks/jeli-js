@@ -1,5 +1,5 @@
-import { isequal, inarray } from '@jeli/helpers';
-import { errorBuilder, ProviderToken } from '@jeli/core';
+import { isequal } from '@jeli/helpers';
+import { errorBuilder } from '@jeli/core';
 import { CheckboxEventBinder } from './directives/checkbox.event.accessor';
 import { SelectEventBinder } from './directives/select.event.accessor';
 import { DefaultEventBinder } from './directives/default.event.accessor';
@@ -135,4 +135,12 @@ export function getValueAccessor(valueAccessors) {
     }
 
     return inbuilt;
+}
+
+function getValueByPath(value, paths) {
+    return paths.reduce(function(accum, key){
+        if (typeof accum !== 'object') return null;
+        accum = accum[key];
+        return accum;
+    }, value);
 }
