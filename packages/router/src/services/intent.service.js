@@ -10,7 +10,7 @@ Service({
 export function ViewIntentService() {
     this._currentOpenIntent = new Map();
     this.intentContainer = null;
-    this.$currentIntent = "";
+    this._currentIntent = "";
 }
 
 /**
@@ -20,7 +20,7 @@ export function ViewIntentService() {
  * @returns 
  */
 ViewIntentService.prototype.openIntent = function(intentName, params) {
-    if ((this.$currentIntent === intentName)) {
+    if ((this._currentIntent === intentName)) {
         return;
     }
 
@@ -30,8 +30,7 @@ ViewIntentService.prototype.openIntent = function(intentName, params) {
             // set out intent to cache
             // _intentCache[intentName] = _intent;
             // set the current intent name
-            var _this = this;
-            this.$currentIntent = intentName;
+            this._currentIntent = intentName;
             this._currentOpenIntent.set(intentName, {
                 element: null,
                 route: {
@@ -41,14 +40,13 @@ ViewIntentService.prototype.openIntent = function(intentName, params) {
                 }
             });
 
-            ComponentFactoryResolver(intentConfig.view.component, this.intentContainer, function(componentRef) {
-                DOMHelper.insertAfter(componentRef, componentRef.nativeElement, _this.intentContainer.nativeElement);
-                var config = _this._currentOpenIntent.get(intentName);
+            ComponentFactoryResolver(intentConfig.component, this.intentContainer, componentRef => {
+                var config = this._currentOpenIntent.get(intentName);
                 config.element = componentRef;
-                componentRef.class.add('view-intent');
-                _this.intentContainer.children.add(componentRef);
-                _this.transitIntent(intentName, intentConfig.transition || 50);
-            }, true);
+                // componentRef.class.add('view-intent');
+                this.intentContainer.children.add(componentRef);
+                // this.transitIntent(intentName, intentConfig.transition || 50);
+            });
         } else {
             this.transitIntent(intentName, 50);
         }
@@ -58,7 +56,7 @@ ViewIntentService.prototype.openIntent = function(intentName, params) {
 ViewIntentService.prototype.closeIntent = function() {
     var allIntents = [];
     // get net intent
-    var current = this.$currentIntent;
+    var current = this._currentIntent;
     this._currentOpenIntent.forEach(function(intent, key) {
         intent.element && intent.element.nativeElement.removeAttribute('style');
         if ((current === key)) {
@@ -69,18 +67,18 @@ ViewIntentService.prototype.closeIntent = function() {
     });
 
     this._currentOpenIntent.delete(current);
-    this.$currentIntent = allIntents.pop();
-    if (this.$currentIntent) {
-        this.transitIntent(this.$currentIntent, 70);
+    this._currentIntent = allIntents.pop();
+    if (this._currentIntent) {
+        this.transitIntent(this._currentIntent, 70);
     }
 };
 
-ViewIntentService.prototype.$destroyAllIntent = function() {
+ViewIntentService.prototype.destroyAllIntent = function() {
     // get all intent keys
     this._currentOpenIntent.forEach(function(intentView) {
         DOMHelper.remove(intentView.element);
     });
-    this.$currentIntent = undefined;
+    this._currentIntent = undefined;
     this._currentOpenIntent.clear();
 };
 
@@ -109,7 +107,7 @@ ViewIntentService.prototype.removeIntent = function(intentName) {
 ViewIntentService.prototype.transitIntent = function(intentName, timer) {
     var intentView = this._currentOpenIntent.get(intentName);
     if (intentView) {
-        this.$currentIntent = intentName;
+        this._currentIntent = intentName;
         this.hideAllIntent();
         this.animate(intentView.element, {
             transform: 'translateX(0%)'
@@ -131,5 +129,5 @@ ViewIntentService.prototype.hideAllIntent = function(removeIntent) {
 };
 
 ViewIntentService.prototype.getCurrentIntent = function() {
-    return (this.getIntentView(this.$currentIntent) || {}).route;
+    return (this.getIntentView(this._currentIntent) || {}).route;
 };

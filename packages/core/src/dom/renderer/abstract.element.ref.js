@@ -4,22 +4,31 @@
  */
 var $eUID = 1;
 var $elementContext = '__jContext__';
+// holds a set of elements based of their refs
+var $elementContainer = new Map();
+
 /**
  * Abstract element ref for generating components
  * @param {*} definition 
  * @param {*} parentRef 
  */
 function AbstractElementRef(definition, parentRef) {
-    /**
-     * extend the definition
-     */
-    var locaVariables = null;
+    var localVariables = null;
     this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
+    // all registered observers goes in here
     this.$observers = [];
+    // Element referenceId
     this.refId = $eUID++;
+    // Hold list of Element children, this can also be queried
     this.children = new QueryList();
+    // element ParentRef
     this.parent = parentRef;
+    // holds id to parentRefContext
+    // holds the referenceId to a parentRef
     this.hostRefId = (parentRef ? (parentRef.isc ? parentRef.refId : (parentRef.hostRefId || this.refId)) : this.refId);
+    // hold the refId for actuall element where this content will be injected
+    // this is only set by content injection using <j-place/>
+    this.contentHostRefId = parentRef ? parentRef.contentHostRefId : null; 
     this.type = definition.type;
     this.tagName = definition.name.toLowerCase();
     this.index = definition.index;
@@ -34,20 +43,20 @@ function AbstractElementRef(definition, parentRef) {
 
     /**
      * compile local vairables if defined
+     * <j-template />
      */
     if (definition.ctx$) {
-        locaVariables = createLocalVariables(definition.ctx$, parentRef.context, parentRef.componentInstance);
+        localVariables = createLocalVariables(definition.ctx$, parentRef.context, parentRef.componentInstance);
     }
 
     Object.defineProperties(this, {
         context: {
             get: function() {
                 // template context
-                if (locaVariables) return locaVariables;
+                if (localVariables) return localVariables;
                 // component context or custom context
-                if (componentDebugContext.has(this.refId)) {
+                if (componentDebugContext.has(this.refId)) 
                     return componentDebugContext.get(this.refId).context;
-                }
                 // parent context
                 return this.parent && this.parent.context;
             }
@@ -97,9 +106,7 @@ function AbstractElementRef(definition, parentRef) {
 
     if (11 !== this.nativeElement.nodeType) {
         Object.defineProperty(this.nativeElement, $elementContext, {
-            get: () => {
-                return this;
-            }
+            get: () => this.context
         });
     }
 };

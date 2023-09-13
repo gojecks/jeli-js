@@ -14,6 +14,6 @@ Element({
 export function JIntentContainer(viewIntent, ElementRef) {
     viewIntent.intentContainer = ElementRef;
     this.viewDidDestroy = function() {
-        viewIntent.$destroyAllIntent();
+        viewIntent.destroyAllIntent();
     };
 }

@@ -10,7 +10,34 @@ export var staticInjectionToken = {
     QueryList: 'QueryList',
     Function: 'Function',
     HostRef: 'HostRef',
-    HTMLElement: 'HTMLElement'
+    HTMLElement: 'HTMLElement',
+    ContentHostRef: 'ContentHostRef'
+};
+
+/**
+     * generate local injectors
+     * Getter for Dependencies that are set in runTime
+     * see example from jSwitch Directive
+     * Dependencies can also be optional
+     * "provider:TYPE=?Value_To_Map"
+     * ? symbol represents optional Dependency
+     * @param {*} idx 
+     */
+var staticInjectionTokenHandlers = {
+    TemplateRef: (context) => TemplateRef.factory(context.injectors.ElementRef, context.get({ tokenName: 'Selector' })),
+    changeDetector: (context) => context.injectors.ElementRef.changeDetector,
+    ViewRef: (context) => new ViewRef(context.injectors.ElementRef),
+    ParentRef: (context, dep) => {
+        if (dep.value) {
+            return findParentRef(context.injectors.ElementRef.parent, dep);
+        }
+        return context.injectors.ElementRef.parent.componentInstance;
+    },
+    VALIDATORS: (context) => getValidators(context.injectors.ElementRef),
+    ContentHostRef: (context) => {
+        var componentRef = ComponentRef.get(context.injectors.ElementRef.contentHostRefId);
+       return componentRef.componentInstance
+    }
 };
 
 /**
@@ -38,42 +65,7 @@ ComponentInjectors.prototype.get = function(dep) {
     if (this.injectors.hasOwnProperty(dep.tokenName))
         return this.injectors[dep.tokenName];
     else if (staticInjectionToken[dep.tokenName])
-        return _ComponentInjectionToken(dep, this);
-}
-
-/**
- * 
- * @param {*} dep 
- * @param {*} context 
- * @returns 
- */
-function _ComponentInjectionToken(dep, context) {
-    /**
-     * generate local injectors
-     * Getter for Dependencies that are set in runTime
-     * see example from jSwitch Directive
-     * Dependencies can also be optional
-     * "provider:TYPE=?Value_To_Map"
-     * ? symbol represents optional Dependency
-     * @param {*} idx 
-     */
-    switch (dep.tokenName) {
-        case (staticInjectionToken.TemplateRef):
-            return TemplateRef.factory(context.injectors.ElementRef, context.get({ tokenName: 'Selector' }));
-        case (staticInjectionToken.changeDetector):
-            return context.injectors.ElementRef.changeDetector;
-        case (staticInjectionToken.ViewRef):
-            return new ViewRef(context.injectors.ElementRef);
-        case (staticInjectionToken.ParentRef):
-            {
-                if (dep.value) {
-                    return findParentRef(context.injectors.ElementRef.parent, dep);
-                }
-                return context.injectors.ElementRef.parent.componentInstance;
-            }
-        case (staticInjectionToken.VALIDATORS):
-            return getValidators(context.injectors.ElementRef);
-    }
+        return staticInjectionTokenHandlers[dep.tokenName](this, dep);
 }
 
 /**

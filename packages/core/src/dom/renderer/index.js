@@ -126,7 +126,7 @@ export var ViewParser = function () {
         var placeElement = (createPlaceElement) ? new AbstractElementRef({
             name: "#",
             type: 11
-        }, hostRef) : null
+        }, hostRef) : null;
 
         /**
          * 
@@ -135,8 +135,9 @@ export var ViewParser = function () {
         function createAndAppend(elementDefinition) {
             var child = ViewParser.builder[elementDefinition.type](elementDefinition, hostRef.parent, viewContainer, context);
              // Attach the child element to the origin, used for getting the right componentRef
-             // TODO: uncomment this line if <j-place> starts breaking
-            // child.hostRefId = hostRef.refId;
+            // actual hostRefId where content is appended
+            // ContentHostRef? should reolve the component instance
+            child.contentHostRefId = hostRef.refId;
             if (appendToParent || createPlaceElement) {
                 pushToParent(child, placeElement || parent);
             } else {
@@ -228,7 +229,9 @@ export var ViewParser = function () {
             11: place,
             13: outlet,
             8: comment
-        }
+        },
+        // holds a set of elements based of their refs
+        $elementContextContainer: new Map()
     };
 }();
 
@@ -237,7 +240,7 @@ export var ViewParser = function () {
  * @param {*} node
  */
 function transverse(node) {
-    if (node._lazyCompiled) return;
+    if (node._lcmp) return;
     if (node instanceof AbstractElementRef) {
         if (node.providers && node.providers.length) {
             ElementCompiler.resolve(node, proceedWithCompilation);

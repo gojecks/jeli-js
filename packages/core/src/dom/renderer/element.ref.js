@@ -2,26 +2,20 @@
  * 
  * @param {*} definition 
  * @param {*} parent 
- * @param {*} _lazyCompiled
+ * @param {*} _lcmp
  */
-export function ElementRef(definition, parent, _lazyCompiled) {
+export function ElementRef(definition, parent, lcmp) {
     AbstractElementRef.call(this, definition, parent);
     this.events = new EventHandler((definition.events || []).slice());
-    this._lazyCompiled = _lazyCompiled;
-
-    /**
-     * check if element is custom element
-     */
+    // holds value for lazyCompiled element
+    this._lcmp = lcmp;
+    // check if element is custom element
     if (definition.isc) {
-        /**
-         * create the element Observer
-         */
+        // create the element Observer
         ComponentRef.create(this.refId, parent && parent.hostRef.refId);
     }
 
-    /**
-     * definition.attrObservers
-     */
+    // definition.attrObservers
     if (definition.attr$) {
         setupAttributeObservers(this, definition.attr$);
     }

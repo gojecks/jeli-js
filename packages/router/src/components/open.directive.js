@@ -1,38 +1,20 @@
 import { ViewIntentService } from '../services/intent.service';
 Directive({
-    selector: 'open',
-    DI: ['ElementRef?', ViewIntentService],
-    props: ['open', "params"],
-    events: ['event:click=clickHandler()']
+    selector: 'openIntent',
+    DI: [ViewIntentService],
+    props: ['open=openIntent', "params"],
+    events: ['click:event=clickHandler()']
 })
 
 /**
  * 
- * @param {*} ElementRef 
  * @param {*} viewIntent 
  */
-export function OpenIntent(elementRef, viewIntent) {
+export function OpenIntent( viewIntent) {
     this.params = {};
-    this._open = null;
+    this.open = null;
 
     this.clickHandler = function() {
-        // state has changed
-        //where attr contains a parameter
-        if (this.splitWhere.length) {
-            //convert the required string to OBJECT
-            this.params = elementRef.context.evaluate(this.splitWhere.join(':'));
-        }
-        viewIntent.openIntent(this.pathName, this.params);
+        viewIntent.openIntent(this.open, this.params);
     };
-
-    Object.defineProperty(this, 'open', {
-        set: function(value) {
-            this.splitWhere = (value || '').split(':');
-            this.pathName = this.splitWhere.shift();
-            this._open = value;
-        },
-        get: function() {
-            return this._open;
-        }
-    });
 }

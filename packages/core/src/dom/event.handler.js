@@ -208,16 +208,13 @@ function getFnFromContext(eventInstance, componentInstance, context) {
     }
 
     var fn = instance[eventInstance.fn];
-    /**
-     * Array instance
-     */
-    if (fn)
-        fn.context = ((instance instanceof Array || !componentInstance[eventInstance.fn]) ? instance : componentInstance);
+    // check FN and array instace
+    if (!fn) return null;
 
+    fn.context = ((instance instanceof Array || !componentInstance[eventInstance.fn]) ? instance : componentInstance);
     instance = null;
-
     return fn;
-};
+}
 
 /**
  * 
@@ -262,7 +259,7 @@ function handleEvent(element, event, eventName) {
         } else if (registeredEvent.target) {
             var mainElement = getClosest(registeredEvent.target);
             if (!mainElement) return;
-            context = (mainElement[$elementContext] || element).context;
+            context = mainElement[$elementContext];
             // overwrite the event target to return the right element
             _event = ProxyEvent(event, mainElement);
         }

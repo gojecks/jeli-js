@@ -75,7 +75,9 @@ AttributeAppender.helpers = {
     },
     readonly: function(nativeElement, value) {
         AttributeAppender.setValue(nativeElement, 'readonly', value, true);
-    }
+    },
+    aria: () => singleOrMultipeUpdate.apply(null, arguments),
+    data: () => singleOrMultipeUpdate.apply(null, arguments)
 };
 
 /**
@@ -98,3 +100,19 @@ AttributeAppender.setProp = function(nativeElement, propName, propValue, templat
         AttributeAppender.setValue(nativeElement, propName, propValue);
     }
 };
+
+/**
+ * 
+ * @param {*} nativeElement 
+ * @param {*} prop 
+ * @param {*} value 
+ */
+function singleOrMultipeUpdate(nativeElement, prop, value){
+    if (isobject(prop)) {
+        for(var name of prop) {
+            nativeElement[name] =  value;   
+        }
+    } else {
+        nativeElement[prop] =  value;
+    }
+}

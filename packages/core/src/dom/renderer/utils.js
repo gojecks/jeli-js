@@ -370,6 +370,22 @@ export function createLocalVariables(localVariables, localContext, parentContext
 }
 
 /**
+ * 
+ * @param {*} targetContext 
+ * @param {*} targetElement 
+ * return element context
+ */
+export function getElementContext(targetContext, targetElement){
+    if (!targetContext) return targetElement.context;
+
+    if (targetContext.locaVariables){
+        return targetContext.locaVariables;
+    }
+    var componentRef = ComponentRef.get(targetContext.refId, targetContext.parentRefId);
+    return componentRef.context;
+}
+
+/**
  * methods exposed to public
  */
 export var DOMHelper = {

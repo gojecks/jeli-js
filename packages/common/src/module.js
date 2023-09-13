@@ -13,6 +13,7 @@ import { whereFilterFn } from './filter/where.filter';
 import { QueryFactory } from './services/query.service';
 import { FilterPipe } from './filter/filter';
 import { ReversePipe } from './filter/reverse';
+import { SizeToUnitPipe } from './filter/size-unit-conversion';
 /**
  * set up common Module
  * that other Module could inject
@@ -30,7 +31,8 @@ jModule({
         CurrencyFilter,
         QueryFactory,
         FilterPipe,
-        ReversePipe
+        ReversePipe,
+        SizeToUnitPipe
     ],
     selectors: [
         ForDirective,
