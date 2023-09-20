@@ -146,7 +146,7 @@ function elementBefore(targetNode, insertNode){
 function elementInsertAfter(hostElement, newNode, targetNode, ignoreDetector) {
     if (!targetNode || !targetNode.parentNode) return;
     targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
-    if (!ignoreDetector) hostElement.changeDetector.onlySelf();
+    if (hostElement && !ignoreDetector) hostElement.changeDetector.onlySelf();
 }
 
 /**

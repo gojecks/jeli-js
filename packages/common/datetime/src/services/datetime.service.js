@@ -53,8 +53,25 @@ export function DatetimeService(dateTimeMonthHalf, dateTimeMonthFull, dateTimeDa
         return monthList;
     };
 }
-
 DatetimeService.prototype._dateTime = function(datetime) {
+    return DatetimeService.staticDateTime(datetime);
+}
+
+/**
+ * @function timeConverter
+ * @Param : Datetime Object or String
+ * @return (Object)
+ */
+DatetimeService.prototype.timeConverter = function(dateToParse) {
+   return DatetimeService.staticTimeConverter(dateToParse, this);
+};
+
+/**
+ * 
+ * @param {*} datetime 
+ * @returns 
+ */
+DatetimeService.staticDateTime = function(datetime) {
     var outputDate = (!isNaN(Number(datetime)) && Number(datetime)) ? new Date(datetime) : DateStringConverter(datetime);
     var g = function(j) {
         return ((j < 10) ? '0' : '') + j
@@ -77,19 +94,16 @@ DatetimeService.prototype._dateTime = function(datetime) {
     return outputDate;
 };
 
-/**
- * @function timeConverter
- * @Param : Datetime Object or String
- * @return (Object)
- */
-DatetimeService.prototype.timeConverter = function(dateToParse) {
+
+
+DatetimeService.staticTimeConverter = function(dateToParse, context){
     //dataToParse (Time) is undefined
     if (!dateToParse) {
-        dateToParse = this._dateTime();
+        dateToParse = DatetimeService.staticDateTime();
     }
 
-    var currentDateTime = this._dateTime();
-    var _dateTimeToParse = (dateToParse.current_time) ? dateToParse : this._dateTime(dateToParse);
+    var currentDateTime = DatetimeService.staticDateTime();
+    var _dateTimeToParse = (dateToParse.current_time) ? dateToParse : DatetimeService.staticDateTime(dateToParse);
     var j = _dateTimeToParse.getTime();
     var l = currentDateTime.getTime();
     var B = 1000 * 60 * 60 * 24;
@@ -140,12 +154,12 @@ DatetimeService.prototype.timeConverter = function(dateToParse) {
         YY: String(year).slice(2),
         M: month,
         MM: p(month),
-        MMM: this.dateTimeMonthHalf[month - 1],
-        MMMM: this.dateTimeMonthFull[month - 1],
+        MMM: context.dateTimeMonthHalf[month - 1],
+        MMMM: context.dateTimeMonthFull[month - 1],
         D: day,
         DD: p(day),
-        DDD: this.dateTimeDayHalf[weekDay],
-        DDDD: this.dateTimeDayFull[weekDay],
+        DDD: context.dateTimeDayHalf[weekDay],
+        DDDD: context.dateTimeDayFull[weekDay],
         h: hours % 12 || 12,
         hh: p(hours),
         H: hours,
@@ -162,11 +176,11 @@ DatetimeService.prototype.timeConverter = function(dateToParse) {
 
     //set leap year
     result.isLeapYear = leapYear(year);
-    result.today = this.dateTimeDayHalf[currentDateTime.getDay()] + ', ' + currentDateTime.getDate() + ' ' + this.dateTimeMonthHalf[currentDateTime.getMonth()];
+    result.today = context.dateTimeDayHalf[currentDateTime.getDay()] + ', ' + currentDateTime.getDate() + ' ' + context.dateTimeMonthHalf[currentDateTime.getMonth()];
     if (currentDateTime.getFullYear() > _dateTimeToParse.getFullYear()) {
-        result.date = this.dateTimeMonthHalf[_dateTimeToParse.getMonth()] + ', ' + _dateTimeToParse.getDate() + ' ' + _dateTimeToParse.getFullYear();
+        result.date = context.dateTimeMonthHalf[_dateTimeToParse.getMonth()] + ', ' + _dateTimeToParse.getDate() + ' ' + _dateTimeToParse.getFullYear();
     } else {
-        result.date = this.dateTimeDayHalf[_dateTimeToParse.getDay()] + ', ' + _dateTimeToParse.getDate() + ' ' + this.dateTimeMonthHalf[_dateTimeToParse.getMonth()]
+        result.date = context.dateTimeDayHalf[_dateTimeToParse.getDay()] + ', ' + _dateTimeToParse.getDate() + ' ' + context.dateTimeMonthHalf[_dateTimeToParse.getMonth()]
     }
 
     if (result.time_difference.seconds <= 60) {
@@ -216,4 +230,4 @@ DatetimeService.prototype.timeConverter = function(dateToParse) {
     }
 
     return result;
-};
+}

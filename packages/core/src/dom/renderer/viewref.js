@@ -34,12 +34,20 @@ ViewRef.prototype = Object.create(Array.prototype);
  * @param {*} curr 
  */
 ViewRef.prototype.move = function(prev, curr) {
-    moveItemInArray(this, prev, curr);
     scheduler.schedule(() => {
         var view = this.get(prev);
         var targetNode = this.get(curr);
         if (targetNode && view) {
-            elementBefore(view.compiledElement.nativeElement, targetNode.compiledElement.nativeElement);
+            // insert after
+            if (curr > prev){
+                elementInsertAfter(null, view.compiledElement.nativeElement, targetNode.compiledElement.nativeElement);
+            } else {
+                // insert before
+                elementBefore(targetNode.compiledElement.nativeElement, view.compiledElement.nativeElement);
+            }
+            
+            moveItemInArray(this, prev, curr);
+            this.updateContext();
         }
     });
 };
@@ -62,6 +70,16 @@ ViewRef.prototype.clearView = function() {
         view.destroy();
     }
 };
+
+ViewRef.prototype.updateContext = function(){
+    for (var i = 0; i < this.length; i++) {
+        var view = this.get(i);
+        view.updateContext({
+            index: i,
+            count: this.length
+        });
+    }
+}
 
 /**
  * 

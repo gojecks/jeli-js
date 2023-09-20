@@ -1,4 +1,4 @@
-import { isfunction } from '@jeli/helpers';
+import { isfunction, moveItemInArray } from '@jeli/helpers';
 /**
  * IterableProfiler
  * Compare Two Objects or Array<Objects>
@@ -61,10 +61,11 @@ IterableProfiler.prototype.diff = function(source) {
     var operationOrder = [];
     var isDirty = false;
     for (var inc = 0; inc < len; inc++) {
-        var prevIndex = this.cacheHash.indexOf(newCacheHash[inc]);
-        var cacheHashIndex = newCacheHash.indexOf(this.cacheHash[inc]);
-        var existsInCache = prevIndex > -1;
-        var cacheIndexExistsInSource = cacheHashIndex > -1;
+        var newCacheIndex = newCacheHash.indexOf(this.cacheHash[inc]);
+        var indexInCache = this.cacheHash.indexOf(newCacheHash[inc]);
+        var prevIndex = this.cacheHash.indexOf(newCacheHash[newCacheIndex]);
+        var existsInCache = indexInCache > -1;
+        var cacheIndexExistsInSource = newCacheIndex > -1;
         var outOfCacheRange = (inc > totalCacheItem - 1);
         /**
          * find the hash in the cacheHash
@@ -73,12 +74,12 @@ IterableProfiler.prototype.diff = function(source) {
          */
         if (existsInCache) {
             /**
-             * check if currentIndex is > prevIndex
+             * check if currentIndex is > indexInCache
              * eg: [a,b] => [a,c,b]
              * true: new Data was added in previous index to the collection
              * false: we move the item to correct index
              */
-            if (prevIndex !== inc) {
+            if (prevIndex !== newCacheIndex) {
                 isDirty = true;
                 if (!cacheIndexExistsInSource) {
                     // push the index for deletion
@@ -94,9 +95,12 @@ IterableProfiler.prototype.diff = function(source) {
                         continue;
                     }
 
+                    var from = indexInCache > newCacheIndex ? indexInCache : prevIndex;
+                    var to = indexInCache > newCacheIndex ? prevIndex : newCacheIndex;
+                    moveItemInArray(this.cacheHash, from, to);
                     operationOrder.push({
-                        index: inc,
-                        prevIndex: prevIndex,
+                        index: to,
+                        prevIndex: from,
                         state: "move"
                     });
                 }

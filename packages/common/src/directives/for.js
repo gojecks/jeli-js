@@ -88,13 +88,7 @@ ForDirective.prototype._listenerFn = function() {
         }
     });
 
-    for (var i = 0; i < this.viewRef.length; i++) {
-        var view = this.viewRef.get(i);
-        view.updateContext({
-            index: i,
-            count: this._forValue.length
-        });
-    }
+    this.viewRef.updateContext();
     // set progress to false
     this.inProgress = false;
 };

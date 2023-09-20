@@ -36,22 +36,23 @@ function InternalChangeDetector(context) {
         if (context.parent && !ignoreParent && componentDebugContext.has(context.parent)) {
             var parent = componentDebugContext.get(context.parent);
             parent.changeDetector.detectChanges(true);
-            triggerChild(parent.child, []);
+            triggerChild(parent.child, [], context.parent);
         }
 
         context.observables && context.observables.notifyAllObservers(context.componentInstance);
         if (!ignoreChild) {
-            triggerChild(context.child, []);
+            triggerChild(context.child, [], context.parent);
         }
 
         /**
          * 
          * @param {*} children 
+         * @param {*} ignore 
+         * @param {*} parentRef 
          */
-        function triggerChild(children, ignore) {
-            for (var i = 0; i < children.length; i++) {
-                var refId = children[i];
-                if (!ignore.includes(refId) && componentDebugContext.has(refId)) {
+        function triggerChild(children, ignore, parentRef) {
+            for(var refId of children) {
+                if (componentDebugContext.has(parentRef) && !ignore.includes(refId) && componentDebugContext.has(refId)) {
                     var child = componentDebugContext.get(refId);
                     child.changeDetector.onlySelf();
                 }
