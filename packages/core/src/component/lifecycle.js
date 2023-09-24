@@ -5,7 +5,8 @@ export var LifeCycleConst = {
     didChange: 1,
     didInit: 2,
     viewDidLoad: 3,
-    viewDidDestroy: 4
+    viewDidDestroy: 4,
+    AfterViewLoad: 5
 };
 
 var LifeCycleKeys = Object.keys(LifeCycleConst);
@@ -24,7 +25,8 @@ export function LifeCycle(componentInstance) {
         viewDidLoad: !!componentInstance.viewDidLoad,
         viewDidDestroy: !!componentInstance.viewDidDestroy,
         willObserve: !!componentInstance.willObserve,
-        didChange: !!componentInstance.didChange
+        didChange: !!componentInstance.didChange,
+        afterViewLoad: !!componentInstance.afterViewLoad
     };
 
     /**

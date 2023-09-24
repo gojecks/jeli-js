@@ -3,6 +3,8 @@ import { staticInjectionToken } from '../../component/injectors';
 import { AttributeAppender } from '../attribute';
 import { QueryList } from '../queryList';
 import { TemplateRef } from './templateref';
+
+var isAllowedArrayType = ['style'];
 /**
  * 
  * @param {*} nativeElement 
@@ -310,10 +312,15 @@ export function setupAttributeObservers(element, attrObservers) {
 
     function observe() {
         for (var propName of observerKeys) {
-            /**
-             * remove the config
-             */
-            if (attrObservers[propName].once && observerStarted) {
+            // remove the config
+            if (attrObservers[propName].once && observerStarted) continue;
+            // compile array observers
+            // only for styles
+            if (isAllowedArrayType.includes(propName) && Array.isArray(attrObservers[propName])) {
+                attrObservers[propName].forEach(item => {
+                    if(item.once && observerStarted) return;
+                    attributeEvaluator(propName, item);
+                });
                 continue;
             }
             attributeEvaluator(propName, attrObservers[propName]);

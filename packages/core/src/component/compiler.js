@@ -17,10 +17,7 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
      * 
      * @param {*} componentInstance 
      */
-    function CoreComponentCompiler(componentInstance) {
-        if (!elementRef.isc) {
-            return;
-        }
+    function CoreElementCompiler(componentInstance) {
         var componentRef = componentDebugContext.get(elementRef.refId);
         /**
          * add two way binding between components 
@@ -34,7 +31,7 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
                 elementMutationObserver(elementRef.nativeElement, function (mutationList, observer) {
                     // attach contentChild(ren)
                     AttachComponentContentQuery(elementRef);
-                    lifeCycle && lifeCycle.trigger(LifeCycleConst.viewDidLoad);
+                    lifeCycle.trigger(LifeCycleConst.viewDidLoad);
                     observer.disconnect();
                 });
                 
@@ -98,7 +95,7 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
              * remove the Attribute from element
              */
             elementRef.nodes.set(factory.ctors.exportAs || ctors.selector, componentInstance);
-            lifeCycle && lifeCycle.trigger(LifeCycleConst.viewDidLoad);
+            lifeCycle.trigger(LifeCycleConst.viewDidLoad);
             attachElementObserver(elementRef, function () {
                 lifeCycle.trigger(LifeCycleConst.viewDidDestroy);
                 elementRef.nodes.delete(ctors.selector);
@@ -106,7 +103,7 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
         }
     }
 
-    ComponentFactoryInitializer(factory, componentInjectors,
+    ElementFactoryInitializer(factory, componentInjectors,
         /**
          * 
          * @param {*} componentInstance 
@@ -123,7 +120,7 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
             lifeCycle.trigger(LifeCycleConst.didInit);
             registerDirectiveInstance(componentInstance);
             next(componentInstance);
-            CoreComponentCompiler(componentInstance);
+            if (elementRef.isc) CoreElementCompiler(componentInstance);
         });
 }
 
@@ -165,7 +162,7 @@ ElementCompiler.resolve = function (node, nextTick) {
  * @param {*} locals 
  * @param {*} CB 
  */
-function ComponentFactoryInitializer(factory, injectorInstance, CB) {
+function ElementFactoryInitializer(factory, injectorInstance, CB) {
     wireResolvers(factory.ctors.resolve, injectorInstance);
     AutoWire(factory, injectorInstance, function (instance) {
         try {

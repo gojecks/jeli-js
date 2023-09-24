@@ -11,7 +11,8 @@ export var staticInjectionToken = {
     Function: 'Function',
     HostRef: 'HostRef',
     HTMLElement: 'HTMLElement',
-    ContentHostRef: 'ContentHostRef'
+    ContentHostRef: 'ContentHostRef',
+    HostElement: 'HostElement'
 };
 
 /**
@@ -36,7 +37,21 @@ var staticInjectionTokenHandlers = {
     VALIDATORS: (context) => getValidators(context.injectors.ElementRef),
     ContentHostRef: (context) => {
         var componentRef = ComponentRef.get(context.injectors.ElementRef.contentHostRefId);
-       return componentRef.componentInstance
+       return componentRef.componentInstance;
+    },
+    /**
+     * Used  to retrieve host dom nativeElement, for Element and Directives
+     * @param {*} context 
+     * @returns 
+     */
+    HostElement: (context) =>  {
+        var elementId = 'jl-' + context.injectors.ElementRef.refId;
+        // attach a refAttr
+        context.injectors.ElementRef.nativeElement.setAttribute(elementId, '');
+        // attach to el
+        return Object.defineProperty({}, 'nativeElement', {
+            get: () => document.querySelector('['+ elementId +']') 
+        });
     }
 };
 

@@ -79,8 +79,9 @@ IterableProfiler.prototype.diff = function(source) {
              * true: new Data was added in previous index to the collection
              * false: we move the item to correct index
              */
-            if (prevIndex !== newCacheIndex) {
+            if (prevIndex !== newCacheIndex || !cacheIndexExistsInSource) {
                 isDirty = true;
+                // record is removed from source but exists in cache
                 if (!cacheIndexExistsInSource) {
                     // push the index for deletion
                     // remove the element from cacheHash
