@@ -13,7 +13,7 @@ export function AbstractFormControl(changeDetector) {
 AbstractFormControl.prototype.addField = function(formFieldInstance) {
     var formControl = this.form.getField(formFieldInstance.name);
     setupControl(formControl, formFieldInstance);
-    this.form.updateValueAndStatus({ emitEvent: false });
+    formControl.updateValueAndStatus({ emitEvent: false });
     this._formFields.push(formFieldInstance);
     return formControl;
 }
