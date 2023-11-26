@@ -1,5 +1,5 @@
 var jeliContext = Object.create({
-    buildTime: Date.now(),
+    buildTime: __buildOptions.buildTime,
     version: __buildOptions.version,
     debug: jeliDebugger
 });

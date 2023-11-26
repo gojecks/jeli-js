@@ -69,7 +69,6 @@ QueryList.prototype.destroy = function() {
 
 QueryList.prototype.remove = function(element) {
     var index = this.indexOf(element);
-
     return this.removeByIndex(index);
 };
 
@@ -78,6 +77,7 @@ QueryList.prototype.hasIndex = function(index) {
 }
 
 QueryList.prototype.removeByIndex = function(index) {
+    if (0 > index) return null;
     var element = removeFromArray(this, index);
     this.onChanges.next({
         value: element,

@@ -3,17 +3,6 @@ import { errorBuilder } from '@jeli/core';
 import { FormControlAbstract } from './form-control.abstract';
 import {FormFieldControlService} from './form-field-control.service';
 
-/**
- * 
- * @param {*} context 
- * @param {*} controls 
- */
-function addFields(context, formFields) {
-    if (!isobject(formFields)) return;
-    for (var field in formFields) {
-        context.addField(field, formFields[field]);
-    }
-}
 
 Service({
     static: true,
@@ -30,7 +19,7 @@ export function FormControlService(formFields, validators) {
     /**
      * create the formField and validations
      */
-    addFields(this, formFields);
+    this.addFields(formFields);
 }
 
 FormControlService.prototype = Object.create(FormControlAbstract.prototype);
@@ -55,7 +44,12 @@ FormControlService.prototype.addField = function(name, fieldControl) {
  * @param {*} fieldControls 
  */
 FormControlService.prototype.addFields = function(fieldControls) {
-    addFields(this, fieldControls)
+    if (!isobject(fieldControls)) return;
+    for (var field in fieldControls) {
+        this.addField(field, fieldControls[field]);
+    }
+    // collect all values
+    this._updateValue();
 }
 
 
@@ -109,9 +103,8 @@ FormControlService.prototype.setValue = function(values, options) {
 };
 
 FormControlService.prototype.forEachField = function(callback) {
-    var _this = this;
-    Object.keys(this.formFieldControls).forEach(function(field) {
-        callback(_this.formFieldControls[field], field);
+    Object.keys(this.formFieldControls).forEach((field) => {
+        callback(this.formFieldControls[field], field);
     });
 };
 

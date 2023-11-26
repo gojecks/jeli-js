@@ -15,6 +15,6 @@ AbstractStrategy.prototype.getBaseHref = function() {}
 AbstractStrategy.prototype.path = function() {}
 AbstractStrategy.prototype.pushState = function(data, path) {
     if  (history){
-        history.pushState(data, null, this.path(path));
+        history.pushState(data, null, this.locationService.getFullPath(path));
     }
 }

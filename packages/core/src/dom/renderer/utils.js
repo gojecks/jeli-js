@@ -163,7 +163,7 @@ function replaceElement(fromElement, toElement) {
     }
     fromElement.parent.children.replace(fromElement, toElement, true);
     targetNode.replaceWith(toElement.nativeElement);
-    removeElement(fromElement, true);
+    removeElement(fromElement);
     targetNode = null;
 }
 

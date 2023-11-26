@@ -31,10 +31,19 @@ export function WebStateService(locationService) {
  * @param {*} targetWindow 
  */
 WebStateService.prototype.go = function(routeName, params, targetWindow) {
+    var isHrefRequest = routeName.includes('/');
+    if (routeName.includes('//')){
+        return (targetWindow ? window.open(routeName, targetWindow) : location.href = routeName);
+    }
+
     if (!targetWindow) {
-        this.locationService.byName(routeName, params);
+        if (isHrefRequest) {
+            this.locationService.byUrl(routeName, params);
+        } else {
+            this.locationService.byName(routeName, params);
+        }
     } else {
-        var url = getHref(routeName, params);
+        var url = (isHrefRequest ? routeName : getHref(routeName, params));
         window.open(this.locationService.getFullPath(url), targetWindow);
     }
 }

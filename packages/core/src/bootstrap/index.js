@@ -1,5 +1,5 @@
 import { bootstrapFromDOM } from '../component/custom.dom';
-import { Inject } from '../dependency.injector';
+import { Inject, ProviderToken } from '../dependency.injector';
 /**
  * JELI LOCAL VARIABLES
  */
@@ -12,7 +12,9 @@ var CoreBootstrapContext = Object({
 });
 
 export var INITIALIZERS = new ProviderToken('AppInitializers', true);
-export var APP_BOOTSTRAP = new ProviderToken('AppBootstrap', true)
+export var APP_BOOTSTRAP = new ProviderToken('AppBootstrap', true);
+export var APP_BASE_HREF = new ProviderToken('AppBaseHref', false);
+export var APP_ASSET_URL = new ProviderToken('AppAssetsURL', false);
     /**
      * Static Bootstrap Options
      * @param {*} moduleToBootStrap
