@@ -76,8 +76,8 @@ AttributeAppender.helpers = {
     readonly: function(nativeElement, value) {
         AttributeAppender.setValue(nativeElement, 'readonly', value, true);
     },
-    aria: () => singleOrMultipeUpdate.apply(null, arguments),
-    data: () => singleOrMultipeUpdate.apply(null, arguments)
+    aria: (nativeElement, value) => singleOrMultipeUpdate(nativeElement, 'aria-',  value),
+    data: (nativeElement, value) => singleOrMultipeUpdate(nativeElement, 'data-',  value)
 };
 
 /**
@@ -108,11 +108,11 @@ AttributeAppender.setProp = function(nativeElement, propName, propValue, templat
  * @param {*} value 
  */
 function singleOrMultipeUpdate(nativeElement, prop, value){
-    if (isobject(prop)) {
-        for(var name of prop) {
-            nativeElement[name] =  value;   
+    if (isobject(value)) {
+        for(var name in value) {
+            nativeElement.setAttribute(prop + name, value[name]);   
         }
     } else {
-        nativeElement[prop] =  value;
+        nativeElement.setAttribute(prop, value);
     }
 }

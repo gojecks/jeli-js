@@ -120,7 +120,6 @@ function fadeFN(element, to, style, speed) {
         },
         complete: function () {
             element.style.display = style;
-            done = 1;
         },
         step: function (delta) {
             element.style.opacity = to + delta;

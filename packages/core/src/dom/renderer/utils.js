@@ -280,27 +280,6 @@ function cleanupElementRef(elementRef) {
 
 /**
  * 
- * @param {*} tag 
- * @param {*} text 
- * @param {*} fromDOM 
- */
-function createElementByType(tag, text, fromDOM) {
-    if (fromDOM) {
-        return document.querySelector(tag);
-    }
-
-    switch (tag) {
-        case ('##'):
-            return document.createComment(text);
-        case ('#'):
-            return document.createDocumentFragment();
-        default:
-            return document.createElement(tag);
-    }
-};
-
-/**
- * 
  * @param {*} element 
  * @param {*} observers 
  */
@@ -398,5 +377,32 @@ export function getElementContext(targetContext, targetElement){
 export var DOMHelper = {
     insert: elementInsertAfter,
     remove: removeElement,
-    replace: replaceElement
+    replace: replaceElement,
+    /**
+     * 
+     * @param {*} tag 
+     * @param {*} attributes 
+     * @param {*} content 
+     * @param {*} appendToParent 
+     * @returns 
+     */
+    createElement: function(tag, attributes, content, appendToParent) {
+        var ele = document.createElement(tag);
+        AttributeAppender(ele, attributes || {});
+        if (content){
+            if(typeof content == 'function'){
+                content(ele);
+            } else {
+                ele.innerHTML = content
+            }
+        }
+
+        if (appendToParent) appendToParent.appendChild(ele);
+        return ele;
+    },
+    createTextNode: function(textContent, parent){
+        var textNode = document.createTextNode(textContent);
+        if (parent) parent.appendChild(textNode);
+        return textNode;
+    }
 };

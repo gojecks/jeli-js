@@ -1,4 +1,4 @@
-import { ComponentFactoryResolver, DOMHelper } from '@jeli/core';
+import { ComponentFactoryResolver, DOMHelper, ElementStyle, EventEmitter } from '@jeli/core';
 Service({
     name: 'viewIntent'
 })
@@ -11,6 +11,7 @@ export function ViewIntentService() {
     this._currentOpenIntent = new Map();
     this.intentContainer = null;
     this._currentIntent = "";
+    this.onCloseEvent = new EventEmitter();
 }
 
 /**
@@ -28,7 +29,6 @@ ViewIntentService.prototype.openIntent = function(intentName, params) {
     if (intentConfig) {
         if (!this._currentOpenIntent.has(intentName)) {
             // set out intent to cache
-            // _intentCache[intentName] = _intent;
             // set the current intent name
             this._currentIntent = intentName;
             this._currentOpenIntent.set(intentName, {
@@ -43,34 +43,41 @@ ViewIntentService.prototype.openIntent = function(intentName, params) {
             ComponentFactoryResolver(intentConfig.component, this.intentContainer, componentRef => {
                 var config = this._currentOpenIntent.get(intentName);
                 config.element = componentRef;
-                // componentRef.class.add('view-intent');
+                componentRef.nativeElement.classList.add('view-intent');
+                this.intentContainer.nativeElement.appendChild(componentRef.nativeElement);
                 this.intentContainer.children.add(componentRef);
-                // this.transitIntent(intentName, intentConfig.transition || 50);
-            });
+                this.transitIntent(intentName, intentConfig.transition || 50);
+            }, true);
         } else {
             this.transitIntent(intentName, 50);
         }
     };
 }
 
-ViewIntentService.prototype.closeIntent = function() {
+ViewIntentService.prototype.closeIntent = function(data) {
     var allIntents = [];
     // get net intent
-    var current = this._currentIntent;
-    this._currentOpenIntent.forEach(function(intent, key) {
+    this._currentOpenIntent.forEach((intent, key) => {
         intent.element && intent.element.nativeElement.removeAttribute('style');
-        if ((current === key)) {
-            DOMHelper.remove(intent.element);
+        if ((this._currentIntent === key)) {
+            DOMHelper.remove(intent.element, true);
         } else {
             allIntents.push(key);
         }
     });
 
-    this._currentOpenIntent.delete(current);
+    var previous = this._currentIntent;
+    this._currentOpenIntent.delete(this._currentIntent);
     this._currentIntent = allIntents.pop();
     if (this._currentIntent) {
         this.transitIntent(this._currentIntent, 70);
     }
+
+    this.onCloseEvent.emit({
+        intent: previous,
+        current: this._currentIntent,
+        data
+    })
 };
 
 ViewIntentService.prototype.destroyAllIntent = function() {
@@ -82,20 +89,19 @@ ViewIntentService.prototype.destroyAllIntent = function() {
     this._currentOpenIntent.clear();
 };
 
-ViewIntentService.prototype.animate = function(elementRef, style, timer) {
+ViewIntentService.prototype.animate = function(element, style, timer) {
     var start = null;
-
     function step(timestamp) {
         if (!start) start = timestamp;
         var progress = timestamp - start;
         if (progress < timer) {
             window.requestAnimationFrame(step);
         } else {
-            elementRef.style(style);
+            ElementStyle(element, style);
         }
     }
 
-    if (!elementRef) { return; }
+    if (!element) { return; }
     window.requestAnimationFrame(step);
 }
 
@@ -109,7 +115,7 @@ ViewIntentService.prototype.transitIntent = function(intentName, timer) {
     if (intentView) {
         this._currentIntent = intentName;
         this.hideAllIntent();
-        this.animate(intentView.element, {
+        this.animate(intentView.element.nativeElement, {
             transform: 'translateX(0%)'
         }, timer || 100);
     }

@@ -45,12 +45,15 @@ var staticInjectionTokenHandlers = {
      * @returns 
      */
     HostElement: (context) =>  {
-        var elementId = 'jl-' + context.injectors.ElementRef.refId;
-        // attach a refAttr
-        context.injectors.ElementRef.nativeElement.setAttribute(elementId, '');
-        // attach to el
+        var nativeElement = context.injectors.ElementRef.nativeElement;
+        var hRefId = 'jl-' + context.injectors.ElementRef.refId;
+        nativeElement.setAttribute(hRefId, '');
         return Object.defineProperty({}, 'nativeElement', {
-            get: () => document.querySelector('['+ elementId +']') 
+            get: () =>  {
+                var ele = document.querySelector('['+hRefId+']');
+                if (ele && nativeElement) nativeElement == null;
+                return ele || nativeElement; 
+            }
         });
     }
 };
