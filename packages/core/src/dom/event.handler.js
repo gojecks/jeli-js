@@ -30,7 +30,9 @@ EventHandler.prototype.destroy = function () {
 EventHandler.registerListener = function (element) {
     if (!element.events || !element.events._events.length) return;
     var eventInstance = element.events;
-    var handler = function ($ev) { handleEvent(element, $ev); };
+    var handler = function ($ev) { 
+        EventHandler.handleEvent(element, $ev); 
+    };
 
     /**
      * 
@@ -47,7 +49,7 @@ EventHandler.registerListener = function (element) {
                 var customRegistry = customEventRegistry.get(event[0]);
                 if (customRegistry) {
                     var unsubscribe = customRegistry.register(event[1], function (htmlEvent) {
-                        handleEvent(element, htmlEvent, eventName);
+                        EventHandler.handleEvent (element, htmlEvent, eventName);
                     });
                     eventInstance.registeredEvents.set(eventName, unsubscribe);
                     customRegistry = null;
@@ -66,23 +68,6 @@ EventHandler.registerListener = function (element) {
             event.name.split(' ').forEach(eventName => _registerEvent(eventName, !!event.target));
         }
     }
-};
-
-
-/**
- * 
- * @param {*} eventInstance 
- * @param {*} eventName 
- * @param {*} eventValue 
- * @param {*} componentInstance 
- */
-EventHandler.attachEvent = function (eventInstance, eventName, eventValue, componentInstance) {
-    eventInstance._events.push({
-        name: eventName,
-        handler: function ($event) {
-            return _executeEventsTriggers(eventValue, componentInstance, null, $event);
-        }
-    });
 };
 
 /**
@@ -222,7 +207,7 @@ function getFnFromContext(eventInstance, componentInstance, context) {
  * @param {*} event 
  * @param {*} eventName 
  */
-function handleEvent(element, event, eventName) {
+EventHandler.handleEvent = function(element, event, eventName) {
     eventName = eventName || event.type;
     // prevent the default only when its any of these events
     if (inarray(eventName, ['touchstart', 'touchend', 'touchmove', 'submit'])) {
@@ -264,15 +249,18 @@ function handleEvent(element, event, eventName) {
             _event = ProxyEvent(event, mainElement);
         }
 
+        // get the component instance
+        // events set from directives have to getInstance from Map<nodes>
+        var componentInstance = registeredEvent.node ? element.nodes.get(registeredEvent.node) : element.hostRef.componentInstance;
         _executeEventsTriggers(
             registeredEvent.value,
-            element.hostRef.componentInstance,
+            componentInstance,
             context,
             _event || event
         );
 
         // clean proxyEvent
-        context = null;
+        context = componentInstance = null;
         if (_event){
             _event.target = _event.preventDefault =  null;
         }

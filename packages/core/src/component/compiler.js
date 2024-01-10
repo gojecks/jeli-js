@@ -61,29 +61,17 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
      * @param {*} componentInstance 
      */
     function compileEventsRegistry(componentInstance) {
+        var actions = {
+            event: (name) => elementRef.events._events.push(Object.assign({name}, ctors.events[name])),
+            emitter: (name) =>  EventHandler.attachEventEmitter(elementRef, name, componentInstance),
+            dispatcher: name => EventHandler.attachEventDispatcher(elementRef, name, componentInstance)
+        };
+
         if (ctors.events) {
-            Object.keys(ctors.events).forEach(_registry);
-        }
-
-        /**
-         * 
-         * @param {*} option 
-         */
-        function _registry(evName) {
-            switch (ctors.events[evName].type) {
-                case ('event'):
-                    EventHandler.attachEvent(elementRef.events, evName, ctors.events[evName].value, componentInstance);
-                    break;
-                case ('emitter'):
-                    /**
-                     * attach an instance of emitter to the componentInstance
-                     */
-                    EventHandler.attachEventEmitter(elementRef, evName, componentInstance);
-                    break;
-                case ('dispatcher'):
-                    EventHandler.attachEventDispatcher(elementRef, evName, componentInstance);
-                    break;
-
+            for(var name in ctors.events) {
+                if(actions[ctors.events[name].type]){
+                    actions[ctors.events[name].type](name);
+                }
             }
         }
     }
