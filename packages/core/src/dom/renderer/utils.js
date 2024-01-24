@@ -157,6 +157,7 @@ function elementInsertAfter(hostElement, newNode, targetNode, ignoreDetector) {
  * @param {ElementRef} toElement 
  */
 function replaceElement(fromElement, toElement) {
+    if (!fromElement) return;
     var targetNode = fromElement.nativeElement;
     if (11 === targetNode.nodeType) {
         targetNode = fromElement.children.first.nativeElement;

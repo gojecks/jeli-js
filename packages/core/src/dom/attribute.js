@@ -56,15 +56,13 @@ AttributeAppender.helpers = {
         AttributeAppender.setValue(nativeElement, 'innerHTML', sce.trustAsHTML(value));
     },
     src: function(nativeElement, value) {
-        if (!['IMG', 'IFRAME', 'SOURCE'].includes(nativeElement.tagName)) {
+        if (!['IMG', 'IFRAME', 'SOURCE', 'SCRIPT'].includes(nativeElement.tagName))
             return errorBuilder("src is not a valid property of " + nativeElement.tagName);
-        }
         AttributeAppender.setValue(nativeElement, 'src', value);
     },
     href: function(nativeElement, value) {
-        if (!isequal('A', nativeElement.tagName)) {
+        if (!isequal('A', nativeElement.tagName))
             return errorBuilder("href is not a valid property of " + nativeElement.nativeElement.tagName);
-        }
         AttributeAppender.setValue(nativeElement, 'href', value);
     },
     class: function(nativeElement, value) {

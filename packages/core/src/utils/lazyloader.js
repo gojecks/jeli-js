@@ -48,20 +48,17 @@ LazyLoader.prototype.jscs = function (obj, callback) {
  * @param {*} filePaths 
  * @param {*} callback 
  * @param {*} type 
+ * @param {*} assetURL 
  */
-LazyLoader.prototype._resolve = function (filePaths, callback, type) {
-    var totalFiles = 0,resolved = 0;
+LazyLoader.prototype._resolve = function (filePaths, callback, type, assetURL) {
+    var totalFiles = 0, resolved = 0;
+    var types = ['js', 'css'];
     /**
      * path generator
      * @param {*} path 
      */
-    var clink = (path) => {
-        if (path.includes("//")) {
-            return path;
-        }
-
-        return [this.sourcePath, path, ".", type].join('');
-    }
+    assetURL = (assetURL || this.resourcePath || '')
+    var clink = (path, ftype) => path.includes("//") ? path : [assetURL, path, (ftype ? "." : ''), ftype].join('');
 
     //start the js process
     if (typeof callback !== 'function') {
@@ -76,31 +73,41 @@ LazyLoader.prototype._resolve = function (filePaths, callback, type) {
             if (LazyLoader.cached.includes(filePath)) {
                 break;
             }
-            
+
             totalFiles++;
             LazyLoader.cached.push(filePath);
-            var element = _createElement(filePath, type);
-            attachListener(element);
-            (this.dropZone || document.getElementsByTagName('head')[0]).appendChild(element);
+            var ftype = type || filePath.substring(filePath.lastIndexOf('.') + 1);
+            if (types.includes(ftype)) {
+                var element = _createElement(clink(filePath, type || ''), ftype);
+                attachListener(element);
+                (this.dropZone || document.getElementsByTagName('head')[0]).appendChild(element);
+            }
         }
     }
 
+    /**
+     * 
+     * @param {*} filePath 
+     * @param {*} type 
+     * @returns HTMLELEMENT
+     */
     function _createElement(filePath, type) {
         var element = null;
         if (type === 'js') {
             element = document.createElement('script');
-            element.src = clink(filePath)
-           // element.type = "module";
-        } else {
+            element.src = filePath
+            // element.type = "module";
+        } else if (type == 'css') {
             element = document.createElement('link');
             element.setAttribute('type', 'text/css');
-            element.setAttribute('href', clink(filePath));
+            element.setAttribute('href', filePath);
             element.setAttribute('rel', 'stylesheet');
         }
 
         element.charset = "utf-8";
         element.timeout = 120;
         element.async = true;
+
         return element;
     }
 
@@ -115,7 +122,7 @@ LazyLoader.prototype._resolve = function (filePaths, callback, type) {
         };
     }
 
-    function triggerCallack(){
+    function triggerCallack() {
         if (totalFiles == resolved)
             callback();
     }

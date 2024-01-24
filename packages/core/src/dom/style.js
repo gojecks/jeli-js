@@ -36,7 +36,7 @@ export function ElementStyle(nativeElement, name, value) {
 ElementStyle.set = function(nativeElement, name, value, suffix) {
     if (typeof value === 'number' && ElementStyle.props.WithSuffix.includes(name)) {
         value += suffix || 'px';
-    } else if (ElementStyle.props.background.includes(name) && value.includes('.') && !value.startsWith('url')) {
+    } else if (value && ElementStyle.props.background.includes(name) && value.includes('.') && !value.startsWith('url')) {
         value = 'url(' + value + ')';
     }
 

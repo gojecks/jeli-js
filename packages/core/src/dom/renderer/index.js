@@ -133,7 +133,7 @@ export var ViewParser = function () {
          * @param {*} elementDefinition 
          */
         function createAndAppend(elementDefinition) {
-            var child = ViewParser.builder[elementDefinition.type](elementDefinition, hostRef.parent, viewContainer, context);
+            var child = ViewParser.builder[elementDefinition.type](elementDefinition, definition.$ctx ? parent : hostRef.parent, viewContainer, context);
              // Attach the child element to the origin, used for getting the right componentRef
             // actual hostRefId where content is appended
             // ContentHostRef? should reolve the component instance
@@ -191,6 +191,9 @@ export var ViewParser = function () {
                     unsubscribeScheduler = scheduler.schedule(function () {
                         if(element){
                             transverse(element);
+                            if (!oldElement){
+                                pushToParent(element, parent, template.index)
+                            }
                             replaceElement(oldElement, element);
                         }
                         oldElement = null;
