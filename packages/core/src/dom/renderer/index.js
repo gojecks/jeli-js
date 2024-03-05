@@ -175,6 +175,15 @@ export var ViewParser = function () {
         var currentValue = null;
         var element = null;
         var unsubscribeScheduler = noop();
+        var fallbackNode = createElementByType('##', 'outlet')
+        var fallbackNodes = Object.defineProperties({}, {
+            nativeElement: {
+                get: () => fallbackNode
+            },
+            parent: {
+                get: () => parent
+            }
+        });
 
         function checkAndCompileTemplate(fromObserver) {
             var templateId = getFilteredTemplateValue(def.$templateId, context || parent.context, parent.componentInstance);
@@ -185,19 +194,28 @@ export var ViewParser = function () {
                 if (template) {
                     var oldElement = element;
                     element = ViewParser.builder[template.type](template, parent, viewContainer, context);
+                    /**
+                     * return element if element is null or compilation comes from observer
+                     */
                     if (!fromObserver || !element)
                         return element;
                     // process  and replace
                     unsubscribeScheduler = scheduler.schedule(function () {
                         if(element){
                             transverse(element);
-                            if (!oldElement){
-                                pushToParent(element, parent, template.index)
-                            }
-                            replaceElement(oldElement, element);
+                            replaceElement(oldElement || fallbackNodes, element);
                         }
                         oldElement = null;
                     });
+                } else {
+                    // previously compiled but document is not missing
+                    if (element){
+                        replaceElement(element, fallbackNodes);
+                        // set element to null
+                        element = null; 
+                    } else if (!fromObserver) {
+                        return fallbackNodes;
+                    }
                 }
             }
         }

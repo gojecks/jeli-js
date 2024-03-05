@@ -17,31 +17,28 @@ export var getDays = function(month, year) {
     return ar[month];
 };
 
-/*
-@Function DateStringConverter
-convert String to Date
-@Param : String
 
-@return (Object) DateTime
-*/
-
-export var DateStringConverter = function(str) {
-    //Function setMonth
-    function setDay(d) {
-        return (Number(d) < 10) ? parseInt(d) : Number(d);
-    }
-
-    if (typeof str === 'string') {
-        var arr = str.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/);
-        if (arr) {
-            arr.shift();
-            return new Date(arr[0], (arr[1] - 1), setDay(arr[2]), arr[3] || 0, arr[4] || 0, arr[5] || 0);
-        } else if (/(\d+)-(\d+)-(\d+)/.test(str)) {
-            return new Date(str);
+/**
+ * Converts a given string to dateTome Object
+ * e.g YYYY.MM.DD YYYY/MM/DD YYYY-MM-DD
+ * e.g YYYY.MM.DD HH:MM:SS YYYY/MM/DD HH:MM:SS YYYY-MM-DD HH:MM:SS
+ * @param {*} dateString 
+ * @returns Date
+ */
+export var DateStringConverter = function(dateString) {
+    var str2Date = null;
+    if (typeof dateString === 'string') {
+        str2Date = new Date(dateString);
+        if (isNaN(str2Date.getTime())) {
+            var dateRegEx = dateString.match(/(\d+)[-./](\d+)[-./](\d+)(\s(\d+):(\d+):(\d+)|)/);
+            if (dateRegEx) {
+                dateRegEx.shift();
+                str2Date = new Date(dateRegEx[0], dateRegEx[1], dateRegEx[2], dateRegEx[3] || 0, dateRegEx[4] || 0, dateRegEx[5] || 0);
+            }
         }
     }
 
-    return new Date();
+    return str2Date || new Date();
 }
 
 export var setText = function(text, future) {

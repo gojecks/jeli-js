@@ -206,6 +206,27 @@ function attachElementObserver(element, onDestroyListener) {
 
 /**
  * 
+ * @param {*} tag 
+ * @param {*} text 
+ * @param {*} fromDOM 
+ */
+function createElementByType(tag, text, fromDOM) {
+    if (fromDOM) {
+        return document.querySelector(tag);
+    }
+
+    switch (tag) {
+        case ('##'):
+            return document.createComment(text);
+        case ('#'):
+            return document.createDocumentFragment();
+        default:
+            return document.createElement(tag);
+    }
+}
+
+/**
+ * 
  * @param {*} elementRef 
  * @param {*} eventListener 
  */
@@ -333,7 +354,7 @@ export function createLocalVariables(localVariables, localContext, parentContext
     var context = {};
     if (localVariables) {
         for (var propName in localVariables) {
-            if (!Array.isArray(localVariables[propName]) && localVariables[propName].match(/\s/)) {
+            if (localVariables[propName] && typeof localVariables[propName] == 'string' && localVariables[propName].match(/\s/)) {
                 context[propName] = localVariables[propName];
             } else {
                 writePropertyBinding(propName);
@@ -401,6 +422,12 @@ export var DOMHelper = {
         if (appendToParent) appendToParent.appendChild(ele);
         return ele;
     },
+    /**
+     * 
+     * @param {*} textContent 
+     * @param {*} parent 
+     * @returns 
+     */
     createTextNode: function(textContent, parent){
         var textNode = document.createTextNode(textContent);
         if (parent) parent.appendChild(textNode);

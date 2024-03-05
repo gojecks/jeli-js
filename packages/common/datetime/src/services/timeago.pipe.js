@@ -7,7 +7,8 @@ Pipe({
 //timeAgoFilterFn
 //@result converts date to timeago
 export function TimeAgoFilterFn(dateTimeFactory) {
-    this.compile = function(text) {
-        return dateTimeFactory.timeConverter(text).timeago;
+    this.compile = function(dateTime, fallback) {
+        if (!dateTime && fallback) return fallback;
+        return dateTimeFactory.timeConverter(dateTime).timeago;
     };
 }

@@ -7,26 +7,6 @@ var $elementContext = '__jContext__';
 // holds a set of elements based of their refs
 var $elementContainer = new Map();
 
-/**
- * 
- * @param {*} tag 
- * @param {*} text 
- * @param {*} fromDOM 
- */
-function createElementByType(tag, text, fromDOM) {
-    if (fromDOM) {
-        return document.querySelector(tag);
-    }
-
-    switch (tag) {
-        case ('##'):
-            return document.createComment(text);
-        case ('#'):
-            return document.createDocumentFragment();
-        default:
-            return document.createElement(tag);
-    }
-}
 
 /**
  * Abstract element ref for generating components

@@ -103,8 +103,8 @@ DatetimeService.staticTimeConverter = function(dateToParse, context){
     }
 
     var currentDateTime = DatetimeService.staticDateTime();
-    var _dateTimeToParse = (dateToParse.current_time) ? dateToParse : DatetimeService.staticDateTime(dateToParse);
-    var j = _dateTimeToParse.getTime();
+    var date2ParseObject = (dateToParse.current_time) ? dateToParse : DatetimeService.staticDateTime(dateToParse);
+    var j = date2ParseObject.getTime();
     var l = currentDateTime.getTime();
     var B = 1000 * 60 * 60 * 24;
     var result = {};
@@ -112,16 +112,16 @@ DatetimeService.staticTimeConverter = function(dateToParse, context){
         return ((m < 10) ? '0' : '') + m
     };
 
-    if (isNaN(_dateTimeToParse.getTime())) {
+    if (isNaN(date2ParseObject.getTime())) {
         var f = n.replace(' ', 'T');
         var r = n.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/),
             D = r[1] + '-' + p((r[2] - 1)) + '-' + r[3] + ' ' + r[4] + ':' + r[5] + ':' + r[6],
-            _dateTimeToParse = new Date(Date.fromISO(f)),
+            date2ParseObject = new Date(Date.fromISO(f)),
             j = q.getTime();
         x = new Date();
     }
 
-    var g = Date.UTC(_dateTimeToParse.getFullYear(), _dateTimeToParse.getMonth(), _dateTimeToParse.getDate()),
+    var g = Date.UTC(date2ParseObject.getFullYear(), date2ParseObject.getMonth(), date2ParseObject.getDate()),
         f = Date.UTC(currentDateTime.getFullYear(), currentDateTime.getMonth(), currentDateTime.getDate()),
         days = Math.floor((f - g) / B),
         future = (j > l),
@@ -140,11 +140,11 @@ DatetimeService.staticTimeConverter = function(dateToParse, context){
         months: Math.floor(days / 30)
     };
 
-    var year = _dateTimeToParse.getFullYear(),
-        month = _dateTimeToParse.getMonth() + 1,
-        day = _dateTimeToParse.getDate(),
-        weekDay = _dateTimeToParse.getDay(),
-        timeSettings = _dateTimeToParse.current_time.split(' ')[1].split(':'),
+    var year = date2ParseObject.getFullYear(),
+        month = date2ParseObject.getMonth() + 1,
+        day = date2ParseObject.getDate(),
+        weekDay = date2ParseObject.getDay(),
+        timeSettings = date2ParseObject.current_time.split(' ')[1].split(':'),
         hours = timeSettings[0],
         minute = parseInt(timeSettings[1]),
         seconds = parseInt(timeSettings[2]);
@@ -177,10 +177,10 @@ DatetimeService.staticTimeConverter = function(dateToParse, context){
     //set leap year
     result.isLeapYear = leapYear(year);
     result.today = context.dateTimeDayHalf[currentDateTime.getDay()] + ', ' + currentDateTime.getDate() + ' ' + context.dateTimeMonthHalf[currentDateTime.getMonth()];
-    if (currentDateTime.getFullYear() > _dateTimeToParse.getFullYear()) {
-        result.date = context.dateTimeMonthHalf[_dateTimeToParse.getMonth()] + ', ' + _dateTimeToParse.getDate() + ' ' + _dateTimeToParse.getFullYear();
+    if (currentDateTime.getFullYear() > date2ParseObject.getFullYear()) {
+        result.date = context.dateTimeMonthHalf[date2ParseObject.getMonth()] + ', ' + date2ParseObject.getDate() + ' ' + date2ParseObject.getFullYear();
     } else {
-        result.date = context.dateTimeDayHalf[_dateTimeToParse.getDay()] + ', ' + _dateTimeToParse.getDate() + ' ' + context.dateTimeMonthHalf[_dateTimeToParse.getMonth()]
+        result.date = context.dateTimeDayHalf[date2ParseObject.getDay()] + ', ' + date2ParseObject.getDate() + ' ' + context.dateTimeMonthHalf[date2ParseObject.getMonth()]
     }
 
     if (result.time_difference.seconds <= 60) {
