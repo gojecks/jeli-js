@@ -11,7 +11,7 @@ export function AbstractFormControl(changeDetector) {
 }
 
 AbstractFormControl.prototype.addField = function(formFieldInstance) {
-    var formControl = this.form.getField(formFieldInstance.name);
+    var formControl = this.getField(formFieldInstance.name);
     setupControl(formControl, formFieldInstance);
     formControl.updateValueAndStatus({ emitEvent: false });
     this._formFields.push(formFieldInstance);
@@ -21,10 +21,12 @@ AbstractFormControl.prototype.addField = function(formFieldInstance) {
 AbstractFormControl.prototype.removeField = function(formFieldInstance) {
     // remove the formFieldInstance
     this._formFields.splice(this._formFields.indexOf(formFieldInstance), 1);
+    var formControl = this.getField(formFieldInstance.name);
+    cleanupControl(formControl, formFieldInstance);
 }
 
 AbstractFormControl.prototype.getField = function(fieldName) {
-    return this.form.getField(fieldName);
+    return this.form && this.form.getField(fieldName);
 }
 
 AbstractFormControl.prototype.resetForm = function(values) {
@@ -33,6 +35,9 @@ AbstractFormControl.prototype.resetForm = function(values) {
 
 AbstractFormControl.prototype.viewDidDestroy = function() {
     if (this.form) {
+        this._formFields.forEach(formField => {
+            cleanupControl(this.getField(formField.name), formField);
+        });
         this.form = null;
     }
 };

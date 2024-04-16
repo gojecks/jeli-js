@@ -12,7 +12,7 @@ var isAllowedArrayType = ['style'];
  */
 export function elementMutationObserver(nativeElement, callback) {
     // Create an observer instance linked to the callback function
-    var observer = new MutationObserver(function(mutationsList, observer) {
+    var observer = new MutationObserver(function(mutationsList) {
         if (mutationsList.length) {
             callback.apply(null, arguments);
         }
@@ -405,10 +405,11 @@ export var DOMHelper = {
      * @param {*} tag 
      * @param {*} attributes 
      * @param {*} content 
-     * @param {*} appendToParent 
+     * @param {*} parent 
+     * @param {*} replaceParentContent 
      * @returns 
      */
-    createElement: function(tag, attributes, content, appendToParent) {
+    createElement: function(tag, attributes, content, parent, replaceParentContent) {
         var ele = document.createElement(tag);
         AttributeAppender(ele, attributes || {});
         if (content){
@@ -419,7 +420,12 @@ export var DOMHelper = {
             }
         }
 
-        if (appendToParent) appendToParent.appendChild(ele);
+        if (parent) {
+            // empty the parent if flag is true
+            if (replaceParentContent) parent.innerHTML = '';
+            parent.appendChild(ele);
+        } 
+        
         return ele;
     },
     /**

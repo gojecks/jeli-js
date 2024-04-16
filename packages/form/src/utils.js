@@ -29,6 +29,11 @@ function setupControl(fieldControl, dir) {
     }
 }
 
+function cleanupControl(fieldControl, dir){
+    dir && dir.eventBinder.clearRegistries();
+    fieldControl && fieldControl.clearListeners();
+}
+
 /**
  * 
  * @param {*} fieldControl 

@@ -23,3 +23,10 @@ AbstractValueAccessor.prototype.registerOnChange = function(onChangeFn) {
 AbstractValueAccessor.prototype.registerOnDisable = function(onDisableFn) {
     this.onDisable = onDisableFn;
 };
+
+AbstractValueAccessor.prototype.clearRegistries = function(){
+    this.elementRef = null;
+    this.onChange = null;
+    this.onBlur = null;
+    this.onDisable = null;
+}
