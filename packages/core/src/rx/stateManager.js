@@ -5,7 +5,7 @@
  * @returns 
  */
 export function StateManager(current, callback, states) {
-    this.current = '';
+    this.current = (current || '');
     this.states = states || [];
     this.set = function(name) {
         if (!validateAction(this.current, name)) {

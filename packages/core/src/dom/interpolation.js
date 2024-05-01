@@ -44,18 +44,17 @@ function getFilteredTemplateValue(templateModel, context, componentInstance) {
  * @param {*} definition 
  * @param {*} context 
  * @param {*} componentInstance 
- * @param {*} cb 
  */
-function compileTemplate(definition, context, componentInstance, cb) {
+function compileTemplate(definition, context, componentInstance) {
     var value = undefined;
-    if (definition.length > 1) {
+    if (definition.length > 1)
         value = definition[1].reduce(function(accum, options) {
             return accum.replace(options[0], evaluateExpression(options[1], context, componentInstance));
         }, definition[0]);
-    } else {
+    else 
         value = getFilteredTemplateValue(definition, context, componentInstance);
-    }
-    cb((value == null || value == undefined || value == 'null') ? '' : value);
+    
+    return ([null, undefined, 'null'].includes(value) ? '' : value);
 }
 
 /**

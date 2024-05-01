@@ -89,7 +89,6 @@ ViewRef.prototype.updateContext = function(){
  * @param {*} index 
  */
 function EmbededViewContext(parentRef, templateRef, context) {
-    var _componentRef = null;
     this.context = context;
     var templateContext = templateRef.getContext();
     var componentRefContext = createLocalVariables(templateContext, context, parentRef.context);
@@ -100,7 +99,8 @@ function EmbededViewContext(parentRef, templateRef, context) {
      * create the Viewcontext if templateRef has a context
      */
     if (this.compiledElement && this.compiledElement.hasContext) {
-        ComponentRef.create(this.compiledElement.refId, parentRef.hostRef.refId, componentRefContext);
+        this.compiledElement.context = componentRefContext;
+        // ComponentRef.create(this.compiledElement.refId, parentRef.hostRef.refId, componentRefContext);
     }
 
     /**
@@ -147,11 +147,6 @@ function EmbededViewContext(parentRef, templateRef, context) {
 
     this.destroy = function() {
         this.unsubscribeScheduler();
-        if (_componentRef && !this.compiledElement.isc) {
-            _componentRef.destroy();
-            _componentRef = null;
-        }
-
         removeElement(this.compiledElement, true);
         this.compiledElement = null;
         this.context = null;

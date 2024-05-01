@@ -40,9 +40,9 @@ function animationInterval(options) {
     var id = setInterval(function () {
         var timePassed = new Date - start;
         var progress = timePassed / options.duration;
-        if (progress > 1) {
+        if (progress > 1)
             progress = 1;
-        }
+
         options.progress = progress;
         var delta = options.delta(progress);
         options.step(delta);
@@ -59,6 +59,12 @@ function triggerCallback(callback, arg) {
     }
 }
 
+function getAttrFx(element, show){
+    var height = parseInt(element.style.height || element.clientHeight);
+    var opacity = show ? 1: 0;
+    return { height, opacity }
+}
+
 /**
  * 
  * @param {*} element 
@@ -70,13 +76,12 @@ export function animate(element, styles, speed, callback) {
     animationInterval({
         duration: speed,
         delta: function (progress) {
-            progress = this.progress;
             return FX.easing.swing(progress);
         },
         complete: callback || function () { },
         step: function (delta) {
             for (var prop in styles) {
-                element.style[prop] = Math.floor(styles[prop] * delta) + 'px';
+                element.style[prop] = Math.floor(styles[prop] * delta);
             };
         }
     });
@@ -89,8 +94,12 @@ export function animate(element, styles, speed, callback) {
  * @param {*} callback 
  */
 animate.hide = function (element, speed, callback) {
-    speed = speed || 100;
-    animate(element, { display: "none" }, speed, callback);
+    var attrFx = getAttrFx(element, false);
+    animate(element, attrFx, speed || 100, function(){
+        element.style.display = 'none';
+        element.style.height = attrFx.height;
+        triggerCallback(callback);
+    });
 }
 
 /**
@@ -100,8 +109,10 @@ animate.hide = function (element, speed, callback) {
  * @param {*} callback 
  */
 animate.show = function (element, speed, callback) {
-    speed = speed || 100;
-    animate(element, { display: "block" }, speed, callback);
+    element.style.display = 'block';
+    animate(element, getAttrFx(element, true), speed || 100, function(){
+        triggerCallback(callback);
+    });
 };
 
 /**
@@ -115,14 +126,13 @@ function fadeFN(element, to, style, speed) {
     animationInterval({
         duration: speed || 1000,
         delta: function (progress) {
-            progress = this.progress;
             return FX.easing.swing(progress);
         },
         complete: function () {
             element.style.display = style;
         },
         step: function (delta) {
-            element.style.opacity = to + delta;
+            element.style.opacity =  delta;
         }
     });
 }
@@ -159,7 +169,6 @@ animate.fadeOut = function (element, speed, callback) {
 animate.slideUp = function (element, speed, callback) {
     speed = speed || 1000;
     var hgt = element.clientHeight;
-    var lst = hgt;
     animationInterval({
         duration: speed,
         delta: function (progress) {
@@ -168,7 +177,7 @@ animate.slideUp = function (element, speed, callback) {
         },
         complete: function () {
             element.style.display = 'none';
-            element.style.height = lst + 'px';
+            element.style.height = hgt + 'px';
         },
         step: function (delta) {
             element.style.height = Math.floor(hgt - (hgt * delta)) + 'px';

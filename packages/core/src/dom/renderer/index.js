@@ -1,6 +1,7 @@
 import { scheduler } from "../../utils/scheduler";
 import { ElementRef } from "./element.ref";
 import { TemplateRef } from "./templateref";
+import { createLocalVariables } from "./utils";
 
 export var ViewParser = function () {
     function JSONCompiler(templates) {
@@ -58,9 +59,8 @@ export var ViewParser = function () {
      */
     function element(definition, parent, viewContainer, context) {
         var elementRef = new ElementRef(definition, parent);
-        if (definition.attr) {
+        if (definition.attr)
             AttributeAppender(elementRef.nativeElement, definition.attr);
-        }
 
         if (definition.children) {
             for (var i = 0; i < definition.children.length; i++) {
@@ -123,22 +123,31 @@ export var ViewParser = function () {
         var hostRef = parent.hostRef;
         var createPlaceElement = !(viewContainer || appendToParent);
         var template = TemplateRef.factory(hostRef, 'place', true);
+        var haveLocalVairables = (definition.$ctx && ('object' == typeof definition.$ctx));
         var placeElement = (createPlaceElement) ? new AbstractElementRef({
             name: "#",
             type: 11
         }, hostRef) : null;
+
+        // create the context if jPlace have context object
+        if (haveLocalVairables)
+            context = createLocalVariables(definition.$ctx, parent.context, context);
 
         /**
          * 
          * @param {*} elementDefinition 
          */
         function createAndAppend(elementDefinition) {
-            var child = ViewParser.builder[elementDefinition.type](elementDefinition, definition.$ctx ? parent : hostRef.parent, viewContainer, context);
+            var child = ViewParser.builder[elementDefinition.type](elementDefinition, (definition.$ctx == true ? parent : hostRef.parent), viewContainer, context);
+            // set the localVairables
+            if (haveLocalVairables)
+                child.context = context;
+            
              // Attach the child element to the origin, used for getting the right componentRef
             // actual hostRefId where content is appended
             // ContentHostRef? should reolve the component instance
             child.contentHostRefId = hostRef.refId;
-            if (appendToParent || createPlaceElement) {
+            if (!createPlaceElement) {
                 pushToParent(child, placeElement || parent);
             } else {
                 viewContainer.pushToView(child);

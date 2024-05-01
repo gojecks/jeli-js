@@ -1,4 +1,4 @@
-import { isobject, isstring, inarray } from '@jeli/helpers';
+import { isobject, isstring } from '@jeli/helpers';
 /**
  * 
  * @param {*} nativeElement 
@@ -7,18 +7,18 @@ import { isobject, isstring, inarray } from '@jeli/helpers';
  * @param {*} suffix
  */
 export function ElementStyle(nativeElement, name, value) {
-    if ((name && !value) && isstring(name)) {
+    var isObjectName = isobject(name);
+    if ((name && !value) && !isObjectName) {
         if (!!(window.getComputedStyle)) {
             var ret = window.getComputedStyle(nativeElement)[name];
             return parseInt(ret) || ret;
         }
 
-        return;
+        return null;
     }
 
-    if (isobject(name)) {
+    if (isObjectName) {
         for (var prop in name) {
-            //set the style required
             ElementStyle.set(nativeElement, prop, name[prop]);
         }
     } else {
@@ -34,12 +34,7 @@ export function ElementStyle(nativeElement, name, value) {
  * @param {*} suffix
  */
 ElementStyle.set = function(nativeElement, name, value, suffix) {
-    if (typeof value === 'number' && ElementStyle.props.WithSuffix.includes(name)) {
-        value += suffix || 'px';
-    } else if (value && ElementStyle.props.background.includes(name) && value.includes('.') && !value.startsWith('url')) {
-        value = 'url(' + value + ')';
-    }
-
+   value = ElementStyle.fixValue(value, name, suffix);
     nativeElement.style[name] = value;
 };
 
@@ -47,3 +42,13 @@ ElementStyle.props = {
     WithSuffix: 'width|height|top|bottom|left|right|marginTop|marginBottom|marginLeft|marginRight|paddingRight|paddingLeft|paddingTop|paddingBottom|fontSize'.split('|'),
     background: 'backgroundImage'.split('|')
 };
+
+ElementStyle.fixValue = function(value, name, suffix) {
+    if (typeof value == 'number' && ElementStyle.props.WithSuffix.includes(name)) {
+        value += suffix || 'px';
+    } else if (value && ElementStyle.props.background.includes(name) && value.includes('.') && !value.startsWith('url')) {
+        value = 'url(' + value + ')';
+    }
+
+    return value;
+}

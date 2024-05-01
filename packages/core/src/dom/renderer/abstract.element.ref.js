@@ -46,9 +46,8 @@ function AbstractElementRef(definition, parentRef) {
      * compile local vairables if defined
      * <j-template />
      */
-    if (definition.ctx$) {
+    if (definition.ctx$)
         localVariables = createLocalVariables(definition.ctx$, parentRef.context, parentRef.componentInstance);
-    }
 
     Object.defineProperties(this, {
         context: {
@@ -60,6 +59,9 @@ function AbstractElementRef(definition, parentRef) {
                     return componentDebugContext.get(this.refId).context;
                 // parent context
                 return this.parent && this.parent.context;
+            },
+            set: context => {
+                if (!definition.ctx$) localVariables = context;
             }
         },
         componentInstance: {
@@ -76,9 +78,8 @@ function AbstractElementRef(definition, parentRef) {
         },
         hostRef: {
             get: function() {
-                if (this.isc) {
+                if (this.isc)
                     return this;
-                }
 
                 return this.parent && this.parent.hostRef;
             }

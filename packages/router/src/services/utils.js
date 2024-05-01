@@ -339,12 +339,12 @@ export function getRoute(routeName, params) {
  */
 export function getRequiredRoute(url, params) {
     var queryParam = url.split("?");
-    var foundRoute = getRouteObj(url, queryParam);
+    var foundRoute = getRouteObj(queryParam[0]);
     if (foundRoute) {
         patchParams(foundRoute, params, queryParam[0]);
         // route contains queryParam
         if (queryParam[1]) {
-            foundRoute.route.params = extend(  foundRoute.route.params, unserialize(queryParam[1]));
+            foundRoute.route.params = extend( foundRoute.route.params, unserialize(queryParam[1]));
         }
     }
 

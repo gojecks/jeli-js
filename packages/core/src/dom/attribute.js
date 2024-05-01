@@ -46,7 +46,7 @@ AttributeAppender.helpers = {
     style: function(nativeElement, value, template) {
         if (isobject(value)) {
             ElementStyle(nativeElement, value);
-        } else if (template) {
+        } else if (template && template.type) {
             ElementStyle.set(nativeElement, template.type, value, template.suffix);
         } else {
             nativeElement.setAttribute('style', value);
@@ -87,15 +87,15 @@ AttributeAppender.helpers = {
  * @returns 
  */
 AttributeAppender.setProp = function(nativeElement, propName, propValue, template) {
-    if (propValue === undefined || !nativeElement || nativeElement.nodeType !== 1) return;
-    if (AttributeAppender.helpers[propName]) {
-        return AttributeAppender.helpers[propName](nativeElement, propValue, template);
-    }
-
-    if (propName in nativeElement) {
-        nativeElement[propName] = propValue;
-    } else {
-        AttributeAppender.setValue(nativeElement, propName, propValue);
+    try {
+        if (propValue === undefined || !nativeElement || nativeElement.nodeType !== 1) return;
+        if (AttributeAppender.helpers[propName]) 
+            return AttributeAppender.helpers[propName](nativeElement, propValue, template);
+    
+        if (propName in nativeElement) nativeElement[propName] = propValue;
+        else AttributeAppender.setValue(nativeElement, propName, propValue);
+    } catch(e) {
+        console.error(e);
     }
 };
 

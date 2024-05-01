@@ -261,18 +261,17 @@ function SubscribeObservables(refId, fn) {
  * @param {*} textNodeRef 
  */
 function textNodeCompiler(textNodeRef) {
-    function _compiler() {
-        compileTemplate(textNodeRef.ast, textNodeRef.parent.context, textNodeRef.parent.componentInstance, function(value) {
-            if (textNodeRef.nativeNode.nodeValue === value) return;
-            textNodeRef.nativeNode.nodeValue = value;
-        });
+    function setValue() {
+        var value = compileTemplate(textNodeRef.ast, textNodeRef.parent.context, textNodeRef.parent.componentInstance);
+        if (textNodeRef.nativeNode.nodeValue === value) return;
+        textNodeRef.nativeNode.nodeValue = value;
     }
 
     if (!textNodeRef.ast.once && textNodeRef.parent && textNodeRef.parent.hostRef) {
-        attachElementObserver(textNodeRef.parent, SubscribeObservables(textNodeRef.parent.hostRef.refId, _compiler));
+        attachElementObserver(textNodeRef.parent, SubscribeObservables(textNodeRef.parent.hostRef.refId, setValue));
     };
 
-    _compiler();
+    setValue();
 }
 
 /**
@@ -318,12 +317,20 @@ export function setupAttributeObservers(element, attrObservers) {
             // compile array observers
             // only for styles
             if (isAllowedArrayType.includes(propName) && Array.isArray(attrObservers[propName])) {
-                attrObservers[propName].forEach(item => {
-                    if(item.once && observerStarted) return;
-                    attributeEvaluator(propName, item);
-                });
+                var objectValues = attrObservers[propName].reduce((accum, item) => {
+                    if(item.once && observerStarted) return accum;
+                    var value = compileTemplate(item, element.context, element.componentInstance);
+                    if (value) {
+                       if (!accum) accum = {};
+                       Object.assign(accum, (isobject(value) ? value : {[item.type]: ElementStyle.fixValue(value, item.suffix)}));
+                    }
+                    return accum;
+                }, null);
+
+                AttributeAppender.helpers[propName](element.nativeElement, objectValues);
                 continue;
             }
+
             attributeEvaluator(propName, attrObservers[propName]);
         }
 
@@ -333,13 +340,8 @@ export function setupAttributeObservers(element, attrObservers) {
          * @param {*} template 
          */
         function attributeEvaluator(propName, template) {
-            compileTemplate(template, element.context, element.componentInstance, function(value) {
-                try {
-                    AttributeAppender.setProp(element.nativeElement, propName, value, template);
-                } catch (e) {
-                    console.error(e);
-                }
-            });
+            var value = compileTemplate(template, element.context, element.componentInstance);
+            AttributeAppender.setProp(element.nativeElement, propName, value, template);
         }
 
         observerStarted = true;
