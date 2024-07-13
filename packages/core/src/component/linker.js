@@ -8,45 +8,53 @@ import { LifeCycleConst } from './lifecycle';
  * @param {*} componentInstance 
  * @param {*} elementRef 
  * @param {*} lifeCycle 
- * @param {*} definition
+ * @param {*} ctors
  */
-export function elementInputLinker(componentInstance, elementRef, lifeCycle, definition) {
+export function elementInputLinker(componentInstance, elementRef, lifeCycle, ctors) {
     lifeCycle.trigger(LifeCycleConst.willObserve);
     var propChanges = null;
     var registeredProperty = {};
-    var isPrimitive = [];
+    var ignoreChecks = [];
     var always = false;
-    if (definition.props) {
+    var elementProps = elementRef.internal_getDefinition('props');
+    var asNative = elementRef.internal_getDefinition('asNative');
+    if (ctors.props)
         always = _updateViewBinding();
+
+    function getContext(){
+        if (elementRef.hasContext) {
+            return elementRef.context;
+        } else {
+            return ((isequal(elementRef.parent.type, 8) && !elementRef.isc) ? elementRef : elementRef.parent).context;
+        } 
     }
 
     function _updateViewBinding() {
         var hasBinding = false;
-        var context = null;
-        if (elementRef.hasContext) {
-            context = elementRef.context;
-        } else {
-            context = ((isequal(elementRef.parent.type, 8) && !elementRef.isc) ? elementRef : elementRef.parent).context;
-        }
-
-        for (var prop in definition.props) {
-            if (isPrimitive.includes(prop)) continue;
-            var item = definition.props[prop];
+        for (var prop in ctors.props) {
+            if (ignoreChecks.includes(prop)) continue;
+            var item = ctors.props[prop];
             var name = item.value || prop;
             var value;
-            if (elementRef.props && elementRef.props.hasOwnProperty(name)) {
+            if (asNative) {
+                setValue(prop, elementRef.getProps(prop));
+                continue;
+            }
+
+            if (elementProps && elementProps.hasOwnProperty(name)){
+                var context = getContext();
                 try {
-                    if (isobject(elementRef.props[name])) {
+                    if (isobject(elementProps[name])) {
                         hasBinding = true;
-                        value = getFilteredTemplateValue(elementRef.props[name], context, elementRef.parent.componentInstance);
+                        value = getFilteredTemplateValue(elementProps[name], context, elementRef.parent.componentInstance);
                     } else {
-                        value = getPrimitiveValue(item.type, name, elementRef.props[name]);
-                        isPrimitive.push(prop);
+                        value = getPrimitiveValue(item.type, name, elementProps[name]);
+                        ignoreChecks.push(prop);
                     }
                     setValue(prop, value);
                 } catch (e) { console.error(e); }
             } else if (elementRef.hasAttribute(name)) {
-                isPrimitive.push(prop);
+                ignoreChecks.push(prop);
                 setValue(prop, elementRef.attr[name]);
             }
         }
@@ -134,7 +142,8 @@ export function elementInputLinker(componentInstance, elementRef, lifeCycle, def
         },
         done: function() {
             registeredProperty = null;
-            isPrimitive.length = 0;
+            ignoreChecks.length = 0;
+            elementProps = null;
         }
     });
 }

@@ -171,7 +171,7 @@ ComponentRef.create = function(refId, parentId, context) {
         componentRef._context = context || null;
     }
 
-    if (parentId && componentDebugContext.has(parentId)) {
+    if (componentDebugContext.has(parentId)  && (parentId != refId)) {
         componentRef.parent = parentId;
         // add child to parent
         componentDebugContext.get(parentId).child.push(refId);
@@ -187,3 +187,7 @@ ComponentRef.create = function(refId, parentId, context) {
 ComponentRef.get = function(refId, hostRefId) {
     return componentDebugContext.get(refId) || componentDebugContext.get(hostRefId) || {};
 };
+
+ComponentRef.has = function(refId) {
+    return componentDebugContext.has(refId);
+}

@@ -1,6 +1,6 @@
 import { ViewHandler } from "./jWebViewHandler.service";
 import { EventManager, InterceptorResolver } from '@jeli/core';
-import { 
+import {
     getHref,
     getRequiredRoute,
     routeConfig,
@@ -8,7 +8,7 @@ import {
     ROUTE_INTERCEPTOR,
     ROUTE_LOCATION_STRATEGY,
     getParentRoute,
-    getRoute 
+    getRoute
 } from './utils';
 import { RouteInterceptorInstance } from "../events/route-interceptor.event";
 import { unserialize } from '@jeli/helpers/utils';
@@ -182,10 +182,17 @@ LocationService.prototype._processState = function (route, path, rootElement) {
     // check to make sure current state is not same as state to resolve
     if (this.changed(navigatedPath)) {
         //dispatch event for webRoute Success
-        this.events.dispatch(ROUTE_EVENT_ENUMS.SUCCESS, new RouteEvent(navigatedPath, route, this.currentRoute, this.lastVisited));
+        var routeEvent = new RouteEvent(navigatedPath, route, this.currentRoute, this.lastVisited);
+        this.events.dispatch(ROUTE_EVENT_ENUMS.SUCCESS, routeEvent);
         this.currentRoute = route;
         this.strategy.pushState({ name: route.name, params: route.params }, navigatedPath);
-        this.viewHandler.resolveViews(route, rootElement);
+        this.viewHandler.resolveViews(route, rootElement)
+            .then(() => {
+                if (routeConfig.scrollTop) window.scrollTo(0, 0);
+                this.events.dispatch(ROUTE_EVENT_ENUMS.COMPLETE, routeEvent);
+                // cleanup
+                routeEvent = null;
+            });
     } else {
         // trigger error route state
         this.events.dispatch(ROUTE_EVENT_ENUMS.ERROR, new RouteErrorEvent(navigatedPath));
@@ -238,7 +245,7 @@ LocationService.prototype.href = function (stateName, params) {
  */
 LocationService.prototype.subscribe = function (eventName, callback) {
     var eventList = Object.values(ROUTE_EVENT_ENUMS);
-    if (eventList.includes(eventName)){
+    if (eventList.includes(eventName)) {
         return this.events.add(eventName, callback);
     } else {
         console.error(eventName + ' does not exist, please use ' + eventList.join('|'));
@@ -279,12 +286,12 @@ LocationService.prototype.redirect = function (routeName, params) {
  * @param {*} url 
  * @param {*} params 
  */
-LocationService.prototype.byUrl = function(url, params){
+LocationService.prototype.byUrl = function (url, params) {
     url = url || routeConfig.fallback.url;
     var route = getRequiredRoute(url, params);
-    this.go({route, url});
+    this.go({ route, url });
 }
 
-LocationService.prototype.byName = function(name, params) {
+LocationService.prototype.byName = function (name, params) {
     this.go(getRoute(name, params));
 };

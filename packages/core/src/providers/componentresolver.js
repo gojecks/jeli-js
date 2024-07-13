@@ -10,8 +10,7 @@ import { noop } from "../utils/closure";
  */
 export function ComponentFactoryResolver(componentFactory, viewRef, callback, skipElementInsert) {
     if (!componentFactory || !componentFactory.ctors.exposeView) {
-        errorBuilder('No exported factory found for <' + componentFactory.ctors.selector + '>');
-        return null;
+        return Promise.reject('No exported factory found for <' + componentFactory.ctors.selector + '>');
     }
 
     var viewDefinition = {

@@ -1,5 +1,5 @@
-import { ComponentFactoryResolver, DOMHelper, compileModule, errorBuilder } from '@jeli/core';
-import { routeConfig, staticRoutePrefix } from './utils';
+import { ComponentFactoryResolver, DOMHelper, compileModule, errorBuilder, rxLoop } from '@jeli/core';
+import { staticRoutePrefix } from './utils';
 Service({
     name: 'ViewHandler'
 })
@@ -41,20 +41,23 @@ ViewHandler.prototype.getView = function (view, name) {
  * 
  * @param {*} viewComponent
  * @param {*} viewObjectInstance 
+ * @param {*} callback
  * compile the template when loaded
  */
-ViewHandler.prototype.compileViewTemplate = function (viewComponent, viewObjectInstance) {
+ViewHandler.prototype.compileViewTemplate = function (viewComponent, viewObjectInstance, callback) {
     //remove cache
     this.cleanUp(viewObjectInstance);
     // lazyloaded modules
     var isLazyLoaded = !!viewComponent.loadModule;
     this._loadModule(viewComponent.loadModule).then(componentFactory => {
-        ComponentFactoryResolver(isLazyLoaded ? componentFactory : viewComponent, viewObjectInstance.element, componentRef => {
-            viewObjectInstance.compiledWith = componentRef;
-            if (routeConfig.scrollTop) {
-                window.scrollTo(0, 0);
-            }
-        });
+        ComponentFactoryResolver(isLazyLoaded ? componentFactory : viewComponent, viewObjectInstance.element)
+            .then(componentRef => {
+                viewObjectInstance.compiledWith = componentRef;
+                callback();
+            }, errMessage => {
+                errorBuilder(errMessage);
+                callback();
+            });
     });
 };
 
@@ -107,9 +110,8 @@ ViewHandler.prototype.getCurrentView = function (route) {
  * trigger the resolved route views
  */
 ViewHandler.prototype.resolveViews = function (route) {
-    var views = this.getCurrentView(route);
-    for (var idx = 0; idx < views.length; idx++) {
-        var view = views[idx] || staticRoutePrefix;
+    return rxLoop(this.getCurrentView(route), (view, next) => {
+        view = view || staticRoutePrefix;
         var viewObj = route.views[view] || route;
         var viewObjectInstance = this.getView(view);
         /**
@@ -117,16 +119,17 @@ ViewHandler.prototype.resolveViews = function (route) {
          */
         if (!viewObj) {
             errorBuilder('[Router] No view definition for ' + route.name);
-            continue;
+            return next();
         }
 
         if (viewObjectInstance) {
-            this.compileViewTemplate(viewObj, viewObjectInstance);
+            this.compileViewTemplate(viewObj, viewObjectInstance, next);
         } else {
             //Push pending view to stack
             this._pendingViewStack.set(view, viewObj);
+            next();
         }
-    }
+    });
 };
 
 ViewHandler.prototype.destroy = function (ref) {
@@ -139,8 +142,9 @@ ViewHandler.prototype.destroy = function (ref) {
 
 ViewHandler.prototype.handlePendingView = function (viewName) {
     if (this._pendingViewStack.has(viewName)) {
-        this.compileViewTemplate(this._pendingViewStack.get(viewName), this.viewsHolder.get(viewName));
-        this._pendingViewStack.delete(viewName);
+        this.compileViewTemplate(this._pendingViewStack.get(viewName), this.viewsHolder.get(viewName), () => {
+            this._pendingViewStack.delete(viewName);
+        });
     }
 }
 

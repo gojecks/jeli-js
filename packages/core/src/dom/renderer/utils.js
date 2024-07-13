@@ -27,7 +27,7 @@ export function elementMutationObserver(nativeElement, callback) {
  * @param {*} elementRef 
  */
 function AttachComponentContentQuery(elementRef){
-    var querySet = elementRef.cq;
+    var querySet = elementRef.internal_getDefinition('cq');
     if (querySet){
         var componentInstance = elementRef.componentInstance;
         var props = Object.keys(querySet);
@@ -87,45 +87,6 @@ function AttachComponentContentQuery(elementRef){
                 }
             })
         });
-    }
-}
-
-/**
- * 
- * @param {*} hostElement 
- * @param {*} option 
- * @param {*} childEelement 
- * @returns 
- */
-function addViewQuery(hostElement, option, childElement) {
-    if (!isequal(option[1], hostElement.tagName)) {
-        return hostElement.parent && addViewQuery(hostElement.parent.hostRef, option, childElement);
-    }
-
-    var name = option[0].name;
-    var type = option[0].type;
-    switch (type) {
-        case (staticInjectionToken.QueryList):
-            if (!hostElement.componentInstance.hasOwnProperty(name)) {
-                hostElement.componentInstance[name] = new QueryList();
-            }
-            hostElement.componentInstance[name].add(childElement);
-            break;
-        case (staticInjectionToken.ElementRef):
-            hostElement.componentInstance[name] = childElement;
-            break;
-        case (staticInjectionToken.HTMLElement):
-            hostElement.componentInstance[name] = childElement.nativeElement;
-            break;
-        default:
-            Object.defineProperty(hostElement.componentInstance, name, {
-                configurable: true,
-                enumerable: true,
-                get: function() {
-                    return (childElement.nodes.has(type) ? childElement.nodes.get(type) : childElement.context);
-                }
-            });
-            break;
     }
 }
 
@@ -211,9 +172,8 @@ function attachElementObserver(element, onDestroyListener) {
  * @param {*} fromDOM 
  */
 function createElementByType(tag, text, fromDOM) {
-    if (fromDOM) {
-        return document.querySelector(tag);
-    }
+    if (fromDOM)
+        return tag;
 
     switch (tag) {
         case ('##'):
@@ -279,6 +239,7 @@ function textNodeCompiler(textNodeRef) {
  * @param {*} elementRef 
  */
 function cleanupElementRef(elementRef) {
+    if (!elementRef) return;
     elementRef.events && elementRef.events.destroy();
     /**
      * trigger registered listeners

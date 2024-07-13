@@ -8,3 +8,4 @@ export * from './event.manager';
 export * from './rx.utils';
 export * from './timers';
 export * from './rx-debounce';
+export * from './media-query';

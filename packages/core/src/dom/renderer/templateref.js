@@ -23,15 +23,19 @@ export function TemplateRef(templates, isContentChild) {
      * @param {*} callback 
      */
     this.forEach = function(selector, callback) {
+        var tmplCallback = tmpl => callback((isfunction(tmpl) ? tmpl() : tmpl));
+        if (typeof templates == 'function')
+            return templates(selector, tmplCallback);
+
         if (templates.hasOwnProperty(selector)) {
             // initialize templates as function
-            templates[selector].forEach(tmpl => callback((isfunction(tmpl) ? tmpl() : tmpl)));
+            templates[selector].forEach(tmplCallback);
         }
     }
 }
 
 TemplateRef.factory = function(node, templateId, silent) {
-    var templates = node["[[tmpl]]"];
+    var templates = node.internal_getDefinition('templates');
     if (!templates || !templates.hasOwnProperty(templateId)) {
         if (!silent) errorBuilder('No templates Defined #' + templateId);
         return null;

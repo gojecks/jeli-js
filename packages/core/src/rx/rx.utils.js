@@ -65,6 +65,55 @@ export function rxWait(){ }
 
 /**
  * 
+ * @param {*} targetInstance 
+ * @param {*} eventsName 
+ */
+export function rxEvents(targetInstance, eventNames) {
+    if (!targetInstance || !eventNames) return errorBuilder(`Target and eventNames parameters are required to use this method`)
+    function coreEventListener(event) {
+
+    }
+
+    if (!Array.isArray(eventNames)) eventNames = [eventNames];
+    // register Event
+    eventNames.forEach(eventName => targetInstance.addEventListener(eventName, coreEventListener));
+    
+    // subscription callback
+    // use to remove registered events
+    return () => {
+        eventNames.forEach(eventName => targetInstance.removeEventListener(eventName, coreEventListener));
+    };
+}
+
+/**
+ * 
+ * @param {*} operations 
+ * @param {*} value 
+ * @param {*} callback 
+ * @returns 
+ */
+export function rxLoop(operations, callback){
+    return new Promise((resolve) => {
+        if (!operations || !operations.length){
+            return resolve();
+        }
+
+        var inc = 0;
+        function next() {
+            if (operations.length > inc) {
+                inc++
+                callback(operations[inc - 1], next);
+            } else {
+                resolve();
+            }
+        }
+    
+        next();
+    });
+}
+
+/**
+ * 
  * @param {*} subscription 
  * @param {*} model 
  * @param {*} ignoreCheck 
@@ -120,30 +169,17 @@ function _valueComparison(value, suscription) {
  * @param {*} callback 
  * @returns 
  */
-function triggerWhen(operators, args, callback) {
-    if (!operators || !operators.length) {
-        return callback(true);
-    }
-
-    var inc = 0;
+function triggerWhen(operators, args, callback) {       
     var passed = true;
-
-    function next() {
-        if (operators.length > inc) {
-            var fn = operators[inc];
-            fn(args, function(value) {
-                if (!value) {
-                    passed = false;
-                }
-                inc++;
-                next();
-            });
-        } else {
-            callback(passed);
-        }
-    }
-
-    next();
+    rxLoop(operators, (operator, next) => {
+        operator(args, value => {
+            if (!value) {
+                passed = false;
+            }
+            next();
+        });
+    })
+    .then(() => callback(passed), () => callback(passed))
 }
 
 /**

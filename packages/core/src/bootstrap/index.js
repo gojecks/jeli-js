@@ -1,4 +1,4 @@
-import { bootstrapFromDOM } from '../component/custom.dom';
+import { CompileNativeElement } from '../component/custom.dom';
 import { Inject, ProviderToken } from '../dependency.injector';
 /**
  * JELI LOCAL VARIABLES
@@ -43,9 +43,10 @@ export function bootStrapApplication(moduleToBootStrap) {
     });
 
     function bootStrapElement() {
-        if (moduleToBootStrap.rootElement) {
+        var isNative = moduleToBootStrap.rootElement.ctors.asNative;
+        if (moduleToBootStrap.rootElement && !isNative) {
             var selector = moduleToBootStrap.rootElement.ctors.selector;
-            bootstrapFromDOM(moduleToBootStrap.rootElement, selector, function(elementRef) {
+            CompileNativeElement(moduleToBootStrap.rootElement, document.querySelector(selector), function(elementRef) {
                 CoreBootstrapContext.bootStrapComponent = elementRef;
                 Inject(APP_BOOTSTRAP, CoreBootstrapContext.injector).forEach(function(callback) {
                     callback();

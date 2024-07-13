@@ -59,10 +59,9 @@ FormControlService.prototype.hasField = function(controlName) {
 
 FormControlService.prototype.getField = function(controlName) {
     var path = this.getPath(controlName);
-    if (isarray(path)) {
+    if (isarray(path))
         return this.getByPath(path);
-    }
-    return this.formFieldControls[controlName] || null;
+    return this.formFieldControls ? this.formFieldControls[controlName] : null;
 };
 
 FormControlService.prototype.getByPath = function(paths) {

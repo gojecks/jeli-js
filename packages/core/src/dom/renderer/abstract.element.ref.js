@@ -30,13 +30,12 @@ function AbstractElementRef(definition, parentRef) {
     // hold the refId for actuall element where this content will be injected
     // this is only set by content injection using <j-place/>
     this.contentHostRefId = parentRef ? parentRef.contentHostRefId : null; 
-    this.type = definition.type;
-    this.tagName = definition.name.toLowerCase();
-    this.index = definition.index;
-    this.attr = definition.attr;
-    this.props = definition.props;
-    this.isc = definition.isc;
+    this.tagName = (!definition.fromDOM ? definition.name : this.nativeElement.localName).toLowerCase();
     this.hasContext = (!!definition.context || (!definition.isc && parentRef && parentRef.hasContext));
+    this.type = definition.type;
+    this.attr = definition.attr;
+    this.isc = definition.isc;
+   
     if (definition.providers) {
         this.providers = definition.providers;
         this.nodes = new Map();
@@ -55,8 +54,8 @@ function AbstractElementRef(definition, parentRef) {
                 // template context
                 if (localVariables) return localVariables;
                 // component context or custom context
-                if (componentDebugContext.has(this.refId)) 
-                    return componentDebugContext.get(this.refId).context;
+                if (ComponentRef.has(this.refId)) 
+                    return ComponentRef.get(this.refId).context;
                 // parent context
                 return this.parent && this.parent.context;
             },
@@ -84,24 +83,9 @@ function AbstractElementRef(definition, parentRef) {
                 return this.parent && this.parent.hostRef;
             }
         },
-        "[[tmpl]]": {
-            get: function() {
-                return definition.templates;
-            }
-        },
         nativeNode: {
             get: function() {
                 return this.type === 8 ? this.nativeElement : null;
-            }
-        },
-        data: {
-            get: function() {
-                return definition.data;
-            }
-        },
-        cq: {
-            get: function(){
-                return definition.cq;
             }
         }
     });
@@ -111,6 +95,10 @@ function AbstractElementRef(definition, parentRef) {
             get: () => this.context
         });
     }
+
+    this.internal_getDefinition = function(prop) {
+        return definition[prop];
+    };
 };
 
 AbstractElementRef.prototype.hasAttribute = function(name) {
@@ -118,5 +106,9 @@ AbstractElementRef.prototype.hasAttribute = function(name) {
 };
 
 AbstractElementRef.prototype.getAttribute = function(name) {
-    return (this.attr && name in this.attr) ? this.attr[name] : this.nativeElement.getAttribute(name);
+    return (this.hasAttribute(name)) ? this.attr[name] : this.nativeElement.getAttribute(name);
 };
+
+AbstractElementRef.prototype.getProps = function(prop) {
+    return this.nativeElement[prop];
+}

@@ -8,7 +8,7 @@ export function StateManager(current, callback, states) {
     this.current = (current || '');
     this.states = states || [];
     this.set = function(name) {
-        if (!validateAction(this.current, name)) {
+        if (!validateAction(this.current, name) && this.states.length) {
             this.current = name;
             this.lastStateIndex = this.states.indexOf(name);
         }
@@ -44,6 +44,9 @@ export function StateManager(current, callback, states) {
 
 StateManager.prototype.pushStates = function(states) {
     this.states.push.apply(this.states, states);
+    if (this.current && !this.lastStateIndex){
+        this.lastStateIndex = this.states.indexOf(name);
+    }
 };
 
 StateManager.prototype.next = function() {

@@ -26,10 +26,15 @@ export var ViewParser = function () {
          * 
          * @param {*} compiled 
          */
-        this.pushToView = function (compiled) {
-            compiled.parent && compiled.parent.children.add(compiled);
-            fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
-            transverse(compiled);
+        this.pushToView = function (compiled, isNativeMode) {
+            if (!isNativeMode) {
+                compiled.parent && compiled.parent.children.add(compiled);
+                fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
+                transverse(compiled);
+            } else {
+                // nativeElement
+                fragment.appendChild(compiled);
+            }
         };
 
         /**
@@ -85,10 +90,16 @@ export var ViewParser = function () {
      * push Child element to parent
      * @param {*} child 
      * @param {*} parent 
+     * @param {*} index 
+     * @param {*} isNativeMode 
      */
-    function pushToParent(child, parent, index) {
-        parent.children.add(child, index);
-        parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+    function pushToParent(child, parent, index, isNativeMode) {
+        if (!isNativeMode) {
+            parent.children.add(child, index);
+            parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+        } else {
+            parent.nativeElement.appendChild(child); 
+        }
     }
 
     /**
@@ -113,6 +124,7 @@ export var ViewParser = function () {
     /**
      * <j-place selector=refId|attr|tag|*></j-template>
      * render light dom in shadow dom
+     * equivalemt to <slot></slot>
      * @param {*} definition
      * @param {*} parent
      * @param {*} viewContainer
@@ -121,43 +133,50 @@ export var ViewParser = function () {
      */
     function place(definition, parent, viewContainer, context, appendToParent) {
         var hostRef = parent.hostRef;
+        var isNativeMode = hostRef.internal_getDefinition('asNative');
+        var haveLocalVairables = false;
         var createPlaceElement = !(viewContainer || appendToParent);
         var template = TemplateRef.factory(hostRef, 'place', true);
-        var haveLocalVairables = (definition.$ctx && ('object' == typeof definition.$ctx));
         var placeElement = (createPlaceElement) ? new AbstractElementRef({
             name: "#",
             type: 11
         }, hostRef) : null;
 
-        // create the context if jPlace have context object
-        if (haveLocalVairables)
-            context = createLocalVariables(definition.$ctx, parent.context, context);
+        if (!isNativeMode) {
+            haveLocalVairables = (definition.$ctx && ('object' == typeof definition.$ctx));
+            // create the context if jPlace have context object
+            if (haveLocalVairables)
+                context = createLocalVariables(definition.$ctx, parent.context, context);
+        }
 
         /**
          * 
-         * @param {*} elementDefinition 
+         * @param {*} element 
          */
-        function createAndAppend(elementDefinition) {
-            var child = ViewParser.builder[elementDefinition.type](elementDefinition, (definition.$ctx == true ? parent : hostRef.parent), viewContainer, context);
-            // set the localVairables
-            if (haveLocalVairables)
-                child.context = context;
-            
-             // Attach the child element to the origin, used for getting the right componentRef
-            // actual hostRefId where content is appended
-            // ContentHostRef? should reolve the component instance
-            child.contentHostRefId = hostRef.refId;
-            if (!createPlaceElement) {
-                pushToParent(child, placeElement || parent);
+        function createAndAppend(element) {
+            if (!isNativeMode) {
+                var child = ViewParser.builder[element.type](element, (definition.$ctx == true ? parent : hostRef.parent), viewContainer, context);
+                // set the localVairables
+                if (haveLocalVairables)
+                    child.context = context;
+                
+                 // Attach the child element to the origin, used for getting the right componentRef
+                // actual hostRefId where content is appended
+                // ContentHostRef? should reolve the component instance
+                child.contentHostRefId = hostRef.refId;
+            }
+
+            if (createPlaceElement || appendToParent) {
+                pushToParent(child || element, placeElement || parent, null, isNativeMode);
             } else {
-                viewContainer.pushToView(child);
+                viewContainer.pushToView(child || element, isNativeMode);
             }
 
             /**
              * check if VC property is defined in placeTemplate
              * register the child to the hostRef viewQuery
              */
-            if (definition.vc && ([elementDefinition.refId, child.tagName].includes(definition.vc[0].value))) {
+            if (definition.vc && ([element.refId, child.tagName].includes(definition.vc[0].value))) {
                 addViewQuery(hostRef, definition.vc, child);
             }
         }
@@ -296,5 +315,44 @@ function transverse(node) {
         //proceed with the compilation
         //checking child elements
         node.children.forEach(transverse);
+    }
+}
+
+/**
+ * 
+ * @param {*} hostElement 
+ * @param {*} option 
+ * @param {*} childEelement 
+ * @returns 
+ */
+function addViewQuery(hostElement, option, childElement) {
+    if (!isequal(option[1], hostElement.tagName) && !hostElement.internal_getDefinition('asNative')) {
+        return hostElement.parent && addViewQuery(hostElement.parent.hostRef, option, childElement);
+    }
+
+    var name = option[0].name;
+    var type = option[0].type;
+    switch (type) {
+        case (staticInjectionToken.QueryList):
+            if (!hostElement.componentInstance.hasOwnProperty(name)) {
+                hostElement.componentInstance[name] = new QueryList();
+            }
+            hostElement.componentInstance[name].add(childElement);
+            break;
+        case (staticInjectionToken.ElementRef):
+            hostElement.componentInstance[name] = childElement;
+            break;
+        case (staticInjectionToken.HTMLElement):
+            hostElement.componentInstance[name] = childElement.nativeElement;
+            break;
+        default:
+            Object.defineProperty(hostElement.componentInstance, name, {
+                configurable: true,
+                enumerable: true,
+                get: function() {
+                    return (childElement.nodes.has(type) ? childElement.nodes.get(type) : childElement.context);
+                }
+            });
+            break;
     }
 }

@@ -109,23 +109,28 @@ export function Inject(dep, localInjector) {
 
 /**
  * 
- * @param {*} factory 
+ * @param {*} constructorFN 
  * @param {*} locals 
  * @param {*} callback 
  */
-export function AutoWire(factory, localInjector, callback) {
-    if (isfunction(factory)) {
-        var deps = resolveDeps(factory.ctors && factory.ctors.DI, localInjector);
+export function AutoWire(constructorFN, localInjector, callback) {
+    if (isfunction(constructorFN)) {
+        var deps = resolveDeps(constructorFN.ctors && constructorFN.ctors.DI, localInjector);
         //initialize the defined function
         //only initializes when its defined
-        var protos = Object.create(factory.prototype);
-        var result = factory.apply(protos, deps) || protos;
+        var result = null;
+        if ('Reflect' in window) {
+            result = Reflect.construct(constructorFN, deps);
+        } else {
+            var protos = Object.create(constructorFN.prototype);
+            var result = constructorFN.apply(protos, deps) || protos;
+        }
 
         /**
          * set the instance for reference providerToken to pick up
          */
-        if (existingInstance.has(factory)) {
-            existingInstance.set(factory, result);
+        if (existingInstance.has(constructorFN)) {
+            existingInstance.set(constructorFN, result);
         }
         /**
          * trigger callback if passed
@@ -137,8 +142,8 @@ export function AutoWire(factory, localInjector, callback) {
         return result;
     }
 
-    factory = resolveTokenBase(factory, localInjector);
-    return factory;
+    constructorFN = resolveTokenBase(constructorFN, localInjector);
+    return constructorFN;
 };
 
 /**

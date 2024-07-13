@@ -2,7 +2,7 @@
  * 
  * @param {*} definition 
  * @param {*} parent 
- * @param {*} _lcmp
+ * @param {*} lcmp
  */
 export function ElementRef(definition, parent, lcmp) {
     AbstractElementRef.call(this, definition, parent);
@@ -12,7 +12,7 @@ export function ElementRef(definition, parent, lcmp) {
     // check if element is custom element
     if (definition.isc) {
         // create the element Observer
-        ComponentRef.create(this.refId, parent && parent.hostRef.refId);
+        ComponentRef.create(this.refId, definition.fromDOM ? 1 : parent && parent.hostRef.refId);
     }
 
     // definition.attrObservers

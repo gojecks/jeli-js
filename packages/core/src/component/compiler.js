@@ -12,30 +12,47 @@ import { LifeCycleConst } from './lifecycle';
  */
 function ElementCompiler(factory, elementRef, componentInjectors, next) {
     var ctors = factory.ctors;
+    var asNative = elementRef.internal_getDefinition('asNative');
     var lifeCycle;
     /**
      * 
      * @param {*} componentInstance 
      */
-    function CoreElementCompiler(componentInstance) {
-        var componentRef = componentDebugContext.get(elementRef.refId);
-        /**
-         * add two way binding between components 
-         */
+    function ConnectView(componentInstance) {
+        var componentRef = ComponentRef.get(elementRef.refId);
         componentRef.componentInstance = componentInstance;
+
         if (factory.view) {
             try {
                 // set the refID of the directive
                 var renderedElement = factory.view(elementRef);
-                // attach mutationObserver
-                elementMutationObserver(elementRef.nativeElement, function (mutationList, observer) {
+                var triggerAndBindCQ = () => {
                     // attach contentChild(ren)
                     AttachComponentContentQuery(elementRef);
                     lifeCycle.trigger(LifeCycleConst.viewDidLoad);
-                    observer.disconnect();
-                });
-                
-                elementRef.nativeElement.appendChild(renderedElement);
+                };
+
+                // attach mutationObserver
+                if (!asNative) {
+                    elementMutationObserver(elementRef.nativeElement, function (mutationList, observer) {
+                        triggerAndBindCQ();
+                        observer.disconnect();
+                    });
+                    
+                    elementRef.nativeElement.appendChild(renderedElement);
+                } else {
+                    // attach shadow dom
+                    // also append styles to shadow dom
+                    if(ctors.useShadowDom){
+                        var shadow = elementRef.nativeElement.attachShadow({ mode: 'open' });
+                        shadow.appendChild(renderedElement);
+                    } else {
+                        elementRef.nativeElement.appendChild(renderedElement);
+                    }
+                    
+                    triggerAndBindCQ();
+                }
+
                 elementRef.changeDetector.detectChanges();
             } catch (e) {
                 errorBuilder(e);
@@ -60,7 +77,7 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
      * 
      * @param {*} componentInstance 
      */
-    function compileEventsRegistry(componentInstance) {
+    function eventsRegistry(componentInstance) {
         var actions = {
             event: (name) => elementRef.events._events.push(Object.assign({name}, ctors.events[name])),
             emitter: (name) =>  EventHandler.attachEventEmitter(elementRef, name, componentInstance),
@@ -73,24 +90,29 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
                     actions[ctors.events[name].type](name);
                 }
             }
+
+            // register eventListener to element
+            if (!factory.view && ctors.asNative) {
+                EventHandler.registerListener(elementRef);
+            }
         }
     }
 
 
     function registerDirectiveInstance(componentInstance) {
-        if (!elementRef.isc) {
-            /**
-             * remove the Attribute from element
-             */
-            elementRef.nodes.set(factory.ctors.exportAs || ctors.selector, componentInstance);
-            lifeCycle.trigger(LifeCycleConst.viewDidLoad);
-            attachElementObserver(elementRef, function () {
-                lifeCycle.trigger(LifeCycleConst.viewDidDestroy);
-                elementRef.nodes.delete(ctors.selector);
-            });
-        }
+        if (elementRef.isc) return;
+        /**
+         * remove the Attribute from element
+         */
+        elementRef.nodes.set(factory.ctors.exportAs || ctors.selector, componentInstance);
+        lifeCycle.trigger(LifeCycleConst.viewDidLoad);
+        attachElementObserver(elementRef, function () {
+            lifeCycle.trigger(LifeCycleConst.viewDidDestroy);
+            elementRef.nodes.delete(ctors.selector);
+        });
     }
 
+    // nativeStrategyCompiler
     ElementFactoryInitializer(factory, componentInjectors,
         /**
          * 
@@ -102,13 +124,13 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
              * eventListener
              * eventEmitter
              */
-            compileEventsRegistry(componentInstance);
+            eventsRegistry(componentInstance);
             lifeCycle = new LifeCycle(componentInstance);
             elementInputLinker(componentInstance, elementRef, lifeCycle, ctors);
             lifeCycle.trigger(LifeCycleConst.didInit);
             registerDirectiveInstance(componentInstance);
             next(componentInstance);
-            if (elementRef.isc) CoreElementCompiler(componentInstance);
+            if (elementRef.isc) ConnectView(componentInstance);
         });
 }
 

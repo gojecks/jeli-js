@@ -1,7 +1,9 @@
 import { scheduler } from '../../utils/scheduler';
 import { removeFromArray, addToArray, moveItemInArray } from '@jeli/helpers';
+
 /**
- * Element ViewRef
+ * 
+ * @param {*} elementRef 
  */
 export function ViewRef(elementRef) {
     this._destroyed = false;
