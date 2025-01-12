@@ -63,28 +63,30 @@ var staticInjectionTokenHandlers = {
  * @param {*} annotations 
  * @param {*} selector) 
  */
-function ComponentInjectors(elementRef, selector) {
-    AbstractInjectorInstance.call(this, elementRef);
-    this.injectors.ElementRef = elementRef;
-    this.injectors.Selector = selector;
-    this.has = function(tokenName) {
-        return this.injectors.hasOwnProperty(tokenName) || staticInjectionToken.hasOwnProperty(tokenName);
-    };
-}
-ComponentInjectors.prototype = Object.create(AbstractInjectorInstance.prototype);
-ComponentInjectors.prototype.constructor = AbstractInjectorInstance;
-ComponentInjectors.prototype.destroy = function() {
-    this.injectors.ElementRef = null;
-    this.injectors = null;
-    this.currentClassAnnotations = null;
-};
+class ComponentInjectors extends AbstractInjectorInstance {
+    constructor(elementRef, selector) {
+        super(elementRef);
+        this.injectors.ElementRef = elementRef;
+        this.injectors.Selector = selector;
+    }
 
-ComponentInjectors.prototype.get = function(dep) {
-    if (this.injectors.hasOwnProperty(dep.tokenName))
-        return this.injectors[dep.tokenName];
-    else if (staticInjectionToken[dep.tokenName])
-        return staticInjectionTokenHandlers[dep.tokenName](this, dep);
+    has(tokenName) {
+        return this.injectors.hasOwnProperty(tokenName) || staticInjectionToken.hasOwnProperty(tokenName);
+    }
+
+    destroy() {
+        this.injectors.ElementRef = null;
+        this.injectors = null;
+        this.currentClassAnnotations = null;
+    }
+    get(dep) {
+        if (this.injectors.hasOwnProperty(dep.tokenName))
+            return this.injectors[dep.tokenName];
+        else if (staticInjectionToken[dep.tokenName])
+            return staticInjectionTokenHandlers[dep.tokenName](this, dep);
+    }
 }
+
 
 /**
  * 

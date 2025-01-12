@@ -25,13 +25,12 @@ Directive({
  * 
  * @param {*} elementRef 
  */
-export function CheckboxEventBinder(elementRef) {
-    AbstractValueAccessor.call(this, elementRef);
-};
-
-CheckboxEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
-CheckboxEventBinder.prototype.constructor = AbstractValueAccessor;
-
-CheckboxEventBinder.prototype.writeValue = function(checked) {
-    AttributeAppender.setProp(this.element.nativeElement, 'checked', checked, true);
+/**
+ *
+ * @param {*} elementRef
+ */
+export class CheckboxEventBinder extends AbstractValueAccessor{
+    writeValue(checked) {
+        AttributeAppender.setProp(this.element.nativeElement, 'checked', checked, true);
+    }
 };

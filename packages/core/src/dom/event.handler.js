@@ -5,7 +5,8 @@ import { ProxyEvent } from './event.proxy';
 
 var customEventRegistry = new Map([
     ['window', new CustomEventHandler(window)],
-    ['document', new CustomEventHandler(document)]
+    ['document', new CustomEventHandler(document)],
+    ['body', new CustomEventHandler(document.body)]
 ]);
 
 /**
@@ -13,130 +14,199 @@ var customEventRegistry = new Map([
  * @param {*} elementRef 
  * @param {*} events 
  */
-function EventHandler(events) {
-    this._events = events;
-    this.registeredEvents = new Map();
-}
+export class EventHandler {
+    constructor(events) {
+        this._events = events;
+        this.registeredEvents = new Map();
+    }
+    static registerListener(element) {
+        if (!element.events || !element.events._events.length) return;
+        var eventInstance = element.events;
+        var handler = function ($ev) {
+            EventHandler.handleEvent(element, $ev);
+        };
 
-EventHandler.prototype.destroy = function () {
-    this.registeredEvents.forEach(function (removeListenerFn) {
-        removeListenerFn();
-    });
-    this.registeredEvents.clear();
-    this._events.length = 0;
-};
-
-
-EventHandler.registerListener = function (element) {
-    if (!element.events || !element.events._events.length) return;
-    var eventInstance = element.events;
-    var handler = function ($ev) { 
-        EventHandler.handleEvent(element, $ev); 
-    };
-
-    /**
-     * 
-     * @param {*} eventName 
-     * @param {*} useCapture 
-     */
-    function _registerEvent(eventName, useCapture) {
-        if (!eventInstance.registeredEvents.has(eventName)) {
-            /**
-             * events that goes with a . e.g (window.message)
-             */
-            if (eventName.includes('.')) {
-                var event = eventName.split('.');
-                var customRegistry = customEventRegistry.get(event[0]);
-                if (customRegistry) {
-                    var unsubscribe = customRegistry.register(event[1], function (htmlEvent) {
-                        EventHandler.handleEvent (element, htmlEvent, eventName);
+        /**
+         *
+         * @param {*} eventName
+         * @param {*} useCapture
+         */
+        function _registerEvent(eventName, useCapture) {
+            if (!eventInstance.registeredEvents.has(eventName)) {
+                /**
+                 * events that goes with a . e.g (window.message)
+                 */
+                if (eventName.includes('.')) {
+                    var event = eventName.split('.');
+                    var customRegistry = customEventRegistry.get(event.shift());
+                    if (customRegistry) {
+                        eventInstance.registeredEvents.set(
+                            eventName, 
+                            customRegistry.register(event.pop(), htmlEvent => {
+                                EventHandler.handleEvent(element, htmlEvent, eventName);
+                            })
+                        );
+                        customRegistry = null;
+                    }
+                } else {
+                    element.nativeElement.addEventListener(eventName, handler, useCapture);
+                    eventInstance.registeredEvents.set(eventName, function () {
+                        element.nativeElement.removeEventListener(eventName, handler);
                     });
-                    eventInstance.registeredEvents.set(eventName, unsubscribe);
-                    customRegistry = null;
                 }
-            } else {
-                element.nativeElement.addEventListener(eventName, handler, useCapture);
-                eventInstance.registeredEvents.set(eventName, function () {
-                    element.nativeElement.removeEventListener(eventName, handler);
-                });
+            }
+        }
+
+        for (var event of eventInstance._events) {
+            if (!event.custom) {
+                event.name.split(' ').forEach(eventName => _registerEvent(eventName, !!event.target));
             }
         }
     }
-
-    for (var event of eventInstance._events) {
-        if (!event.custom) {
-            event.name.split(' ').forEach(eventName => _registerEvent(eventName, !!event.target));
-        }
-    }
-};
-
-/**
- * Attach the EventEmitter to the component Instance
- * @param {*} element 
- * @param {*} eventName 
- * @param {*} componentInstance 
- */
-EventHandler.attachEventEmitter = function (element, eventName, componentInstance) {
-    var registeredEvent = getEventsByType(element.events._events, eventName)[0];
-    if (registeredEvent && registeredEvent.value) {
-        var unSubscribe = componentInstance[eventName].subscribe(function (value) {
-            // trigger change detector if defined
-            var parentElement = element && element.parent;
-            parentElement = (parentElement.isc ? parentElement : parentElement.hostRef);
-            _executeEventsTriggers(
-                registeredEvent.value,
-                parentElement.componentInstance,
-                element.hasContext ? element.context : element.parent.hasContext ? element.parent.context : parentElement.context,
-                value
-            );
-
-            parentElement && parentElement.changeDetector && parentElement.changeDetector.detectChanges();
-        });
-        /**
-         * destroy the subscription
-         */
-        element.events.registeredEvents.set(eventName, unSubscribe);
-    }
-}
-
-/**
- * 
- * @param {*} element 
- * @param {*} eventName 
- * @param {*} componentInstance 
- */
-EventHandler.attachEventDispatcher = function (element, eventName, componentInstance) {
-    var registeredEvent = getEventsByType(element.events._events, eventName)[0];
-    var context = null;
-    if (registeredEvent && registeredEvent.value) {
-        context = element.context;
-        if (element.isc) {
-            context = element.parent.context;
-        }
-
-        /**
-         * get the method Name
-         * and default handlers
-         * replace the default handler with dispatcher event handler
-         */
-        if (context.hasOwnProperty(eventName)) {
-            var unSubscribe = context[eventName].subscribe(function (value) {
+    /**
+     * Attach the EventEmitter to the component Instance
+     * @param {*} element
+     * @param {*} eventName
+     * @param {*} componentInstance
+     */
+    static attachEventEmitter(element, eventName, componentInstance) {
+        var registeredEvent = getEventsByType(element.events._events, eventName)[0];
+        if (registeredEvent && registeredEvent.value) {
+            var unSubscribe = componentInstance[eventName].subscribe(function (value) {
+                // trigger change detector if defined
+                var parentElement = element && element.parent;
+                if (!parentElement) return;
+                parentElement = (parentElement.isc ? parentElement : parentElement.hostRef);
                 _executeEventsTriggers(
                     registeredEvent.value,
-                    componentInstance,
-                    element.context,
+                    parentElement.componentInstance,
+                    element.hasContext ? element.context : element.parent.hasContext ? element.parent.context : parentElement.context,
                     value
                 );
-                element && element.changeDetector.detectChanges();
-            });
 
+                parentElement && parentElement.changeDetector && parentElement.changeDetector.detectChanges();
+            });
             /**
              * destroy the subscription
              */
             element.events.registeredEvents.set(eventName, unSubscribe);
         }
     }
+    /**
+     *
+     * @param {*} element
+     * @param {*} eventName
+     * @param {*} componentInstance
+     */
+    static attachEventDispatcher(element, eventName, componentInstance) {
+        var registeredEvent = getEventsByType(element.events._events, eventName)[0];
+        var context = null;
+        if (registeredEvent && registeredEvent.value) {
+            context = element.context;
+            if (element.isc) {
+                context = element.parent.context;
+            }
+
+            /**
+             * get the method Name
+             * and default handlers
+             * replace the default handler with dispatcher event handler
+             */
+            if (context.hasOwnProperty(eventName)) {
+                var unSubscribe = context[eventName].subscribe(function (value) {
+                    _executeEventsTriggers(
+                        registeredEvent.value,
+                        componentInstance,
+                        element.context,
+                        value
+                    );
+                    element && element.changeDetector.detectChanges();
+                });
+
+                /**
+                 * destroy the subscription
+                 */
+                element.events.registeredEvents.set(eventName, unSubscribe);
+            }
+        }
+    }
+    /**
+     *
+     * @param {*} element
+     * @param {*} event
+     * @param {*} eventName
+     */
+    static handleEvent(element, event, eventName) {
+        eventName = eventName || event.type;
+        // prevent the default only when its any of these events
+        if (inarray(eventName, ['touchstart', 'touchend', 'touchmove', 'submit'])) {
+            event.preventDefault();
+        }
+
+        try {
+            getEventsByType(element.events._events, eventName).forEach(triggerEvents);
+        } catch (e) {
+            errorBuilder(e);
+        } finally {
+            element && element.changeDetector && element.changeDetector.detectChanges();
+        }
+
+        function getClosest(target) {
+            for (var query of target) {
+                var ele = event.target.closest(query);
+                if (ele) return ele;
+            }
+
+            return null;
+        }
+
+        /**
+         *
+         * @param {*} registeredEvent
+         * @param {*} event
+         */
+        function triggerEvents(registeredEvent) {
+            var _event = null;
+            var context = element.context;
+            if (registeredEvent.handler) {
+                return registeredEvent.handler(event);
+            } else if (registeredEvent.target) {
+                var mainElement = getClosest(registeredEvent.target);
+                if (!mainElement) return;
+                context = mainElement[$elementContext];
+                // overwrite the event target to return the right element
+                _event = ProxyEvent(event, mainElement);
+            }
+
+            // get the component instance
+            // events set from directives have to getInstance from Map<nodes>
+            var componentInstance = registeredEvent.node ? element.nodes.get(registeredEvent.node) : element.hostRef.componentInstance;
+            _executeEventsTriggers(
+                registeredEvent.value,
+                componentInstance,
+                context,
+                _event || event
+            );
+
+            // clean proxyEvent
+            context = componentInstance = null;
+            if (_event) {
+                _event.target = _event.preventDefault = null;
+            }
+        }
+    }
+
+    destroy() {
+        this.registeredEvents.forEach(cb => (cb && cb()));
+        this.registeredEvents.clear();
+        this._events.length = 0;
+    }
 }
+
+
+
+
+
 
 
 /**
@@ -201,68 +271,3 @@ function getFnFromContext(eventInstance, componentInstance, context) {
     return fn;
 }
 
-/**
- * 
- * @param {*} element 
- * @param {*} event 
- * @param {*} eventName 
- */
-EventHandler.handleEvent = function(element, event, eventName) {
-    eventName = eventName || event.type;
-    // prevent the default only when its any of these events
-    if (inarray(eventName, ['touchstart', 'touchend', 'touchmove', 'submit'])) {
-        event.preventDefault();
-    }
-
-    try {
-        getEventsByType(element.events._events, eventName).forEach(triggerEvents);
-    } catch (e) {
-        errorBuilder(e);
-    } finally {
-        element && element.changeDetector && element.changeDetector.detectChanges();
-    }
-
-    function getClosest(target) {
-        for(var query of target){
-            var ele = event.target.closest(query);
-            if(ele) return ele;
-        }
-        
-        return null;
-    }
-
-    /**
-     * 
-     * @param {*} registeredEvent 
-     * @param {*} event 
-     */
-    function triggerEvents(registeredEvent) {
-        var _event = null;
-        var context = element.context;
-        if (registeredEvent.handler) {
-            return registeredEvent.handler(event);
-        } else if (registeredEvent.target) {
-            var mainElement = getClosest(registeredEvent.target);
-            if (!mainElement) return;
-            context = mainElement[$elementContext];
-            // overwrite the event target to return the right element
-            _event = ProxyEvent(event, mainElement);
-        }
-
-        // get the component instance
-        // events set from directives have to getInstance from Map<nodes>
-        var componentInstance = registeredEvent.node ? element.nodes.get(registeredEvent.node) : element.hostRef.componentInstance;
-        _executeEventsTriggers(
-            registeredEvent.value,
-            componentInstance,
-            context,
-            _event || event
-        );
-
-        // clean proxyEvent
-        context = componentInstance = null;
-        if (_event){
-            _event.target = _event.preventDefault =  null;
-        }
-    }
-}

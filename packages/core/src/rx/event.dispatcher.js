@@ -1,9 +1,6 @@
-export function EventDispatcher() {
-    AbstractEventRx.call(this);
+export class EventDispatcher extends  AbstractEventRx {
+    dispatch(args) {
+        this._status = 1;
+        _eventRxTrigger(this, args);
+    }
 }
-
-EventDispatcher.prototype = Object.create(AbstractEventRx.prototype);
-EventDispatcher.prototype.constructor = AbstractEventRx;
-EventDispatcher.prototype.dispatch = function(args) {
-    _eventRxTrigger(this, args);
-};

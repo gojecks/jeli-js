@@ -236,28 +236,22 @@ function resolveReference(reference, localInjector) {
     }
 }
 
-resolveClosureRef.factory = function(token, localInjector) {
-    var args = resolveDeps(token.DI, localInjector);
-    return function() {
-        return resolveClosureRef(token.factory).apply(null, args);
+export class AbstractInjectorInstance {
+    constructor(injector) {
+        this.injectors = injector || {};
     }
-};
 
-export function AbstractInjectorInstance() {
-    this.injectors = {};
-    this.has = function(injectorToken) {
+    has(injectorToken) {
         return this.injectors.hasOwnProperty(injectorToken);
-    };
+    }
+    
+    set(tokenName, value) {
+        this.injectors[tokenName] = value;
+    }
+    get(injectorToken) {
+        return this.injectors[injectorToken];
+    }
+    destroy() {
+        this.injectors = null;
+    }
 }
-
-AbstractInjectorInstance.prototype.set = function(tokenName, value) {
-    this.injectors[tokenName] = value;
-};
-
-AbstractInjectorInstance.prototype.get = function(injectorToken) {
-    return this.injectors[injectorToken];
-};
-
-AbstractInjectorInstance.prototype.destroy = function() {
-    this.injectors = null;
-};

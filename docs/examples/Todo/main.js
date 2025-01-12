@@ -3,16 +3,16 @@
     /** trigged factory **/ 
     factory(__required);
 }(function(__required) {
-    var core = __required(1133);
+    var core = __required(1143);
 var bootStrapApplication = core.bootStrapApplication;
-var AppModule = __required(1165, 'AppModule');
+var AppModule = __required(1176, 'AppModule');
 bootStrapApplication(AppModule);
 }, (function(modules,  self) { 
     'use strict';
     var OD = Object.defineProperty,
-    installedModules = {},
     dep_name = 'jeli_chunk_loaded',
-    buildArgs = {"hasStyles":true},
+    buildArgs = {"buildTime":1734326607440,"version":"1.0.0","baseHref":"","assetURL":"","production":false},
+    installedModules = {buildArgs},
     pendingLazyLoad = [];
     OD(self, dep_name, {
         set: function(value) {
@@ -35,7 +35,7 @@ bootStrapApplication(AppModule);
 
     function loadScript(mid){
         var scriptElement = document.createElement('script');
-        var path = [buildArgs.deployURL || '', mid, ".js"].join('')
+        var path = [buildArgs.assetURL || '', mid, ".js"].join('')
         scriptElement.src = path;
         scriptElement.type = "module";
         scriptElement.async = true;
@@ -79,45 +79,45 @@ bootStrapApplication(AppModule);
     };
 
     return __required;
-})( /** JELI DEPENDECY HUB **/ {1115 : (module, exports, __required, global) => {
+})( /** JELI DEPENDECY HUB **/ {1124 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str) {
     return typeof str === 'string' && new String(str) instanceof String;
 }
 },
-1116 : (module, exports, __required, global) => {
+1125 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (obj) {
     return Object.prototype.toString.call(obj) === '[object Array]';
 }
 },
-1117 : (module, exports, __required, global) => {
+1126 : (module, exports, __required, global) => {
 "use strict";
-var isarray = __required(1116, 'default');
-var isstring = __required(1115, 'default');
+var isarray = __required(1125, 'default');
+var isstring = __required(1124, 'default');
 exports.default = function (needle, haystack) {
     return (isstring(haystack) || isarray(haystack)) && haystack.indexOf(needle) > -1;
 }
 },
-1118 : (module, exports, __required, global) => {
+1127 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (bool) {
     return Object.prototype.toString.call(bool) === '[object Boolean]';
 }
 },
-1119 : (module, exports, __required, global) => {
+1128 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (val) {
     return typeof val !== 'undefined';
 }
 },
-1120 : (module, exports, __required, global) => {
+1129 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (n) {
     return parseFloat(n) > 0;
 }
 },
-1121 : (module, exports, __required, global) => {
+1130 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (val) {
     if (val && typeof val === 'object') {
@@ -126,7 +126,7 @@ exports.default = function (val) {
     return !val || val === '';
 }
 },
-1122 : (module, exports, __required, global) => {
+1131 : (module, exports, __required, global) => {
 "use strict";
 exports.default = equal;
 function equal(a, b) {
@@ -170,50 +170,50 @@ function equal(a, b) {
 }
 ;
 },
-1123 : (module, exports, __required, global) => {
+1132 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (n) {
     return Number(n) === n && n % 1 !== 0;
 }
 },
-1124 : (module, exports, __required, global) => {
+1133 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (fn) {
     return typeof fn === 'function';
 }
 },
-1125 : (module, exports, __required, global) => {
+1134 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str) {
     return str && typeof str === 'string' && '{['.indexOf(str.charAt(0)) > -1 && '}]'.indexOf(str.charAt(str.length - 1)) > -1;
 }
 },
-1126 : (module, exports, __required, global) => {
+1135 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (val) {
     return null === val;
 }
 },
-1127 : (module, exports, __required, global) => {
+1136 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (n) {
     return Number(n) === n && n % 1 === 0;
 }
 },
-1128 : (module, exports, __required, global) => {
+1137 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (obj) {
     return typeof obj === 'object' && obj instanceof Object && Object.prototype.toString.call(obj) === '[object Object]';
 }
 ;
 },
-1129 : (module, exports, __required, global) => {
+1138 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (val) {
     return typeof val === 'undefined';
 }
 },
-1130 : (module, exports, __required, global) => {
+1139 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (list, item, index) {
     if (index >= list.length) {
@@ -223,7 +223,7 @@ exports.default = function (list, item, index) {
     }
 }
 },
-1131 : (module, exports, __required, global) => {
+1140 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (list, index) {
     if (index >= list.length - 1) {
@@ -233,35 +233,51 @@ exports.default = function (list, index) {
     }
 }
 },
-1132 : (module, exports, __required, global) => {
+1141 : (module, exports, __required, global) => {
+"use strict";
+exports.default = moveItemInArray;
+function moveItemInArray(arr, from, to) {
+    if (!(arr instanceof Array))
+        return;
+    arr.splice(to, 0, arr.splice(from, 1)[0]);
+}
+},
+1142 : (module, exports, __required, global) => {
 "use strict";
 
-exports.removeFromArray = __required(1131, 'default');
-exports.addToArray = __required(1130, 'default');
-exports.isundefined = __required(1129, 'default');
-exports.isstring = __required(1115, 'default');
-exports.isobject = __required(1128, 'default');
-exports.isnumber = __required(1127, 'default');
-exports.isnull = __required(1126, 'default');
-exports.isjsonstring = __required(1125, 'default');
-exports.isfunction = __required(1124, 'default');
-exports.isfloat = __required(1123, 'default');
-exports.isequal = __required(1122, 'default');
-exports.isempty = __required(1121, 'default');
-exports.isdouble = __required(1120, 'default');
-exports.isdefined = __required(1119, 'default');
-exports.isboolean = __required(1118, 'default');
-exports.isarray = __required(1116, 'default');
-exports.inarray = __required(1117, 'default');
+exports.moveItemInArray = __required(1141, 'default');
+exports.removeFromArray = __required(1140, 'default');
+exports.addToArray = __required(1139, 'default');
+exports.isundefined = __required(1138, 'default');
+exports.isstring = __required(1124, 'default');
+exports.isobject = __required(1137, 'default');
+exports.isnumber = __required(1136, 'default');
+exports.isnull = __required(1135, 'default');
+exports.isjsonstring = __required(1134, 'default');
+exports.isfunction = __required(1133, 'default');
+exports.isfloat = __required(1132, 'default');
+exports.isequal = __required(1131, 'default');
+exports.isempty = __required(1130, 'default');
+exports.isdouble = __required(1129, 'default');
+exports.isdefined = __required(1128, 'default');
+exports.isboolean = __required(1127, 'default');
+exports.isarray = __required(1125, 'default');
+exports.inarray = __required(1126, 'default');
 },
-1133 : (module, exports, __required, global) => {
+1143 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'LazyLoader', () => LazyLoader);
 __required.r(exports, 'InterceptorResolver', () => InterceptorResolver);
 __required.r(exports, 'IterableProfiler', () => IterableProfiler);
 __required.r(exports, 'ComponentFactoryResolver', () => ComponentFactoryResolver);
+__required.r(exports, 'MediaQueryEvent', () => MediaQueryEvent);
+__required.r(exports, 'EventDebounce', () => EventDebounce);
 __required.r(exports, 'rxInterval', () => rxInterval);
 __required.r(exports, 'rxTimeout', () => rxTimeout);
+__required.r(exports, 'rxLoop', () => rxLoop);
+__required.r(exports, 'rxEvents', () => rxEvents);
+__required.r(exports, 'rxWait', () => rxWait);
+__required.r(exports, 'rxUntilChanged', () => rxUntilChanged);
 __required.r(exports, 'rxWhile', () => rxWhile);
 __required.r(exports, 'rxDebounceTime', () => rxDebounceTime);
 __required.r(exports, 'debounce', () => debounce);
@@ -269,7 +285,9 @@ __required.r(exports, 'EventManager', () => EventManager);
 __required.r(exports, 'Promise2', () => Promise2);
 __required.r(exports, 'EventEmitter', () => EventEmitter);
 __required.r(exports, 'StateManager', () => StateManager);
+__required.r(exports, 'animate', () => animate);
 __required.r(exports, 'interpolationHelper', () => interpolationHelper);
+__required.r(exports, 'ProxyEvent', () => ProxyEvent);
 __required.r(exports, 'CustomEventHandler', () => CustomEventHandler);
 __required.r(exports, 'TextNodeRef', () => TextNodeRef);
 __required.r(exports, 'ViewRef', () => ViewRef);
@@ -281,22 +299,26 @@ __required.r(exports, 'Subject', () => Subject);
 __required.r(exports, 'QueryList', () => QueryList);
 __required.r(exports, 'ElementClassList', () => ElementClassList);
 __required.r(exports, 'ElementStyle', () => ElementStyle);
+__required.r(exports, 'sce', () => sce);
 __required.r(exports, 'AttributeAppender', () => AttributeAppender);
 __required.r(exports, 'DOMHelper', () => DOMHelper);
+__required.r(exports, 'getElementContext', () => getElementContext);
 __required.r(exports, 'createLocalVariables', () => createLocalVariables);
 __required.r(exports, 'setupAttributeObservers', () => setupAttributeObservers);
 __required.r(exports, 'ObserveUntilDestroyed', () => ObserveUntilDestroyed);
 __required.r(exports, 'elementMutationObserver', () => elementMutationObserver);
-__required.r(exports, 'sce', () => sce);
 __required.r(exports, 'scheduler', () => scheduler);
 __required.r(exports, 'ViewParser', () => ViewParser);
-__required.r(exports, 'ElementRef', () => ElementRef);
-__required.r(exports, 'bootstrapFromDOM', () => bootstrapFromDOM);
 __required.r(exports, 'ChangeDetector', () => ChangeDetector);
 __required.r(exports, 'compileModule', () => compileModule);
 __required.r(exports, 'bootStrapApplication', () => bootStrapApplication);
+__required.r(exports, 'APP_ASSET_URL', () => APP_ASSET_URL);
+__required.r(exports, 'APP_BASE_HREF', () => APP_BASE_HREF);
 __required.r(exports, 'APP_BOOTSTRAP', () => APP_BOOTSTRAP);
 __required.r(exports, 'INITIALIZERS', () => INITIALIZERS);
+__required.r(exports, 'ElementRef', () => ElementRef);
+__required.r(exports, 'CompileNativeElement', () => CompileNativeElement);
+__required.r(exports, 'createCustomElement', () => createCustomElement);
 __required.r(exports, 'Observer', () => Observer);
 __required.r(exports, 'staticInjectionToken', () => staticInjectionToken);
 __required.r(exports, 'TemplateRef', () => TemplateRef);
@@ -312,20 +334,27 @@ __required.r(exports, 'AutoWire', () => AutoWire);
 __required.r(exports, 'Inject', () => Inject);
 __required.r(exports, 'ProviderToken', () => ProviderToken);
 __required.r(exports, 'errorBuilder', () => errorBuilder);
-var helpers = __required(1132);
+var helpers = __required(1142);
 var isnumber = helpers.isnumber;
 var isarray = helpers.isarray;
 var isnull = helpers.isnull;
 var isundefined = helpers.isundefined;
 var isboolean = helpers.isboolean;
+var inarray = helpers.inarray;
+var moveItemInArray = helpers.moveItemInArray;
 var addToArray = helpers.addToArray;
 var removeFromArray = helpers.removeFromArray;
-var inarray = helpers.inarray;
 var isstring = helpers.isstring;
 var isequal = helpers.isequal;
 var isobject = helpers.isobject;
 var isfunction = helpers.isfunction;
-var __buildOptions = {};
+var __buildOptions = {
+    'buildTime': 1734326607082,
+    'version': '1.0.0',
+    'baseHref': '',
+    'assetURL': '',
+    'production': false
+};
 function errorBuilder(error, logLevel, stack) {
     var loggerLevel = void 0 == logLevel ? 0 : logLevel;
     var logLevelMethods = [
@@ -362,6 +391,12 @@ function resolveClosureRef(ref) {
     }
 }
 ;
+resolveClosureRef.factory = function (token, localInjector) {
+    var args = resolveDeps(token.DI, localInjector);
+    return function () {
+        return resolveClosureRef(token.factory).apply(null, args);
+    };
+};
 function noop(callback) {
     return callback || function () {
     };
@@ -434,21 +469,26 @@ function Inject(dep, localInjector) {
     return null;
 }
 ;
-function AutoWire(factory, localInjector, callback) {
-    if (isfunction(factory)) {
-        var deps = resolveDeps(factory.ctors && factory.ctors.DI, localInjector);
-        var protos = Object.create(factory.prototype);
-        var result = factory.apply(protos, deps) || protos;
-        if (existingInstance.has(factory)) {
-            existingInstance.set(factory, result);
+function AutoWire(constructorFN, localInjector, callback) {
+    if (isfunction(constructorFN)) {
+        var deps = resolveDeps(constructorFN.ctors && constructorFN.ctors.DI, localInjector);
+        var result = null;
+        if ('Reflect' in window) {
+            result = Reflect.construct(constructorFN, deps);
+        } else {
+            var protos = Object.create(constructorFN.prototype);
+            var result = constructorFN.apply(protos, deps) || protos;
+        }
+        if (existingInstance.has(constructorFN)) {
+            existingInstance.set(constructorFN, result);
         }
         if (isfunction(callback)) {
             return callback(result);
         }
         return result;
     }
-    factory = resolveTokenBase(factory, localInjector);
-    return factory;
+    constructorFN = resolveTokenBase(constructorFN, localInjector);
+    return constructorFN;
 }
 ;
 function wireResolvers(deps, localInjector) {
@@ -510,78 +550,83 @@ function resolveReference(reference, localInjector) {
         return reference;
     }
 }
-resolveClosureRef.factory = function (token, localInjector) {
-    var args = resolveDeps(token.DI, localInjector);
-    return function () {
-        return resolveClosureRef(token.factory).apply(null, args);
-    };
-};
-function AbstractInjectorInstance() {
-    this.injectors = {};
-    this.has = function (injectorToken) {
+class AbstractInjectorInstance {
+    constructor(injector) {
+        this.injectors = injector || {};
+    }
+    has(injectorToken) {
         return this.injectors.hasOwnProperty(injectorToken);
-    };
+    }
+    set(tokenName, value) {
+        this.injectors[tokenName] = value;
+    }
+    get(injectorToken) {
+        return this.injectors[injectorToken];
+    }
+    destroy() {
+        this.injectors = null;
+    }
 }
-AbstractInjectorInstance.prototype.set = function (tokenName, value) {
-    this.injectors[tokenName] = value;
-};
-AbstractInjectorInstance.prototype.get = function (injectorToken) {
-    return this.injectors[injectorToken];
-};
-AbstractInjectorInstance.prototype.destroy = function () {
-    this.injectors = null;
-};
 var LifeCycleConst = {
     willObserve: 0,
     didChange: 1,
     didInit: 2,
     viewDidLoad: 3,
-    viewDidDestroy: 4
+    viewDidDestroy: 4,
+    AfterViewLoad: 5
 };
 var LifeCycleKeys = Object.keys(LifeCycleConst);
-function LifeCycle(componentInstance) {
-    var _cycleState = {
-        didInit: !!componentInstance.didInit,
-        viewDidLoad: !!componentInstance.viewDidLoad,
-        viewDidDestroy: !!componentInstance.viewDidDestroy,
-        willObserve: !!componentInstance.willObserve,
-        didChange: !!componentInstance.didChange
-    };
-    this.has = function (cycle) {
-        return _cycleState[cycle] && isfunction(componentInstance[cycle]);
-    };
-    this.trigger = function (cycle, args) {
-        var cycleId = LifeCycleKeys[cycle];
-        if (this.has(cycleId)) {
-            componentInstance[cycleId](args);
-        }
-    };
-}
-function TemplateRef(templates, isContentChild) {
-    this.createElement = function (parentNode, viewContainer, context) {
-        return ViewParser.builder[templates.type](templates, parentNode, viewContainer, context);
-    };
-    this.getContext = function () {
-        return templates.context;
-    };
-    this.forEach = function (selector, callback) {
-        if (templates.hasOwnProperty(selector)) {
-            templates[selector].forEach(tmpl => callback(isfunction(tmpl) ? tmpl() : tmpl));
-        }
-    };
-}
-TemplateRef.factory = function (node, templateId, silent) {
-    var templates = node['[[tmpl]]'];
-    if (!templates || !templates.hasOwnProperty(templateId)) {
-        if (!silent)
-            errorBuilder('No templates Defined #' + templateId);
-        return null;
+class LifeCycle {
+    constructor(componentInstance) {
+        var _cycleState = {
+            didInit: !!componentInstance.didInit,
+            viewDidLoad: !!componentInstance.viewDidLoad,
+            viewDidDestroy: !!componentInstance.viewDidDestroy,
+            willObserve: !!componentInstance.willObserve,
+            didChange: !!componentInstance.didChange,
+            afterViewLoad: !!componentInstance.afterViewLoad
+        };
+        this.has = function (cycle) {
+            return _cycleState[cycle] && isfunction(componentInstance[cycle]);
+        };
+        this.trigger = function (cycle, args) {
+            var cycleId = LifeCycleKeys[cycle];
+            if (this.has(cycleId)) {
+                componentInstance[cycleId](args);
+            }
+        };
     }
-    if (typeof templates[templateId] === 'function') {
-        templates[templateId] = templates[templateId]();
+}
+class TemplateRef {
+    constructor(templates) {
+        this.createElement = function (parentNode, viewContainer, context) {
+            return ViewParser.builder[templates.type](templates, parentNode, viewContainer, context);
+        };
+        this.getContext = function () {
+            return templates.context;
+        };
+        this.forEach = function (selector, callback) {
+            var tmplCallback = tmpl => callback(isfunction(tmpl) ? tmpl() : tmpl);
+            if (typeof templates == 'function')
+                return templates(selector, tmplCallback);
+            if (templates.hasOwnProperty(selector)) {
+                templates[selector].forEach(tmplCallback);
+            }
+        };
     }
-    return new TemplateRef(templates[templateId]);
-};
+    static factory(node, templateId, silent) {
+        var templates = node.internal_getDefinition('templates');
+        if (!templates || !templates.hasOwnProperty(templateId)) {
+            if (!silent)
+                errorBuilder('No templates Defined #' + templateId);
+            return null;
+        }
+        if (typeof templates[templateId] === 'function') {
+            templates[templateId] = templates[templateId]();
+        }
+        return new TemplateRef(templates[templateId]);
+    }
+}
 var staticInjectionToken = {
     ElementRef: 'ElementRef',
     TemplateRef: 'TemplateRef',
@@ -593,45 +638,58 @@ var staticInjectionToken = {
     QueryList: 'QueryList',
     Function: 'Function',
     HostRef: 'HostRef',
-    HTMLElement: 'HTMLElement'
+    HTMLElement: 'HTMLElement',
+    ContentHostRef: 'ContentHostRef',
+    HostElement: 'HostElement'
 };
-function ComponentInjectors(elementRef, selector) {
-    AbstractInjectorInstance.call(this, elementRef);
-    this.injectors.ElementRef = elementRef;
-    this.injectors.Selector = selector;
-    this.has = function (tokenName) {
-        return this.injectors.hasOwnProperty(tokenName) || staticInjectionToken.hasOwnProperty(tokenName);
-    };
-}
-ComponentInjectors.prototype = Object.create(AbstractInjectorInstance.prototype);
-ComponentInjectors.prototype.constructor = AbstractInjectorInstance;
-ComponentInjectors.prototype.destroy = function () {
-    this.injectors.ElementRef = null;
-    this.injectors = null;
-    this.currentClassAnnotations = null;
-};
-ComponentInjectors.prototype.get = function (dep) {
-    if (this.injectors.hasOwnProperty(dep.tokenName))
-        return this.injectors[dep.tokenName];
-    else if (staticInjectionToken[dep.tokenName])
-        return _ComponentInjectionToken(dep, this);
-};
-function _ComponentInjectionToken(dep, context) {
-    switch (dep.tokenName) {
-    case staticInjectionToken.TemplateRef:
-        return TemplateRef.factory(context.injectors.ElementRef, context.get({ tokenName: 'Selector' }));
-    case staticInjectionToken.changeDetector:
-        return context.injectors.ElementRef.changeDetector;
-    case staticInjectionToken.ViewRef:
-        return new ViewRef(context.injectors.ElementRef);
-    case staticInjectionToken.ParentRef: {
-            if (dep.value) {
-                return findParentRef(context.injectors.ElementRef.parent, dep);
-            }
-            return context.injectors.ElementRef.parent.componentInstance;
+var staticInjectionTokenHandlers = {
+    TemplateRef: context => TemplateRef.factory(context.injectors.ElementRef, context.get({ tokenName: 'Selector' })),
+    changeDetector: context => context.injectors.ElementRef.changeDetector,
+    ViewRef: context => new ViewRef(context.injectors.ElementRef),
+    ParentRef: (context, dep) => {
+        if (dep.value) {
+            return findParentRef(context.injectors.ElementRef.parent, dep);
         }
-    case staticInjectionToken.VALIDATORS:
-        return getValidators(context.injectors.ElementRef);
+        return context.injectors.ElementRef.parent.componentInstance;
+    },
+    VALIDATORS: context => getValidators(context.injectors.ElementRef),
+    ContentHostRef: context => {
+        var componentRef = ComponentRef.get(context.injectors.ElementRef.contentHostRefId);
+        return componentRef.componentInstance;
+    },
+    HostElement: context => {
+        var nativeElement = context.injectors.ElementRef.nativeElement;
+        var hRefId = 'jl-' + context.injectors.ElementRef.refId;
+        nativeElement.setAttribute(hRefId, '');
+        return Object.defineProperty({}, 'nativeElement', {
+            get: () => {
+                var ele = document.querySelector('[' + hRefId + ']');
+                if (ele && nativeElement)
+                    nativeElement == null;
+                return ele || nativeElement;
+            }
+        });
+    }
+};
+class ComponentInjectors extends AbstractInjectorInstance {
+    constructor(elementRef, selector) {
+        super(elementRef);
+        this.injectors.ElementRef = elementRef;
+        this.injectors.Selector = selector;
+    }
+    has(tokenName) {
+        return this.injectors.hasOwnProperty(tokenName) || staticInjectionToken.hasOwnProperty(tokenName);
+    }
+    destroy() {
+        this.injectors.ElementRef = null;
+        this.injectors = null;
+        this.currentClassAnnotations = null;
+    }
+    get(dep) {
+        if (this.injectors.hasOwnProperty(dep.tokenName))
+            return this.injectors[dep.tokenName];
+        else if (staticInjectionToken[dep.tokenName])
+            return staticInjectionTokenHandlers[dep.tokenName](this, dep);
     }
 }
 function getValidators(elementRef) {
@@ -657,44 +715,51 @@ function findParentRef(parentRef, refInstance) {
     }
     return parentRef.nodes.get(selector);
 }
-function elementInputLinker(componentInstance, elementRef, lifeCycle, definition) {
+function elementInputLinker(componentInstance, elementRef, lifeCycle, ctors) {
     lifeCycle.trigger(LifeCycleConst.willObserve);
     var propChanges = null;
     var registeredProperty = {};
-    var isPrimitive = [];
+    var ignoreChecks = [];
     var always = false;
-    if (definition.props) {
+    var elementProps = elementRef.internal_getDefinition('props');
+    var asNative = elementRef.internal_getDefinition('asNative');
+    if (ctors.props)
         always = _updateViewBinding();
+    function getContext() {
+        if (elementRef.hasContext) {
+            return elementRef.context;
+        } else {
+            return (isequal(elementRef.parent.type, 8) && !elementRef.isc ? elementRef : elementRef.parent).context;
+        }
     }
     function _updateViewBinding() {
         var hasBinding = false;
-        var context = null;
-        if (elementRef.hasContext) {
-            context = elementRef.context;
-        } else {
-            context = (isequal(elementRef.parent.type, 8) && !elementRef.isc ? elementRef : elementRef.parent).context;
-        }
-        for (var prop in definition.props) {
-            if (isPrimitive.includes(prop))
+        for (var prop in ctors.props) {
+            if (ignoreChecks.includes(prop))
                 continue;
-            var item = definition.props[prop];
+            var item = ctors.props[prop];
             var name = item.value || prop;
             var value;
-            if (elementRef.props && elementRef.props.hasOwnProperty(name)) {
+            if (asNative) {
+                setValue(prop, elementRef.getProps(prop));
+                continue;
+            }
+            if (elementProps && elementProps.hasOwnProperty(name)) {
+                var context = getContext();
                 try {
-                    if (isobject(elementRef.props[name])) {
+                    if (isobject(elementProps[name])) {
                         hasBinding = true;
-                        value = getFilteredTemplateValue(elementRef.props[name], context, elementRef.parent.componentInstance);
+                        value = getFilteredTemplateValue(elementProps[name], context, elementRef.parent.componentInstance);
                     } else {
-                        value = getPrimitiveValue(item.type, name, elementRef.props[name]);
-                        isPrimitive.push(prop);
+                        value = getPrimitiveValue(item.type, name, elementProps[name]);
+                        ignoreChecks.push(prop);
                     }
                     setValue(prop, value);
                 } catch (e) {
                     console.error(e);
                 }
             } else if (elementRef.hasAttribute(name)) {
-                isPrimitive.push(prop);
+                ignoreChecks.push(prop);
                 setValue(prop, elementRef.attr[name]);
             }
         }
@@ -757,28 +822,40 @@ function elementInputLinker(componentInstance, elementRef, lifeCycle, definition
         },
         done: function () {
             registeredProperty = null;
-            isPrimitive.length = 0;
+            ignoreChecks.length = 0;
+            elementProps = null;
         }
     });
 }
 function ElementCompiler(factory, elementRef, componentInjectors, next) {
     var ctors = factory.ctors;
+    var asNative = elementRef.internal_getDefinition('asNative');
     var lifeCycle;
-    function CoreComponentCompiler(componentInstance) {
-        if (!elementRef.isc) {
-            return;
-        }
-        var componentRef = componentDebugContext.get(elementRef.refId);
+    function ConnectView(componentInstance) {
+        var componentRef = ComponentRef.get(elementRef.refId);
         componentRef.componentInstance = componentInstance;
         if (factory.view) {
             try {
                 var renderedElement = factory.view(elementRef);
-                elementMutationObserver(elementRef.nativeElement, function (mutationList, observer) {
+                var triggerAndBindCQ = () => {
                     AttachComponentContentQuery(elementRef);
-                    lifeCycle && lifeCycle.trigger(LifeCycleConst.viewDidLoad);
-                    observer.disconnect();
-                });
-                elementRef.nativeElement.appendChild(renderedElement);
+                    lifeCycle.trigger(LifeCycleConst.viewDidLoad);
+                };
+                if (!asNative) {
+                    elementMutationObserver(elementRef.nativeElement, (mutationList, observer) => {
+                        triggerAndBindCQ();
+                        observer.disconnect();
+                    });
+                    elementRef.nativeElement.appendChild(renderedElement);
+                } else {
+                    if (ctors.useShadowDom) {
+                        var shadow = elementRef.nativeElement.attachShadow({ mode: 'open' });
+                        shadow.appendChild(renderedElement);
+                    } else {
+                        elementRef.nativeElement.appendChild(renderedElement);
+                    }
+                    triggerAndBindCQ();
+                }
                 elementRef.changeDetector.detectChanges();
             } catch (e) {
                 errorBuilder(e);
@@ -792,49 +869,49 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
         });
         componentRef.changeDetector.detectChanges(true, true);
     }
-    function compileEventsRegistry(componentInstance) {
+    function eventsRegistry(componentInstance) {
+        var actions = {
+            event: name => elementRef.events._events.push(Object.assign({ name }, ctors.events[name])),
+            emitter: name => EventHandler.attachEventEmitter(elementRef, name, componentInstance),
+            dispatcher: name => EventHandler.attachEventDispatcher(elementRef, name, componentInstance)
+        };
         if (ctors.events) {
-            Object.keys(ctors.events).forEach(_registry);
-        }
-        function _registry(evName) {
-            switch (ctors.events[evName].type) {
-            case 'event':
-                EventHandler.attachEvent(elementRef.events, evName, ctors.events[evName].value, componentInstance);
-                break;
-            case 'emitter':
-                EventHandler.attachEventEmitter(elementRef, evName, componentInstance);
-                break;
-            case 'dispatcher':
-                EventHandler.attachEventDispatcher(elementRef, evName, componentInstance);
-                break;
+            for (var name in ctors.events) {
+                if (actions[ctors.events[name].type]) {
+                    actions[ctors.events[name].type](name);
+                }
+            }
+            if (!factory.view && ctors.asNative) {
+                EventHandler.registerListener(elementRef);
             }
         }
     }
     function registerDirectiveInstance(componentInstance) {
-        if (!elementRef.isc) {
-            elementRef.nodes.set(factory.ctors.exportAs || ctors.selector, componentInstance);
-            lifeCycle && lifeCycle.trigger(LifeCycleConst.viewDidLoad);
-            attachElementObserver(elementRef, function () {
-                lifeCycle.trigger(LifeCycleConst.viewDidDestroy);
-                elementRef.nodes.delete(ctors.selector);
-            });
-        }
+        if (elementRef.isc)
+            return;
+        elementRef.nodes.set(factory.ctors.exportAs || ctors.selector, componentInstance);
+        lifeCycle.trigger(LifeCycleConst.viewDidLoad);
+        attachElementObserver(elementRef, function () {
+            lifeCycle.trigger(LifeCycleConst.viewDidDestroy);
+            elementRef.nodes.delete(ctors.selector);
+        });
     }
-    ComponentFactoryInitializer(factory, componentInjectors, function triggerInstance(componentInstance) {
-        compileEventsRegistry(componentInstance);
+    ElementFactoryInitializer(factory, componentInjectors, function triggerInstance(componentInstance) {
+        eventsRegistry(componentInstance);
         lifeCycle = new LifeCycle(componentInstance);
         elementInputLinker(componentInstance, elementRef, lifeCycle, ctors);
         lifeCycle.trigger(LifeCycleConst.didInit);
         registerDirectiveInstance(componentInstance);
         next(componentInstance);
-        CoreComponentCompiler(componentInstance);
+        if (elementRef.isc)
+            ConnectView(componentInstance);
     });
 }
 ElementCompiler.resolve = function (node, nextTick) {
     var inc = 0;
     var componentInjectors = new ComponentInjectors(node);
     function next() {
-        var factory = node.providers[inc];
+        var factory = node.providers && node.providers[inc];
         inc++;
         if (factory) {
             componentInjectors.set('Selector', factory.ctors.selector);
@@ -850,7 +927,7 @@ ElementCompiler.resolve = function (node, nextTick) {
     }
     next(null);
 };
-function ComponentFactoryInitializer(factory, injectorInstance, CB) {
+function ElementFactoryInitializer(factory, injectorInstance, CB) {
     wireResolvers(factory.ctors.resolve, injectorInstance);
     AutoWire(factory, injectorInstance, function (instance) {
         try {
@@ -861,221 +938,400 @@ function ComponentFactoryInitializer(factory, injectorInstance, CB) {
     });
 }
 ;
-function Observer() {
-    this.$notifyInProgress = 0;
-    this.bindingIdx = 0;
-    this.retry = false;
-    this._entries = new Map();
-}
-Observer.prototype.subscribe = function (callback) {
-    var self = this, bindingIdx = this.bindingIdx++;
-    this.retry = true;
-    this._entries.set(bindingIdx, {
-        handler: callback,
-        state: false
-    });
-    return function () {
-        self._entries.delete(bindingIdx);
-    };
-};
-Observer.prototype.observeForKey = function (key, callback, core) {
-    var index = 0;
-    var self = this;
-    var keyObserver;
-    if (!this._entries.has(key)) {
-        this._entries.push(key, {
-            watchKey: key,
-            handler: [callback],
-            core: core,
+class Observer {
+    constructor() {
+        this.$notifyInProgress = 0;
+        this.bindingIdx = 0;
+        this.retry = false;
+        this._entries = new Map();
+    }
+    subscribe(callback) {
+        var self = this, bindingIdx = this.bindingIdx++;
+        this.retry = true;
+        this._entries.set(bindingIdx, {
+            handler: callback,
             state: false
         });
-    } else {
-        keyObserver = this.get(key);
-        index = keyObserver.length;
-        keyObserver.handler.push(fn);
+        return function () {
+            self._entries.delete(bindingIdx);
+        };
     }
-    return function () {
-        if (!index) {
-            self._entries.delete(key);
+    observeForKey(key, callback, core) {
+        var index = 0;
+        var self = this;
+        var keyObserver;
+        if (!this._entries.has(key)) {
+            this._entries.push(key, {
+                watchKey: key,
+                handler: [callback],
+                core: core,
+                state: false
+            });
         } else {
-            keyObserver.handler.splice(index, 1);
+            keyObserver = this.get(key);
+            index = keyObserver.length;
+            keyObserver.handler.push(fn);
         }
-    };
-};
-Observer.prototype.notifyAllObservers = function (model, ignoreCheck) {
-    if (this.$notifyInProgress) {
-        this.retry = true;
-        return;
+        return function () {
+            if (!index) {
+                self._entries.delete(key);
+            } else {
+                keyObserver.handler.splice(index, 1);
+            }
+        };
     }
-    this.$notifyInProgress = true;
-    this._entries.forEach(function (subscription) {
-        rxNotify(subscription, model, ignoreCheck);
-    });
-    if (this.retry) {
-        this.retry = false;
-        this.notifyAllObservers(model);
-    }
-    this.$notifyInProgress = false;
-};
-Observer.prototype.destroy = function () {
-    this._entries.clear();
-    this.notifyAllObservers = 0;
-    this.retry = false;
-};
-function InternalChangeDetector(context) {
-    this._changeDetectorState = 3;
-    Object.defineProperty(this, 'status', {
-        get: function () {
-            return _changeDetectorState;
-        }
-    });
-    this.detectChanges = function () {
-        if (this._changeDetectorState == 3) {
-            tick.apply(null, arguments);
-        }
-    };
-    function tick(ignoreChild, ignoreParent) {
-        if (!context.observables) {
+    notifyAllObservers(model, ignoreCheck) {
+        if (this.$notifyInProgress) {
+            this.retry = true;
             return;
         }
-        if (context.parent && !ignoreParent && componentDebugContext.has(context.parent)) {
-            var parent = componentDebugContext.get(context.parent);
-            parent.changeDetector.detectChanges(true);
-            triggerChild(parent.child, []);
+        this.$notifyInProgress = true;
+        this._entries.forEach(function (subscription) {
+            rxNotify(subscription, model, ignoreCheck);
+        });
+        if (this.retry) {
+            this.retry = false;
+            this.notifyAllObservers(model);
         }
-        context.observables && context.observables.notifyAllObservers(context.componentInstance);
-        if (!ignoreChild) {
-            triggerChild(context.child, []);
-        }
-        function triggerChild(children, ignore) {
-            for (var i = 0; i < children.length; i++) {
-                var refId = children[i];
-                if (!ignore.includes(refId) && componentDebugContext.has(refId)) {
-                    var child = componentDebugContext.get(refId);
-                    child.changeDetector.onlySelf();
+        this.$notifyInProgress = false;
+    }
+    destroy() {
+        this._entries.clear();
+        this.notifyAllObservers = 0;
+        this.retry = false;
+    }
+}
+class InternalChangeDetector {
+    constructor(context) {
+        this._changeDetectorState = 3;
+        this.detectChanges = function () {
+            if (this._changeDetectorState == 3) {
+                tick.apply(null, arguments);
+            }
+        };
+        function tick(ignoreChild, ignoreParent) {
+            if (!context.observables) {
+                return;
+            }
+            if (context.parent && !ignoreParent && componentDebugContext.has(context.parent)) {
+                var parent = componentDebugContext.get(context.parent);
+                parent.changeDetector.detectChanges(true);
+                triggerChild(parent.child, [], context.parent);
+            }
+            context.observables && context.observables.notifyAllObservers(context.componentInstance);
+            if (!ignoreChild) {
+                triggerChild(context.child, [], context.parent);
+            }
+            function triggerChild(children, ignore, parentRef) {
+                for (var refId of children) {
+                    if (componentDebugContext.has(parentRef) && !ignore.includes(refId) && componentDebugContext.has(refId)) {
+                        var child = componentDebugContext.get(refId);
+                        child.changeDetector.onlySelf();
+                    }
                 }
             }
         }
+        ;
     }
-    ;
+    get status() {
+        return this._changeDetectorState;
+    }
+    onlySelf() {
+        this.detectChanges(false, true);
+    }
+    markAsChecked() {
+        this._changeDetectorState = 1;
+    }
+    markAsUnChecked() {
+        this._changeDetectorState = 3;
+    }
+    markAsOnce() {
+        this._changeDetectorState = 2;
+    }
 }
-InternalChangeDetector.prototype.onlySelf = function () {
-    this.detectChanges(false, true);
-};
-InternalChangeDetector.prototype.markAsChecked = function () {
-    this._changeDetectorState = 1;
-};
-InternalChangeDetector.prototype.markAsUnChecked = function () {
-    this._changeDetectorState = 3;
-};
-InternalChangeDetector.prototype.markAsOnce = function () {
-    this._changeDetectorState = 2;
-};
 var componentDebugContext = new Map();
-function ComponentRef(refId, context) {
-    this.componentRefId = refId;
-    this.observables = new Observer();
-    this.child = [];
-    this.parent = null;
-    this.changeDetector = new InternalChangeDetector(this);
-    this._componentInstance = null;
-    this._context = context || null;
-    Object.defineProperties(this, {
-        context: {
-            get: function () {
-                if (this._context) {
-                    return this._context;
-                }
-                return this.componentInstance;
-            }
-        },
-        componentInstance: {
-            get: function () {
-                if (!this._componentInstance && this.parent && componentDebugContext.has(this.parent)) {
-                    return componentDebugContext.get(this.parent).componentInstance;
-                }
-                return this._componentInstance;
-            },
-            set: function (componentInstance) {
-                this._componentInstance = componentInstance;
-            }
+class ComponentRef {
+    constructor(refId, context) {
+        this.componentRefId = refId;
+        this.observables = new Observer();
+        this.child = [];
+        this.parent = null;
+        this.changeDetector = new InternalChangeDetector(this);
+        this._componentInstance = null;
+        this._context = context || null;
+    }
+    get context() {
+        if (this._context) {
+            return this._context;
         }
-    });
-}
-ComponentRef.prototype.removeChild = function (refId) {
-    this.child.splice(this.child.indexOf(refId), 1);
-    componentDebugContext.delete(refId);
-};
-ComponentRef.prototype.updateModel = function (propName, value) {
-    if (isobject(propName)) {
-        for (var prop in propName) {
-            setModelValue(prop, this.context, propName[name]);
+        return this.componentInstance;
+    }
+    get componentInstance() {
+        if (!this._componentInstance && this.parent && componentDebugContext.has(this.parent)) {
+            return componentDebugContext.get(this.parent).componentInstance;
         }
-    } else {
-        setModelValue(propName, this.context, value);
+        return this._componentInstance;
     }
-    this.changeDetector.detectChanges(false, true);
-    return this;
-};
-ComponentRef.prototype.destroy = function () {
-    if (!componentDebugContext.has(this.componentRefId))
-        return;
-    this.changeDetector.markAsChecked();
-    componentDebugContext.delete(this.componentRefId);
-    if (this.parent && componentDebugContext.has(this.parent)) {
-        componentDebugContext.get(this.parent).removeChild(this.componentRefId);
+    set componentInstance(value) {
+        this._componentInstance = value;
     }
-    this._componentInstance = null;
-    this._context = null;
-    this.observables.destroy();
-    this.changeDetector = null;
-    this.observables = null;
-    this.parent = null;
-    this.child.length = 0;
-};
-ComponentRef.create = function (refId, parentId, context) {
-    var componentRef = componentDebugContext.get(refId);
-    if (!componentRef) {
-        componentRef = new ComponentRef(refId, context);
-        componentDebugContext.set(refId, componentRef);
-    } else {
-        componentRef._context = context || null;
+    static create(refId, parentId, context) {
+        var componentRef = componentDebugContext.get(refId);
+        if (!componentRef) {
+            componentRef = new ComponentRef(refId, context);
+            componentDebugContext.set(refId, componentRef);
+        } else {
+            componentRef._context = context || null;
+        }
+        if (componentDebugContext.has(parentId) && parentId != refId) {
+            componentRef.parent = parentId;
+            componentDebugContext.get(parentId).child.push(refId);
+        }
+        componentRef = null;
     }
-    if (parentId && componentDebugContext.has(parentId)) {
-        componentRef.parent = parentId;
-        componentDebugContext.get(parentId).child.push(refId);
+    static get(refId, hostRefId) {
+        return componentDebugContext.get(refId) || componentDebugContext.get(hostRefId) || {};
     }
-    componentRef = null;
-};
-ComponentRef.get = function (refId, hostRefId) {
-    return componentDebugContext.get(refId) || componentDebugContext.get(hostRefId) || {};
-};
-function ElementRef(definition, parent, _lazyCompiled) {
-    AbstractElementRef.call(this, definition, parent);
-    this.events = new EventHandler((definition.events || []).slice());
-    this._lazyCompiled = _lazyCompiled;
-    if (definition.isc) {
-        ComponentRef.create(this.refId, parent && parent.hostRef.refId);
+    static has(refId) {
+        return componentDebugContext.has(refId);
     }
-    if (definition.attr$) {
-        setupAttributeObservers(this, definition.attr$);
+    removeChild(refId) {
+        this.child.splice(this.child.indexOf(refId), 1);
+        componentDebugContext.delete(refId);
+    }
+    updateModel(propName, value) {
+        if (isobject(propName)) {
+            for (var prop in propName) {
+                setModelValue(prop, this.context, propName[name]);
+            }
+        } else {
+            setModelValue(propName, this.context, value);
+        }
+        this.changeDetector.detectChanges(false, true);
+        return this;
+    }
+    destroy() {
+        if (!componentDebugContext.has(this.componentRefId))
+            return;
+        this.changeDetector.markAsChecked();
+        componentDebugContext.delete(this.componentRefId);
+        if (this.parent && componentDebugContext.has(this.parent)) {
+            componentDebugContext.get(this.parent).removeChild(this.componentRefId);
+        }
+        this._componentInstance = null;
+        this._context = null;
+        this.observables.destroy();
+        this.changeDetector = null;
+        this.observables = null;
+        this.parent = null;
+        this.child.length = 0;
     }
 }
-ElementRef.prototype = Object.create(AbstractElementRef.prototype);
-ElementRef.prototype.constructor = AbstractElementRef;
-function bootstrapFromDOM(componentClass, selector, callback) {
+var $eUID = 1;
+var $elementContext = '__jContext__';
+var $elementContainer = new Map();
+class AbstractElementRef {
+    constructor(definition, parentRef) {
+        var localVariables = null;
+        this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
+        this.$observers = [];
+        this.refId = $eUID++;
+        this.children = new QueryList();
+        this.parent = parentRef;
+        this.hostRefId = parentRef ? parentRef.isc ? parentRef.refId : parentRef.hostRefId || this.refId : this.refId;
+        this.contentHostRefId = parentRef ? parentRef.contentHostRefId : null;
+        this.tagName = (!definition.fromDOM ? definition.name : this.nativeElement.localName).toLowerCase();
+        this.hasContext = !!definition.context || !definition.isc && parentRef && parentRef.hasContext;
+        this.type = definition.type;
+        this.attr = definition.attr;
+        this.isc = definition.isc;
+        if (definition.providers) {
+            this.providers = definition.providers;
+            this.nodes = new Map();
+        }
+        if (definition.ctx$)
+            localVariables = createLocalVariables(definition.ctx$, parentRef.context, parentRef.componentInstance);
+        Object.defineProperties(this, {
+            context: {
+                get: function () {
+                    if (localVariables)
+                        return localVariables;
+                    if (ComponentRef.has(this.refId))
+                        return ComponentRef.get(this.refId).context;
+                    return this.parent && this.parent.context;
+                },
+                set: context => {
+                    if (!definition.ctx$)
+                        localVariables = context;
+                }
+            }
+        });
+        if (11 !== this.nativeElement.nodeType) {
+            Object.defineProperty(this.nativeElement, $elementContext, { get: () => this.context });
+        }
+        this.internal_getDefinition = function (prop) {
+            return definition[prop];
+        };
+    }
+    get componentInstance() {
+        var hostElement = ComponentRef.get(this.refId, this.hostRefId);
+        return hostElement.componentInstance;
+    }
+    get changeDetector() {
+        var hostElement = ComponentRef.get(this.refId, this.hostRefId);
+        return hostElement.changeDetector;
+    }
+    get hostRef() {
+        if (this.isc)
+            return this;
+        return this.parent && this.parent.hostRef;
+    }
+    get nativeNode() {
+        return this.type === 8 ? this.nativeElement : null;
+    }
+    hasAttribute(name) {
+        return this.attr && this.attr.hasOwnProperty(name);
+    }
+    getAttribute(name) {
+        return this.hasAttribute(name) ? this.attr[name] : this.nativeElement.getAttribute(name);
+    }
+    getProps(prop) {
+        return this.nativeElement[prop];
+    }
+}
+class ElementRef extends AbstractElementRef {
+    constructor(definition, parent, lcmp) {
+        super(definition, parent);
+        this.events = new EventHandler((definition.events || []).slice());
+        this._lcmp = lcmp;
+        if (definition.isc) {
+            ComponentRef.create(this.refId, definition.fromDOM ? 1 : parent && parent.hostRef.refId);
+        }
+        if (definition.attr$) {
+            setupAttributeObservers(this, definition.attr$);
+        }
+    }
+}
+function CompileNativeElement(componentClass, selector, callback) {
+    var asNative = componentClass.ctors.asNative;
+    var childrenNodesLen = asNative ? selector.children.length : 0;
     var elementRef = new ElementRef({
         name: selector,
         isc: true,
         type: 1,
-        fromDOM: true
+        fromDOM: true,
+        asNative,
+        templates: {
+            place: () => (placeSelector, callback) => {
+                var children = Array.from(selector.children).splice(0, childrenNodesLen);
+                if (placeSelector != '@') {
+                    children = children.filter(ele => !ele.classList.has(placeSelector) || ele.id != placeSelector || ele.nodeName != placeSelector || !ele.hasAttribute(placeSelector));
+                }
+                children.forEach(callback);
+                childrenNodesLen -= children.length;
+            }
+        }
     }, null);
     var componentInjectors = new ComponentInjectors(elementRef);
     ElementCompiler(componentClass, elementRef, componentInjectors, function (componentInstance) {
-        if (callback && typeof callback === 'function') {
+        if (typeof callback === 'function')
             callback(elementRef, componentInstance);
-        }
     });
+}
+function createCustomElement(elementConstructor, attributes) {
+    if (typeof elementConstructor !== 'function')
+        throw new Error(`Parameter should be a funtion ${ typeof elementConstructor } provided`);
+    class jlCustomElement extends HTMLElement {
+        static get observedAttributes() {
+            return Object.keys(attributes);
+        }
+        get nativeStrategyCompiler() {
+            if (!this._nativeStrategyCompiler) {
+                this._nativeStrategyCompiler = new NativeStrategyCompiler(elementConstructor);
+            }
+            return this._nativeStrategyCompiler;
+        }
+        constructor() {
+            super();
+            this._nativeStrategyCompiler = null;
+        }
+        connectedCallback() {
+            this.nativeStrategyCompiler.connect(this);
+        }
+        disconnectedCallback() {
+            this.nativeStrategyCompiler.disconnect();
+        }
+        attributeChangedCallback(name, oldValue, newValue) {
+            this.nativeStrategyCompiler.setPropValue(attributes[name], newValue);
+        }
+    }
+    ;
+    Object.values(attributes).forEach(props => {
+        Object.defineProperty(jlCustomElement.prototype, props[1], {
+            get: function () {
+                return this.nativeStrategyCompiler.getPropValue(props[1]);
+            },
+            set: function (value) {
+                this.nativeStrategyCompiler.setPropValue(props[1], value);
+            },
+            configurable: true,
+            enumerable: true
+        });
+    });
+    return jlCustomElement;
+}
+class NativeStrategyCompiler {
+    constructor(elementConstructor) {
+        var _elementRef = null;
+        this._inputValues = {};
+        this.connect = function (context) {
+            CompileNativeElement(elementConstructor, context, elementRef => {
+                _elementRef = elementRef;
+            });
+        };
+        this.disconnect = function () {
+            cleanupElementRef(_elementRef);
+            _elementRef = this._inputValues = null;
+        };
+    }
+    setPropValue(attrProp, value) {
+        if (typeof value == 'string')
+            value = this._parseAttrValue(attrProp[0], value);
+        this._inputValues[attrProp[1]] = value;
+    }
+    getPropValue(name) {
+        return this._inputValues[name];
+    }
+    _parseAttrValue(type, value) {
+        try {
+            switch ((type || '').toLowerCase()) {
+            case 'array':
+            case 'object':
+                if (!value || value == '-')
+                    return null;
+                if (!'{['.includes(value.trim().charAt(0)) && value.includes(':')) {
+                    return value.split(',').reduce((accum, key) => {
+                        key = key.split(':');
+                        accum[key[0].trim()] = key[1].trim();
+                        return accum;
+                    }, type == 'array' ? [] : {});
+                }
+                try {
+                    value = JSON.parse(value);
+                } catch (e) {
+                    value = value.split(',');
+                }
+                return value;
+                break;
+            case 'boolean':
+            case 'number':
+                return JSON.parse(value);
+                break;
+            }
+        } catch (e) {
+        }
+        return value;
+    }
 }
 var CoreBootstrapContext = Object({
     bootStrapComponent: null,
@@ -1086,6 +1342,8 @@ var CoreBootstrapContext = Object({
 });
 var INITIALIZERS = new ProviderToken('AppInitializers', true);
 var APP_BOOTSTRAP = new ProviderToken('AppBootstrap', true);
+var APP_BASE_HREF = new ProviderToken('AppBaseHref', false);
+var APP_ASSET_URL = new ProviderToken('AppAssetsURL', false);
 function bootStrapApplication(moduleToBootStrap) {
     return new Promise(function (resolve, reject) {
         try {
@@ -1104,9 +1362,10 @@ function bootStrapApplication(moduleToBootStrap) {
         }
     });
     function bootStrapElement() {
-        if (moduleToBootStrap.rootElement) {
+        var isNative = moduleToBootStrap.rootElement.ctors.asNative;
+        if (moduleToBootStrap.rootElement && !isNative) {
             var selector = moduleToBootStrap.rootElement.ctors.selector;
-            bootstrapFromDOM(moduleToBootStrap.rootElement, selector, function (elementRef) {
+            CompileNativeElement(moduleToBootStrap.rootElement, document.querySelector(selector), function (elementRef) {
                 CoreBootstrapContext.bootStrapComponent = elementRef;
                 Inject(APP_BOOTSTRAP, CoreBootstrapContext.injector).forEach(function (callback) {
                     callback();
@@ -1117,8 +1376,7 @@ function bootStrapApplication(moduleToBootStrap) {
 }
 ;
 function compileModule(dModule) {
-    dModule.fac();
-    dModule();
+    return dModule && (dModule.fac(), dModule());
 }
 function ChangeDetector() {
     if (!CoreBootstrapContext.bootStrapComponent)
@@ -1140,164 +1398,6 @@ var scheduler = {
         };
     }
 };
-var ViewParser = function () {
-    function JSONCompiler(templates) {
-        var fragment = document.createDocumentFragment();
-        this.compile = function (transpiledHTML, elementRef) {
-            for (var i = 0; i < transpiledHTML.length; i++) {
-                var compiled = ViewParser.builder[transpiledHTML[i].type](transpiledHTML[i], elementRef, this);
-                if (compiled) {
-                    this.pushToView(compiled);
-                }
-            }
-            return fragment;
-        };
-        this.pushToView = function (compiled) {
-            compiled.parent && compiled.parent.children.add(compiled);
-            fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
-            transverse(compiled);
-        };
-        this._GT = function (tid, mtl) {
-            if (mtl && mtl.type)
-                return mtl;
-            var tmpl = templates(tid);
-            if (!tmpl)
-                return null;
-            if (mtl)
-                return Object.assign(mtl, tmpl);
-            return typeof tmpl === 'object' ? tmpl : tmpl();
-        };
-    }
-    function element(definition, parent, viewContainer, context) {
-        var elementRef = new ElementRef(definition, parent);
-        if (definition.attr) {
-            AttributeAppender(elementRef.nativeElement, definition.attr);
-        }
-        if (definition.children) {
-            for (var i = 0; i < definition.children.length; i++) {
-                var childDefinition = typeof definition.children[i] === 'function' ? definition.children[i]() : definition.children[i];
-                if (!childDefinition)
-                    continue;
-                var child = ViewParser.builder[childDefinition.type](childDefinition, elementRef, viewContainer, context, true);
-                if (child) {
-                    pushToParent(child, elementRef, i);
-                }
-            }
-        }
-        if (definition.vc) {
-            addViewQuery(elementRef.hostRef, definition.vc, elementRef);
-        }
-        return elementRef;
-    }
-    function pushToParent(child, parent, index) {
-        parent.children.add(child, index);
-        parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
-    }
-    function comment(definition, parent) {
-        return new AbstractElementRef(definition, parent);
-    }
-    function text(definition, parent) {
-        return new TextNodeRef(definition, parent);
-    }
-    function place(definition, parent, viewContainer, context, appendToParent) {
-        var hostRef = parent.hostRef;
-        var createPlaceElement = !(viewContainer || appendToParent);
-        var template = TemplateRef.factory(hostRef, 'place', true);
-        var placeElement = createPlaceElement ? new AbstractElementRef({
-            name: '#',
-            type: 11
-        }, hostRef) : null;
-        function createAndAppend(elementDefinition) {
-            var child = ViewParser.builder[elementDefinition.type](elementDefinition, hostRef.parent, viewContainer, context);
-            if (appendToParent || createPlaceElement) {
-                pushToParent(child, placeElement || parent);
-            } else {
-                viewContainer.pushToView(child);
-            }
-            if (definition.vc && [
-                    elementDefinition.refId,
-                    child.tagName
-                ].includes(definition.vc[0].value)) {
-                addViewQuery(hostRef, definition.vc, child);
-            }
-        }
-        if (template) {
-            template.forEach(definition.refId, createAndAppend);
-        }
-        return placeElement;
-    }
-    function outlet(def, parent, viewContainer, context) {
-        var currentValue = null;
-        var element = null;
-        var unsubscribeScheduler = noop();
-        function checkAndCompileTemplate(fromObserver) {
-            var templateId = getFilteredTemplateValue(def.$templateId, context || parent.context, parent.componentInstance);
-            if (currentValue != templateId) {
-                unsubscribeScheduler();
-                currentValue = templateId;
-                var template = def._GT && def._GT(templateId);
-                if (template) {
-                    var oldElement = element;
-                    element = ViewParser.builder[template.type](template, parent, viewContainer, context);
-                    if (!fromObserver || !element)
-                        return element;
-                    unsubscribeScheduler = scheduler.schedule(function () {
-                        if (element) {
-                            transverse(element);
-                            replaceElement(oldElement, element);
-                        }
-                        oldElement = null;
-                    });
-                }
-            }
-        }
-        if (def.$templateId) {
-            if (!def.context) {
-                ObserveUntilDestroyed(parent, {
-                    next: function () {
-                        checkAndCompileTemplate(true);
-                    },
-                    done: function () {
-                        element = null;
-                    }
-                });
-            }
-            return checkAndCompileTemplate();
-        }
-        return null;
-    }
-    return {
-        JSONCompiler: JSONCompiler,
-        builder: {
-            1: element,
-            3: text,
-            11: place,
-            13: outlet,
-            8: comment
-        }
-    };
-}();
-function transverse(node) {
-    if (node._lazyCompiled)
-        return;
-    if (node instanceof AbstractElementRef) {
-        if (node.providers && node.providers.length) {
-            ElementCompiler.resolve(node, proceedWithCompilation);
-        } else {
-            proceedWithCompilation(node);
-        }
-    } else if (node instanceof TextNodeRef && node.hasBinding) {
-        textNodeCompiler(node);
-    }
-    function proceedWithCompilation(node) {
-        if (isequal(node.type, 8)) {
-            return;
-        }
-        ;
-        EventHandler.registerListener(node);
-        node.children.forEach(transverse);
-    }
-}
 var sce = function () {
     var element = document.createElement('div');
     function htmlEscape(str) {
@@ -1320,14 +1420,15 @@ var sce = function () {
     };
 }();
 function ElementStyle(nativeElement, name, value) {
-    if (name && !value && isstring(name)) {
+    var isObjectName = isobject(name);
+    if (name && !value && !isObjectName) {
         if (!!window.getComputedStyle) {
             var ret = window.getComputedStyle(nativeElement)[name];
             return parseInt(ret) || ret;
         }
-        return;
+        return null;
     }
-    if (isobject(name)) {
+    if (isObjectName) {
         for (var prop in name) {
             ElementStyle.set(nativeElement, prop, name[prop]);
         }
@@ -1337,16 +1438,20 @@ function ElementStyle(nativeElement, name, value) {
 }
 ;
 ElementStyle.set = function (nativeElement, name, value, suffix) {
-    if (typeof value === 'number' && ElementStyle.props.WithSuffix.includes(name)) {
-        value += suffix || 'px';
-    } else if (ElementStyle.props.background.includes(name) && value.includes('.') && !value.startsWith('url')) {
-        value = 'url(' + value + ')';
-    }
+    value = ElementStyle.fixValue(value, name, suffix);
     nativeElement.style[name] = value;
 };
 ElementStyle.props = {
     WithSuffix: 'width|height|top|bottom|left|right|marginTop|marginBottom|marginLeft|marginRight|paddingRight|paddingLeft|paddingTop|paddingBottom|fontSize'.split('|'),
     background: 'backgroundImage'.split('|')
+};
+ElementStyle.fixValue = function (value, name, suffix) {
+    if (typeof value == 'number' && ElementStyle.props.WithSuffix.includes(name)) {
+        value += suffix || 'px';
+    } else if (value && ElementStyle.props.background.includes(name) && value.includes('.') && !value.startsWith('url')) {
+        value = 'url(' + value + ')';
+    }
+    return value;
 };
 function ElementClassList(nativeElement, classList, type) {
     if (type) {
@@ -1416,7 +1521,7 @@ AttributeAppender.helpers = {
     style: function (nativeElement, value, template) {
         if (isobject(value)) {
             ElementStyle(nativeElement, value);
-        } else if (template) {
+        } else if (template && template.type) {
             ElementStyle.set(nativeElement, template.type, value, template.suffix);
         } else {
             nativeElement.setAttribute('style', value);
@@ -1429,16 +1534,15 @@ AttributeAppender.helpers = {
         if (![
                 'IMG',
                 'IFRAME',
-                'SOURCE'
-            ].includes(nativeElement.tagName)) {
+                'SOURCE',
+                'SCRIPT'
+            ].includes(nativeElement.tagName))
             return errorBuilder('src is not a valid property of ' + nativeElement.tagName);
-        }
         AttributeAppender.setValue(nativeElement, 'src', value);
     },
     href: function (nativeElement, value) {
-        if (!isequal('A', nativeElement.tagName)) {
+        if (!isequal('A', nativeElement.tagName))
             return errorBuilder('href is not a valid property of ' + nativeElement.nativeElement.tagName);
-        }
         AttributeAppender.setValue(nativeElement, 'href', value);
     },
     class: function (nativeElement, value) {
@@ -1449,229 +1553,256 @@ AttributeAppender.helpers = {
     },
     readonly: function (nativeElement, value) {
         AttributeAppender.setValue(nativeElement, 'readonly', value, true);
-    }
+    },
+    aria: (nativeElement, value) => singleOrMultipeUpdate(nativeElement, 'aria-', value),
+    data: (nativeElement, value) => singleOrMultipeUpdate(nativeElement, 'data-', value)
 };
 AttributeAppender.setProp = function (nativeElement, propName, propValue, template) {
-    if (propValue === undefined || !nativeElement || nativeElement.nodeType !== 1)
-        return;
-    if (AttributeAppender.helpers[propName]) {
-        return AttributeAppender.helpers[propName](nativeElement, propValue, template);
-    }
-    if (propName in nativeElement) {
-        nativeElement[propName] = propValue;
-    } else {
-        AttributeAppender.setValue(nativeElement, propName, propValue);
+    try {
+        if (propValue === undefined || !nativeElement || nativeElement.nodeType !== 1)
+            return;
+        if (AttributeAppender.helpers[propName])
+            return AttributeAppender.helpers[propName](nativeElement, propValue, template);
+        if (propName in nativeElement)
+            nativeElement[propName] = propValue;
+        else
+            AttributeAppender.setValue(nativeElement, propName, propValue);
+    } catch (e) {
+        console.error(e);
     }
 };
+function singleOrMultipeUpdate(nativeElement, prop, value) {
+    if (isobject(value)) {
+        for (var name in value) {
+            nativeElement.setAttribute(prop + name, value[name]);
+        }
+    } else {
+        nativeElement.setAttribute(prop, value);
+    }
+}
 var SubscriptionStates = {
     onError: 0,
     onSuccess: 1,
     onCompleted: 2
 };
 var statedIDs = Object.keys(SubscriptionStates);
-function Subscription(replayOnSubscription) {
-    this.subscriptions = [];
-    this.state = {
-        pending: false,
-        value: null,
-        resolveWith: -1
-    };
+class Subscription {
+    constructor(replayOnSubscription) {
+        this.subscriptions = [];
+        this.state = {
+            pending: false,
+            value: null,
+            resolveWith: -1
+        };
+    }
+    add(success, error, completed) {
+        if (isobject(success)) {
+            this.subscriptions.push(success);
+        } else {
+            this.subscriptions.push({
+                onSuccess: success,
+                onError: error,
+                onCompleted: completed
+            });
+        }
+        return this;
+    }
+    notify(state, args) {
+        if (!this.state || this.state.resolveWith === SubscriptionStates.onCompleted) {
+            return;
+        }
+        var stateId = statedIDs[state];
+        for (var subscription of this.subscriptions) {
+            var callback = subscription[stateId];
+            if (callback && isfunction(callback)) {
+                callback(args);
+            }
+        }
+        this.state.pending = this.subscriptions.length < 1;
+        this.state.resolveWith = state;
+        this.state.value = args;
+    }
+    destroy() {
+        this.subscriptions.length = 0;
+        this.state = null;
+    }
 }
-Subscription.prototype.add = function (success, error, completed) {
-    if (isobject(success)) {
-        this.subscriptions.push(success);
-    } else {
-        this.subscriptions.push({
-            onSuccess: success,
-            onError: error,
-            onCompleted: completed
+class Observable {
+    constructor(callback) {
+        var _observer = AbstractObserver();
+        callback(_observer);
+        this.subscribe = function (success, error, completed) {
+            var subscription = new Subscription();
+            subscription.add(success, error, completed);
+            _observer.add(subscription);
+            return subscription;
+        };
+    }
+}
+class AbstractObserver {
+    constructor() {
+        var subscriptions = [];
+        this.add = function (subscription) {
+            if (!(subscription instanceof Subscription)) {
+                throw new Error('Expected instance of subscriptions but got ' + typeof subscription);
+            }
+            subscriptions.push(subscription);
+        };
+        this._forEach = function (callback) {
+            var length = subscriptions.length;
+            var _subscriptions = subscriptions.slice();
+            for (var i = 0; i < length; i++) {
+                if (callback(_subscriptions[i])) {
+                    subscriptions.splice(i, i);
+                }
+            }
+            _subscriptions.length = 0;
+        };
+        this.hasObservers = function () {
+            return subscriptions.length > 0;
+        };
+    }
+    next(value) {
+        this._forEach(function (subscription) {
+            subscription.notify(SubscriptionStates.onCompleted, value);
         });
     }
-    return this;
-};
-Subscription.prototype.notify = function (state, args) {
-    if (!this.state || this.state.resolveWith === SubscriptionStates.onCompleted) {
-        return;
+    error(errorObject) {
+        this._forEach(function (subscription) {
+            subscription.notify(SubscriptionStates.onError, errorObject);
+        });
     }
-    var stateId = statedIDs[state];
-    for (var subscription of this.subscriptions) {
-        var callback = subscription[stateId];
-        if (callback && isfunction(callback)) {
-            callback(args);
-        }
+    completed() {
+        this._forEach(function (subscription) {
+            subscription.notify(SubscriptionStates.onCompleted);
+        });
     }
-    this.state.pending = this.subscriptions.length < 1;
-    this.state.resolveWith = state;
-    this.state.value = args;
-};
-Subscription.prototype.destroy = function () {
-    this.subscriptions.length = 0;
-    this.state = null;
-};
-function Observable(callback) {
-    var _observer = AbstractObserver();
-    callback(_observer);
-    this.subscribe = function (success, error, completed) {
-        var subscription = new Subscription();
+    destroy() {
+        this._forEach(function (subscription) {
+            subscription.destroy();
+            return true;
+        });
+    }
+}
+class Subject {
+    constructor() {
+        this._observer = new AbstractObserver();
+    }
+    subscribe(success, error, completed) {
+        var subscription = new Subscription(false);
         subscription.add(success, error, completed);
-        _observer.add(subscription);
+        this._observer.add(subscription);
         return subscription;
-    };
+    }
+    destroy() {
+        this._observer.destroy();
+    }
+    hasObservers() {
+        return this._observer.hasObservers();
+    }
+    next(value) {
+        this._observer.next(value);
+    }
+    error(error) {
+        this._observer.error(error);
+    }
+    completed() {
+        this._observer.completed();
+    }
 }
-function AbstractObserver() {
-    var subscriptions = [];
-    this.add = function (subscription) {
-        if (!(subscription instanceof Subscription)) {
-            throw new Error('Expected instance of subscriptions but got ' + typeof subscription);
-        }
-        subscriptions.push(subscription);
-    };
-    this._forEach = function (callback) {
-        var length = subscriptions.length;
-        var _subscriptions = subscriptions.slice();
-        for (var i = 0; i < length; i++) {
-            if (callback(_subscriptions[i])) {
-                subscriptions.splice(i, i);
+class QueryList extends Array {
+    constructor() {
+        super();
+        this.onChanges = new Subject();
+        Object.defineProperties(this, {
+            first: {
+                get: function () {
+                    return this[0];
+                }
+            },
+            last: {
+                get: function () {
+                    return this[this.length - 1];
+                }
             }
+        });
+    }
+    static from(iterable) {
+        if (!Array.isArray(iterable))
+            throw new Error(typeof iterable + ' ' + iterable + ' is not iterable');
+        var instance = new QueryList(iterable);
+        iterable.forEach(it => instance.push(it));
+        return instance;
+    }
+    static is(instance) {
+        return instance instanceof QueryList;
+    }
+    add(element, index, emitEvent) {
+        addToArray(this, element, index);
+        if (emitEvent) {
+            this.onChanges.next({
+                value: element,
+                index: index,
+                type: 'add'
+            });
         }
-        _subscriptions.length = 0;
-    };
-    this.hasObservers = function () {
-        return subscriptions.length > 0;
-    };
-}
-AbstractObserver.prototype.next = function (value) {
-    this._forEach(function (subscription) {
-        subscription.notify(SubscriptionStates.onCompleted, value);
-    });
-};
-AbstractObserver.prototype.error = function (errorObject) {
-    this._forEach(function (subscription) {
-        subscription.notify(SubscriptionStates.onError, errorObject);
-    });
-};
-AbstractObserver.prototype.completed = function () {
-    this._forEach(function (subscription) {
-        subscription.notify(SubscriptionStates.onCompleted);
-    });
-};
-AbstractObserver.prototype.destroy = function () {
-    this._forEach(function (subscription) {
-        subscription.destroy();
-        return true;
-    });
-};
-function Subject() {
-    this._observer = new AbstractObserver();
-}
-Subject.prototype.subscribe = function (success, error, completed) {
-    var subscription = new Subscription(false);
-    subscription.add(success, error, completed);
-    this._observer.add(subscription);
-    return subscription;
-};
-Subject.prototype.destroy = function () {
-    this._observer.destroy();
-};
-Subject.prototype.hasObservers = function () {
-    return this._observer.hasObservers();
-};
-Subject.prototype.next = function (value) {
-    this._observer.next(value);
-};
-Subject.prototype.error = function (error) {
-    this._observer.error(error);
-};
-Subject.prototype.completed = function () {
-    this._observer.completed();
-};
-function QueryList() {
-    Object.defineProperties(this, {
-        first: {
-            get: function () {
-                return this[0];
-            }
-        },
-        last: {
-            get: function () {
-                return this[this.length - 1];
-            }
+    }
+    replace(from, to, emitEvent) {
+        var index = this.indexOf(from);
+        if (index > -1) {
+            this[index] = to;
         }
-    });
-}
-QueryList.constructor = Array;
-QueryList.prototype = Object.create(Array.prototype);
-QueryList.prototype.add = function (element, index, emitEvent) {
-    addToArray(this, element, index);
-    if (emitEvent) {
+        if (emitEvent) {
+            this.onChanges.next({
+                value: to,
+                index: index,
+                type: 'replace'
+            });
+        }
+    }
+    get(element) {
+        if (element) {
+            return this.find(function (ele) {
+                return ele === element;
+            });
+        }
+        return this;
+    }
+    getByIndex(index) {
+        return this[index];
+    }
+    destroy() {
+        while (this.length) {
+            var element = this.pop();
+            if (element)
+                removeElement(element);
+        }
+        this.onChanges.destroy();
+    }
+    remove(element) {
+        var index = this.indexOf(element);
+        return this.removeByIndex(index);
+    }
+    hasIndex(index) {
+        return this.length - 1 > index;
+    }
+    removeByIndex(index) {
+        if (0 > index)
+            return null;
+        var element = removeFromArray(this, index);
         this.onChanges.next({
             value: element,
             index: index,
-            type: 'add'
+            type: 'detached'
         });
+        return element;
     }
-};
-QueryList.prototype.replace = function (from, to, emitEvent) {
-    var index = this.indexOf(from);
-    if (index > -1) {
-        this[index] = to;
-    }
-    if (emitEvent) {
-        this.onChanges.next({
-            value: to,
-            index: index,
-            type: 'replace'
-        });
-    }
-};
-QueryList.prototype.get = function (element) {
-    if (element) {
-        return this.find(function (ele) {
-            return ele === element;
-        });
-    }
-    return this;
-};
-QueryList.prototype.getByIndex = function (index) {
-    return this[index];
-};
-QueryList.prototype.destroy = function () {
-    while (this.length) {
-        var element = this.pop();
-        if (element)
-            removeElement(element);
-    }
-    this.onChanges.destroy();
-};
-QueryList.prototype.remove = function (element) {
-    var index = this.indexOf(element);
-    return this.removeByIndex(index);
-};
-QueryList.prototype.hasIndex = function (index) {
-    return this.length - 1 > index;
-};
-QueryList.prototype.removeByIndex = function (index) {
-    var element = removeFromArray(this, index);
-    this.onChanges.next({
-        value: element,
-        index: index,
-        type: 'detached'
-    });
-    return element;
-};
-QueryList.prototype.onChanges = new Subject();
-QueryList.from = function (iterable) {
-    if (!Array.isArray(iterable))
-        throw new Error(typeof iterable + ' ' + iterable + ' is not iterable');
-    var instance = new QueryList(iterable);
-    iterable.forEach(it => instance.push(it));
-    return instance;
-};
-QueryList.is = function (instance) {
-    return instance instanceof QueryList;
-};
+}
+var isAllowedArrayType = ['style'];
 function elementMutationObserver(nativeElement, callback) {
-    var observer = new MutationObserver(function (mutationsList, observer) {
+    if (!nativeElement)
+        return;
+    var observer = new MutationObserver(function (mutationsList) {
         if (mutationsList.length) {
             callback.apply(null, arguments);
         }
@@ -1683,7 +1814,7 @@ function elementMutationObserver(nativeElement, callback) {
     });
 }
 function AttachComponentContentQuery(elementRef) {
-    var querySet = elementRef.cq;
+    var querySet = elementRef.internal_getDefinition('cq');
     if (querySet) {
         var componentInstance = elementRef.componentInstance;
         var props = Object.keys(querySet);
@@ -1726,8 +1857,390 @@ function AttachComponentContentQuery(elementRef) {
         });
     }
 }
+function elementBefore(targetNode, insertNode) {
+    if (!targetNode || !targetNode.parentNode)
+        return;
+    if (targetNode.before)
+        targetNode.before(insertNode);
+    else
+        targetNode.parentNode.insertBefore(insertNode, targetNode);
+}
+function elementInsertAfter(hostElement, newNode, targetNode, ignoreDetector) {
+    if (!targetNode || !targetNode.parentNode)
+        return;
+    targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
+    if (hostElement && !ignoreDetector)
+        hostElement.changeDetector.onlySelf();
+}
+function replaceElement(fromElement, toElement) {
+    if (!fromElement)
+        return;
+    var targetNode = fromElement.nativeElement;
+    if (11 === targetNode.nodeType) {
+        targetNode = fromElement.children.first.nativeElement;
+    }
+    fromElement.parent.children.replace(fromElement, toElement, true);
+    targetNode.replaceWith(toElement.nativeElement);
+    removeElement(fromElement);
+    targetNode = null;
+}
+function removeElement(elementRef, removeFromParent) {
+    if (!elementRef)
+        return;
+    if (elementRef instanceof AbstractElementRef) {
+        if (elementRef.nativeElement && elementRef.nativeElement.nodeType != 11) {
+            elementRef.nativeElement.remove();
+        }
+        if (removeFromParent && elementRef.parent) {
+            elementRef.parent.children.remove(elementRef);
+        }
+        cleanupElementRef(elementRef);
+    } else if (elementRef instanceof TextNodeRef) {
+        elementRef.nativeNode.remove();
+    }
+}
+function attachElementObserver(element, onDestroyListener) {
+    if (onDestroyListener) {
+        element.$observers.push(onDestroyListener);
+    }
+}
+function createElementByType(tag, text, fromDOM) {
+    if (fromDOM)
+        return tag;
+    switch (tag) {
+    case '##':
+        return document.createComment(text);
+    case '#':
+        return document.createDocumentFragment();
+    default:
+        return document.createElement(tag);
+    }
+}
+function ObserveUntilDestroyed(elementRef, eventListener) {
+    if (elementRef.hostRef) {
+        var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, eventListener.next);
+        attachElementObserver(elementRef, function () {
+            unsubscribe();
+            eventListener.done(true);
+        });
+    }
+}
+function SubscribeObservables(refId, fn) {
+    var componentRef = componentDebugContext.get(refId);
+    var unsubscribe = null;
+    if (componentRef) {
+        unsubscribe = componentRef.observables.subscribe(fn);
+    }
+    return unsubscribe;
+}
+function textNodeCompiler(textNodeRef) {
+    function setValue() {
+        var value = compileTemplate(textNodeRef.ast, textNodeRef.parent.context, textNodeRef.parent.componentInstance);
+        if (textNodeRef.nativeNode.nodeValue === value)
+            return;
+        textNodeRef.nativeNode.nodeValue = value;
+    }
+    if (!textNodeRef.ast.once && textNodeRef.parent && textNodeRef.parent.hostRef) {
+        attachElementObserver(textNodeRef.parent, SubscribeObservables(textNodeRef.parent.hostRef.refId, setValue));
+    }
+    ;
+    setValue();
+}
+function cleanupElementRef(elementRef) {
+    if (!elementRef)
+        return;
+    elementRef.events && elementRef.events.destroy();
+    while (elementRef.$observers.length) {
+        elementRef.$observers.pop()();
+    }
+    elementRef.children.destroy();
+    elementRef.nativeElement = null;
+    elementRef.parent = null;
+    if (elementRef.providers) {
+        elementRef.providers = null;
+        elementRef.nodes.clear();
+    }
+}
+;
+function setupAttributeObservers(element, attrObservers) {
+    var observerStarted = false;
+    var observerKeys = Object.keys(attrObservers);
+    var unsubscribe = SubscribeObservables(element.hostRef.refId, observe);
+    attachElementObserver(element, unsubscribe);
+    function observe() {
+        for (var propName of observerKeys) {
+            if (attrObservers[propName].once && observerStarted)
+                continue;
+            if (isAllowedArrayType.includes(propName) && Array.isArray(attrObservers[propName])) {
+                var objectValues = attrObservers[propName].reduce((accum, item) => {
+                    if (item.once && observerStarted)
+                        return accum;
+                    var value = compileTemplate(item, element.context, element.componentInstance);
+                    if (value) {
+                        if (!accum)
+                            accum = {};
+                        Object.assign(accum, isobject(value) ? value : { [item.type]: ElementStyle.fixValue(value, item.suffix) });
+                    }
+                    return accum;
+                }, null);
+                AttributeAppender.helpers[propName](element.nativeElement, objectValues);
+                continue;
+            }
+            attributeEvaluator(propName, attrObservers[propName]);
+        }
+        function attributeEvaluator(propName, template) {
+            var value = compileTemplate(template, element.context, element.componentInstance);
+            AttributeAppender.setProp(element.nativeElement, propName, value, template);
+        }
+        observerStarted = true;
+    }
+}
+function createLocalVariables(localVariables, localContext, parentContext) {
+    var context = {};
+    if (localVariables) {
+        for (var propName in localVariables) {
+            if (localVariables[propName] && typeof localVariables[propName] == 'string' && localVariables[propName].match(/\s/)) {
+                context[propName] = localVariables[propName];
+            } else {
+                writePropertyBinding(propName);
+            }
+        }
+    }
+    function writePropertyBinding(propName) {
+        Object.defineProperty(context, propName, {
+            get: function () {
+                if (!localContext)
+                    return null;
+                return evaluateExpression(localVariables[propName], localContext, parentContext);
+            }
+        });
+    }
+    return context;
+}
+function getElementContext(targetContext, targetElement) {
+    if (!targetContext)
+        return targetElement.context;
+    if (targetContext.locaVariables) {
+        return targetContext.locaVariables;
+    }
+    var componentRef = ComponentRef.get(targetContext.refId, targetContext.parentRefId);
+    return componentRef.context;
+}
+var DOMHelper = {
+    insert: elementInsertAfter,
+    remove: removeElement,
+    replace: replaceElement,
+    createElement: function (tag, attributes, content, parent, replaceParentContent) {
+        var ele = document.createElement(tag);
+        AttributeAppender(ele, attributes || {});
+        if (content) {
+            if (typeof content == 'function') {
+                content(ele);
+            } else {
+                ele.innerHTML = content;
+            }
+        }
+        if (parent) {
+            if (replaceParentContent)
+                parent.innerHTML = '';
+            parent.appendChild(ele);
+        }
+        return ele;
+    },
+    createTextNode: function (textContent, parent) {
+        var textNode = document.createTextNode(textContent);
+        if (parent)
+            parent.appendChild(textNode);
+        return textNode;
+    }
+};
+var ViewParser = function () {
+    var compiler = {
+        $: (tmpl, mtl) => mtl ? mtl.type ? mtl : Object.assign(mtl, tmpl) : typeof tmpl === 'object' ? tmpl : tmpl(),
+        jit: (elementRef, transpiledHTML, vt) => {
+            var fragment = document.createDocumentFragment();
+            var pushView = (compiled, isNativeMode) => {
+                if (!isNativeMode) {
+                    compiled.parent && compiled.parent.children.add(compiled);
+                    fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
+                    transverse(compiled);
+                } else {
+                    fragment.appendChild(compiled);
+                }
+            };
+            for (var i = 0; i < transpiledHTML.length; i++) {
+                var compiled = ViewParser.builder[transpiledHTML[i].type](transpiledHTML[i], elementRef, pushView);
+                if (compiled) {
+                    pushView(compiled);
+                }
+            }
+            var componentInstance = elementRef.componentInstance;
+            for (var name in vt) {
+                componentInstance[name] = new TemplateRef(vt[name]);
+            }
+            return fragment;
+        }
+    };
+    function element(definition, parent, viewContainer, context) {
+        var elementRef = new ElementRef(definition, parent);
+        if (definition.attr)
+            AttributeAppender(elementRef.nativeElement, definition.attr);
+        if (definition.children) {
+            for (var i = 0; i < definition.children.length; i++) {
+                var childDefinition = typeof definition.children[i] === 'function' ? definition.children[i]() : definition.children[i];
+                if (!childDefinition)
+                    continue;
+                var child = ViewParser.builder[childDefinition.type](childDefinition, elementRef, viewContainer, context, true);
+                if (child) {
+                    pushToParent(child, elementRef, i);
+                }
+            }
+        }
+        if (definition.vc) {
+            addViewQuery(elementRef.hostRef, definition.vc, elementRef);
+        }
+        return elementRef;
+    }
+    function pushToParent(child, parent, index, isNativeMode) {
+        if (!isNativeMode) {
+            parent.children.add(child, index);
+            parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
+        } else {
+            parent.nativeElement.appendChild(child);
+        }
+    }
+    function comment(definition, parent) {
+        return new AbstractElementRef(definition, parent);
+    }
+    function text(definition, parent) {
+        return new TextNodeRef(definition, parent);
+    }
+    function place(definition, parent, viewContainer, context, appendToParent) {
+        var hostRef = parent.hostRef;
+        var isNativeMode = hostRef.internal_getDefinition('asNative');
+        var haveLocalVairables = false;
+        var createPlaceElement = !(viewContainer || appendToParent);
+        var template = TemplateRef.factory(hostRef, 'place', true);
+        var placeElement = createPlaceElement ? new AbstractElementRef({
+            name: '#',
+            type: 11
+        }, hostRef) : null;
+        if (!isNativeMode) {
+            haveLocalVairables = definition.$ctx && 'object' == typeof definition.$ctx;
+            if (haveLocalVairables)
+                context = createLocalVariables(definition.$ctx, parent.context, context);
+        }
+        function createAndAppend(element) {
+            if (!isNativeMode) {
+                var child = ViewParser.builder[element.type](element, definition.$ctx == true ? parent : hostRef.parent, viewContainer, context);
+                if (haveLocalVairables)
+                    child.context = context;
+                child.contentHostRefId = hostRef.refId;
+            }
+            if (createPlaceElement || appendToParent) {
+                pushToParent(child || element, placeElement || parent, null, isNativeMode);
+            } else {
+                viewContainer(child || element, isNativeMode);
+            }
+            if (definition.vc && [
+                    element.refId,
+                    child.tagName
+                ].includes(definition.vc[0].value)) {
+                addViewQuery(hostRef, definition.vc, child);
+            }
+        }
+        if (template) {
+            template.forEach(definition.refId, createAndAppend);
+        }
+        return placeElement;
+    }
+    function outlet(def, parent, viewContainer, context) {
+        var currentValue = null;
+        var element = null;
+        var unsubscribeScheduler = noop();
+        var fallbackNode = createElementByType('##', 'outlet');
+        var fallbackNodes = Object.defineProperties({}, {
+            nativeElement: { get: () => fallbackNode },
+            parent: { get: () => parent }
+        });
+        function checkAndCompileTemplate(fromObserver) {
+            var templateId = getFilteredTemplateValue(def.$templateId, context || parent.context, parent.componentInstance);
+            if (currentValue != templateId) {
+                unsubscribeScheduler();
+                currentValue = templateId;
+                var template = def._GT && def._GT(templateId);
+                if (template) {
+                    var oldElement = element;
+                    element = ViewParser.builder[template.type](template, parent, viewContainer, context);
+                    if (!fromObserver || !element)
+                        return element;
+                    unsubscribeScheduler = scheduler.schedule(function () {
+                        if (element) {
+                            transverse(element);
+                            replaceElement(oldElement || fallbackNodes, element);
+                        }
+                        oldElement = null;
+                    });
+                } else {
+                    if (element) {
+                        replaceElement(element, fallbackNodes);
+                        element = null;
+                    } else if (!fromObserver) {
+                        return fallbackNodes;
+                    }
+                }
+            }
+        }
+        if (def.$templateId) {
+            if (!def.context) {
+                ObserveUntilDestroyed(parent, {
+                    next: function () {
+                        checkAndCompileTemplate(true);
+                    },
+                    done: function () {
+                        element = null;
+                    }
+                });
+            }
+            return checkAndCompileTemplate();
+        }
+        return null;
+    }
+    return {
+        compiler,
+        builder: {
+            1: element,
+            3: text,
+            11: place,
+            13: outlet,
+            8: comment
+        },
+        $elementContextContainer: new Map()
+    };
+}();
+function transverse(node) {
+    if (node._lcmp)
+        return;
+    if (node instanceof AbstractElementRef) {
+        if (node.providers && node.providers.length) {
+            ElementCompiler.resolve(node, proceedWithCompilation);
+        } else {
+            proceedWithCompilation(node);
+        }
+    } else if (node instanceof TextNodeRef && node.hasBinding) {
+        textNodeCompiler(node);
+    }
+    function proceedWithCompilation(node) {
+        if (isequal(node.type, 8)) {
+            return;
+        }
+        ;
+        EventHandler.registerListener(node);
+        node.children.forEach(transverse);
+    }
+}
 function addViewQuery(hostElement, option, childElement) {
-    if (!isequal(option[1], hostElement.tagName)) {
+    if (!isequal(option[1], hostElement.tagName) && !hostElement.internal_getDefinition('asNative')) {
         return hostElement.parent && addViewQuery(hostElement.parent.hostRef, option, childElement);
     }
     var name = option[0].name;
@@ -1756,313 +2269,91 @@ function addViewQuery(hostElement, option, childElement) {
         break;
     }
 }
-function elementInsertAfter(hostElement, newNode, targetNode, ignoreDetector) {
-    if (!targetNode || !targetNode.parentNode)
-        return;
-    targetNode.parentNode.insertBefore(newNode, targetNode.nextSibling);
-    if (!ignoreDetector)
-        hostElement.changeDetector.onlySelf();
-}
-function replaceElement(fromElement, toElement) {
-    var targetNode = fromElement.nativeElement;
-    if (11 === targetNode.nodeType) {
-        targetNode = fromElement.children.first.nativeElement;
+class ViewRef extends Array {
+    constructor(elementRef) {
+        super();
+        this._destroyed = false;
+        this.get = function (index) {
+            return this[index];
+        };
+        this.createEmbededView = function (templateRef, context, index) {
+            var view = new EmbededViewContext(elementRef, templateRef, context);
+            view.renderView(index);
+            addToArray(this, view, index);
+            return view;
+        };
     }
-    fromElement.parent.children.replace(fromElement, toElement, true);
-    targetNode.replaceWith(toElement.nativeElement);
-    removeElement(fromElement, true);
-    targetNode = null;
-}
-function removeElement(elementRef, removeFromParent) {
-    if (!elementRef)
-        return;
-    if (elementRef instanceof AbstractElementRef) {
-        if (elementRef.nativeElement && elementRef.nativeElement.nodeType != 11) {
-            elementRef.nativeElement.remove();
-        }
-        if (removeFromParent && elementRef.parent) {
-            elementRef.parent.children.remove(elementRef);
-        }
-        cleanupElementRef(elementRef);
-    } else if (elementRef instanceof TextNodeRef) {
-        elementRef.nativeNode.remove();
-    }
-}
-function attachElementObserver(element, onDestroyListener) {
-    if (onDestroyListener) {
-        element.$observers.push(onDestroyListener);
-    }
-}
-function ObserveUntilDestroyed(elementRef, eventListener) {
-    if (elementRef.hostRef) {
-        var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, eventListener.next);
-        attachElementObserver(elementRef, function () {
-            unsubscribe();
-            eventListener.done(true);
-        });
-    }
-}
-function SubscribeObservables(refId, fn) {
-    var componentRef = componentDebugContext.get(refId);
-    var unsubscribe = null;
-    if (componentRef) {
-        unsubscribe = componentRef.observables.subscribe(fn);
-    }
-    return unsubscribe;
-}
-function textNodeCompiler(textNodeRef) {
-    function _compiler() {
-        compileTemplate(textNodeRef.ast, textNodeRef.parent.context, textNodeRef.parent.componentInstance, function (value) {
-            if (textNodeRef.nativeNode.nodeValue === value)
-                return;
-            textNodeRef.nativeNode.nodeValue = value;
-        });
-    }
-    if (!textNodeRef.ast.once && textNodeRef.parent && textNodeRef.parent.hostRef) {
-        attachElementObserver(textNodeRef.parent, SubscribeObservables(textNodeRef.parent.hostRef.refId, _compiler));
-    }
-    ;
-    _compiler();
-}
-function cleanupElementRef(elementRef) {
-    elementRef.events && elementRef.events.destroy();
-    while (elementRef.$observers.length) {
-        elementRef.$observers.pop()();
-    }
-    elementRef.children.destroy();
-    elementRef.nativeElement = null;
-    elementRef.parent = null;
-    if (elementRef.providers) {
-        elementRef.providers = null;
-        elementRef.nodes.clear();
-    }
-}
-;
-function createElementByType(tag, text, fromDOM) {
-    if (fromDOM) {
-        return document.querySelector(tag);
-    }
-    switch (tag) {
-    case '##':
-        return document.createComment(text);
-    case '#':
-        return document.createDocumentFragment();
-    default:
-        return document.createElement(tag);
-    }
-}
-;
-function setupAttributeObservers(element, attrObservers) {
-    var observerStarted = false;
-    var observerKeys = Object.keys(attrObservers);
-    var unsubscribe = SubscribeObservables(element.hostRef.refId, observe);
-    attachElementObserver(element, unsubscribe);
-    function observe() {
-        for (var propName of observerKeys) {
-            if (attrObservers[propName].once && observerStarted) {
-                continue;
-            }
-            attributeEvaluator(propName, attrObservers[propName]);
-        }
-        function attributeEvaluator(propName, template) {
-            compileTemplate(template, element.context, element.componentInstance, function (value) {
-                try {
-                    AttributeAppender.setProp(element.nativeElement, propName, value, template);
-                } catch (e) {
-                    console.error(e);
+    move(prev, curr) {
+        scheduler.schedule(() => {
+            var view = this.get(prev);
+            var targetNode = this.get(curr);
+            if (targetNode && view) {
+                if (curr > prev) {
+                    elementInsertAfter(null, view.compiledElement.nativeElement, targetNode.compiledElement.nativeElement);
+                } else {
+                    elementBefore(targetNode.compiledElement.nativeElement, view.compiledElement.nativeElement);
                 }
+                moveItemInArray(this, prev, curr);
+                this.updateContext();
+            }
+        });
+    }
+    remove(index) {
+        var view = removeFromArray(this, index);
+        if (view) {
+            view._destroyed_view = true;
+            view.destroy();
+        }
+        view = null;
+    }
+    clearView() {
+        while (this.length) {
+            var view = this.shift();
+            view.destroy();
+        }
+    }
+    updateContext() {
+        for (var i = 0; i < this.length; i++) {
+            var view = this.get(i);
+            view.updateContext({
+                index: i,
+                count: this.length
             });
         }
-        observerStarted = true;
     }
 }
-function createLocalVariables(localVariables, localContext, parentContext) {
-    var context = {};
-    if (localVariables) {
-        for (var propName in localVariables) {
-            if (!Array.isArray(localVariables[propName]) && localVariables[propName].match(/\s/)) {
-                context[propName] = localVariables[propName];
-            } else {
-                writePropertyBinding(propName);
-            }
+class EmbededViewContext {
+    constructor(parentRef, templateRef, context) {
+        this.context = context;
+        this.parentRef = parentRef;
+        var templateContext = templateRef.getContext();
+        var componentRefContext = createLocalVariables(templateContext, context, parentRef.context);
+        this.compiledElement = templateRef.createElement(parentRef, null, componentRefContext);
+        this.compiledElement.hasContext = !!templateContext;
+        this.unsubscribeScheduler;
+        if (this.compiledElement && this.compiledElement.hasContext) {
+            this.compiledElement.context = componentRefContext;
         }
     }
-    function writePropertyBinding(propName) {
-        Object.defineProperty(context, propName, {
-            get: function () {
-                if (!localContext)
-                    return null;
-                return evaluateExpression(localVariables[propName], localContext, parentContext);
-            }
-        });
-    }
-    return context;
-}
-var DOMHelper = {
-    insert: elementInsertAfter,
-    remove: removeElement,
-    replace: replaceElement
-};
-var $eUID = 1;
-var $elementContext = '__jContext__';
-function AbstractElementRef(definition, parentRef) {
-    var locaVariables = null;
-    this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
-    this.$observers = [];
-    this.refId = $eUID++;
-    this.children = new QueryList();
-    this.parent = parentRef;
-    this.hostRefId = parentRef ? parentRef.isc ? parentRef.refId : parentRef.hostRefId || this.refId : this.refId;
-    this.type = definition.type;
-    this.tagName = definition.name.toLowerCase();
-    this.index = definition.index;
-    this.attr = definition.attr;
-    this.props = definition.props;
-    this.isc = definition.isc;
-    this.hasContext = !!definition.context || !definition.isc && parentRef && parentRef.hasContext;
-    if (definition.providers) {
-        this.providers = definition.providers;
-        this.nodes = new Map();
-    }
-    if (definition.ctx$) {
-        locaVariables = createLocalVariables(definition.ctx$, parentRef.context, parentRef.componentInstance);
-    }
-    Object.defineProperties(this, {
-        context: {
-            get: function () {
-                if (locaVariables)
-                    return locaVariables;
-                if (componentDebugContext.has(this.refId)) {
-                    return componentDebugContext.get(this.refId).context;
-                }
-                return this.parent && this.parent.context;
-            }
-        },
-        componentInstance: {
-            get: function () {
-                var hostElement = ComponentRef.get(this.refId, this.hostRefId);
-                return hostElement.componentInstance;
-            }
-        },
-        changeDetector: {
-            get: function () {
-                var hostElement = ComponentRef.get(this.refId, this.hostRefId);
-                return hostElement.changeDetector;
-            }
-        },
-        hostRef: {
-            get: function () {
-                if (this.isc) {
-                    return this;
-                }
-                return this.parent && this.parent.hostRef;
-            }
-        },
-        '[[tmpl]]': {
-            get: function () {
-                return definition.templates;
-            }
-        },
-        nativeNode: {
-            get: function () {
-                return this.type === 8 ? this.nativeElement : null;
-            }
-        },
-        data: {
-            get: function () {
-                return definition.data;
-            }
-        },
-        cq: {
-            get: function () {
-                return definition.cq;
-            }
-        }
-    });
-    if (11 !== this.nativeElement.nodeType) {
-        Object.defineProperty(this.nativeElement, $elementContext, {
-            get: () => {
-                return this;
-            }
-        });
-    }
-}
-;
-AbstractElementRef.prototype.hasAttribute = function (name) {
-    return this.attr && this.attr.hasOwnProperty(name);
-};
-AbstractElementRef.prototype.getAttribute = function (name) {
-    return this.attr && name in this.attr ? this.attr[name] : this.nativeElement.getAttribute(name);
-};
-function ViewRef(elementRef) {
-    this._destroyed = false;
-    this.get = function (index) {
-        return this[index];
-    };
-    this.createEmbededView = function (templateRef, context, index) {
-        var view = new EmbededViewContext(elementRef, templateRef, context);
-        view.renderView(index);
-        addToArray(this, view, index);
-        return view;
-    };
-}
-ViewRef.constructor = Array;
-ViewRef.prototype = Object.create(Array.prototype);
-ViewRef.prototype.move = function (prev, curr) {
-    var view = this.get(prev);
-    scheduler.schedule(function () {
-        if (view) {
-            var parent = view.compiledElement.parent;
-            var targetNode = parent.children.getByIndex(curr - 1);
-            if (targetNode) {
-                elementInsertAfter(parent, view.compiledElement.nativeElement, targetNode.nativeElement);
-            }
-        }
-    });
-};
-ViewRef.prototype.remove = function (index) {
-    var view = removeFromArray(this, index);
-    if (view) {
-        view._destroyed_view = true;
-        view.destroy();
-    }
-    view = null;
-};
-ViewRef.prototype.clearView = function () {
-    while (this.length) {
-        var view = this.shift();
-        view.destroy();
-    }
-};
-function EmbededViewContext(parentRef, templateRef, context) {
-    var _componentRef = null;
-    this.context = context;
-    var templateContext = templateRef.getContext();
-    var componentRefContext = createLocalVariables(templateContext, context, parentRef.context);
-    this.compiledElement = templateRef.createElement(parentRef, null, componentRefContext);
-    this.compiledElement.hasContext = !!templateContext;
-    this.unsubscribeScheduler;
-    if (this.compiledElement && this.compiledElement.hasContext) {
-        ComponentRef.create(this.compiledElement.refId, parentRef.hostRef.refId, componentRefContext);
-    }
-    this.renderView = function (index) {
-        var targetNode = (parentRef.children.last || parentRef).nativeElement;
+    renderView(index) {
+        var targetNode = (this.parentRef.children.last || this.parentRef).nativeElement;
         var _arrIndex = index ? index - 1 : index;
-        if (index !== undefined && parentRef.children.hasIndex(_arrIndex)) {
-            targetNode = parentRef.children.getByIndex(_arrIndex).nativeElement;
-        }
+        if (index !== undefined && this.parentRef.children.hasIndex(_arrIndex))
+            targetNode = this.parentRef.children.getByIndex(_arrIndex).nativeElement;
         if (!this.compiledElement)
             return;
         var nativeElement = this.compiledElement.nativeElement || this.compiledElement.nativeNode;
         var changeDetector = this.compiledElement && this.compiledElement.changeDetector;
-        parentRef.children.add(this.compiledElement, index);
+        this.parentRef.children.add(this.compiledElement, index);
         var _scheduler = () => {
             try {
                 transverse(this.compiledElement);
-                elementInsertAfter(parentRef, nativeElement, targetNode, true);
-                if (changeDetector) {
+                if (index)
+                    elementInsertAfter(this.parentRef, nativeElement, targetNode, true);
+                else
+                    elementBefore(targetNode, nativeElement);
+                if (changeDetector)
                     changeDetector.detectChanges();
-                }
                 nativeElement = null;
                 changeDetector = null;
                 targetNode = null;
@@ -2070,29 +2361,26 @@ function EmbededViewContext(parentRef, templateRef, context) {
             }
         };
         this.unsubscribeScheduler = scheduler.schedule(_scheduler);
-    };
-    this.destroy = function () {
+    }
+    destroy() {
         this.unsubscribeScheduler();
-        if (_componentRef && !this.compiledElement.isc) {
-            _componentRef.destroy();
-            _componentRef = null;
-        }
         removeElement(this.compiledElement, true);
         this.compiledElement = null;
         this.context = null;
-    };
-    this.setContext = function (context) {
+        this.parentRef = null;
+    }
+    setContext(context) {
         this.context = context;
         this.compiledElement.changeDetector.detectChanges();
-    };
-}
-EmbededViewContext.prototype.updateContext = function (updates) {
-    if (!this.context)
-        return;
-    for (var prop in updates) {
-        this.context[prop] = updates[prop];
     }
-};
+    updateContext(updates) {
+        if (!this.context)
+            return;
+        for (var prop in updates) {
+            this.context[prop] = updates[prop];
+        }
+    }
+}
 function TextNodeRef(definition, parent) {
     this.nativeNode = document.createTextNode(definition.ast[0]);
     this.type = 3;
@@ -2112,163 +2400,6 @@ function TextNodeRef(definition, parent) {
         });
     }
 }
-function EventHandler(events) {
-    this._events = events;
-    this.registeredEvents = new Map();
-}
-EventHandler.prototype.destroy = function () {
-    this.registeredEvents.forEach(function (removeListenerFn) {
-        removeListenerFn();
-    });
-    this.registeredEvents.clear();
-    this._events.length = 0;
-};
-EventHandler.customRegistry = {
-    window: new CustomEventHandler(window),
-    document: new CustomEventHandler(document)
-};
-EventHandler.registerListener = function (element) {
-    if (!element.events || !element.events._events.length)
-        return;
-    var eventInstance = element.events;
-    var handler = function ($ev) {
-        handleEvent(element, $ev);
-    };
-    function _registerEvent(eventName) {
-        if (!eventInstance.registeredEvents.has(eventName)) {
-            if (eventName.includes('.')) {
-                var event = eventName.split('.');
-                if (EventHandler.customRegistry[event[0]]) {
-                    var unsubscribe = EventHandler.customRegistry[event[0]].register(event[1], function (htmlEvent) {
-                        handleEvent(element, htmlEvent, eventName);
-                    });
-                    eventInstance.registeredEvents.set(eventName, unsubscribe);
-                }
-            } else {
-                element.nativeElement.addEventListener(eventName, handler, false);
-                eventInstance.registeredEvents.set(eventName, function () {
-                    element.nativeElement.removeEventListener(eventName, handler);
-                });
-            }
-        }
-    }
-    var totalEvents = eventInstance._events.length;
-    while (totalEvents--) {
-        var event = eventInstance._events[totalEvents];
-        if (!event.custom) {
-            event.name.split(' ').forEach(_registerEvent);
-        }
-    }
-};
-EventHandler.attachEvent = function (eventInstance, eventName, eventValue, componentInstance) {
-    eventInstance._events.push({
-        name: eventName,
-        handler: function ($event) {
-            return _executeEventsTriggers(eventValue, componentInstance, null, $event);
-        }
-    });
-};
-EventHandler.attachEventEmitter = function (element, eventName, componentInstance) {
-    var registeredEvent = getEventsByType(element.events._events, eventName)[0];
-    if (registeredEvent && registeredEvent.value) {
-        var unSubscribe = componentInstance[eventName].subscribe(function (value) {
-            var parentElement = element && element.parent;
-            parentElement = parentElement.isc ? parentElement : parentElement.hostRef;
-            _executeEventsTriggers(registeredEvent.value, parentElement.componentInstance, element.hasContext ? element.context : element.parent.hasContext ? element.parent.context : parentElement.context, value);
-            parentElement && parentElement.changeDetector && parentElement.changeDetector.detectChanges();
-        });
-        element.events.registeredEvents.set(eventName, unSubscribe);
-    }
-};
-EventHandler.attachEventDispatcher = function (element, eventName, componentInstance) {
-    var registeredEvent = getEventsByType(element.events._events, eventName)[0];
-    var context = null;
-    if (registeredEvent && registeredEvent.value) {
-        context = element.context;
-        if (element.isc) {
-            context = element.parent.context;
-        }
-        if (context.hasOwnProperty(eventName)) {
-            var unSubscribe = context[eventName].subscribe(function (value) {
-                _executeEventsTriggers(registeredEvent.value, componentInstance, element.context, value);
-                element && element.changeDetector.detectChanges();
-            });
-            element.events.registeredEvents.set(eventName, unSubscribe);
-        }
-    }
-};
-function getEventsByType(events, type) {
-    return events.filter(function (event) {
-        return event.name.split(/\s/g).includes(type);
-    });
-}
-;
-function _executeEventsTriggers(eventTriggers, componentInstance, context, ev) {
-    eventTriggers.forEach(_dispatch);
-    function _dispatch(event) {
-        if (event.left) {
-            parseObjectExpression(event, context, componentInstance, ev);
-        } else if (event.fn) {
-            var fn = getFnFromContext(event, componentInstance, context);
-            if (fn) {
-                var narg = generateArguments(event.args, context || componentInstance, null, ev);
-                fn.apply(fn.context, narg);
-                fn.context = null;
-                fn = null;
-            }
-        }
-    }
-}
-function getFnFromContext(eventInstance, componentInstance, context) {
-    var instance = componentInstance;
-    if (eventInstance.namespaces) {
-        instance = resolveContext(eventInstance.namespaces, componentInstance, context);
-    }
-    var fn = instance[eventInstance.fn];
-    if (instance instanceof Array || !componentInstance[eventInstance.fn]) {
-        fn.context = instance;
-    } else {
-        fn.context = componentInstance;
-    }
-    instance = null;
-    return fn;
-}
-;
-function handleEvent(element, event, eventName) {
-    eventName = eventName || event.type;
-    if (inarray(eventName, [
-            'touchstart',
-            'touchend',
-            'touchmove',
-            'submit'
-        ])) {
-        event.preventDefault();
-    }
-    try {
-        getEventsByType(element.events._events, eventName).forEach(triggerEvents);
-    } catch (e) {
-        errorBuilder(e);
-    } finally {
-        element && element.changeDetector && element.changeDetector.detectChanges();
-    }
-    function isClosest(target) {
-        return target.some(query => event.target.closest(query));
-    }
-    function triggerEvents(registeredEvent) {
-        if (registeredEvent.handler) {
-            return registeredEvent.handler(event);
-        } else {
-            var selectedElem = element;
-            if (registeredEvent.target) {
-                if (!isClosest(registeredEvent.target))
-                    return;
-                selectedElem = event.target[$elementContext] || element;
-            }
-            _executeEventsTriggers(registeredEvent.value, element.hostRef.componentInstance, selectedElem.context, event);
-            selectedElem = null;
-        }
-    }
-}
 function CustomEventHandler(element) {
     var trigger = event => {
         this.trigger(event);
@@ -2286,23 +2417,210 @@ function CustomEventHandler(element) {
             return () => this.registeredEvents[type].splice(index - 1, 1);
         }
     };
-    this.trigger = function (event) {
-        var listeners = this.registeredEvents[event.type];
-        if (listeners && listeners.length) {
-            listeners.forEach(function (listener) {
-                listener(event);
+}
+CustomEventHandler.prototype.trigger = function (event) {
+    var listeners = this.registeredEvents[event.type] || [];
+    for (var i = 0; i < listeners.length; i++) {
+        listeners[i](event);
+    }
+};
+CustomEventHandler.prototype.destroy = function () {
+    for (var type in this.registeredEvents) {
+        this.registeredEvents[type].length = 0;
+        delete this.registeredEvents[type];
+        this.element.removeEventListener(type, trigger, false);
+    }
+    this.element = null;
+    this.registeredEvents = null;
+};
+function ProxyEvent(event, target) {
+    var eventProps = [
+        'key',
+        'keyCode',
+        'pageX',
+        'pageY',
+        'screenX',
+        'screenY',
+        'x',
+        'y',
+        'clientX',
+        'clientY',
+        'type',
+        'width',
+        'height',
+        'offsetX',
+        'offsetY'
+    ];
+    return eventProps.reduce((accum, name) => (accum[name] = event[name], accum), {
+        target,
+        preventDefault: event.preventDefault
+    });
+}
+var customEventRegistry = new Map([
+    [
+        'window',
+        new CustomEventHandler(window)
+    ],
+    [
+        'document',
+        new CustomEventHandler(document)
+    ]
+]);
+class EventHandler {
+    constructor(events) {
+        this._events = events;
+        this.registeredEvents = new Map();
+    }
+    static registerListener(element) {
+        if (!element.events || !element.events._events.length)
+            return;
+        var eventInstance = element.events;
+        var handler = function ($ev) {
+            EventHandler.handleEvent(element, $ev);
+        };
+        function _registerEvent(eventName, useCapture) {
+            if (!eventInstance.registeredEvents.has(eventName)) {
+                if (eventName.includes('.')) {
+                    var event = eventName.split('.');
+                    var customRegistry = customEventRegistry.get(event[0]);
+                    if (customRegistry) {
+                        var unsubscribe = customRegistry.register(event[1], function (htmlEvent) {
+                            EventHandler.handleEvent(element, htmlEvent, eventName);
+                        });
+                        eventInstance.registeredEvents.set(eventName, unsubscribe);
+                        customRegistry = null;
+                    }
+                } else {
+                    element.nativeElement.addEventListener(eventName, handler, useCapture);
+                    eventInstance.registeredEvents.set(eventName, function () {
+                        element.nativeElement.removeEventListener(eventName, handler);
+                    });
+                }
+            }
+        }
+        for (var event of eventInstance._events) {
+            if (!event.custom) {
+                event.name.split(' ').forEach(eventName => _registerEvent(eventName, !!event.target));
+            }
+        }
+    }
+    static attachEventEmitter(element, eventName, componentInstance) {
+        var registeredEvent = getEventsByType(element.events._events, eventName)[0];
+        if (registeredEvent && registeredEvent.value) {
+            var unSubscribe = componentInstance[eventName].subscribe(function (value) {
+                var parentElement = element && element.parent;
+                if (!parentElement)
+                    return;
+                parentElement = parentElement.isc ? parentElement : parentElement.hostRef;
+                _executeEventsTriggers(registeredEvent.value, parentElement.componentInstance, element.hasContext ? element.context : element.parent.hasContext ? element.parent.context : parentElement.context, value);
+                parentElement && parentElement.changeDetector && parentElement.changeDetector.detectChanges();
             });
+            element.events.registeredEvents.set(eventName, unSubscribe);
         }
-    };
-    this.destroy = function () {
-        for (var type in this.registeredEvents) {
-            this.registeredEvents[type].length = 0;
-            delete this.registeredEvents[type];
-            this.element.removeEventListener(type, trigger, false);
+    }
+    static attachEventDispatcher(element, eventName, componentInstance) {
+        var registeredEvent = getEventsByType(element.events._events, eventName)[0];
+        var context = null;
+        if (registeredEvent && registeredEvent.value) {
+            context = element.context;
+            if (element.isc) {
+                context = element.parent.context;
+            }
+            if (context.hasOwnProperty(eventName)) {
+                var unSubscribe = context[eventName].subscribe(function (value) {
+                    _executeEventsTriggers(registeredEvent.value, componentInstance, element.context, value);
+                    element && element.changeDetector.detectChanges();
+                });
+                element.events.registeredEvents.set(eventName, unSubscribe);
+            }
         }
-        this.element = null;
-        this.registeredEvents = null;
-    };
+    }
+    static handleEvent(element, event, eventName) {
+        eventName = eventName || event.type;
+        if (inarray(eventName, [
+                'touchstart',
+                'touchend',
+                'touchmove',
+                'submit'
+            ])) {
+            event.preventDefault();
+        }
+        try {
+            getEventsByType(element.events._events, eventName).forEach(triggerEvents);
+        } catch (e) {
+            errorBuilder(e);
+        } finally {
+            element && element.changeDetector && element.changeDetector.detectChanges();
+        }
+        function getClosest(target) {
+            for (var query of target) {
+                var ele = event.target.closest(query);
+                if (ele)
+                    return ele;
+            }
+            return null;
+        }
+        function triggerEvents(registeredEvent) {
+            var _event = null;
+            var context = element.context;
+            if (registeredEvent.handler) {
+                return registeredEvent.handler(event);
+            } else if (registeredEvent.target) {
+                var mainElement = getClosest(registeredEvent.target);
+                if (!mainElement)
+                    return;
+                context = mainElement[$elementContext];
+                _event = ProxyEvent(event, mainElement);
+            }
+            var componentInstance = registeredEvent.node ? element.nodes.get(registeredEvent.node) : element.hostRef.componentInstance;
+            _executeEventsTriggers(registeredEvent.value, componentInstance, context, _event || event);
+            context = componentInstance = null;
+            if (_event) {
+                _event.target = _event.preventDefault = null;
+            }
+        }
+    }
+    destroy() {
+        this.registeredEvents.forEach(function (removeListenerFn) {
+            removeListenerFn();
+        });
+        this.registeredEvents.clear();
+        this._events.length = 0;
+    }
+}
+function getEventsByType(events, type) {
+    return events.filter(function (event) {
+        return event.name.split(/\s/g).includes(type);
+    });
+}
+;
+function _executeEventsTriggers(eventTriggers, componentInstance, context, ev) {
+    eventTriggers.forEach(_dispatch);
+    function _dispatch(event) {
+        if (event.left) {
+            parseObjectExpression(event, context, componentInstance, ev);
+        } else if (event.fn) {
+            var fn = getFnFromContext(event, componentInstance, context);
+            if (!fn)
+                return errorBuilder('No context found for this event');
+            var narg = generateArguments(event.args, context, componentInstance, ev);
+            fn.apply(fn.context, narg);
+            fn.context = null;
+            fn = null;
+        }
+    }
+}
+function getFnFromContext(eventInstance, componentInstance, context) {
+    var instance = componentInstance;
+    if (eventInstance.namespaces) {
+        instance = resolveContext(eventInstance.namespaces, componentInstance, context);
+    }
+    var fn = instance[eventInstance.fn];
+    if (!fn)
+        return null;
+    fn.context = instance instanceof Array || !componentInstance[eventInstance.fn] ? instance : componentInstance;
+    instance = null;
+    return fn;
 }
 function filterParser(filterClass, context) {
     var filterInstance = Inject(filterClass);
@@ -2327,16 +2645,19 @@ function getFilteredTemplateValue(templateModel, context, componentInstance) {
     }
     return value;
 }
-function compileTemplate(definition, context, componentInstance, cb) {
+function compileTemplate(definition, context, componentInstance) {
     var value = undefined;
-    if (definition.length > 1) {
+    if (definition.length > 1)
         value = definition[1].reduce(function (accum, options) {
             return accum.replace(options[0], evaluateExpression(options[1], context, componentInstance));
         }, definition[0]);
-    } else {
+    else
         value = getFilteredTemplateValue(definition, context, componentInstance);
-    }
-    cb(value == null || value == undefined || value == 'null' ? '' : value);
+    return [
+        null,
+        undefined,
+        'null'
+    ].includes(value) ? '' : value;
 }
 function evaluateExpression(expr, context, componentInstance) {
     if (isobject(expr) && expr.prop) {
@@ -2352,11 +2673,11 @@ function generateArguments(args, context, componentInstance, event) {
             if (!node.length)
                 return node;
             var isEvent = isequal(node[0], '$event');
-            return resolveContext(node.slice(isEvent ? 1 : 0), isEvent ? event : context, componentInstance);
+            return resolveContext(node.slice(isEvent ? 1 : 0), isEvent ? event : context, componentInstance, isEvent);
         } else if (isobject(node) && node.arg)
             return generateArguments(node.arg, context, componentInstance, event);
         else if (isstring(node))
-            return isequal(node, '$event') ? event : context.hasOwnProperty(node) ? context[node] : node;
+            return isequal(node, '$event') ? event : context.hasOwnProperty(node) ? context[node] : componentInstance.hasOwnProperty(node) ? componentInstance[node] : node;
         return resolveValueFromContext(node, context, componentInstance, event);
     }
 }
@@ -2492,8 +2813,7 @@ function setModelValue(key, context, componentInstance, value) {
     modelContext = null;
     return value;
 }
-function resolveContext(key, context, componentInstance) {
-    var isEventType = context instanceof Event;
+function resolveContext(key, context, componentInstance, isEventType) {
     return key.reduce(function (accum, property, idx) {
         if (isEventType) {
             return accum[property];
@@ -2513,88 +2833,259 @@ function interpolationHelper(delimiterRegExp, str, replacerData) {
         return resolveContext(key.split('.'), replacerData);
     });
 }
-function AbstractEventRx() {
-    this._listeners = [];
-    this._hooks = [];
-}
-AbstractEventRx.prototype.when = function () {
-    for (var i = 0; i < arguments.length; i++) {
-        this._hooks.push(arguments[i]);
-    }
-    return this;
-};
-AbstractEventRx.prototype.subscribe = function (fn) {
-    var index = this._listeners.length;
-    var _this = this;
-    if (typeof fn !== 'function') {
-        errorBuilder('Expected a function got ' + typeof fn);
-        return;
-    }
-    this._listeners.push(fn);
-    return function () {
-        _this._listeners.splice(index, 1);
-    };
-};
-AbstractEventRx.prototype.destroy = function () {
-    this._listeners.length = 0;
-    this._hooks.length = 0;
-};
-function StateManager(current, callback, states) {
-    this.current = '';
-    this.states = states || [];
-    this.set = function (name) {
-        if (!validateAction(this.current, name)) {
-            this.current = name;
-            this.lastStateIndex = this.states.indexOf(name);
-        }
-    };
-    function validateAction(current, next) {
-        return (callback || function () {
-            return false;
-        })(current, next);
-    }
-    Object.defineProperties(this, {
-        isLast: {
-            get: function () {
-                return this.lastStateIndex === this.states.length - 1;
+var FX = {
+    easing: {
+        linear: function (progress) {
+            return progress;
+        },
+        quadratic: function (progress) {
+            return Math.pow(progress, 2);
+        },
+        swing: function (progress) {
+            return 0.5 - Math.cos(progress * Math.PI) / 2;
+        },
+        circ: function (progress) {
+            return 1 - Math.sin(Math.acos(progress));
+        },
+        back: function (progress, x) {
+            return Math.pow(progress, 2) * ((x + 1) * progress - x);
+        },
+        bounce: function (progress) {
+            for (var a = 0, b = 1; 1; a += b, b /= 2) {
+                if (progress >= (7 - 4 * a) / 11) {
+                    return -Math.pow((11 - 6 * a - 11 * progress) / 4, 2) + Math.pow(b, 2);
+                }
             }
         },
-        isFirst: {
-            get: function () {
-                return this.lastStateIndex < 1;
-            }
+        elastic: function (progress, x) {
+            return Math.pow(2, 10 * (progress - 1)) * Math.cos(20 * Math.PI * x / 3 * progress);
+        }
+    }
+};
+function animationInterval(options) {
+    var start = new Date();
+    if (typeof options.duration === 'string') {
+        options.duration = options.duration == 'fast' ? 100 : 1000;
+    }
+    var id = setInterval(function () {
+        var timePassed = new Date() - start;
+        var progress = timePassed / options.duration;
+        if (progress > 1)
+            progress = 1;
+        options.progress = progress;
+        var delta = options.delta(progress);
+        options.step(delta);
+        if (progress == 1) {
+            clearInterval(id);
+            options.complete();
+        }
+    }, options.delay || 10);
+}
+function triggerCallback(callback, arg) {
+    if (callback && typeof callback == 'function') {
+        callback.call(arg);
+    }
+}
+function getAttrFx(element, show) {
+    var height = parseInt(element.style.height || element.clientHeight);
+    var opacity = show ? 1 : 0;
+    return {
+        height,
+        opacity
+    };
+}
+function animate(element, styles, speed, callback) {
+    animationInterval({
+        duration: speed,
+        delta: function (progress) {
+            return FX.easing.swing(progress);
+        },
+        complete: callback || function () {
+        },
+        step: function (delta) {
+            if (typeof styles == 'function')
+                styles(delta);
+            else
+                for (var prop in styles) {
+                    element.style[prop] = Math.floor(styles[prop] * delta);
+                }
+            ;
         }
     });
-    this.set(current);
 }
-StateManager.prototype.pushStates = function (states) {
-    this.states.push.apply(this.states, states);
+;
+animate.hide = function (element, speed, callback) {
+    var attrFx = getAttrFx(element, false);
+    animate(element, attrFx, speed || 100, function () {
+        element.style.display = 'none';
+        element.style.height = attrFx.height;
+        triggerCallback(callback);
+    });
 };
-StateManager.prototype.next = function () {
-    var next = this.lastStateIndex + 1;
-    if (this.states.length - 1 >= next) {
-        this.set(this.states[next]);
-    }
+animate.show = function (element, speed, callback) {
+    element.style.display = 'block';
+    animate(element, getAttrFx(element, true), speed || 100, function () {
+        triggerCallback(callback);
+    });
 };
-StateManager.prototype.previous = function () {
-    if (this.lastStateIndex) {
-        this.set(this.states[this.lastStateIndex - 1]);
-    }
-};
-StateManager.prototype.isState = function (state) {
-    return state === this.current;
-};
-StateManager.prototype.setClass = function (state) {
-    return this.isState(state) ? 'active' : '';
-};
-function EventEmitter() {
-    AbstractEventRx.call(this);
+function fadeFN(element, to, style, speed, callback) {
+    animationInterval({
+        duration: speed || 1000,
+        delta: function (progress) {
+            return FX.easing.swing(progress);
+        },
+        complete: function () {
+            element.style.display = style;
+            triggerCallback(callback);
+        },
+        step: function (delta) {
+            element.style.opacity = delta ? to : delta;
+        }
+    });
 }
-EventEmitter.prototype = Object.create(AbstractEventRx.prototype);
-EventEmitter.prototype.constructor = AbstractEventRx;
-EventEmitter.prototype.emit = function (args) {
-    _eventRxTrigger(this, args);
+animate.fadeIn = function (element, speed, callback) {
+    fadeFN(element, 1, 'block', speed, callback);
 };
+animate.fadeOut = function (element, speed, callback) {
+    fadeFN(element, 0, 'none', speed, callback);
+};
+animate.slideUp = function (element, speed, callback) {
+    speed = speed || 1000;
+    var hgt = element.clientHeight;
+    animationInterval({
+        duration: speed,
+        delta: function (progress) {
+            progress = this.progress;
+            return FX.easing.swing(progress);
+        },
+        complete: function () {
+            element.style.display = 'none';
+            element.style.height = hgt + 'px';
+            triggerCallback(callback);
+        },
+        step: function (delta) {
+            element.style.height = Math.floor(hgt - hgt * delta) + 'px';
+            element.style.overflow = 'hidden';
+        }
+    });
+};
+animate.slideDown = function (element, speed, callback) {
+    speed = speed || 1000;
+    var hgt = parseInt(element.style.height);
+    element.style.height = '0px';
+    element.style.display = '';
+    animationInterval({
+        duration: speed,
+        delta: function (progress) {
+            progress = this.progress;
+            return FX.easing.swing(progress);
+        },
+        complete: function () {
+            element.style.overflow = 'auto';
+            triggerCallback(callback);
+        },
+        step: function (delta) {
+            element.style.height = Math.floor(0 + hgt * delta) + 'px';
+            element.style.overflow = 'hidden';
+        }
+    });
+};
+animate.toggleSlide = function (element) {
+    animate[element.style.display === 'none' ? 'slideDown' : 'slideUp'](element);
+};
+var rxEventStatus = [
+    'pending',
+    'inprogress',
+    'complete'
+];
+class AbstractEventRx {
+    constructor() {
+        this._listeners = [];
+        this._hooks = [];
+        this._callback = null;
+        this._status = 0;
+    }
+    when() {
+        for (var i = 0; i < arguments.length; i++) {
+            this._hooks.push(arguments[i]);
+        }
+        return this;
+    }
+    subscribe(fn) {
+        var index = this._listeners.length;
+        if (typeof fn !== 'function') {
+            errorBuilder('Expected a function got ' + typeof fn);
+            return;
+        }
+        this._listeners.push(fn);
+        return () => this.destroy(index);
+    }
+    destroy(index) {
+        if (this._status == 1 && this._listeners.length) {
+            this._status = 2;
+            return;
+        }
+        if (index == this._listeners.length) {
+            this._listeners.length = 0;
+            this._hooks.length = 0;
+        } else {
+            this._listeners.splice(index, 1);
+        }
+    }
+}
+class StateManager {
+    constructor(current, callback, states) {
+        this.current = current || '';
+        this.states = states || [];
+        this.set = function (name) {
+            if (!validateAction(this.current, name) && this.states.length) {
+                this.current = name;
+                this.lastStateIndex = this.states.indexOf(name);
+            }
+        };
+        function validateAction(current, next) {
+            return (callback || function () {
+                return false;
+            })(current, next);
+        }
+        this.set(current);
+    }
+    get isLast() {
+        return this.lastStateIndex === this.states.length - 1;
+    }
+    get isFirst() {
+        return this.lastStateIndex < 1;
+    }
+    pushStates(states) {
+        this.states.push.apply(this.states, states);
+        if (this.current && !this.lastStateIndex) {
+            this.lastStateIndex = this.states.indexOf(name);
+        }
+    }
+    next() {
+        var next = this.lastStateIndex + 1;
+        if (this.states.length - 1 >= next) {
+            this.set(this.states[next]);
+        }
+    }
+    previous() {
+        if (this.lastStateIndex) {
+            this.set(this.states[this.lastStateIndex - 1]);
+        }
+    }
+    isState(state) {
+        return state === this.current;
+    }
+    setClass(state) {
+        return this.isState(state) ? 'active' : '';
+    }
+}
+class EventEmitter extends AbstractEventRx {
+    emit(args) {
+        this._status = 1;
+        _eventRxTrigger(this, args);
+    }
+}
 function Promise2(callback, extension) {
     var _catchCallback = function (e) {
         console.error(e);
@@ -2714,68 +3205,70 @@ Promise2.all = function (resolve) {
         }
     });
 };
-function EventManager(defaultCallback, eventExtensionMethod) {
-    var _events = {};
-    this.defaultCallback = defaultCallback || function () {
-    };
-    this.eventExtensionMethod = typeof eventExtensionMethod === 'function' ? eventExtensionMethod : function (obj) {
-        return obj;
-    };
-    this.add = function (eventName, callback) {
-        if (!_events.hasOwnProperty(eventName)) {
-            _events[eventName] = [];
-        }
-        _events[eventName].push(callback);
-        return _events[eventName].length - 1;
-    };
-    this.get = function (eventName) {
-        return _events[eventName] || [];
-    };
-}
-EventManager.prototype._eventsObj = function (type) {
-    return this.eventExtensionMethod({
-        type: type,
-        timestamp: +new Date(),
-        isTrusted: true,
-        returnValue: true,
-        target: null,
-        defaultPrevented: false,
-        preventDefault: function () {
-            this.defaultPrevented = true;
-        }
-    });
-};
-EventManager.prototype.dispatch = function (eventName) {
-    var eventObj = this._eventsObj(eventName);
-    var arg = [eventObj].concat(Array.prototype.slice.call(arguments, 1, arguments.length));
-    var eventListeners = this.get(eventName);
-    if (eventListeners) {
-        eventListeners.forEach(function (fn) {
-            fn.apply(fn, arg);
+class EventManager {
+    constructor(defaultCallback, eventExtensionMethod) {
+        var _events = {};
+        this.defaultCallback = defaultCallback || function () {
+        };
+        this.eventExtensionMethod = typeof eventExtensionMethod === 'function' ? eventExtensionMethod : function (obj) {
+            return obj;
+        };
+        this.add = function (eventName, callback) {
+            if (!_events.hasOwnProperty(eventName)) {
+                _events[eventName] = [];
+            }
+            _events[eventName].push(callback);
+            return _events[eventName].length - 1;
+        };
+        this.get = function (eventName) {
+            return _events[eventName] || [];
+        };
+    }
+    _eventsObj(type) {
+        return this.eventExtensionMethod({
+            type: type,
+            timestamp: +new Date(),
+            isTrusted: true,
+            returnValue: true,
+            target: null,
+            defaultPrevented: false,
+            preventDefault: function () {
+                this.defaultPrevented = true;
+            }
         });
     }
-    if (!eventObj.defaultPrevented) {
-        this.defaultCallback.apply(this.defaultCallback, arg);
+    dispatch(eventName) {
+        var eventObj = this._eventsObj(eventName);
+        var arg = [eventObj].concat(Array.prototype.slice.call(arguments, 1, arguments.length));
+        var eventListeners = this.get(eventName);
+        if (eventListeners) {
+            eventListeners.forEach(function (fn) {
+                fn.apply(fn, arg);
+            });
+        }
+        if (!eventObj.defaultPrevented) {
+            this.defaultCallback.apply(this.defaultCallback, arg);
+        }
     }
-};
-EventManager.prototype.unlink = function (eventName, index) {
-    var eventListeners = this.get(eventName);
-    if (eventListeners) {
-        eventListeners.splice(1, index);
+    unlink(eventName, index) {
+        var eventListeners = this.get(eventName);
+        if (eventListeners) {
+            eventListeners.splice(1, index);
+        }
     }
-};
-EventManager.prototype.destroy = function (eventName) {
-    var eventListeners = this.get(eventName);
-    if (eventListeners) {
-        eventListeners.length = 0;
+    destroy(eventName) {
+        var eventListeners = this.get(eventName);
+        if (eventListeners) {
+            eventListeners.length = 0;
+        }
     }
-};
-EventManager.prototype.one = function (eventName, idx) {
-    var eventListeners = this.get(eventName);
-    if (eventListeners) {
-        return eventListeners[idx];
+    one(eventName, idx) {
+        var eventListeners = this.get(eventName);
+        if (eventListeners) {
+            return eventListeners[idx];
+        }
     }
-};
+}
 function debounce(func, wait, immediate) {
     var timeout;
     return function () {
@@ -2802,11 +3295,50 @@ function rxDebounceTime(timeout, immediate) {
 }
 ;
 function rxWhile(callback) {
-    return function (value, listener) {
-        listener(callback(value));
+    return function (value, next) {
+        next(callback(value));
     };
 }
 ;
+function rxUntilChanged() {
+    var oldValue = null;
+    return function (value, next) {
+        var noChanges = !isequal(value, oldValue);
+        oldValue = value;
+        next(noChanges);
+    };
+}
+function rxWait() {
+}
+function rxEvents(targetInstance, eventNames) {
+    if (!targetInstance || !eventNames)
+        return errorBuilder(`Target and eventNames parameters are required to use this method`);
+    function coreEventListener(event) {
+    }
+    if (!Array.isArray(eventNames))
+        eventNames = [eventNames];
+    eventNames.forEach(eventName => targetInstance.addEventListener(eventName, coreEventListener));
+    return () => {
+        eventNames.forEach(eventName => targetInstance.removeEventListener(eventName, coreEventListener));
+    };
+}
+function rxLoop(operations, callback) {
+    return new Promise(resolve => {
+        if (!operations || !operations.length) {
+            return resolve();
+        }
+        var inc = 0;
+        function next() {
+            if (operations.length > inc) {
+                inc++;
+                callback(operations[inc - 1], next);
+            } else {
+                resolve();
+            }
+        }
+        next();
+    });
+}
 function rxNotify(subscription, model, ignoreCheck) {
     if (subscription.watchKey) {
         if (model) {
@@ -2820,7 +3352,7 @@ function rxNotify(subscription, model, ignoreCheck) {
                 if (subscription.core(value)) {
                     _trigger(subscription.handler, value);
                 }
-            } else if (ignoreCheck || _comparison(value, subscription)) {
+            } else if (ignoreCheck || _valueComparison(value, subscription)) {
                 _trigger(subscription.handler, value);
             }
         }
@@ -2837,32 +3369,23 @@ function _trigger(handlers, value) {
         handlers(value);
     }
 }
-function _comparison(value, suscription) {
+function _valueComparison(value, suscription) {
     var noChanges = !isequal(value, suscription.lastValue);
     suscription.lastValue = value;
     return noChanges;
 }
 function triggerWhen(operators, args, callback) {
-    if (!operators || !operators.length) {
-        return callback(true);
-    }
-    var inc = 0;
-    var failed = false;
-    function next() {
-        var fn = operators[inc];
-        if (fn) {
-            fn(args, function (value) {
-                if (!value) {
-                    failed = true;
-                }
-                inc++;
-                next();
-            });
-        } else {
-            callback(!failed);
-        }
-    }
-    next();
+    var passed = true;
+    if (!operators || !operators.length)
+        return callback(passed);
+    rxLoop(operators, (operator, next) => {
+        operator(args, value => {
+            if (!value) {
+                passed = false;
+            }
+            next();
+        });
+    }).then(() => callback(passed), () => callback(passed));
 }
 function _eventRxTrigger(context, value) {
     triggerWhen(context._hooks, value, function (allPassed) {
@@ -2870,57 +3393,91 @@ function _eventRxTrigger(context, value) {
             context._listeners.forEach(function (fn) {
                 fn(value);
             });
+            if (context._status == 2)
+                context.destroy();
+            else
+                context._status = 0;
         }
     });
 }
-function rxTimeout() {
-    this.subscription = new Subscription(false);
-    this.play = function (timer) {
-        this.timerId = nativeTimeout(() => this.subscription.notify(SubscriptionStates.onSuccess), timer || 100);
-        return this;
-    };
-}
-rxTimeout.prototype.subscribe = function (callback, onDestroy) {
-    this.subscription.add(callback, onDestroy);
-    return this;
-};
-rxTimeout.prototype.stop = function () {
-    clearTimeout(this.timerId);
-};
-rxTimeout.prototype.clearTimeout = function (destroy) {
-    this.stop();
-    if (destroy) {
-        this.subscription.destroy();
+class rxTimeout {
+    constructor() {
+        this.subscription = new Subscription(false);
+        this.play = function (timer) {
+            this.timerId = nativeTimeout(() => this.subscription.notify(SubscriptionStates.onSuccess), timer || 100);
+            return this;
+        };
     }
-};
-function rxInterval() {
-    this.subscription = new Subscription(false);
-    this.intervalId = null;
-    this.play = function (interval) {
-        this.intervalId = nativeInterval(() => this.subscription.notify(SubscriptionStates.onSuccess), interval || 100);
+    subscribe(callback, onDestroy) {
+        this.subscription.add(callback, onDestroy);
         return this;
-    };
-}
-rxInterval.prototype.subscribe = function (callback, onDestroy) {
-    this.subscription.add(callback, onDestroy);
-    return this;
-};
-rxInterval.prototype.stop = function () {
-    clearInterval(this.intervalId);
-};
-rxInterval.prototype.clearInterval = function (destroy) {
-    this.stop();
-    if (destroy) {
-        this.subscription.destroy();
     }
-};
-function ComponentFactoryResolver(componentFactory, viewComponent, callback, skipElementInsert) {
+    stop() {
+        clearTimeout(this.timerId);
+    }
+    clearTimeout(destroy) {
+        this.stop();
+        if (destroy) {
+            this.subscription.destroy();
+        }
+    }
+}
+class rxInterval {
+    constructor() {
+        this.subscription = new Subscription(false);
+        this.intervalId = null;
+        this.play = function (interval) {
+            this.intervalId = nativeInterval(() => this.subscription.notify(SubscriptionStates.onSuccess), interval || 100);
+            return this;
+        };
+    }
+    subscribe(callback, onDestroy) {
+        this.subscription.add(callback, onDestroy);
+        return this;
+    }
+    stop() {
+        clearInterval(this.intervalId);
+    }
+    clearInterval(destroy) {
+        this.stop();
+        if (destroy) {
+            this.subscription.destroy();
+        }
+    }
+}
+class EventDebounce extends AbstractEventRx {
+    constructor(timer, immediate) {
+        super();
+        this._callback = debounce(value => {
+            this._status = 1;
+            _eventRxTrigger(this, value);
+        }, timer, immediate);
+    }
+    next(args) {
+        this._callback(args);
+    }
+}
+function MediaQueryEvent(breakPoints, callback) {
+    if (!Array.isArray(breakPoints) || typeof callback != 'function')
+        return errorBuilder('MediaQueryEvent requires list of breakPoints to observe and also a callback function');
+    var attachQuery = (screenSize, idx) => {
+        var handleChange = event => callback(event, screenSize);
+        var query = `(min-width: ${ screenSize }px)`;
+        var nextPoint = breakPoints[idx + 1];
+        if (nextPoint)
+            query += ` and (max-width: ${ nextPoint - 0.02 }px)`;
+        var media = matchMedia(`${ query }`);
+        media.addEventListener('change', handleChange);
+        if (media.matches)
+            handleChange(media);
+        return () => media.removeEventListener('change', handleChange);
+    };
+    var breakPointHandlers = breakPoints.map(attachQuery);
+    return () => breakPointHandlers.forEach(listener => listener());
+}
+function ComponentFactoryResolver(componentFactory, viewRef, callback, skipElementInsert) {
     if (!componentFactory || !componentFactory.ctors.exposeView) {
-        errorBuilder('No exported factory found for <' + componentFactory.ctors.selector + '>');
-        return null;
-    }
-    if (!viewComponent) {
-        throw new Error('Unable to determine viewRef');
+        return Promise.reject('No exported factory found for <' + componentFactory.ctors.selector + '>');
     }
     var viewDefinition = {
         name: componentFactory.ctors.selector,
@@ -2928,20 +3485,27 @@ function ComponentFactoryResolver(componentFactory, viewComponent, callback, ski
         isc: true,
         providers: [componentFactory]
     };
-    var componentRef = new ElementRef(viewDefinition, viewComponent, true);
+    var componentRef = new ElementRef(viewDefinition, viewRef, true);
     var localInjectors = new ComponentInjectors(componentRef);
-    ElementCompiler(componentFactory, componentRef, localInjectors, function (componentInstance) {
-        if (!skipElementInsert) {
-            elementInsertAfter(viewComponent, componentRef.nativeElement, viewComponent.nativeElement);
-            viewComponent.children.add(componentRef);
+    return new Promise((resolve, reject) => {
+        try {
+            ElementCompiler(componentFactory, componentRef, localInjectors, function (componentInstance) {
+                if (!skipElementInsert && viewRef) {
+                    elementInsertAfter(viewRef, componentRef.nativeElement, viewRef.nativeElement);
+                    viewRef.children.add(componentRef);
+                }
+                (callback || resolve)(componentRef, componentInstance);
+            });
+        } catch (exception) {
+            reject(exception);
         }
-        noop(callback)(componentRef, componentInstance);
+        localInjectors = null;
+        viewDefinition = null;
     });
-    localInjectors = null;
-    viewDefinition = null;
 }
 function IterableProfiler(trackBy) {
     this._destroyed = false;
+    this._typeError = false;
     this.cacheHash = [];
     this.out = null;
     this.trackBy = trackBy || function (item, index) {
@@ -2949,16 +3513,20 @@ function IterableProfiler(trackBy) {
     };
 }
 IterableProfiler.prototype.diff = function (source) {
-    if (this._destroyed) {
+    if (this._destroyed)
         return false;
-    }
     if (source && !(source instanceof Array)) {
-        throw new Error('Collection should be an array');
+        if (!this._typeError) {
+            this._typeError = true;
+            return errorBuilder(new TypeError('Collection should be an array'));
+        }
+        return false;
     }
     this.out = {
         deleted: [],
         order: []
     };
+    this._typeError = false;
     var noSource = !source || !source.length;
     if (noSource && (!this.cacheHash || !this.cacheHash.length)) {
         return false;
@@ -2970,20 +3538,18 @@ IterableProfiler.prototype.diff = function (source) {
     }
     var len = source.length;
     var totalCacheItem = this.cacheHash.length;
-    var newCacheHash = new Array(source.length).fill('').map((_, idx) => this.trackBy(source[idx], idx));
+    var newCacheHash = new Array(source.length).fill('-').map((_, idx) => this.trackBy(source[idx], idx));
     var operationOrder = [];
     var isDirty = false;
-    var skipCheck = [];
     for (var inc = 0; inc < len; inc++) {
-        if (skipCheck.includes(inc))
-            continue;
-        var prevIndex = this.cacheHash.indexOf(newCacheHash[inc]);
-        var cacheHashIndex = newCacheHash.indexOf(this.cacheHash[inc]);
-        var existsInCache = prevIndex > -1;
-        var cacheIndexExistsInSource = cacheHashIndex > -1;
+        var newCacheIndex = newCacheHash.indexOf(this.cacheHash[inc]);
+        var indexInCache = this.cacheHash.indexOf(newCacheHash[inc]);
+        var prevIndex = this.cacheHash.indexOf(newCacheHash[newCacheIndex]);
+        var existsInCache = indexInCache > -1;
+        var cacheIndexExistsInSource = newCacheIndex > -1;
         var outOfCacheRange = inc > totalCacheItem - 1;
         if (existsInCache) {
-            if (prevIndex !== inc) {
+            if (prevIndex !== newCacheIndex || !cacheIndexExistsInSource) {
                 isDirty = true;
                 if (!cacheIndexExistsInSource) {
                     if (!outOfCacheRange) {
@@ -2992,9 +3558,19 @@ IterableProfiler.prototype.diff = function (source) {
                         this.out.deleted.push(inc);
                     }
                 } else {
+                    var prev = operationOrder[operationOrder.length - 1];
+                    if (prev && prev.state == 'move' && [
+                            prev.index,
+                            prev.prevIndex
+                        ].includes(prevIndex)) {
+                        continue;
+                    }
+                    var from = indexInCache > newCacheIndex ? indexInCache : prevIndex;
+                    var to = indexInCache > newCacheIndex ? prevIndex : newCacheIndex;
+                    moveItemInArray(this.cacheHash, from, to);
                     operationOrder.push({
-                        index: inc,
-                        prevIndex: prevIndex,
+                        index: to,
+                        prevIndex: from,
                         state: 'move'
                     });
                 }
@@ -3022,7 +3598,6 @@ IterableProfiler.prototype.diff = function (source) {
     this.out.order = operationOrder;
     newCacheHash = null;
     operationOrder = null;
-    skipCheck = null;
     return isDirty;
 };
 IterableProfiler.prototype.forEachDeleted = function (callback) {
@@ -3070,92 +3645,103 @@ function InterceptorResolver(interceptorToken, locals) {
         next();
     });
 }
-function LazyLoader(dropZone) {
-    this.dropZone = dropZone;
-    this.setPath = function (path) {
-        this.sourcePath = path;
-        return this;
-    };
-}
-LazyLoader.prototype.js = function (obj, callback) {
-    this._resolve(obj, callback, 'js');
-};
-LazyLoader.prototype.css = function (obj) {
-    this._resolve(obj, null, 'css');
-};
-LazyLoader.prototype.jscs = function (obj, callback) {
-    for (var type in obj) {
-        this._resolve(obj[type], callback, type);
-    }
-    return this;
-};
-LazyLoader.prototype._resolve = function (filePaths, callback, type) {
-    var totalFiles = 0, resolved = 0;
-    var clink = path => {
-        if (path.includes('//')) {
-            return path;
-        }
-        return [
-            this.sourcePath,
-            path,
-            '.',
-            type
-        ].join('');
-    };
-    if (typeof callback !== 'function') {
-        callback = function () {
+var lazyLoaderCachedPaths = [];
+class LazyLoader {
+    constructor(dropZone) {
+        this.dropZone = dropZone;
+        this.setPath = function (path) {
+            this.sourcePath = path;
+            return this;
         };
     }
-    if (Array.isArray(filePaths)) {
-        for (var filePath of filePaths) {
-            if (LazyLoader.cached.includes(filePath)) {
-                break;
+    static staticLoader() {
+        LazyLoader._resolve.apply({}, arguments);
+    }
+    static _resolve(filePaths, callback, type, assetURL, dropZone) {
+        var totalFiles = 0, resolved = 0, failed = 0;
+        var types = [
+            'js',
+            'css'
+        ];
+        var clink = (path, ftype) => path.includes('//') ? path : [
+            assetURL || '',
+            path,
+            ftype ? '.' : '',
+            ftype
+        ].join('');
+        if (typeof callback !== 'function') {
+            callback = function () {
+            };
+        }
+        if (Array.isArray(filePaths)) {
+            for (var filePath of filePaths) {
+                if (lazyLoaderCachedPaths.includes(filePath)) {
+                    continue;
+                }
+                var ftype = type || filePath.substring(filePath.lastIndexOf('.') + 1);
+                if (types.includes(ftype)) {
+                    totalFiles++;
+                    lazyLoaderCachedPaths.push(filePath);
+                    var element = _createElement(clink(filePath, type || ''), ftype);
+                    attachListener(element, filePath);
+                    (dropZone || document.getElementsByTagName('head')[0]).appendChild(element);
+                }
             }
-            totalFiles++;
-            LazyLoader.cached.push(filePath);
-            var element = _createElement(filePath, type);
-            attachListener(element);
-            (this.dropZone || document.getElementsByTagName('head')[0]).appendChild(element);
         }
-    }
-    function _createElement(filePath, type) {
-        var element = null;
-        if (type === 'js') {
-            element = document.createElement('script');
-            element.src = clink(filePath);
-        } else {
-            element = document.createElement('link');
-            element.setAttribute('type', 'text/css');
-            element.setAttribute('href', clink(filePath));
-            element.setAttribute('rel', 'stylesheet');
+        function _createElement(filePath, type) {
+            var element = null;
+            if (type === 'js') {
+                element = document.createElement('script');
+                element.src = filePath;
+            } else if (type == 'css') {
+                element = document.createElement('link');
+                element.setAttribute('type', 'text/css');
+                element.setAttribute('href', filePath);
+                element.setAttribute('rel', 'stylesheet');
+            }
+            element.charset = 'utf-8';
+            element.timeout = 120;
+            element.async = true;
+            return element;
         }
-        element.charset = 'utf-8';
-        element.timeout = 120;
-        element.async = true;
-        return element;
-    }
-    function attachListener(element) {
-        element.onreadystatechange = element.onload = function () {
-            var state = element.readyState;
-            resolved++;
-            if (!state || /loaded|complete/.test(state)) {
+        function attachListener(element, filePath) {
+            element.onload = function () {
+                resolved++;
                 triggerCallack();
                 element.parentNode.removeChild(element);
-            }
-        };
+            };
+            element.onerror = element.onabort = function () {
+                failed++;
+                triggerCallack();
+                lazyLoaderCachedPaths.splice(lazyLoaderCachedPaths.indexOf(filePath), 1);
+            };
+        }
+        function triggerCallack() {
+            var allResolved = totalFiles == resolved + failed;
+            if (allResolved)
+                callback({
+                    failed,
+                    resolved,
+                    allResolved
+                });
+        }
+        triggerCallack();
     }
-    function triggerCallack() {
-        if (totalFiles == resolved)
-            callback();
+    js(obj, callback) {
+        LazyLoader._resolve(obj, callback, 'js', this.resourcePath, this.dropZone);
     }
-    triggerCallack();
-};
-LazyLoader.cached = [];
-LazyLoader.staticLoader = function () {
-    LazyLoader.prototype._resolve.apply({}, arguments);
-};
+    css(obj) {
+        LazyLoader._resolve(obj, null, 'css', this.resourcePath, this.dropZone);
+    }
+    jscs(obj, callback) {
+        for (var type in obj) {
+            LazyLoader._resolve(obj[type], callback, type, this.resourcePath, this.dropZone);
+        }
+        return this;
+    }
+}
 var jeliContext = Object.create({
-    buildTime: Date.now(),
+    buildTime: __buildOptions.buildTime,
     version: __buildOptions.version,
     debug: jeliDebugger
 });
@@ -3196,8 +3782,9 @@ function trigger(fn, trigerDetector) {
 }
 ;
 },
-1134 : (module, exports, __required, global) => {
+1144 : (module, exports, __required, global) => {
 "use strict";
+__required.r(exports, 'SizeToUnitPipe', () => SizeToUnitPipe);
 __required.r(exports, 'ReversePipe', () => ReversePipe);
 __required.r(exports, 'FilterPipe', () => FilterPipe);
 __required.r(exports, 'whereFilterFn', () => whereFilterFn);
@@ -3216,16 +3803,22 @@ __required.r(exports, 'SwitchDirective', () => SwitchDirective);
 __required.r(exports, 'IfDirective', () => IfDirective);
 __required.r(exports, 'ForDirective', () => ForDirective);
 __required.r(exports, 'CommonModule', () => CommonModule);
-var helpers = __required(1132);
+var helpers = __required(1142);
 var isundefined = helpers.isundefined;
 var isfunction = helpers.isfunction;
 var isarray = helpers.isarray;
 var isobject = helpers.isobject;
 var isequal = helpers.isequal;
-var core = __required(1133);
+var core = __required(1143);
 var ElementClassList = core.ElementClassList;
 var IterableProfiler = core.IterableProfiler;
-var __buildOptions = {};
+var __buildOptions = {
+    'buildTime': 1734326607141,
+    'version': '1.0.0',
+    'baseHref': '',
+    'assetURL': '',
+    'production': false
+};
 function jForRow(context, index, count) {
     this.count = count;
     this.index = index;
@@ -3279,12 +3872,12 @@ var ForDirective = function () {
             },
             forOf: {
                 set: function (value) {
-                    this._isForOff = true;
+                    this._isForOf = true;
                     this._forValue = value;
                     this.willObserve();
                 },
                 get: function () {
-                    if (!this._isForOff)
+                    if (!this._isForOf)
                         return null;
                     return this._forValue;
                 }
@@ -3301,39 +3894,33 @@ var ForDirective = function () {
         });
     }
     ForDirective.prototype._listenerFn = function () {
-        var _this = this;
-        this.iterable.forEachDeleted(function (index) {
-            _this.viewRef.remove(index);
+        this.iterable.forEachDeleted(index => {
+            this.viewRef.remove(index);
         });
-        this.iterable.forEachOperation(function (item) {
+        this.iterable.forEachOperation(item => {
             switch (item.state) {
             case 'create':
-                var context = new jForRow(_this._forValue[item.index], item.index, null);
-                _this.viewRef.createEmbededView(_this.templateRef, context, item.index);
+                var context = new jForRow(this._forValue[item.index], item.index, null);
+                this.viewRef.createEmbededView(this.templateRef, context, item.index);
                 break;
             case 'update':
-                var view = _this.viewRef.get(item.index);
-                view.updateContext({ $context: _this._forValue[item.index] });
+                var view = this.viewRef.get(item.index);
+                view.updateContext({ $context: this._forValue[item.index] });
                 break;
             case 'move':
-                _this.viewRef.move(item.prevIndex, item.index);
+                this.viewRef.move(item.prevIndex, item.index);
                 break;
             }
         });
-        for (var i = 0; i < this.viewRef.length; i++) {
-            var view = _this.viewRef.get(i);
-            view.updateContext({
-                index: i,
-                count: _this._forValue.length
-            });
-        }
+        this.viewRef.updateContext();
         this.inProgress = false;
     };
     ForDirective.prototype.willObserve = function () {
         var changes = this.iterable.diff(this._forValue);
-        if (changes && !this.inProgress)
+        if (changes && !this.inProgress) {
             this.inProgress = true;
-        this._listenerFn();
+            this._listenerFn();
+        }
     };
     ForDirective.prototype.viewDidDestroy = function () {
         this.viewRef.clearView();
@@ -3817,6 +4404,25 @@ var ReversePipe = function () {
     ReversePipe.ctors = { name: 'reverse' };
     return ReversePipe;
 }();
+var SizeToUnitPipe = function () {
+    'use strict';
+    function SizeToUnitPipe() {
+        this.compile = function (size) {
+            var t = Math.floor(Math.log(size, 1024));
+            var unit = [
+                'b',
+                'kb',
+                'mb',
+                'gb',
+                'tb',
+                'pb'
+            ];
+            return Math.round(size / Math.pow(1024, t), 2) + ' ' + unit[t];
+        };
+    }
+    SizeToUnitPipe.ctors = { name: 'sizeToUnit' };
+    return SizeToUnitPipe;
+}();
 var CommonModule = function () {
     'use strict';
     function CommonModule() {
@@ -3824,7 +4430,7 @@ var CommonModule = function () {
     return CommonModule;
 }();
 },
-1135 : (module, exports, __required, global) => {
+1145 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'TimeAgoFilterFn', () => TimeAgoFilterFn);
 __required.r(exports, 'dateTimeFilterFN', () => dateTimeFilterFN);
@@ -3840,9 +4446,15 @@ __required.r(exports, 'leapYear', () => leapYear);
 __required.r(exports, 'DatetimeService', () => DatetimeService);
 __required.r(exports, 'calendarFN', () => calendarFN);
 __required.r(exports, 'DateTimeModule', () => DateTimeModule);
-var core = __required(1133);
+var core = __required(1143);
 var ProviderToken = core.ProviderToken;
-var __buildOptions = {};
+var __buildOptions = {
+    'buildTime': 1734326607179,
+    'version': '1.0.0',
+    'baseHref': '',
+    'assetURL': '',
+    'production': false
+};
 var leapYear = function (year) {
     return year % 4 == 0 ? 1 : 0;
 };
@@ -3863,20 +4475,19 @@ var getDays = function (month, year) {
     ];
     return ar[month];
 };
-var DateStringConverter = function (str) {
-    function setDay(d) {
-        return Number(d) < 10 ? parseInt(d) : Number(d);
-    }
-    if (typeof str === 'string') {
-        var arr = str.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/);
-        if (arr) {
-            arr.shift();
-            return new Date(arr[0], arr[1] - 1, setDay(arr[2]), arr[3] || 0, arr[4] || 0, arr[5] || 0);
-        } else if (/(\d+)-(\d+)-(\d+)/.test(str)) {
-            return new Date(str);
+var DateStringConverter = function (dateString) {
+    var str2Date = null;
+    if (typeof dateString === 'string') {
+        str2Date = new Date(dateString);
+        if (isNaN(str2Date.getTime())) {
+            var dateRegEx = dateString.match(/(\d+)[-./](\d+)[-./](\d+)(\s(\d+):(\d+):(\d+)|)/);
+            if (dateRegEx) {
+                dateRegEx.shift();
+                str2Date = new Date(dateRegEx[0], dateRegEx[1], dateRegEx[2], dateRegEx[3] || 0, dateRegEx[4] || 0, dateRegEx[5] || 0);
+            }
         }
     }
-    return new Date();
+    return str2Date || new Date();
 };
 var setText = function (text, future) {
     return text + (future ? ' from now' : ' ago');
@@ -3977,19 +4588,21 @@ var DAYS_FULL = new ProviderToken('dateTimeDayFull', false, {
 });
 var DatetimeService = function () {
     'use strict';
-    function DatetimeService(dateTimeMonthHalf, dateTimeMonthFull, dateTimeDayHalf, dateTimeDayFull) {
-        var dateFormatRegExp = /D{1,4}|M{1,4}|YY(?:YY)?|([HhMmsTt])\1?|[LloSZ]|"[^"]*"|'[^']*'/g;
-        this.dateTimeDayHalf = dateTimeDayHalf;
-        this.dateTimeMonthHalf = dateTimeMonthHalf;
-        this.dateTimeMonthFull = dateTimeMonthFull;
-        this.dateTimeDayFull = dateTimeDayFull;
-        this.format = function (date, format) {
-            var toFormat = this.timeConverter(date).flags;
-            return String(format).replace(dateFormatRegExp, function ($0) {
-                return $0 in toFormat ? toFormat[$0] : $0.slice(1, $0.length - 1);
-            });
-        };
-        this.buildFullCalendar = function (config) {
+    class DatetimeService {
+        constructor(dateTimeMonthHalf, dateTimeMonthFull, dateTimeDayHalf, dateTimeDayFull) {
+            var dateFormatRegExp = /D{1,4}|M{1,4}|YY(?:YY)?|([HhMmsTt])\1?|[LloSZ]|"[^"]*"|'[^']*'/g;
+            this.dateTimeDayHalf = dateTimeDayHalf;
+            this.dateTimeMonthHalf = dateTimeMonthHalf;
+            this.dateTimeMonthFull = dateTimeMonthFull;
+            this.dateTimeDayFull = dateTimeDayFull;
+            this.format = function (date, format) {
+                var toFormat = this.timeConverter(date).flags;
+                return String(format).replace(dateFormatRegExp, function ($0) {
+                    return $0 in toFormat ? toFormat[$0] : $0.slice(1, $0.length - 1);
+                });
+            };
+        }
+        buildFullCalendar(config) {
             var monthList = [], months = config.fullYear ? 0 : new Date().getMonth();
             for (months; months < 12; months++) {
                 var date = new Date(config.year, months, 1);
@@ -4002,139 +4615,150 @@ var DatetimeService = function () {
                 monthList.push(month);
             }
             return monthList;
-        };
-    }
-    DatetimeService.prototype._dateTime = function (datetime) {
-        var outputDate = !isNaN(Number(datetime)) && Number(datetime) ? new Date(datetime) : DateStringConverter(datetime);
-        var g = function (j) {
-            return (j < 10 ? '0' : '') + j;
-        };
-        outputDate.current_time = [
-            outputDate.getFullYear(),
-            '-',
-            g(Math.ceil(outputDate.getMonth() + 1)),
-            '-',
-            g(outputDate.getDate()),
-            ' ',
-            g(outputDate.getHours()),
-            ':',
-            g(outputDate.getMinutes()),
-            ':',
-            g(outputDate.getSeconds())
-        ].join('');
-        return outputDate;
-    };
-    DatetimeService.prototype.timeConverter = function (dateToParse) {
-        if (!dateToParse) {
-            dateToParse = this._dateTime();
         }
-        var currentDateTime = this._dateTime();
-        var _dateTimeToParse = dateToParse.current_time ? dateToParse : this._dateTime(dateToParse);
-        var j = _dateTimeToParse.getTime();
-        var l = currentDateTime.getTime();
-        var B = 1000 * 60 * 60 * 24;
-        var result = {};
-        var p = function (m) {
-            return (m < 10 ? '0' : '') + m;
-        };
-        if (isNaN(_dateTimeToParse.getTime())) {
-            var f = n.replace(' ', 'T');
-            var r = n.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/), D = r[1] + '-' + p(r[2] - 1) + '-' + r[3] + ' ' + r[4] + ':' + r[5] + ':' + r[6], _dateTimeToParse = new Date(Date.fromISO(f)), j = q.getTime();
-            x = new Date();
+        _dateTime(datetime) {
+            return DatetimeService.staticDateTime(datetime);
         }
-        var g = Date.UTC(_dateTimeToParse.getFullYear(), _dateTimeToParse.getMonth(), _dateTimeToParse.getDate()), f = Date.UTC(currentDateTime.getFullYear(), currentDateTime.getMonth(), currentDateTime.getDate()), days = Math.floor((f - g) / B), future = j > l, futureDiff = future ? j - l : l - j;
-        result.getTime = function () {
-            return j;
-        };
-        result.ctimestamp = g;
-        result.timestamp = f;
-        result.time_difference = {
-            seconds: Math.floor(futureDiff / 3600000 * (60 * 60)),
-            minutes: Math.floor(futureDiff / 3600000 * 60),
-            hours: Math.floor(futureDiff / 3600000),
-            weeks: Math.floor(days / 7),
-            days: days,
-            months: Math.floor(days / 30)
-        };
-        var year = _dateTimeToParse.getFullYear(), month = _dateTimeToParse.getMonth() + 1, day = _dateTimeToParse.getDate(), weekDay = _dateTimeToParse.getDay(), timeSettings = _dateTimeToParse.current_time.split(' ')[1].split(':'), hours = timeSettings[0], minute = parseInt(timeSettings[1]), seconds = parseInt(timeSettings[2]);
-        result.flags = {
-            YYYY: year,
-            YY: String(year).slice(2),
-            M: month,
-            MM: p(month),
-            MMM: this.dateTimeMonthHalf[month - 1],
-            MMMM: this.dateTimeMonthFull[month - 1],
-            D: day,
-            DD: p(day),
-            DDD: this.dateTimeDayHalf[weekDay],
-            DDDD: this.dateTimeDayFull[weekDay],
-            h: hours % 12 || 12,
-            hh: p(hours),
-            H: hours,
-            HH: p(hours),
-            m: minute,
-            mm: p(minute),
-            s: seconds,
-            ss: p(seconds),
-            t: hours < 12 ? 'a' : 'p',
-            tt: hours < 12 ? 'am' : 'pm',
-            T: hours < 12 ? 'A' : 'P',
-            TT: hours < 12 ? 'AM' : 'PM'
-        };
-        result.isLeapYear = leapYear(year);
-        result.today = this.dateTimeDayHalf[currentDateTime.getDay()] + ', ' + currentDateTime.getDate() + ' ' + this.dateTimeMonthHalf[currentDateTime.getMonth()];
-        if (currentDateTime.getFullYear() > _dateTimeToParse.getFullYear()) {
-            result.date = this.dateTimeMonthHalf[_dateTimeToParse.getMonth()] + ', ' + _dateTimeToParse.getDate() + ' ' + _dateTimeToParse.getFullYear();
-        } else {
-            result.date = this.dateTimeDayHalf[_dateTimeToParse.getDay()] + ', ' + _dateTimeToParse.getDate() + ' ' + this.dateTimeMonthHalf[_dateTimeToParse.getMonth()];
+        timeConverter(dateToParse) {
+            return DatetimeService.staticTimeConverter(dateToParse, this);
         }
-        if (result.time_difference.seconds <= 60) {
-            result.timeago = result.time_difference.seconds + setText(' seconds', future);
-        } else {
-            if (result.time_difference.minutes <= 60) {
-                if (result.time_difference.minutes == 1) {
-                    result.timeago = setText('1 minute', future);
-                } else {
-                    result.timeago = result.time_difference.minutes + setText(' minutes', future);
-                }
+        static staticDateTime(datetime) {
+            datetime = isNaN(Number(datetime)) ? datetime : Number(datetime);
+            var outputDate = typeof datetime == 'number' ? new Date(datetime) : DateStringConverter(datetime);
+            var g = j => (typeof j == 'number' && j < 10 ? '0' : '') + j;
+            outputDate.current_time = [
+                outputDate.getFullYear(),
+                '-',
+                g(Math.ceil(outputDate.getMonth() + 1)),
+                '-',
+                g(outputDate.getDate()),
+                ' ',
+                g(outputDate.getHours()),
+                ':',
+                g(outputDate.getMinutes()),
+                ':',
+                g(outputDate.getSeconds())
+            ].join('');
+            return outputDate;
+        }
+        static staticTimeConverter(dateToParse, context) {
+            if (!dateToParse)
+                dateToParse = DatetimeService.staticDateTime();
+            var currentDateTime = DatetimeService.staticDateTime();
+            var date2ParseObject = dateToParse.current_time ? dateToParse : DatetimeService.staticDateTime(dateToParse);
+            var j = date2ParseObject.getTime();
+            var l = currentDateTime.getTime();
+            var B = 1000 * 60 * 60 * 24;
+            var result = {};
+            var p = m => (typeof m == 'number' && m < 10 ? '0' : '') + m;
+            if (isNaN(date2ParseObject.getTime())) {
+                var f = n.replace(' ', 'T');
+                var r = n.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/), D = r[1] + '-' + p(r[2] - 1) + '-' + r[3] + ' ' + r[4] + ':' + r[5] + ':' + r[6], date2ParseObject = new Date(Date.fromISO(f)), j = q.getTime();
+                x = new Date();
+            }
+            var g = Date.UTC(date2ParseObject.getFullYear(), date2ParseObject.getMonth(), date2ParseObject.getDate()), f = Date.UTC(currentDateTime.getFullYear(), currentDateTime.getMonth(), currentDateTime.getDate()), days = Math.floor((f - g) / B), future = j > l, futureDiff = future ? j - l : l - j;
+            result.getTime = () => j;
+            result.ctimestamp = g;
+            result.timestamp = f;
+            result.time_difference = {
+                seconds: Math.floor(futureDiff / 3600000 * (60 * 60)),
+                minutes: Math.floor(futureDiff / 3600000 * 60),
+                hours: Math.floor(futureDiff / 3600000),
+                weeks: Math.floor(days / 7),
+                days: days,
+                months: Math.floor(days / 30)
+            };
+            var year = date2ParseObject.getFullYear(), month = date2ParseObject.getMonth() + 1, day = date2ParseObject.getDate(), weekDay = date2ParseObject.getDay(), timeSettings = date2ParseObject.current_time.split(' ')[1].split(':'), hours = timeSettings[0], minute = parseInt(timeSettings[1]), seconds = parseInt(timeSettings[2]);
+            result.flags = {
+                YYYY: year,
+                YY: String(year).slice(2),
+                M: month,
+                MM: p(month),
+                MMM: context.dateTimeMonthHalf[month - 1],
+                MMMM: context.dateTimeMonthFull[month - 1],
+                D: day,
+                DD: p(day),
+                DDD: context.dateTimeDayHalf[weekDay],
+                DDDD: context.dateTimeDayFull[weekDay],
+                h: hours % 12 || 12,
+                hh: p(hours),
+                H: hours,
+                HH: p(hours),
+                m: minute,
+                mm: p(minute),
+                s: seconds,
+                ss: p(seconds),
+                t: hours < 12 ? 'a' : 'p',
+                tt: hours < 12 ? 'am' : 'pm',
+                T: hours < 12 ? 'A' : 'P',
+                TT: hours < 12 ? 'AM' : 'PM'
+            };
+            result.isLeapYear = leapYear(year);
+            result.today = context.dateTimeDayHalf[currentDateTime.getDay()] + ', ' + currentDateTime.getDate() + ' ' + context.dateTimeMonthHalf[currentDateTime.getMonth()];
+            if (currentDateTime.getFullYear() > date2ParseObject.getFullYear()) {
+                result.date = context.dateTimeMonthHalf[date2ParseObject.getMonth()] + ', ' + date2ParseObject.getDate() + ' ' + date2ParseObject.getFullYear();
             } else {
-                if (result.time_difference.hours <= 24) {
-                    if (result.time_difference.hours == 1) {
-                        result.timeago = setText('an hour', future);
+                result.date = context.dateTimeDayHalf[date2ParseObject.getDay()] + ', ' + date2ParseObject.getDate() + ' ' + context.dateTimeMonthHalf[date2ParseObject.getMonth()];
+            }
+            if (result.time_difference.seconds <= 60) {
+                result.timeago = result.time_difference.seconds + setText(' seconds', future);
+            } else {
+                if (result.time_difference.minutes <= 60) {
+                    if (result.time_difference.minutes == 1) {
+                        result.timeago = setText('1 minute', future);
                     } else {
-                        result.timeago = result.time_difference.hours + setText(' hours', future);
+                        result.timeago = result.time_difference.minutes + setText(' minutes', future);
                     }
                 } else {
-                    if (result.time_difference.days <= 7) {
-                        if (result.time_difference.days == 1) {
-                            result.timeago = 'Yesterday';
+                    if (result.time_difference.hours <= 24) {
+                        if (result.time_difference.hours == 1) {
+                            result.timeago = setText('an hour', future);
                         } else {
-                            result.timeago = result.time_difference.days + setText(' days', future);
+                            result.timeago = result.time_difference.hours + setText(' hours', future);
                         }
                     } else {
-                        if (result.time_difference.weeks <= 4) {
-                            if (result.time_difference.weeks == 1) {
-                                result.timeago = setText('1 week');
+                        if (result.time_difference.days <= 7) {
+                            if (result.time_difference.days == 1) {
+                                result.timeago = 'Yesterday';
                             } else {
-                                result.timeago = result.time_difference.weeks + setText(' weeks', future);
+                                result.timeago = result.time_difference.days + setText(' days', future);
                             }
                         } else {
-                            if (result.time_difference.months <= 12) {
-                                if (result.time_difference.months == 1) {
-                                    result.timeago = setText('1 month', future);
+                            if (result.time_difference.weeks <= 4) {
+                                if (result.time_difference.weeks == 1) {
+                                    result.timeago = setText('1 week');
+                                } else {
+                                    result.timeago = result.time_difference.weeks + setText(' weeks', future);
+                                }
+                            } else {
+                                if (result.time_difference.months <= 12) {
+                                    if (result.time_difference.months == 1) {
+                                        result.timeago = setText('1 month', future);
+                                    } else {
+                                        result.timeago = result.date;
+                                    }
                                 } else {
                                     result.timeago = result.date;
                                 }
-                            } else {
-                                result.timeago = result.date;
                             }
                         }
                     }
                 }
             }
+            return result;
         }
-        return result;
-    };
+        static isSameDate(dateA, dateB) {
+            if (!dateA || !dateB)
+                return false;
+            if (dateA == dateB)
+                return true;
+            dateA = new Date(dateA);
+            dateB = new Date(dateB);
+            if (isNaN(dateA) || isNaN(dateB))
+                return false;
+            return dateA.getFullYear() == dateB.getFullYear() && dateA.getMonth() == dateB.getMonth() && dateA.getDate() == dateB.getDate();
+        }
+    }
     DatetimeService.ctors = {
         DI: [
             MONTHS_HALF,
@@ -4181,8 +4805,10 @@ var dateTimeFilterFN = function () {
 var TimeAgoFilterFn = function () {
     'use strict';
     function TimeAgoFilterFn(dateTimeFactory) {
-        this.compile = function (text) {
-            return dateTimeFactory.timeConverter(text).timeago;
+        this.compile = function (dateTime, fallback) {
+            if (!dateTime && fallback)
+                return fallback;
+            return dateTimeFactory.timeConverter(dateTime).timeago;
         };
     }
     TimeAgoFilterFn.ctors = {
@@ -4198,7 +4824,7 @@ var DateTimeModule = function () {
     return DateTimeModule;
 }();
 },
-1136 : (module, exports, __required, global) => {
+1146 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function () {
     return {
@@ -4215,10 +4841,10 @@ exports.default = function () {
     };
 }
 },
-1137 : (module, exports, __required, global) => {
+1147 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str) {
-    return str(/^([A-Z])|[\s-_](\w)/g, function (match, p1, p2, offset) {
+    return str.replace(/^([A-Z])|[\s-_](\w)/g, function (match, p1, p2, offset) {
         if (p2) {
             return p2.toUpperCase();
         }
@@ -4226,14 +4852,14 @@ exports.default = function (str) {
     });
 }
 },
-1138 : (module, exports, __required, global) => {
+1148 : (module, exports, __required, global) => {
 "use strict";
-var camelCase = __required(1137, 'default');
+var camelCase = __required(1147, 'default');
 exports.default = function (str) {
     return str.charAt(0).toUpperCase() + camelCase(str.substring(1));
 }
 },
-1139 : (module, exports, __required, global) => {
+1149 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str) {
     return str.split('').map(function (char, idx) {
@@ -4245,7 +4871,7 @@ exports.default = function (str) {
 }
 ;
 },
-1140 : (module, exports, __required, global) => {
+1150 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (name, value) {
     if (typeof value != 'undefined') {
@@ -4300,7 +4926,7 @@ function getCookie(name) {
     return cookieValue;
 }
 },
-1141 : (module, exports, __required, global) => {
+1151 : (module, exports, __required, global) => {
 "use strict";
 exports.default = extend;
 function extend() {
@@ -4335,9 +4961,9 @@ function extend() {
     return extended;
 }
 },
-1142 : (module, exports, __required, global) => {
+1152 : (module, exports, __required, global) => {
 "use strict";
-var extend = __required(1141, 'default');
+var extend = __required(1151, 'default');
 exports.default = function (item, deep) {
     var type = {};
     if (Object.prototype.toString.call(item) === '[object Array]') {
@@ -4365,7 +4991,7 @@ exports.default = function (item, deep) {
     return extend(type, item);
 }
 },
-1143 : (module, exports, __required, global) => {
+1153 : (module, exports, __required, global) => {
 "use strict";
 exports.default = copyFrom;
 function copyFrom(to, from) {
@@ -4381,15 +5007,15 @@ function copyFrom(to, from) {
     return to;
 }
 },
-1144 : (module, exports, __required, global) => {
+1154 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (obj) {
     return Object.keys(obj).length;
 }
 },
-1145 : (module, exports, __required, global) => {
+1155 : (module, exports, __required, global) => {
 "use strict";
-var isobject = __required(1128, 'default');
+var isobject = __required(1137, 'default');
 exports.default = function (objToInspect) {
     var isObject = isobject(objToInspect);
     function contains(ins) {
@@ -4439,7 +5065,7 @@ exports.default = function (objToInspect) {
     };
 }
 },
-1146 : (module, exports, __required, global) => {
+1156 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (code) {
     var hash = 0, i, chr, len;
@@ -4453,7 +5079,7 @@ exports.default = function (code) {
     return hash;
 }
 },
-1147 : (module, exports, __required, global) => {
+1157 : (module, exports, __required, global) => {
 "use strict";
 exports.default = logger;
 var logLevels = {
@@ -4504,7 +5130,7 @@ var logger = {
     }
 };
 },
-1148 : (module, exports, __required, global) => {
+1158 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (e) {
     var uid = '';
@@ -4515,7 +5141,7 @@ exports.default = function (e) {
     return uid;
 }
 },
-1149 : (module, exports, __required, global) => {
+1159 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (arr) {
     return arr.reduce(function (all, item, index) {
@@ -4526,11 +5152,11 @@ exports.default = function (arr) {
     }, []);
 }
 },
-1150 : (module, exports, __required, global) => {
+1160 : (module, exports, __required, global) => {
 "use strict";
-var isFunction = __required(1124, 'default');
-var isObject = __required(1128, 'default');
-var isArray = __required(1116, 'default');
+var isFunction = __required(1133, 'default');
+var isObject = __required(1137, 'default');
+var isArray = __required(1125, 'default');
 exports.default = serialize;
 function serialize(obj) {
     if (!obj)
@@ -4563,7 +5189,7 @@ function serialize(obj) {
     }).join('&').replace(/%20/g, '+');
 }
 },
-1151 : (module, exports, __required, global) => {
+1161 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str, regexp) {
     return (str || '').split(regexp).map(function (val) {
@@ -4571,7 +5197,7 @@ exports.default = function (str, regexp) {
     });
 }
 },
-1152 : (module, exports, __required, global) => {
+1162 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str, replacerObj) {
     var newObj;
@@ -4586,7 +5212,7 @@ exports.default = function (str, replacerObj) {
     return newObj;
 }
 },
-1153 : (module, exports, __required, global) => {
+1163 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (par) {
     if (!par || typeof par !== 'string')
@@ -4607,7 +5233,7 @@ exports.default = function (par) {
     }
 }
 },
-1154 : (module, exports, __required, global) => {
+1164 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function ($boolValue) {
     return {
@@ -4624,30 +5250,46 @@ exports.default = function ($boolValue) {
     }[$boolValue];
 }
 },
-1155 : (module, exports, __required, global) => {
+1165 : (module, exports, __required, global) => {
+"use strict";
+exports.default = function (size) {
+    var t = Math.floor(Math.log(size, 1024));
+    var unit = [
+        'b',
+        'kb',
+        'mb',
+        'gb',
+        'tb',
+        'pb'
+    ];
+    return Math.round(size / Math.pow(1024, t), 2) + ' ' + unit[t];
+}
+},
+1166 : (module, exports, __required, global) => {
 "use strict";
 
-exports.simpleBooleanParser = __required(1154, 'default');
-exports.kebabCase = __required(1139, 'default');
-exports.pascalCase = __required(1138, 'default');
-exports.camelcase = __required(1137, 'default');
-exports.unserialize = __required(1153, 'default');
-exports.toobject = __required(1152, 'default');
-exports.splitntrim = __required(1151, 'default');
-exports.serialize = __required(1150, 'default');
-exports.nodubs = __required(1149, 'default');
-exports.makeuid = __required(1148, 'default');
-exports.logger = __required(1147, 'default');
-exports.hashcode = __required(1146, 'default');
-exports.extend = __required(1141, 'default');
-exports.expect = __required(1145, 'default');
-exports.count = __required(1144, 'default');
-exports.copyfrom = __required(1143, 'default');
-exports.copy = __required(1142, 'default');
-exports.cookie = __required(1140, 'default');
-exports.base64 = __required(1136, 'default');
+exports.sizetounit = __required(1165, 'default');
+exports.simpleBooleanParser = __required(1164, 'default');
+exports.kebabCase = __required(1149, 'default');
+exports.pascalCase = __required(1148, 'default');
+exports.camelcase = __required(1147, 'default');
+exports.unserialize = __required(1163, 'default');
+exports.toobject = __required(1162, 'default');
+exports.splitntrim = __required(1161, 'default');
+exports.serialize = __required(1160, 'default');
+exports.nodubs = __required(1159, 'default');
+exports.makeuid = __required(1158, 'default');
+exports.logger = __required(1157, 'default');
+exports.hashcode = __required(1156, 'default');
+exports.extend = __required(1151, 'default');
+exports.expect = __required(1155, 'default');
+exports.count = __required(1154, 'default');
+exports.copyfrom = __required(1153, 'default');
+exports.copy = __required(1152, 'default');
+exports.cookie = __required(1150, 'default');
+exports.base64 = __required(1146, 'default');
 },
-1156 : (module, exports, __required, global) => {
+1167 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'FormRepeaterService', () => FormRepeaterService);
 __required.r(exports, 'RangeEventBinder', () => RangeEventBinder);
@@ -4667,11 +5309,11 @@ __required.r(exports, 'ResolveCheckboxBinder', () => ResolveCheckboxBinder);
 __required.r(exports, 'DefaultEventBinder', () => DefaultEventBinder);
 __required.r(exports, 'ResolveDefaultBinder', () => ResolveDefaultBinder);
 __required.r(exports, 'FormFieldDirective', () => FormFieldDirective);
-__required.r(exports, 'FormFieldControlService', () => FormFieldControlService);
 __required.r(exports, 'AbstractValueAccessor', () => AbstractValueAccessor);
 __required.r(exports, 'VALUE_ACCESSOR', () => VALUE_ACCESSOR);
 __required.r(exports, 'FormFieldControlDirective', () => FormFieldControlDirective);
-__required.r(exports, 'formValidationStack', () => formValidationStack);
+__required.r(exports, 'FormFieldControlService', () => FormFieldControlService);
+__required.r(exports, 'FormValidationStack', () => FormValidationStack);
 __required.r(exports, 'customFormValidator', () => customFormValidator);
 __required.r(exports, 'FormValidatorService', () => FormValidatorService);
 __required.r(exports, 'FormControlAbstract', () => FormControlAbstract);
@@ -4680,68 +5322,73 @@ __required.r(exports, 'AbstractFormControl', () => AbstractFormControl);
 __required.r(exports, 'FormControlNameDirective', () => FormControlNameDirective);
 __required.r(exports, 'FormControlDirective', () => FormControlDirective);
 __required.r(exports, 'FormModule', () => FormModule);
-var utils = __required(1155);
+var utils = __required(1166);
 var extend = utils.extend;
-var helpers = __required(1132);
+var helpers = __required(1142);
 var inarray = helpers.inarray;
 var isboolean = helpers.isboolean;
-var isnull = helpers.isnull;
-var isstring = helpers.isstring;
-var isnumber = helpers.isnumber;
+var isempty = helpers.isempty;
+var isfunction = helpers.isfunction;
 var isequal = helpers.isequal;
 var isarray = helpers.isarray;
-var isfunction = helpers.isfunction;
 var isundefined = helpers.isundefined;
 var isobject = helpers.isobject;
-var isempty = helpers.isempty;
-var core = __required(1133);
-var ProviderToken = core.ProviderToken;
+var core = __required(1143);
 var AttributeAppender = core.AttributeAppender;
 var closureRef = core.closureRef;
+var ProviderToken = core.ProviderToken;
 var EventEmitter = core.EventEmitter;
 var errorBuilder = core.errorBuilder;
-var __buildOptions = {};
-function AbstractFormControl(changeDetector) {
-    this.changeDetector = changeDetector;
-    this._registered = false;
-    this.formName = '';
-    this._formFields = [];
-    this.form = null;
-}
-AbstractFormControl.prototype.addField = function (formFieldInstance) {
-    var formControl = this.form.getField(formFieldInstance.name);
-    setupControl(formControl, formFieldInstance);
-    this.form.updateValueAndStatus({ emitEvent: false });
-    this._formFields.push(formFieldInstance);
-    return formControl;
+var __buildOptions = {
+    'buildTime': 1734326607274,
+    'version': '1.0.0',
+    'baseHref': '',
+    'assetURL': '',
+    'production': false
 };
-AbstractFormControl.prototype.removeField = function (formFieldInstance) {
-    this._formFields.splice(this._formFields.indexOf(formFieldInstance), 1);
-};
-AbstractFormControl.prototype.getField = function (fieldName) {
-    return this.form.getField(fieldName);
-};
-AbstractFormControl.prototype.resetForm = function (values) {
-    this.form.reset(values);
-};
-AbstractFormControl.prototype.viewDidDestroy = function () {
-    if (this.form) {
+class AbstractFormControl {
+    constructor(changeDetector) {
+        this.changeDetector = changeDetector;
+        this._registered = false;
+        this.formName = '';
+        this._formFields = [];
         this.form = null;
     }
-};
+    addField(formFieldInstance) {
+        var formControl = this.getField(formFieldInstance.name);
+        setupControl(formControl, formFieldInstance);
+        formControl.updateValueAndStatus({ emitEvent: false });
+        this._formFields.push(formFieldInstance);
+        return formControl;
+    }
+    removeField(formFieldInstance) {
+        this._formFields.splice(this._formFields.indexOf(formFieldInstance), 1);
+        var formControl = this.getField(formFieldInstance.name);
+        cleanupControl(formControl, formFieldInstance);
+    }
+    getField(fieldName) {
+        return this.form && this.form.getField(fieldName);
+    }
+    resetForm(values) {
+        this.form.reset(values);
+    }
+    viewDidDestroy() {
+        if (this.form) {
+            this._formFields.forEach(formField => {
+                cleanupControl(this.getField(formField.name), formField);
+            });
+            this.form = null;
+        }
+    }
+}
 var FormControlDirective = function () {
     'use strict';
-    function FormControlDirective(changeDetector) {
-        AbstractFormControl.call(this, changeDetector);
-        Object.defineProperty(this, 'formControl', {
-            set: function (formControl) {
-                this.form = formControl;
-                _validateAndBindStatus(this);
-            }
-        });
+    class FormControlDirective extends AbstractFormControl {
+        set formControl(formControl) {
+            this.form = formControl;
+            _validateAndBindStatus(this);
+        }
     }
-    FormControlDirective.prototype = Object.create(AbstractFormControl.prototype);
-    FormControlDirective.prototype.constructor = FormControlDirective;
     FormControlDirective.ctors = {
         selector: 'formControl',
         props: { formControl: {} },
@@ -4754,21 +5401,20 @@ var FormControlDirective = function () {
 }();
 var FormControlNameDirective = function () {
     'use strict';
-    function FormControlNameDirective(parentControl, changeDetector) {
-        AbstractFormControl.call(this, changeDetector);
-        if (!parentControl || !(parentControl instanceof FormControlDirective)) {
-            return errorBuilder('Expected instance of FormControlService but got ' + typeof parentControl);
-        }
-        Object.defineProperty(this, 'formControlName', {
-            set: function (formName) {
-                this.formName = formName;
-                this.form = parentControl.getField(formName);
-                _validateAndBindStatus(this);
+    class FormControlNameDirective extends AbstractFormControl {
+        constructor(parentControl, changeDetector) {
+            super(changeDetector);
+            this.parentControl = parentControl;
+            if (!parentControl || !(parentControl instanceof FormControlDirective)) {
+                return errorBuilder('Expected instance of FormControlService but got ' + typeof parentControl);
             }
-        });
+        }
+        set formControlName(formName) {
+            this.formName = formName;
+            this.form = this.parentControl.getField(formName);
+            _validateAndBindStatus(this);
+        }
     }
-    FormControlNameDirective.prototype = Object.create(AbstractFormControl.prototype);
-    FormControlNameDirective.prototype.constructor = FormControlNameDirective;
     FormControlNameDirective.ctors = {
         selector: 'formControlName',
         props: { formControlName: {} },
@@ -4787,147 +5433,180 @@ var FormControlNameDirective = function () {
     };
     return FormControlNameDirective;
 }();
-function CurrentInstance(next) {
-    this.pending = null;
-    this.hasAsync = false;
-    this.failed = false;
-    this.errors = null;
-    this.count = 0;
-    this.stop = function () {
-        next(this.failed ? this.errors : null);
-    };
+class CurrentInstance {
+    constructor(next, isDeep) {
+        this.pending = null;
+        this.hasAsync = false;
+        this.isDeep = isDeep;
+        this.failed = false;
+        this.errors = null;
+        this.count = 0;
+        this.stop = function () {
+            next(this.failed ? this.errors : null);
+        };
+    }
+    add(totalValidators) {
+        this.count = totalValidators;
+        this.errors = {};
+        this.failed = false;
+        this.hasAsync = false;
+        this.resolve = null;
+    }
+    rec(passed, type, fieldName) {
+        this.count--;
+        if (passed !== true) {
+            this.failed = true;
+            if (this.isDeep) {
+                this.errors[fieldName] = this.errors[fieldName] || {};
+                this.errors[fieldName][type] = true;
+            } else {
+                this.errors[type] = true;
+            }
+        }
+        if (!this.count) {
+            this.stop();
+        }
+    }
+    registerAsyncValidator(asyncInstance, name, fieldName) {
+        this.hasAsync = true;
+        var callback = value => {
+            this.rec(value, name, fieldName);
+        };
+        asyncInstance.then(callback, callback);
+    }
 }
-CurrentInstance.prototype.add = function (totalValidators) {
-    this.count = totalValidators;
-    this.errors = {};
-    this.failed = false;
-    this.hasAsync = false;
-    this.resolve = null;
-};
-CurrentInstance.prototype.rem = function (passed, type) {
-    this.count--;
-    if (passed !== true) {
-        this.failed = true;
-        this.errors[type] = true;
-    }
-    if (!this.count) {
-        this.stop();
-    }
-};
-CurrentInstance.prototype.registerAsyncValidator = function (asyncInstance, name) {
-    this.hasAsync = true;
-    var _this = this;
-    var callback = function (value) {
-        _this.rem(value, name);
-    };
-    asyncInstance.then(callback, callback);
-};
-var formValidationStack = Object.create({
-    MINLENGTH: function (value, requiredLength) {
-        if (null !== value && undefined !== value)
+var emptyCheck = value => [
+    null,
+    undefined,
+    ''
+].includes(value);
+class FormValidationStack {
+    static MINLENGTH(value, requiredLength) {
+        if (!emptyCheck(value))
             return String(value).length >= requiredLength;
         return true;
-    },
-    MAXLENGTH: function (value, requiredLength) {
-        if (value)
+    }
+    static MAXLENGTH(value, requiredLength) {
+        if (!emptyCheck(value))
             return String(value).length <= requiredLength;
         return true;
-    },
-    EMAILVALIDATION: function (value) {
+    }
+    static EMAILVALIDATION(value) {
+        if (emptyCheck(value))
+            return true;
         var regExp = '^(([\\w]+(\\.[\\w]+)*)|(".+"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$';
-        return formValidationStack.PATTERN(value, regExp);
-    },
-    ISEMPTY: function (val, def) {
+        return FormValidationStack.PATTERN(value, regExp);
+    }
+    static ISEMPTY(val, def) {
         return def === isempty(val);
-    },
-    BOOLEAN: function (value, def) {
+    }
+    static BOOLEAN(value, def) {
         return isboolean(value) && isequal(value, def);
-    },
-    DOMAINVALIDATION: function (domain) {
-        return formValidationStack.PATTERN(domain, '[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:.[a-zA-Z]{2,})+');
-    },
-    MEDIUMPASSWORDSTRENGTH: function (passwd) {
-        return formValidationStack.PATTERN(passwd, '^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})');
-    },
-    STRONGPASSWORDSTRENGTH: function (passwd) {
-        return formValidationStack.PATTERN(passwd, '^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})');
-    },
-    PATTERN: function (value, pattern) {
+    }
+    static DOMAINVALIDATION(domain) {
+        return FormValidationStack.PATTERN(domain, '[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:.[a-zA-Z]{2,})+');
+    }
+    static MEDIUMPASSWORDSTRENGTH(passwd) {
+        return FormValidationStack.PATTERN(passwd, '^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})');
+    }
+    static STRONGPASSWORDSTRENGTH(passwd) {
+        return FormValidationStack.PATTERN(passwd, '^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})');
+    }
+    static PATTERN(value, pattern) {
+        if (emptyCheck(value))
+            return true;
         return new RegExp(pattern).test(value);
-    },
-    REQUIRED: function (value, required) {
+    }
+    static REQUIRED(value, required) {
         if (required) {
-            return !isundefined(value) && !isnull(value) && '' !== value;
+            return !emptyCheck(value);
         }
         return !required;
-    },
-    REQUIREDTRUE: function (value) {
-        return isboolean(value) && value === true;
-    },
-    MINNUMBER: function (value, minNumber) {
-        if (null !== value && undefined !== value) {
+    }
+    static REQUIREDTRUE(value) {
+        return !emptyCheck(value) && isboolean(value) && value === true;
+    }
+    static MINNUMBER(value, minNumber) {
+        if (!emptyCheck(value)) {
             value = Number(value);
             return !isNaN(value) && minNumber <= value;
         }
         return true;
-    },
-    MAXNUMBER: function (value, maxNumber) {
-        if (value) {
+    }
+    static MAXNUMBER(value, maxNumber) {
+        if (!emptyCheck(value)) {
             value = Number(value);
             return !isNaN(value) && value <= maxNumber;
         }
         return true;
     }
-});
-function FormValidatorService(callback, validators) {
-    var currentProcess = new CurrentInstance(callback);
+}
+function FormValidatorService(callback, validators, isDeep) {
+    var currentProcess = new CurrentInstance(callback, isDeep);
+    var validatorPaths = [];
+    function flatten(field, record, paths) {
+        if (isobject(record)) {
+            paths.push(field);
+            var _reqStacks = Object.keys(record);
+            if (!FormValidationStack[_reqStacks[0].toUpperCase()] && !isfunction(record[_reqStacks[0]])) {
+                _reqStacks.forEach(field => flatten(field, record[field], paths.slice()));
+            } else {
+                validatorPaths.push([
+                    paths,
+                    record
+                ]);
+            }
+        }
+    }
+    function flattenValdators(vRecords) {
+        if (vRecords) {
+            var keys = Object.keys(vRecords);
+            if (keys.length) {
+                if (!!FormValidationStack[keys[0].toUpperCase()] || isfunction(vRecords[keys[0]]))
+                    return;
+                keys.forEach(field => flatten(field, vRecords[field], []));
+                currentProcess.isDeep = true;
+            }
+        }
+    }
     function _throwErrorIfNoValidators(validatorsObj) {
         if (!isobject(validatorsObj)) {
             throw new Error('Validators are required in order to perform validations');
         }
     }
-    function _validate(value, criteria) {
-        var _criteria = Object.keys(criteria);
-        currentProcess.add(_criteria.length);
-        for (var i = 0; i < _criteria.length; i++) {
-            var validatorName = _criteria[i];
+    function _formFieldValidator(value, criteria, fieldName) {
+        var criteriaKeys = Object.keys(criteria);
+        currentProcess.add(criteriaKeys.length);
+        for (var i = 0; i < criteriaKeys.length; i++) {
+            var validatorName = criteriaKeys[i];
             var passed = false;
-            var validatorFn = formValidationStack[validatorName.toUpperCase()];
+            var validatorFn = FormValidationStack[validatorName.toUpperCase()];
+            var isAsync = isequal('async', validatorName);
             if (validatorFn) {
                 passed = validatorFn(value, criteria[validatorName]);
             } else if (isfunction(criteria[validatorName])) {
-                passed = criteria[validatorName](value);
+                try {
+                    passed = criteria[validatorName](value);
+                } catch (e) {
+                    passed = isAsync ? Promise.resolve(false) : false;
+                }
             }
-            if (isequal('async', validatorName)) {
-                currentProcess.registerAsyncValidator(passed, validatorName);
+            if (isAsync) {
+                currentProcess.registerAsyncValidator(passed, validatorName, fieldName);
             } else {
-                currentProcess.rem(passed, validatorName);
+                currentProcess.rec(passed, validatorName, fieldName);
                 if (!passed) {
-                    return currentProcess.stop();
+                    currentProcess.stop();
+                    return true;
                 }
             }
         }
+        return false;
     }
-    function _validateObjectTypes(formValues) {
-        if (!Object.keys(formValues).length) {
-            validationInstance.emptyFormFields = true;
-            trigger();
-        } else {
-            var _fieldsToValidate = Object.keys(validators);
-            var err = _fieldsToValidate.reduce(function (ret, key) {
-                if (!formValues.hasOwnProperty(key)) {
-                    ret++;
-                    ErrorHandler(key, ['required']);
-                }
-                return ret;
-            }, 0);
-            if (!err) {
-                currentProcess.pending.count = _fieldsToValidate.length;
-                _fieldsToValidate.forEach(function (field) {
-                    _validateField(formValues[field], validators[field], field);
-                });
-            } else {
-                trigger();
+    function _formControlValidator(formValues) {
+        for (var path of validatorPaths) {
+            if (_formFieldValidator(getValueByPath(formValues, path[0]), path[1], path[0].join('.'))) {
+                break;
             }
         }
     }
@@ -4936,7 +5615,10 @@ function FormValidatorService(callback, validators) {
             return callback(null);
         }
         _throwErrorIfNoValidators(validators);
-        _validate(formValue, validators);
+        if (!currentProcess.isDeep)
+            _formFieldValidator(formValue, validators);
+        else
+            _formControlValidator(formValue);
     }
     formValidator.addValidators = function (newValidators) {
         _throwErrorIfNoValidators(newValidators);
@@ -4945,441 +5627,492 @@ function FormValidatorService(callback, validators) {
         } else {
             validators = extend(true, validators, newValidators);
         }
+        flattenValdators(newValidators);
     };
+    flattenValdators(validators);
     return formValidator;
 }
 function customFormValidator(validatorName, validatorFn, override) {
-    if (formValidationStack.hasOwnProperty(validatorName.toUpperCase()) && !override) {
+    if (FormValidationStack.hasOwnProperty(validatorName.toUpperCase()) && !override) {
         return errorBuilder('[' + validatorName + '] already exists, please pass the override parameter to the validator');
     }
-    formValidationStack[validatorName.toUpperCase()] = validatorFn;
+    FormValidationStack[validatorName.toUpperCase()] = validatorFn;
 }
 ;
 var VALID = 'VALID';
 var INVALID = 'INVALID';
 var DISABLED = 'DISABLED';
 var PENDING = 'PENDING';
-function FormControlAbstract(validators) {
-    var _this = this;
-    this._parent = null;
-    this.status = INVALID;
-    this.value = null;
-    this.error = null;
-    this.touched = false;
-    this._pendingValue = null;
-    this._onDisableEvents = [];
-    this._onControlChangeListener = function () {
-    };
-    this.validator = FormValidatorService(function (errors) {
-        _this.setError(errors, true);
-    }, validators);
-    this.valueChanges = new EventEmitter();
-    this.statusChanged = new EventEmitter();
-    Object.defineProperties(this, {
-        parent: {
-            get: function () {
-                return this._parent;
-            }
-        },
-        untouched: {
-            get: function () {
-                return !this.touched;
-            }
-        },
-        invalid: {
-            get: function () {
-                return isequal(this.status, INVALID);
-            }
-        },
-        enabled: {
-            get: function () {
-                return !isequal(this.status, DISABLED);
-            }
-        },
-        disabled: {
-            get: function () {
-                return isequal(this.status, DISABLED);
-            }
-        },
-        valid: {
-            get: function () {
-                return isequal(this.status, VALID);
-            }
-        }
-    });
-}
-FormControlAbstract.prototype.setParent = function (context) {
-    this._parent = context;
-};
-FormControlAbstract.prototype._anyFieldHasStatus = function (status) {
-    return this._anyControl(function (control) {
-        return isequal(control.status, status);
-    });
-};
-FormControlAbstract.prototype._anyControl = function () {
-};
-FormControlAbstract.prototype.setStatus = function () {
-    if (this.disabled)
-        return DISABLED;
-    if (this.error || this._anyFieldHasStatus(INVALID))
-        return INVALID;
-    return VALID;
-};
-FormControlAbstract.prototype.destroy = function () {
-    if (this.formFieldControls) {
-        this.formFieldControls = null;
-    }
-    this._parent = null;
-    this.valueChanges.destroy();
-    this.statusChanged.destroy();
-};
-FormControlAbstract.prototype.markAsTouched = function (options) {
-    options = options || {};
-    this.touched = true;
-    if (this._parent && !option.self) {
-        this._parent.markAsTouched(options);
-    }
-};
-FormControlAbstract.prototype.markAllAsTouched = function () {
-    this.markAsTouched({ self: true });
-    this.forEachField(function (control) {
-        control.markAllAsTouched();
-    });
-};
-FormControlAbstract.prototype.updateValueAndStatus = function (options) {
-    options = options || {};
-    this._setInitialStatus();
-    this._updateValue();
-    if (this.enabled) {
+class FormControlAbstract {
+    constructor(validators, deepValidation) {
+        this._parent = null;
+        this.status = INVALID;
+        this.value = null;
         this.error = null;
-        this.status = this.setStatus();
+        this.touched = false;
+        this._pendingValue = null;
+        this._onDisableEvents = [];
+        this._onControlChangeListener = function () {
+        };
+        this.validator = FormValidatorService(errors => {
+            this.setError(errors, true);
+        }, validators, deepValidation);
+        this.valueChanges = new EventEmitter();
+        this.statusChanged = new EventEmitter();
+    }
+    get parent() {
+        return this._parent;
+    }
+    get untouched() {
+        return !this.touched;
+    }
+    get invalid() {
+        return isequal(this.status, INVALID);
+    }
+    get enabled() {
+        return !isequal(this.status, DISABLED);
+    }
+    get disabled() {
+        return isequal(this.status, DISABLED);
+    }
+    get valid() {
+        return isequal(this.status, VALID);
+    }
+    setParent(context) {
+        this._parent = context;
+    }
+    _anyFieldHasStatus(status) {
+        return this._anyControl(function (control) {
+            return isequal(control.status, status);
+        });
+    }
+    _anyControl() {
+    }
+    setStatus() {
+        if (this.disabled)
+            return DISABLED;
+        if (this.error || this._anyFieldHasStatus(INVALID))
+            return INVALID;
+        return VALID;
+    }
+    destroy() {
+        if (this.formFieldControls) {
+            this.formFieldControls = null;
+        }
+        this._parent = null;
+        this.valueChanges.destroy();
+        this.statusChanged.destroy();
+    }
+    markAsTouched(options) {
+        options = options || {};
+        this.touched = true;
+        if (this._parent && !option.self) {
+            this._parent.markAsTouched(options);
+        }
+    }
+    markAllAsTouched() {
+        this.markAsTouched({ self: true });
+        this.forEachField(function (control) {
+            control.markAllAsTouched();
+        });
+    }
+    updateValueAndStatus(options) {
+        options = options || {};
+        this._setInitialStatus();
+        this._updateValue();
+        if (this.enabled) {
+            this.error = null;
+            this.status = this.setStatus();
+            this._runValidators();
+        }
+        if (!isequal(options.emitEvent, false)) {
+            this.valueChanges.emit(this.value);
+        }
+        if (this._parent && !isequal(options.self, false)) {
+            this._parent.updateValueAndStatus(options);
+        }
+    }
+    enable(options) {
+        options = options || {};
+        this.status = VALID;
+        this.updateValueAndStatus({
+            self: true,
+            emitEvent: options.emitEvent
+        });
+        this.forEachField(function (control) {
+            control.enable({ self: true });
+        });
+        this._onDisableEvents.forEach(function (listener) {
+            listener(false);
+        });
+    }
+    disable(options) {
+        options = options || {};
+        this.status = DISABLED;
+        this.forEachField(function (control) {
+            control.disable({ self: true });
+        });
+        this.updateValueAndStatus({
+            self: true,
+            emitEvent: options.emitEvent
+        });
+        if (isequal(options.emitEvent, true)) {
+            this.valueChanges.emit(this.value);
+        }
+        this._onDisableEvents.forEach(function (listener) {
+            listener(true);
+        });
+    }
+    forEachField() {
+    }
+    _allFieldDisabled() {
+        return this.disabled;
+    }
+    _setInitialStatus() {
+        this.status = this._allFieldDisabled() ? DISABLED : VALID;
+    }
+    _updateValue() {
+    }
+    setValidators(validator) {
+        if (!validator)
+            return;
+        this.validator.addValidators(validator);
         this._runValidators();
     }
-    if (!isequal(options.emitEvent, false)) {
-        this.valueChanges.emit(this.value);
+    _runValidators() {
+        this.validator(this.value);
     }
-    if (this._parent && !isequal(options.self, false)) {
-        this._parent.updateValueAndStatus(options);
+    markAsUntouched(options) {
+        options = options || {};
+        this.touched = false;
+        this.forEachField(function (control) {
+            control.markAsUntouched({ self: true });
+        });
     }
-};
-FormControlAbstract.prototype.enable = function (options) {
-    options = options || {};
-    this.status = VALID;
-    this.updateValueAndStatus({
-        self: true,
-        emitEvent: options.emitEvent
-    });
-    this.forEachField(function (control) {
-        control.enable({ self: true });
-    });
-    this._onDisableEvents.forEach(function (listener) {
-        listener(false);
-    });
-};
-FormControlAbstract.prototype.disable = function (options) {
-    options = options || {};
-    this.status = DISABLED;
-    this.forEachField(function (control) {
-        control.disable({ self: true });
-    });
-    this.updateValueAndStatus({
-        self: true,
-        emitEvent: options.emitEvent
-    });
-    if (isequal(options.emitEvent, true)) {
-        this.valueChanges.emit(this.value);
+    markAllAsUnTouched() {
+        this.markAsUntouched({ self: true });
+        this.forEachField(function (control) {
+            control.markAllAsUnTouched();
+        });
     }
-    this._onDisableEvents.forEach(function (listener) {
-        listener(true);
-    });
-};
-FormControlAbstract.prototype.forEachField = function () {
-};
-FormControlAbstract.prototype._allFieldDisabled = function () {
-    return this.disabled;
-};
-FormControlAbstract.prototype._setInitialStatus = function () {
-    this.status = this._allFieldDisabled() ? DISABLED : VALID;
-};
-FormControlAbstract.prototype._updateValue = function () {
-};
-FormControlAbstract.prototype.setValidators = function (validator) {
-    if (!validator)
-        return;
-    this.validator.addValidators(validator);
-    this._runValidators();
-};
-FormControlAbstract.prototype._runValidators = function () {
-    this.validator(this.value);
-};
-FormControlAbstract.prototype.markAsUntouched = function (options) {
-    options = options || {};
-    this.touched = false;
-    this.forEachField(function (control) {
-        control.markAsUntouched({ self: true });
-    });
-};
-FormControlAbstract.prototype.markAsTouched = function (options) {
-    if (this.touched)
-        return;
-    options = options || {};
-    this.touched = true;
-    if (this.parent && !options.self) {
-        this.parent.markAsTouched(options);
+    _registerOnControlChangeListener(fn) {
+        this._onControlChangeListener = fn;
     }
-};
-FormControlAbstract.prototype.markAllAsUnTouched = function () {
-    this.markAsUntouched({ self: true });
-    this.forEachField(function (control) {
-        control.markAllAsUnTouched();
-    });
-};
-FormControlAbstract.prototype._registerOnControlChangeListener = function (fn) {
-    this._onControlChangeListener = fn;
-};
-FormControlAbstract.prototype.setError = function (errors, emitEvent) {
-    this.error = errors;
-    this._updateStatusOnError(emitEvent);
-};
-FormControlAbstract.prototype.getError = function (errorType) {
-    return this.error ? this.error[errorType] : null;
-};
-FormControlAbstract.prototype.hasError = function (errorType) {
-    return !!this.getError(errorType);
-};
-FormControlAbstract.prototype._updateStatusOnError = function (emitEvent) {
-    this.status = this.setStatus();
-    if (emitEvent) {
-        this.statusChanged.emit(this.status);
+    setError(errors, emitEvent) {
+        this.error = errors;
+        if (this._parent)
+            this._parent._collectErrors();
+        this._updateStatusOnError(emitEvent);
     }
-    if (this._parent) {
-        this._parent._updateStatusOnError(emitEvent);
+    getError(errorType) {
+        return this.error ? this.error[errorType] : null;
     }
-};
-FormControlAbstract.prototype.getPath = function (path) {
-    return path && path.includes('.') ? path.split('.') : path;
-};
-function addFields(context, formFields) {
-    if (!isobject(formFields))
-        return;
-    for (var field in formFields) {
-        context.addField(field, formFields[field]);
+    hasError(errorType) {
+        return !!this.getError(errorType);
+    }
+    _updateStatusOnError(emitEvent) {
+        this.status = this.setStatus();
+        if (emitEvent) {
+            this.statusChanged.emit(this.status);
+        }
+        if (this._parent) {
+            this._parent._updateStatusOnError(emitEvent);
+        }
+    }
+    getPath(path) {
+        return path && path.includes('.') ? path.split('.') : path;
+    }
+    markAsTouched(options) {
+        if (this.touched)
+            return;
+        options = options || {};
+        this.touched = true;
+        if (this.parent && !options.self) {
+            this.parent.markAsTouched(options);
+        }
     }
 }
+var FormFieldControlService = function () {
+    'use strict';
+    class FormFieldControlService extends FormControlAbstract {
+        constructor(fieldControl) {
+            super(fieldControl ? fieldControl.validators : null, false);
+            this.eventType = 'default';
+            this._onChangeEvents = [];
+            this._setInitialState(fieldControl);
+        }
+        _setInitialState(state) {
+            if (isobject(state)) {
+                this.value = state.value;
+                state.disabled ? this.disable({ self: true }) : this.enable({ self: true });
+                this.eventType = state.eventType || this.eventType;
+            } else {
+                this.value = state !== undefined ? state : null;
+            }
+        }
+        setValue(value, options) {
+            options = options || {};
+            this.value = value;
+            if (this._onChangeEvents.length && !isequal(options.emitToView, false)) {
+                this._onChangeEvents.length && this._onChangeEvents.forEach(function (eventChange) {
+                    return eventChange(value, !isequal(options.emitToView, false));
+                });
+            }
+            this.updateValueAndStatus(options);
+        }
+        patchValue(val, options) {
+            if (!options) {
+                options = {};
+            }
+            this.setValue(val, options);
+        }
+        reset(config, options) {
+            this._setInitialState(config);
+            this.markAsUntouched(options);
+            this.setValue(this.value, options);
+        }
+        registerOnChangeListener(listener) {
+            this._onChangeEvents.push(listener);
+        }
+        registerOnDisabledListener(listener) {
+            this._onDisableEvents.push(listener);
+        }
+        clearListeners() {
+            this._onChangeEvents.length = 0;
+            this._onDisableEvents.length = 0;
+        }
+    }
+    FormFieldControlService.ctors = {};
+    FormFieldControlService.ctors.instance = FormFieldControlService;
+    return FormFieldControlService;
+}();
 var FormControlService = function () {
     'use strict';
-    function FormControlService(formFields, validators) {
-        FormControlAbstract.call(this, validators);
-        this.formFieldControls = {};
-        addFields(this, formFields);
-        this.updateValueAndStatus();
-    }
-    FormControlService.prototype = Object.create(FormControlAbstract.prototype);
-    FormControlService.prototype.constructor = FormControlAbstract;
-    FormControlService.prototype.addField = function (name, fieldControl) {
-        if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
-            this.formFieldControls[name] = fieldControl;
-        } else {
-            this.formFieldControls[name] = new FormFieldControlService(fieldControl);
+    class FormControlService extends FormControlAbstract {
+        constructor(formFields, validators) {
+            super(validators, true);
+            this.formFieldControls = {};
+            this.addFields(formFields);
         }
-        this._setupControl(this.formFieldControls[name]);
-    };
-    FormControlService.prototype.addFields = function (fieldControls) {
-        addFields(this, fieldControls);
-    };
-    FormControlService.prototype.hasField = function (controlName) {
-        return this.formFieldControls.hasOwnProperty(controlName);
-    };
-    FormControlService.prototype.getField = function (controlName) {
-        var path = this.getPath(controlName);
-        if (isarray(path)) {
-            return this.getByPath(path);
+        addField(name, fieldControl) {
+            if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
+                this.formFieldControls[name] = fieldControl;
+            } else {
+                this.formFieldControls[name] = new FormFieldControlService(fieldControl);
+            }
+            this._setupControl(this.formFieldControls[name]);
         }
-        return this.formFieldControls[controlName] || null;
-    };
-    FormControlService.prototype.getByPath = function (paths) {
-        return paths.reduce(function (accum, path) {
-            return accum.getField(path);
-        }, this);
-    };
-    FormControlService.prototype._setupControl = function (control) {
-        control.setParent(this);
-        control._registerOnControlChangeListener(this._onControlChangeListener);
-    };
-    FormControlService.prototype.patchValue = function (values, options) {
-        options = options || {};
-        if (isobject(values) || isarray(values)) {
-            for (var field in values) {
-                if (this.hasField(field) && !options.self) {
-                    this.getField(field).patchValue(values[field], {
-                        self: options.self,
-                        updateView: true
-                    });
+        addFields(fieldControls) {
+            if (!isobject(fieldControls))
+                return;
+            for (var field in fieldControls) {
+                this.addField(field, fieldControls[field]);
+            }
+            this.updateValueAndStatus();
+        }
+        hasField(controlName) {
+            return this.formFieldControls.hasOwnProperty(controlName);
+        }
+        getField(controlName) {
+            var path = this.getPath(controlName);
+            if (isarray(path))
+                return this.getByPath(path);
+            return this.formFieldControls ? this.formFieldControls[controlName] : null;
+        }
+        getByPath(paths) {
+            return paths.reduce(function (accum, path) {
+                return accum.getField(path);
+            }, this);
+        }
+        _setupControl(control) {
+            control.setParent(this);
+            control._registerOnControlChangeListener(this._onControlChangeListener);
+        }
+        patchValue(values, options) {
+            options = options || {};
+            if (isobject(values) || isarray(values)) {
+                for (var field in values) {
+                    if (this.hasField(field) && !options.self) {
+                        this.getField(field).patchValue(values[field], {
+                            self: options.self,
+                            updateView: true
+                        });
+                    }
                 }
             }
         }
-    };
-    FormControlService.prototype.setValue = function (values, options) {
-        if (!values)
-            return;
-        this._allValuePresent(values);
-        for (var field in values) {
-            this._isControlPresent(field);
-            this.formFieldControls[field].setValue(values[field], { self: options && options.self });
+        setValue(values, options) {
+            if (!values)
+                return;
+            this._allValuePresent(values);
+            for (var field in values) {
+                this._isControlPresent(field);
+                this.formFieldControls[field].setValue(values[field], { self: options && options.self });
+            }
         }
-    };
-    FormControlService.prototype.forEachField = function (callback) {
-        var _this = this;
-        Object.keys(this.formFieldControls).forEach(function (field) {
-            callback(_this.formFieldControls[field], field);
-        });
-    };
-    FormControlService.prototype.reset = function (value, options) {
-        options = options || {};
-        value = value || {};
-        this.forEachField(function (control, name) {
-            control.reset(value[name] || null, {
-                self: true,
-                emitEvent: options.emitEvent
+        forEachField(callback) {
+            Object.keys(this.formFieldControls).forEach(field => {
+                callback(this.formFieldControls[field], field);
             });
-        });
-    };
-    FormControlService.prototype.setFormFieldValidators = function (fieldValidators) {
-        for (var field in fieldValidators) {
-            this.setFieldValidator(field, fieldValidators[field]);
         }
-    };
-    FormControlService.prototype.setFieldValidator = function (field, validator) {
-        this.getField(field).setValidators(validator);
-        return this;
-    };
-    FormControlService.prototype.allTouched = function () {
-        var alltouched = true;
-        this.forEachField(function (control, name) {
-            if (!control.touched) {
-                alltouched = false;
-            }
-        });
-        return alltouched;
-    };
-    FormControlService.prototype.removeField = function (name) {
-        this.getField(name).destroy();
-        delete this.formFieldControls[name];
-        delete this.value[name];
-        this.valueChanges.emit(this.value);
-    };
-    FormControlService.prototype.getAllValues = function () {
-        return this._collectValues(false);
-    };
-    FormControlService.prototype._allValuePresent = function (values) {
-        this.forEachField(function (control, field) {
-            if (isundefined(values[field])) {
-                errorBuilder('value for formField(' + field + ') is missing');
-            }
-        });
-    };
-    FormControlService.prototype._isControlPresent = function (field) {
-        if (!Object.keys(this.formFieldControls).length) {
-            errorBuilder('There are no field controls registered to this form');
+        reset(value, options) {
+            options = options || {};
+            value = value || {};
+            this.forEachField(function (control, name) {
+                control.reset(value[name] || null, {
+                    self: true,
+                    emitEvent: options.emitEvent
+                });
+            });
         }
-        if (!this.hasField(field)) {
-            errorBuilder('Cannot find field control for ' + field);
-        }
-    };
-    FormControlService.prototype._anyControl = function (callback) {
-        for (var field in this.formFieldControls) {
-            var found = callback(this.formFieldControls[field]);
-            if (found) {
-                return found;
+        setFormFieldValidators(fieldValidators) {
+            for (var field in fieldValidators) {
+                this.setFieldValidator(field, fieldValidators[field]);
             }
         }
-        return undefined;
-    };
-    FormControlService.prototype._allFieldDisabled = function () {
-        for (var field in this.formFieldControls) {
-            if (this.formFieldControls[field].enabled) {
-                return false;
+        setFieldValidator(field, validator) {
+            this.getField(field).setValidators(validator);
+            return this;
+        }
+        allTouched() {
+            var alltouched = true;
+            this.forEachField(function (control, name) {
+                if (!control.touched) {
+                    alltouched = false;
+                }
+            });
+            return alltouched;
+        }
+        removeField(name) {
+            this.getField(name).destroy();
+            delete this.formFieldControls[name];
+            delete this.value[name];
+            this.valueChanges.emit(this.value);
+        }
+        getAllValues() {
+            return this._collectValues(false);
+        }
+        _allValuePresent(values) {
+            this.forEachField(function (control, field) {
+                if (isundefined(values[field])) {
+                    errorBuilder('value for formField(' + field + ') is missing');
+                }
+            });
+        }
+        _isControlPresent(field) {
+            if (!Object.keys(this.formFieldControls).length) {
+                errorBuilder('There are no field controls registered to this form');
+            }
+            if (!this.hasField(field)) {
+                errorBuilder('Cannot find field control for ' + field);
             }
         }
-        return Object.keys(this.formFieldControls).length > 0 || this.disabled;
-    };
-    FormControlService.prototype._updateValue = function () {
-        this.value = this._collectValues(true);
-    };
-    FormControlService.prototype._collectValues = function (enabledOnly) {
-        var values = {};
-        this.forEachField(function (control, field) {
-            if (enabledOnly && control.enabled || !enabledOnly) {
-                values[field] = control.value;
+        _anyControl(callback) {
+            for (var field in this.formFieldControls) {
+                var found = callback(this.formFieldControls[field]);
+                if (found) {
+                    return found;
+                }
             }
-        });
-        return values;
-    };
-    FormControlService.prototype._getFieldErrors = function () {
-        var errors = {};
-        var invalid = false;
-        this.forEachField(function (control, field) {
-            if (control.error) {
-                errors[field] = control.error;
-                invalid = true;
+            return undefined;
+        }
+        _allFieldDisabled() {
+            for (var field in this.formFieldControls) {
+                if (this.formFieldControls[field].enabled) {
+                    return false;
+                }
             }
-        });
-        return invalid ? errors : null;
-    };
+            return Object.keys(this.formFieldControls).length > 0 || this.disabled;
+        }
+        _updateValue() {
+            this.value = this._collectValues(true);
+        }
+        _collectValues(enabledOnly) {
+            var values = {};
+            this.forEachField(function (control, field) {
+                if (enabledOnly && control.enabled || !enabledOnly) {
+                    values[field] = control.value;
+                }
+            });
+            return values;
+        }
+        _getAllFieldErrors() {
+            var errors = {};
+            var invalid = false;
+            this.forEachField(function (control, field) {
+                if (control.error) {
+                    errors[field] = control.error;
+                    invalid = true;
+                }
+            });
+            return invalid ? errors : null;
+        }
+        _collectErrors() {
+            this.error = this._getAllFieldErrors();
+        }
+    }
     FormControlService.ctors = {};
     FormControlService.ctors.instance = FormControlService;
     return FormControlService;
 }();
 var VALUE_ACCESSOR = new ProviderToken('ValueAccessor', true);
-function AbstractValueAccessor(elementRef) {
-    this.onChange = function () {
-    };
-    this.onDisable = function () {
-    };
-    this.onBlur = function () {
-    };
-    this.element = elementRef;
+class AbstractValueAccessor {
+    constructor(elementRef) {
+        this.onChange = function () {
+        };
+        this.onDisable = function () {
+        };
+        this.onBlur = function () {
+        };
+        this.element = elementRef;
+    }
+    setDisabledState(state) {
+        AttributeAppender.setProp(this.element.nativeElement, 'disabled', state);
+    }
+    registerOnBlur(onBlurFn) {
+        this.onBlur = onBlurFn;
+    }
+    registerOnChange(onChangeFn) {
+        this.onChange = onChangeFn;
+    }
+    registerOnDisable(onDisableFn) {
+        this.onDisable = onDisableFn;
+    }
+    clearRegistries() {
+        this.elementRef = null;
+        this.onChange = null;
+        this.onBlur = null;
+        this.onDisable = null;
+    }
 }
-AbstractValueAccessor.prototype.setDisabledState = function (state) {
-    AttributeAppender.setProp(this.element.nativeElement, 'disabled', state);
-};
-AbstractValueAccessor.prototype.registerOnBlur = function (onBlurFn) {
-    this.onBlur = onBlurFn;
-};
-AbstractValueAccessor.prototype.registerOnChange = function (onChangeFn) {
-    this.onChange = onChangeFn;
-};
-AbstractValueAccessor.prototype.registerOnDisable = function (onDisableFn) {
-    this.onDisable = onDisableFn;
-};
 var FormFieldControlDirective = function () {
     'use strict';
-    function FormFieldControlDirective(eventBinder, validators) {
-        this.eventBinder = getValueAccessor(eventBinder);
-        this.control = null;
-        this._validators = validators;
-        this._warning = false;
-        Object.defineProperty(this, 'disabled', {
-            set: function () {
-                if (!this._warning) {
-                    this._warning = true;
-                    console.warn('The use of disabled property with a form field control directive will not take effect');
-                }
+    class FormFieldControlDirective {
+        constructor(eventBinder, validators) {
+            this.eventBinder = getValueAccessor(eventBinder);
+            this.control = null;
+            this._validators = validators;
+            this._warning = false;
+        }
+        set disabled(value) {
+            if (!this._warning) {
+                this._warning = true;
+                console.warn('The use of disabled property with a form field control directive will not take effect');
             }
-        });
+        }
+        didInit() {
+            if (!(this.control instanceof FormFieldControlService)) {
+                return errorBuilder('Expected instance of FormFieldControlService but got ' + typeof this.control);
+            }
+            setupControl(this.control, this);
+            if (this.control.disabled && this.eventBinder.setDisabledState) {
+                this.eventBinder.setDisabledState(true);
+            }
+            this.control.updateValueAndStatus({ emitEvent: false });
+        }
+        modelToViewUpdate() {
+        }
     }
-    FormFieldControlDirective.prototype.didInit = function () {
-        if (!(this.control instanceof FormFieldControlService)) {
-            return errorBuilder('Expected instance of FormFieldControlService but got ' + typeof this.control);
-        }
-        setupControl(this.control, this);
-        if (this.control.disabled && this.eventBinder.setDisabledState) {
-            this.eventBinder.setDisabledState(true);
-        }
-        this.control.updateValueAndStatus({ emitEvent: false });
-    };
-    FormFieldControlDirective.prototype.modelToViewUpdate = function () {
-    };
     FormFieldControlDirective.ctors = {
         selector: 'fieldControl',
         props: {
@@ -5396,90 +6129,34 @@ var FormFieldControlDirective = function () {
     };
     return FormFieldControlDirective;
 }();
-var FormFieldControlService = function () {
-    'use strict';
-    function FormFieldControlService(fieldControl) {
-        FormControlAbstract.call(this, fieldControl ? fieldControl.validators : null);
-        this.eventType = 'default';
-        this._onChangeEvents = [];
-        this._setInitialState(fieldControl);
-        this.updateValueAndStatus({
-            self: true,
-            emitEvent: false
-        });
-    }
-    FormFieldControlService.prototype = Object.create(FormControlAbstract.prototype);
-    FormFieldControlService.prototype.constructor = FormControlAbstract;
-    FormFieldControlService.prototype._setInitialState = function (state) {
-        if (isobject(state)) {
-            this.value = state.value;
-            state.disabled ? this.disable({ self: true }) : this.enable({ self: true });
-            this.eventType = state.eventType || this.eventType;
-        } else {
-            this.value = state !== undefined ? state : null;
-        }
-    };
-    FormFieldControlService.prototype.setValue = function (value, options) {
-        options = options || {};
-        this.value = value;
-        if (this._onChangeEvents.length && !isequal(options.emitToView, false)) {
-            this._onChangeEvents.length && this._onChangeEvents.forEach(function (eventChange) {
-                return eventChange(value, !isequal(options.emitToView, false));
-            });
-        }
-        this.updateValueAndStatus(options);
-    };
-    FormFieldControlService.prototype.patchValue = function (val, options) {
-        if (!options) {
-            options = {};
-        }
-        this.setValue(val, options);
-    };
-    FormFieldControlService.prototype.reset = function (config, options) {
-        this._setInitialState(config);
-        this.markAsUntouched(options);
-        this.setValue(this.value, options);
-    };
-    FormFieldControlService.prototype.registerOnChangeListener = function (listener) {
-        this._onChangeEvents.push(listener);
-    };
-    FormFieldControlService.prototype.registerOnDisabledListener = function (listener) {
-        this._onDisableEvents.push(listener);
-    };
-    FormFieldControlService.prototype.clearListeners = function () {
-        this._onChangeEvents.length = 0;
-        this._onDisableEvents.length = 0;
-    };
-    FormFieldControlService.ctors = {};
-    FormFieldControlService.ctors.instance = FormFieldControlService;
-    return FormFieldControlService;
-}();
 var FormFieldDirective = function () {
     'use strict';
-    function FormFieldDirective(parentContainer, eventBinder, validators) {
-        this.eventBinder = getValueAccessor(eventBinder);
-        this.control = null;
-        this._validators = validators;
-        this.parent = parentContainer;
+    class FormFieldDirective {
+        constructor(parentContainer, eventBinder, validators) {
+            this.eventBinder = getValueAccessor(eventBinder);
+            this.control = null;
+            this._validators = validators;
+            this.parent = parentContainer;
+        }
+        didInit() {
+            if (!this.parent) {
+                return errorBuilder('[formField=' + this.name + ']: Expected an instance of FormControlDirective but got ' + typeof this.parent);
+            }
+            this.control = this.parent.addField(this);
+            if (this.control.disabled && this.eventBinder.setDisabledState) {
+                this.eventBinder.setDisabledState(true);
+            }
+        }
+        modelToViewUpdate() {
+        }
+        viewDidDestroy() {
+            if (this.parent) {
+                this.parent.removeField(this);
+                this.parent = null;
+            }
+            this.control = null;
+        }
     }
-    FormFieldDirective.prototype.didInit = function () {
-        if (!this.parent) {
-            return errorBuilder('[formField=' + this.name + ']: Expected an instance of FormControlDirective but got ' + typeof this.parent);
-        }
-        this.control = this.parent.addField(this);
-        if (this.control.disabled && this.eventBinder.setDisabledState) {
-            this.eventBinder.setDisabledState(true);
-        }
-    };
-    FormFieldDirective.prototype.modelToViewUpdate = function () {
-    };
-    FormFieldDirective.prototype.viewDidDestroy = function () {
-        if (this.parent) {
-            this.parent.removeField(this);
-            this.parent = null;
-        }
-        this.control = null;
-    };
     FormFieldDirective.ctors = {
         selector: 'formField',
         props: { name: { value: 'formField' } },
@@ -5506,15 +6183,12 @@ var ResolveDefaultBinder = {
 };
 var DefaultEventBinder = function () {
     'use strict';
-    function DefaultEventBinder(elementRef) {
-        AbstractValueAccessor.call(this, elementRef);
+    class DefaultEventBinder extends AbstractValueAccessor {
+        writeValue(value) {
+            value = value === null || value === undefined ? '' : value;
+            AttributeAppender.setProp(this.element.nativeElement, 'value', value);
+        }
     }
-    DefaultEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
-    DefaultEventBinder.prototype.constructor = AbstractValueAccessor;
-    DefaultEventBinder.prototype.writeValue = function (value) {
-        value = value === null || value === undefined ? '' : value;
-        AttributeAppender.setProp(this.element.nativeElement, 'value', value);
-    };
     DefaultEventBinder.ctors = {
         selector: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl],input:list:[model|formField|fieldControl]',
         events: {
@@ -5528,7 +6202,8 @@ var DefaultEventBinder = function () {
                                 'value'
                             ]],
                         fn: 'onChange'
-                    }]
+                    }],
+                node: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl],input:list:[model|formField|fieldControl]'
             },
             'blur': {
                 type: 'event',
@@ -5536,7 +6211,8 @@ var DefaultEventBinder = function () {
                         type: 'call',
                         args: ['$event'],
                         fn: 'onBlur'
-                    }]
+                    }],
+                node: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl],input:list:[model|formField|fieldControl]'
             }
         },
         DI: [{
@@ -5555,15 +6231,12 @@ var ResolveCheckboxBinder = {
 };
 var CheckboxEventBinder = function () {
     'use strict';
-    function CheckboxEventBinder(elementRef) {
-        AbstractValueAccessor.call(this, elementRef);
+    class CheckboxEventBinder extends AbstractValueAccessor {
+        writeValue(checked) {
+            AttributeAppender.setProp(this.element.nativeElement, 'checked', checked, true);
+        }
     }
     ;
-    CheckboxEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
-    CheckboxEventBinder.prototype.constructor = AbstractValueAccessor;
-    CheckboxEventBinder.prototype.writeValue = function (checked) {
-        AttributeAppender.setProp(this.element.nativeElement, 'checked', checked, true);
-    };
     CheckboxEventBinder.ctors = {
         selector: 'input:type=checkbox:[model|formField|fieldControl]',
         events: {
@@ -5577,7 +6250,8 @@ var CheckboxEventBinder = function () {
                                 'checked'
                             ]],
                         fn: 'onChange'
-                    }]
+                    }],
+                node: 'input:type=checkbox:[model|formField|fieldControl]'
             },
             'blur': {
                 type: 'event',
@@ -5585,7 +6259,8 @@ var CheckboxEventBinder = function () {
                         type: 'call',
                         args: ['$event'],
                         fn: 'onBlur'
-                    }]
+                    }],
+                node: 'input:type=checkbox:[model|formField|fieldControl]'
             }
         },
         DI: [{
@@ -5596,6 +6271,9 @@ var CheckboxEventBinder = function () {
     };
     return CheckboxEventBinder;
 }();
+function isSameGroup(a, b) {
+    return a.name === b.name;
+}
 var ResolveRadioBinder = {
     name: VALUE_ACCESSOR,
     reference: closureRef(function () {
@@ -5604,23 +6282,22 @@ var ResolveRadioBinder = {
 };
 var RadioEventContainer = function () {
     'use strict';
-    function RadioEventContainer() {
-        var _registry = [];
-        this.register = function (eventBinder) {
-            _registry.push(eventBinder);
-        };
-        this.remove = function (eventBinder) {
-            _registry.splice(_registry.indexOf(eventBinder), 1);
-        };
-        this.selectValue = function (eventBinder) {
-            _registry.forEach(function (registeredBinder) {
+    class RadioEventContainer {
+        constructor() {
+            this._registry = [];
+        }
+        register(eventBinder) {
+            this._registry.push(eventBinder);
+        }
+        remove(eventBinder) {
+            this._registry.splice(this._registry.indexOf(eventBinder), 1);
+        }
+        selectValue(eventBinder) {
+            this._registry.forEach(function (registeredBinder) {
                 if (isSameGroup(registeredBinder, eventBinder) && registeredBinder !== eventBinder) {
                     registeredBinder.writeValue(eventBinder.value);
                 }
             });
-        };
-        function isSameGroup(a, b) {
-            return a.name === b.name;
         }
     }
     RadioEventContainer.ctors = {};
@@ -5628,40 +6305,39 @@ var RadioEventContainer = function () {
 }();
 var RadioEventBinder = function () {
     'use strict';
-    function RadioEventBinder(elementRef, radioEventContainer) {
-        AbstractValueAccessor.call(this, elementRef);
-        this.radioEventContainer = radioEventContainer;
-        this.state = false;
+    class RadioEventBinder extends AbstractValueAccessor {
+        constructor(elementRef, radioEventContainer) {
+            super(elementRef);
+            this.radioEventContainer = radioEventContainer;
+            this.state = false;
+        }
+        didInit() {
+            this._checkFieldName();
+            this.radioEventContainer.register(this);
+        }
+        didDestroy() {
+            this.radioEventContainer.remove(this);
+        }
+        _checkFieldName() {
+            if (this.name && this.formField && this.formField != this.name) {
+                errorBuilder('if you define a name and formField both values must match. <input type=radio name=' + this.name + ' :formField=' + this.formField);
+            }
+            if (!this.name && this.formField)
+                this.name = this.formField;
+        }
+        registerOnChange(onChangeFn) {
+            this._onChange = onChangeFn;
+            this.onChange = value => {
+                onChangeFn(this.value);
+                this.radioEventContainer.selectValue(this);
+            };
+        }
+        writeValue(value) {
+            this.state = value == this.value;
+            AttributeAppender.setProp(this.element.nativeElement, 'checked', this.state);
+        }
     }
     ;
-    RadioEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
-    RadioEventBinder.prototype.constructor = AbstractValueAccessor;
-    RadioEventBinder.prototype.didInit = function () {
-        this._checkFieldName();
-        this.radioEventContainer.register(this);
-    };
-    RadioEventBinder.prototype.didDestroy = function () {
-        this.radioEventContainer.remove(this);
-    };
-    RadioEventBinder.prototype._checkFieldName = function () {
-        if (this.name && this.formField && this.formField != this.name) {
-            errorBuilder('if you define a name and formField both values must match. <input type=radio name=' + this.name + ' :formField=' + this.formField);
-        }
-        if (!this.name && this.formField)
-            this.name = this.formField;
-    };
-    RadioEventBinder.prototype.registerOnChange = function (onChangeFn) {
-        var _this = this;
-        this._onChange = onChangeFn;
-        this.onChange = function (value) {
-            onChangeFn(_this.value);
-            _this.radioEventContainer.selectValue(_this);
-        };
-    };
-    RadioEventBinder.prototype.writeValue = function (value) {
-        this.state = value == this.value;
-        AttributeAppender.setProp(this.element.nativeElement, 'checked', this.state);
-    };
     RadioEventBinder.ctors = {
         selector: 'input:type=radio:[model|formField|fieldControl]',
         events: {
@@ -5675,7 +6351,8 @@ var RadioEventBinder = function () {
                                 'value'
                             ]],
                         fn: 'onChange'
-                    }]
+                    }],
+                node: 'input:type=radio:[model|formField|fieldControl]'
             },
             'blur': {
                 type: 'event',
@@ -5683,7 +6360,8 @@ var RadioEventBinder = function () {
                         type: 'call',
                         args: ['$event'],
                         fn: 'onBlur'
-                    }]
+                    }],
+                node: 'input:type=radio:[model|formField|fieldControl]'
             }
         },
         props: {
@@ -5713,84 +6391,91 @@ function _buildValueToString(id, value) {
         return '' + value;
     if (typeof value === 'object' && id)
         value = 'option:object';
-    return id + ':' + value;
+    return id + '|' + value;
 }
 var SelectEventBinder = function () {
     'use strict';
-    function SelectEventBinder(elementRef) {
-        this.idIncrement = 0;
-        this.selectedValue;
-        this._optionValueMap = new Map();
-        this._compare = isequal;
-        AbstractValueAccessor.call(this, elementRef);
-        Object.defineProperty(this, 'compareFn', {
-            set: function (fn) {
-                if (typeof fn !== 'function') {
-                    throw new Error('expected function for comparisonFN but got ' + typeof fn + ' instead.');
+    class SelectEventBinder extends AbstractValueAccessor {
+        constructor(elementRef) {
+            super(elementRef);
+            this.idIncrement = 0;
+            this.selectedValue;
+            this._optionValueMap = new Map();
+            this._compare = isequal;
+            Object.defineProperty(this, 'compareFn', {
+                set: function (fn) {
+                    if (typeof fn !== 'function') {
+                        throw new Error('expected function for comparisonFN but got ' + typeof fn + ' instead.');
+                    }
+                    this._compare = fn;
                 }
-                this._compare = fn;
+            });
+        }
+        _handleSelection(value) {
+            this.selectedValue = this._getValue(value);
+            this.onChange(this.selectedValue);
+        }
+        writeValue(value) {
+            if (!this.element.hasAttribute('multiple')) {
+                var currentSelectedValue = this._getOptionValue(this.element.nativeElement.value);
+                if (!this._compare(currentSelectedValue, value)) {
+                    var optionId = this.getOptionIdByValue(value);
+                    this.element.nativeElement.value = _buildValueToString(optionId, value);
+                }
+            } else {
+                var markAsSelected = function (opt) {
+                    AttributeAppender.setProp(opt, 'selected', false);
+                };
+                if (Array.isArray(value)) {
+                    var optionIds = value.map(v => this.getOptionIdByValue(v) || v);
+                    markAsSelected = function (opt) {
+                        AttributeAppender.setProp(opt, 'selected', inarray(opt.value, optionIds));
+                    };
+                }
+                this._markAsSelectedMultiple(markAsSelected);
             }
-        });
+            this.selectedValue = value;
+        }
+        isSelected(optionId) {
+            return Object.is(this._optionValueMap.get(optionId), this.selectedValue);
+        }
+        _getValue(valueString) {
+            if (this.element.hasAttribute('multiple')) {
+                var optionsValue = [];
+                for (var i = 0; i < this.element.nativeElement.selectedOptions.length; i++) {
+                    var value = this._getOptionValue(this.element.nativeElement.selectedOptions[i].value);
+                    optionsValue.push(value);
+                }
+                return optionsValue;
+            }
+            return this._getOptionValue(valueString);
+        }
+        _getOptionValue(valueString) {
+            var sptStr = valueString.split('|')[0];
+            return this._optionValueMap.has(sptStr) ? this._optionValueMap.get(sptStr) : valueString;
+        }
+        genOptionId() {
+            return (this.idIncrement++).toString();
+        }
+        getOptionIdByValue(value) {
+            var keys = this._optionValueMap.keys();
+            for (var key of keys) {
+                if (this._compare(this._optionValueMap.get(key), value))
+                    return key;
+            }
+            return null;
+        }
+        _markAsSelectedMultiple(callback) {
+            if (!this.element.nativeElement)
+                return;
+            Array.from(this.element.nativeElement.options).forEach(callback);
+        }
+        destroyOption(optionId) {
+            this._optionValueMap.delete(optionId);
+            this.writeValue(this.selectedValue);
+        }
     }
     ;
-    SelectEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
-    SelectEventBinder.prototype.constructor = AbstractValueAccessor;
-    SelectEventBinder.prototype._handleSelection = function (value) {
-        this.selectedValue = this._getValue(value);
-        this.onChange(this.selectedValue);
-    };
-    SelectEventBinder.prototype.writeValue = function (value) {
-        this.selectedValue = value;
-        if (!this.element.hasAttribute('multiple')) {
-            var currentSelectedValue = this.element.nativeElement.value;
-            if (!this._compare(this._getOptionValue(currentSelectedValue), value)) {
-                var optionId = this._getOptionId(value);
-                AttributeAppender.setProp(this.element.nativeElement, 'value', _buildValueToString(optionId, value));
-            }
-        } else {
-            var markAsSelected = function (opt) {
-                AttributeAppender.setProp(opt, 'selected', false);
-            };
-            if (Array.isArray(value)) {
-                var optionIds = value.map(v => this._getOptionId(v) || v);
-                markAsSelected = function (opt) {
-                    AttributeAppender.setProp(opt, 'selected', inarray(opt.value, optionIds));
-                };
-            }
-            this._markAsSelectedMultiple(markAsSelected);
-        }
-    };
-    SelectEventBinder.prototype._getValue = function (valueString) {
-        if (this.element.hasAttribute('multiple')) {
-            var optionsValue = [];
-            for (var i = 0; i < this.element.nativeElement.selectedOptions.length; i++) {
-                var value = this._getOptionValue(this.element.nativeElement.selectedOptions[i].value);
-                optionsValue.push(value);
-            }
-            return optionsValue;
-        }
-        return this._getOptionValue(valueString);
-    };
-    SelectEventBinder.prototype._getOptionValue = function (valueString) {
-        var optionId = valueString.split(':')[0];
-        return this._optionValueMap.has(optionId) ? this._optionValueMap.get(optionId) : valueString;
-    };
-    SelectEventBinder.prototype.genOptionId = function () {
-        return (this.idIncrement++).toString();
-    };
-    SelectEventBinder.prototype._getOptionId = function (value) {
-        var keys = this._optionValueMap.keys();
-        for (var key of keys) {
-            if (this._compare(this._optionValueMap.get(key), value))
-                return key;
-        }
-        return null;
-    };
-    SelectEventBinder.prototype._markAsSelectedMultiple = function (callback) {
-        if (!this.element.nativeElement)
-            return;
-        Array.from(this.element.nativeElement.options).forEach(callback);
-    };
     SelectEventBinder.ctors = {
         selector: 'select:[model|formField|fieldControl]',
         events: {
@@ -5804,7 +6489,8 @@ var SelectEventBinder = function () {
                                 'value'
                             ]],
                         fn: '_handleSelection'
-                    }]
+                    }],
+                node: 'select:[model|formField|fieldControl]'
             },
             'blur': {
                 type: 'event',
@@ -5812,7 +6498,8 @@ var SelectEventBinder = function () {
                         type: 'call',
                         args: ['$event'],
                         fn: 'onBlur'
-                    }]
+                    }],
+                node: 'select:[model|formField|fieldControl]'
             }
         },
         props: { compareFn: {} },
@@ -5826,41 +6513,34 @@ var SelectEventBinder = function () {
 }();
 var OptionDirective = function () {
     'use strict';
-    function OptionDirective(selectInstance, elementRef) {
-        if (selectInstance)
-            this.id = selectInstance.genOptionId();
-        this._value = null;
-        Object.defineProperty(this, 'value', {
-            set: function (value) {
-                this.setValue(value);
-                if (selectInstance)
-                    selectInstance.writeValue(selectInstance.selectedValue);
-                this._value = value;
-            },
-            get: () => this._value
-        });
-        Object.defineProperty(this, 'jValue', {
-            set: function (value) {
-                if (!selectInstance)
-                    return;
-                selectInstance._optionValueMap.set(this.id, value);
-                this.setValue(_buildValueToString(this.id, value));
-                selectInstance.writeValue(selectInstance.selectedValue);
-                this._value = value;
-            },
-            get: () => this._value
-        });
-        this.setValue = function (value) {
-            if (value && typeof value !== 'object') {
-                AttributeAppender.setProp(elementRef.nativeElement, 'value', value);
+    class OptionDirective {
+        constructor(selectInstance, elementRef) {
+            this.selectInstance = selectInstance;
+            if (selectInstance)
+                this.id = selectInstance.genOptionId();
+            this._value = null;
+            var defineConnector = {
+                set: value => this.prepareValue(value),
+                get: () => this._value
+            };
+            Object.defineProperty(this, 'value', Object.assign({}, defineConnector));
+            Object.defineProperty(this, 'jValue', Object.assign({}, defineConnector));
+            this.setValue = function (value) {
+                AttributeAppender.setProp(elementRef.nativeElement, 'value', value), AttributeAppender.setProp(elementRef.nativeElement, 'selected', this.selectInstance.isSelected(this.id));
+            };
+        }
+        prepareValue(value) {
+            if (!this.selectInstance)
+                return;
+            this._value = value;
+            this.selectInstance._optionValueMap.set(this.id, value);
+            this.setValue(_buildValueToString(this.id, value));
+        }
+        viewDidDestroy() {
+            if (this.selectInstance) {
+                this.selectInstance.destroyOption(this.id);
             }
-        };
-        this.viewDidDestroy = function () {
-            if (selectInstance) {
-                selectInstance._optionValueMap.delete(this.id);
-                selectInstance.writeValue(selectInstance.selectedValue);
-            }
-        };
+        }
     }
     OptionDirective.ctors = {
         selector: 'option',
@@ -5877,7 +6557,7 @@ var OptionDirective = function () {
             },
             {
                 optional: true,
-                tokenName: 'ElementRef'
+                tokenName: 'HostElement'
             }
         ]
     };
@@ -5891,20 +6571,17 @@ var ResolveNumberBinder = {
 };
 var NumberEventBinder = function () {
     'use strict';
-    function NumberEventBinder(elementRef) {
-        AbstractValueAccessor.call(this, elementRef);
+    class NumberEventBinder extends AbstractValueAccessor {
+        writeValue(value) {
+            value = value === null || value === undefined ? '' : value;
+            AttributeAppender.setProp(this.element.nativeElement, 'value', value);
+        }
+        registerOnChange(onChangeFn) {
+            this.onChange = function (value) {
+                onChangeFn(value == '' ? null : parseFloat(value));
+            };
+        }
     }
-    NumberEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
-    NumberEventBinder.prototype.constructor = AbstractValueAccessor;
-    NumberEventBinder.prototype.writeValue = function (value) {
-        value = value === null || value === undefined ? '' : value;
-        AttributeAppender.setProp(this.element.nativeElement, 'value', value);
-    };
-    NumberEventBinder.prototype.registerOnChange = function (onChangeFn) {
-        this.onChange = function (value) {
-            onChangeFn(value == '' ? null : parseFloat(value));
-        };
-    };
     NumberEventBinder.ctors = {
         selector: 'input:type=number:[model|formField|fieldControl]',
         events: {
@@ -5918,7 +6595,8 @@ var NumberEventBinder = function () {
                                 'value'
                             ]],
                         fn: 'onChange'
-                    }]
+                    }],
+                node: 'input:type=number:[model|formField|fieldControl]'
             },
             'blur': {
                 type: 'event',
@@ -5926,7 +6604,8 @@ var NumberEventBinder = function () {
                         type: 'call',
                         args: ['$event'],
                         fn: 'onBlur'
-                    }]
+                    }],
+                node: 'input:type=number:[model|formField|fieldControl]'
             }
         },
         DI: [{
@@ -5945,20 +6624,17 @@ var ResolveRangeBinder = {
 };
 var RangeEventBinder = function () {
     'use strict';
-    function RangeEventBinder(elementRef) {
-        AbstractValueAccessor.call(this, elementRef);
+    class RangeEventBinder extends AbstractValueAccessor {
+        writeValue(value) {
+            value = value === null || value === undefined ? '' : value;
+            AttributeAppender.setProp(this.element.nativeElement, 'value', parseFloat(value), true);
+        }
+        registerOnChange(onChangeFn) {
+            this.onChange = function (value) {
+                onChangeFn(value == '' ? null : parseFloat(value));
+            };
+        }
     }
-    RangeEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
-    RangeEventBinder.prototype.constructor = AbstractValueAccessor;
-    RangeEventBinder.prototype.writeValue = function (value) {
-        value = value === null || value === undefined ? '' : value;
-        AttributeAppender.setProp(this.element.nativeElement, 'value', parseFloat(value), true);
-    };
-    RangeEventBinder.prototype.registerOnChange = function (onChangeFn) {
-        this.onChange = function (value) {
-            onChangeFn(value == '' ? null : parseFloat(value));
-        };
-    };
     RangeEventBinder.ctors = {
         selector: 'input:type=range:[model|formField|fieldControl]',
         events: {
@@ -5972,7 +6648,8 @@ var RangeEventBinder = function () {
                                 'value'
                             ]],
                         fn: 'onChange'
-                    }]
+                    }],
+                node: 'input:type=range:[model|formField|fieldControl]'
             },
             'change': {
                 type: 'event',
@@ -5984,7 +6661,8 @@ var RangeEventBinder = function () {
                                 'value'
                             ]],
                         fn: 'onChange'
-                    }]
+                    }],
+                node: 'input:type=range:[model|formField|fieldControl]'
             },
             'blur': {
                 type: 'event',
@@ -5992,7 +6670,8 @@ var RangeEventBinder = function () {
                         type: 'call',
                         args: ['$event'],
                         fn: 'onBlur'
-                    }]
+                    }],
+                node: 'input:type=range:[model|formField|fieldControl]'
             }
         },
         DI: [{
@@ -6017,6 +6696,10 @@ function setupControl(fieldControl, dir) {
             dir.eventBinder.setDisabledState(state);
         });
     }
+}
+function cleanupControl(fieldControl, dir) {
+    dir && dir.eventBinder.clearRegistries();
+    fieldControl && fieldControl.clearListeners();
 }
 function setUpViewChangeEvent(fieldControl, dir) {
     dir.eventBinder.registerOnChange(function (value) {
@@ -6087,45 +6770,60 @@ function getValueAccessor(valueAccessors) {
     }
     return inbuilt;
 }
+function getValueByPath(value, paths) {
+    return paths.reduce(function (accum, key) {
+        if (typeof accum !== 'object')
+            return null;
+        accum = accum[key];
+        return accum;
+    }, value);
+}
 var ModelDirective = function () {
     'use strict';
-    function ModelDirective(eventBinder, parentControl, validators) {
-        this.eventBinder = getValueAccessor(eventBinder);
-        this._parentControl = parentControl;
-        this._validators = validators;
-        this.modelChange = new EventEmitter();
-        this._model = null;
-    }
-    ModelDirective.prototype.didChange = function (changes) {
-        if (this._isViewModelChanged(changes)) {
-            this._model = changes.model;
+    class ModelDirective {
+        constructor(eventBinder, parentControl, validators) {
+            this.eventBinder = getValueAccessor(eventBinder);
+            this._parentControl = parentControl;
+            this._validators = validators;
+            this.modelChange = new EventEmitter();
+            this._model = null;
+        }
+        didChange(changes) {
+            if (this._isViewModelChanged(changes)) {
+                this._model = changes.model;
+                if (!this.fieldControl)
+                    return;
+                this.fieldControl.setValue(this._model, { emitToView: true });
+            }
+        }
+        modelToViewUpdate(value) {
+            this.modelChange.emit(value);
+        }
+        didInit() {
+            this.fieldControl = new FormFieldControlService(Object.assign({ value: this._model }, this.modelOptions));
+            setupControl(this.fieldControl, this);
+        }
+        viewDidDestroy() {
+            this._control = null;
+        }
+        _isViewModelChanged(changes) {
+            return changes.hasOwnProperty('model') && changes.model !== this._model;
+        }
+        _setValueToModel(value) {
             if (!this.fieldControl)
                 return;
-            this.fieldControl.setValue(this._model, { emitToView: true });
+            this.fieldControl.setValue(value, { emitToView: true });
+            this._model = changes.model;
         }
-    };
-    ModelDirective.prototype.modelToViewUpdate = function (value) {
-        this.modelChange.emit(value);
-    };
-    ModelDirective.prototype.didInit = function () {
-        this.fieldControl = new FormFieldControlService(Object.assign({ value: this._model }, this.modelOptions));
-        setupControl(this.fieldControl, this);
-    };
-    ModelDirective.prototype.viewDidDestroy = function () {
-        this._control = null;
-    };
-    ModelDirective.prototype._isViewModelChanged = function (changes) {
-        return changes.hasOwnProperty('model') && changes.model !== this._model;
-    };
-    ModelDirective.prototype._setValueToModel = function (value) {
-        if (!this.fieldControl)
-            return;
-        this.fieldControl.setValue(value, { emitToView: true });
-        this._model = changes.model;
-    };
+    }
     ModelDirective.ctors = {
         selector: 'model',
-        events: { 'modelChange': { type: 'emitter' } },
+        events: {
+            'modelChange': {
+                type: 'emitter',
+                node: 'jModel'
+            }
+        },
         props: {
             model: {},
             modelOptions: {},
@@ -6149,53 +6847,52 @@ var ModelDirective = function () {
 }();
 var FormRepeaterService = function () {
     'use strict';
-    function FormRepeaterService(fields, autoGenerate, validators) {
-        FormControlAbstract.call(this, validators);
-        this.formFieldControls = [];
-        this._defaultfields = fields;
-        this._autoSetup(autoGenerate);
-        this.updateValueAndStatus();
+    class FormRepeaterService extends FormControlAbstract {
+        constructor(fields, autoGenerate, validators) {
+            super(validators);
+            this.formFieldControls = [];
+            this._defaultfields = fields;
+            this._autoSetup(autoGenerate);
+        }
+        addField(fieldControl) {
+            if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
+                this.formFieldControls.push(fieldControl);
+            } else if (this._defaultfields) {
+                this.formFieldControls.push(new FormControlService(this._defaultfields));
+            } else {
+                this.formFieldControls.push(new FormFieldControlService(fieldControl));
+            }
+            this._setupControl(this.formFieldControls[this.formFieldControls.length - 1]);
+        }
+        getField(index) {
+            return this.formFieldControls[index] || null;
+        }
+        _collectValues(enabledOnly) {
+            var values = [];
+            this.forEachField(function (control) {
+                if (enabledOnly && control.enabled || !enabledOnly) {
+                    values.push(control.value);
+                }
+            });
+            return values;
+        }
+        removeField(index) {
+            var len = this.formFieldControls.length;
+            if (!len || len < index)
+                return;
+            this.formFieldControls[index].destroy();
+            this.value.splice(index, 1);
+            this.formFieldControls.splice(index, 1);
+            this.valueChanges.emit(this.value);
+        }
+        _autoSetup(autoGenerate) {
+            if (autoGenerate) {
+                while (autoGenerate--) {
+                    this.addField();
+                }
+            }
+        }
     }
-    FormRepeaterService.prototype = Object.create(FormControlService.prototype);
-    FormRepeaterService.prototype.constructor = FormControlAbstract;
-    FormRepeaterService.prototype.addField = function (fieldControl) {
-        if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
-            this.formFieldControls.push(fieldControl);
-        } else if (this._defaultfields) {
-            this.formFieldControls.push(new FormControlService(this._defaultfields));
-        } else {
-            this.formFieldControls.push(new FormFieldControlService(fieldControl));
-        }
-        this._setupControl(this.formFieldControls[this.formFieldControls.length - 1]);
-    };
-    FormRepeaterService.prototype.getField = function (index) {
-        return this.formFieldControls[index] || null;
-    };
-    FormRepeaterService.prototype._collectValues = function (enabledOnly) {
-        var values = [];
-        this.forEachField(function (control) {
-            if (enabledOnly && control.enabled || !enabledOnly) {
-                values.push(control.value);
-            }
-        });
-        return values;
-    };
-    FormRepeaterService.prototype.removeField = function (index) {
-        var len = this.formFieldControls.length;
-        if (!len || len < index)
-            return;
-        this.formFieldControls[index].destroy();
-        this.value.splice(index, 1);
-        this.formFieldControls.splice(index, 1);
-        this.valueChanges.emit(this.value);
-    };
-    FormRepeaterService.prototype._autoSetup = function (autoGenerate) {
-        if (autoGenerate) {
-            while (autoGenerate--) {
-                this.addField();
-            }
-        }
-    };
     FormRepeaterService.ctors = {};
     FormRepeaterService.ctors.instance = FormRepeaterService;
     return FormRepeaterService;
@@ -6207,7 +6904,7 @@ var FormModule = function () {
     return FormModule;
 }();
 },
-1157 : (module, exports, __required, global) => {
+1168 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'CSRFCookieHeaderService', () => CSRFCookieHeaderService);
 __required.r(exports, 'csrfCookieConfig', () => csrfCookieConfig);
@@ -6219,20 +6916,26 @@ __required.r(exports, 'HttpRequest', () => HttpRequest);
 __required.r(exports, 'HttpRequestError', () => HttpRequestError);
 __required.r(exports, 'HttpService', () => HttpService);
 __required.r(exports, 'HttpModule', () => HttpModule);
-var utils = __required(1155);
+var utils = __required(1166);
 var serialize = utils.serialize;
-var helpers = __required(1132);
+var helpers = __required(1142);
 var isnull = helpers.isnull;
 var isstring = helpers.isstring;
 var isundefined = helpers.isundefined;
 var isobject = helpers.isobject;
 var inarray = helpers.inarray;
-var core = __required(1133);
+var core = __required(1143);
 var ProviderToken = core.ProviderToken;
 var InterceptorResolver = core.InterceptorResolver;
 var Subject = core.Subject;
 var ChangeDetector = core.ChangeDetector;
-var __buildOptions = {};
+var __buildOptions = {
+    'buildTime': 1734326607300,
+    'version': '1.0.0',
+    'baseHref': '',
+    'assetURL': '',
+    'production': false
+};
 function HttpRequestError(message) {
     this.errorType = null;
     this.message = message;
@@ -6529,7 +7232,7 @@ var HttpCSRFModule = function () {
     return HttpCSRFModule;
 }();
 },
-1158 : (module, exports, __required, global) => {
+1169 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'PathStrategyService', () => PathStrategyService);
 __required.r(exports, 'AbstractStrategy', () => AbstractStrategy);
@@ -6539,12 +7242,16 @@ __required.r(exports, 'JIntentContainer', () => JIntentContainer);
 __required.r(exports, 'ViewIntentService', () => ViewIntentService);
 __required.r(exports, 'OpenIntent', () => OpenIntent);
 __required.r(exports, 'jViewFn', () => jViewFn);
+__required.r(exports, 'RouteEvent', () => RouteEvent);
+__required.r(exports, 'RouteErrorEvent', () => RouteErrorEvent);
 __required.r(exports, 'RouteInterceptorInstance', () => RouteInterceptorInstance);
 __required.r(exports, 'getHref', () => getHref);
 __required.r(exports, 'parseUrl', () => parseUrl);
 __required.r(exports, 'getRequiredRoute', () => getRequiredRoute);
+__required.r(exports, 'getRoute', () => getRoute);
 __required.r(exports, 'parseDelimeter', () => parseDelimeter);
 __required.r(exports, 'getParentRoute', () => getParentRoute);
+__required.r(exports, 'INTENT_EVENT_ENUMS', () => INTENT_EVENT_ENUMS);
 __required.r(exports, 'ROUTE_EVENT_ENUMS', () => ROUTE_EVENT_ENUMS);
 __required.r(exports, 'routeConfig', () => routeConfig);
 __required.r(exports, 'staticRoutePrefix', () => staticRoutePrefix);
@@ -6555,22 +7262,30 @@ __required.r(exports, 'LocationService', () => LocationService);
 __required.r(exports, 'WebStateService', () => WebStateService);
 __required.r(exports, 'GoFn', () => GoFn);
 __required.r(exports, 'RouterModule', () => RouterModule);
-var utils = __required(1155);
+var utils = __required(1166);
 var unserialize = utils.unserialize;
 var extend = utils.extend;
-var core = __required(1133);
+var core = __required(1143);
 var APP_BOOTSTRAP = core.APP_BOOTSTRAP;
+var AttributeAppender = core.AttributeAppender;
 var EventEmitter = core.EventEmitter;
 var InterceptorResolver = core.InterceptorResolver;
 var EventManager = core.EventManager;
-var errorBuilder = core.errorBuilder;
 var ProviderToken = core.ProviderToken;
+var rxLoop = core.rxLoop;
+var errorBuilder = core.errorBuilder;
 var compileModule = core.compileModule;
 var DOMHelper = core.DOMHelper;
 var ComponentFactoryResolver = core.ComponentFactoryResolver;
-var __buildOptions = {};
+var __buildOptions = {
+    'buildTime': 1734326607385,
+    'version': '1.0.0',
+    'baseHref': '',
+    'assetURL': '',
+    'production': false
+};
 var ROUTE_INTERCEPTOR = new ProviderToken('RouteInterceptor', true);
-var ROUTE_LOCATION_STRATEGY = new ProviderToken('RouteLocationStrategy', false, { value: HashStrategyService });
+var ROUTE_LOCATION_STRATEGY = new ProviderToken('RouteLocationStrategy', false);
 var staticRoutePrefix = '^';
 var routeConfig = Object({
     isLoaded: false,
@@ -6584,19 +7299,37 @@ var routeConfig = Object({
     delimiter: [
         '#!',
         ''
-    ]
+    ],
+    autoInitialize: true,
+    allowChangeFromLocationBar: true,
+    scrollTop: true
 });
 var ROUTE_EVENT_ENUMS = {
-    SUCCESS: '$webRouteSuccess',
-    ERROR: '$webRouteError',
-    START: '$webRouteStart',
-    NOTFOUND: '$webRouteNotFound'
+    SUCCESS: 'WEB_ROUTE_SUCCESS',
+    ERROR: 'WEB_ROUTE_ERROR',
+    START: 'WEB_ROUTE_START',
+    NOTFOUND: 'WEB_ROUTE_NOT_FOUND',
+    GUARDCHECK: 'WEB_ROUTE_GUARD_CHECK',
+    REDIRECT: 'WEB_ROUTE_REDIRECT',
+    RENDER: 'WEB_ROUTE_RENDER',
+    COMPLETE: 'WEB_ROUTE_COMPLETE',
+    LME: 'WEB_ROUTE_MODULE_LOAD_ERROR'
+};
+var INTENT_EVENT_ENUMS = {
+    SUCCESS: 'INTENT_SUCCESS',
+    ERROR: 'INTENT_ERROR',
+    START: 'INTENT_START',
+    NOTFOUND: 'INTENT_NOT_FOUND',
+    GUARDCHECK: 'INTENT_GUARD_CHECK',
+    REDIRECT: 'INTENT_REDIRECT',
+    RENDER: 'INTENT_RENDER',
+    COMPLETE: 'INTENT_COMPLETE'
 };
 var _unregistered = {};
 var routeCollections = {};
 var $intentCollection = {};
 function createRoute(url) {
-    var replacer = '/([\\w-@!.]+)', paramsMapping = [];
+    var replacer = '/([\\w-@!.s%]+)', paramsMapping = [];
     url = url.replace(/([\/]|)([:]|)+(\w+)/g, function (match) {
         if (match.indexOf(':') > -1) {
             paramsMapping.push(match.split(':')[1]);
@@ -6610,29 +7343,18 @@ function createRoute(url) {
         regexp: new RegExp('(?:' + url.split('?')[0] + ')$')
     };
 }
-function addViewMatcher(view, route) {
+function addViewMatcher(viewId, route, viewsArray) {
     if (route.component) {
         route.views = route.views || {};
-        route.views[view] = route.component;
+        route.views[viewId] = route.component;
         delete route.component;
+        if (viewsArray)
+            viewsArray.push(viewId);
     }
 }
-function generateRoute(route, requireParent) {
-    if (route.isIntent) {
-        $intentCollection[route.name] = route;
-        return;
-    }
-    if (routeCollections[route.name] && !(_unregistered[route.parent] && _unregistered[route.parent].includes(route.name))) {
-        console.info('[Route] Duplicate route found: ' + route.name + ', skipping to use existing');
-        return;
-    }
-    if (!route.views && (!route.component && !route.loadModule)) {
-        console.info('[Router] missing view configuration for: ' + route.name);
-        return;
-    }
-    route.route = createRoute(route.url || '^');
-    var _views = Object.keys(route.views || {});
-    if (requireParent) {
+function attachRouteViews(route) {
+    var views = Object.keys(route.views || {});
+    if (route.parent) {
         var parentRoute = routeCollections[route.parent];
         route.views = route.views || {};
         for (var view in parentRoute.views) {
@@ -6645,12 +7367,29 @@ function generateRoute(route, requireParent) {
         if (route.targetView && !route.views[route.targetView]) {
             addViewMatcher(route.targetView, route);
         }
-        route.route.parent = parentRoute;
-        if (!_views.length && !route.abstract) {
-            _views = parentRoute.route._views;
+        if (!views.length && !route.abstract) {
+            views = parentRoute.route._views;
         }
         parentRoute = null;
-        delete route.parent;
+    } else {
+        addViewMatcher(route.targetView || staticRoutePrefix, route, views);
+    }
+    route.route._views = views;
+}
+function generateRoute(route, requireParent) {
+    if (route.isIntent) {
+        $intentCollection[route.name] = route;
+        return;
+    }
+    if (routeCollections[route.name] && !(_unregistered[route.parent] && _unregistered[route.parent].includes(route.name))) {
+        console.info('[Route] Duplicate route found: ' + route.name + ', skipping to use existing');
+        return;
+    }
+    route.route = createRoute(route.url || '^');
+    attachRouteViews(route);
+    if (!route.views && (!route.component && !route.loadModule) && !requireParent) {
+        console.info('[Router] Skipping view configuration for: ' + route.name);
+        return;
     }
     if (!route.url) {
         route.abstract = true;
@@ -6661,30 +7400,40 @@ function generateRoute(route, requireParent) {
             url: route.url
         };
     }
-    route.route._views = _views;
+    if (route.parent && routeCollections.hasOwnProperty(route.parent)) {
+        var parent = routeCollections[route.parent];
+        if (parent.data && parent.data.authorities && (!route.data || !route.data.authorities)) {
+            route.data = route.data || {};
+            route.data.authorities = parent.data.authorities;
+        }
+    }
     routeCollections[route.name] = route;
     if (_unregistered.hasOwnProperty(route.name)) {
         _unregistered[route.name].forEach(function (uName) {
-            setupRoute(routeCollections[uName]);
+            setupRoute(routeCollections[uName], true);
         });
         delete _unregistered[route.name];
     }
 }
-function setRouteChildren(config) {
-    if (config.children) {
-        for (var childConfig of config.children) {
-            if (childConfig.name) {
-                var name = childConfig.name;
-                childConfig.name = [
-                    config.name,
+function setRouteChildren(route, fromLazyLoad) {
+    if (route.children) {
+        for (var childRoute of route.children) {
+            if (childRoute.name) {
+                var name = childRoute.name;
+                childRoute.name = [
+                    route.name,
                     name
                 ].join('.');
-                childConfig.url = '/' + config.name + (childConfig.url || '/' + name);
-                childConfig.parent = config.name;
-                generateRoute(childConfig, true);
-                setRouteChildren(childConfig);
+                if (!routeCollections[childRoute.name]) {
+                    childRoute.url = (route.url || '/' + route.name) + (childRoute.url || '/' + name);
+                    childRoute.parent = route.name;
+                    generateRoute(childRoute, true);
+                    setRouteChildren(childRoute);
+                } else if (fromLazyLoad) {
+                    lazyLoadRoute(childRoute);
+                }
             } else {
-                errorBuilder('unregistered child route in parent<' + config.name + '>, name is required:' + JSON.stringify(childConfig));
+                errorBuilder('unregistered child route in parent<' + route.name + '>, name is required:' + JSON.stringify(childRoute));
             }
         }
     }
@@ -6694,16 +7443,13 @@ function setupRoute(route) {
     if (!route.name && route.url) {
         route.name = route.url.replace(/[/:]/g, _ => _ == '/' ? '.' : '');
     }
-    if (!route.parent) {
-        addViewMatcher(route.targetView || staticRoutePrefix, route);
-    }
     if (requireParent && !routeCollections.hasOwnProperty(route.parent)) {
         if (!_unregistered.hasOwnProperty(route.parent)) {
             _unregistered[route.parent] = [];
         }
         _unregistered[route.parent].push(route.name);
         routeCollections[route.name] = route;
-        return this;
+        return;
     }
     generateRoute(route, requireParent);
     setRouteChildren(route);
@@ -6713,48 +7459,53 @@ function lazyLoadRoute(route) {
         var mainRoute = routeCollections[route.name];
         if (mainRoute) {
             Object.assign(mainRoute, route);
-            if (mainRoute.targetView) {
-                addViewMatcher(mainRoute.targetView, mainRoute);
-            } else if (route.views) {
-                mainRoute.route._views = Object.keys(route.views);
-            }
-            setRouteChildren(mainRoute);
+            attachRouteViews(mainRoute);
+            setRouteChildren(mainRoute, true);
         } else {
             setupRoute(route);
         }
     }
 }
-function getParentRoute(name) {
-    var parent = routeCollections[name], fnd;
-    do {
-        if (parent) {
-            fnd = parent;
-        }
-    } while (parent = parent.route.parent);
-    return fnd;
+function patchParams(route, params, queryParam) {
+    route.route.params = extend({}, route.params || {}, params || {});
+    if (queryParam && route.route.paramsMapping.length && !params) {
+        route.route.regexp.exec(queryParam).splice(1).forEach(function (val, inc) {
+            var isNumber = Number(val);
+            route.route.params[route.route.paramsMapping[inc]] = !isNaN(isNumber) ? isNumber : decodeURIComponent(val);
+        });
+    }
 }
-function getRouteObj(routeName) {
-    var queryParam = routeName.split('?');
+function getParentRoute(name) {
+    return routeCollections[name];
+}
+function getRouteObj(urlPath) {
     for (var prop in routeCollections) {
-        if (!routeCollections[prop].abstract && routeCollections[prop].route.regexp.test(queryParam[0])) {
+        if (!routeCollections[prop].abstract && routeCollections[prop].route.regexp.test(urlPath)) {
             return routeCollections[prop];
         }
     }
     return routeCollections[routeConfig.fallback.name] || null;
 }
 function parseDelimeter() {
-    return routeConfig.delimiter.map(a => (a = a.split(''), a.unshift(''), a.join('\\'))).join('(.*?)');
+    return routeConfig.delimiter.map(a => (a = a.split(''), a.unshift(''), a.join('\\'))).join('(.*)');
 }
-function getRequiredRoute(routeName, params) {
-    var queryParam = routeName.split('?'), foundRoute = getRouteObj(routeName);
+function getRoute(routeName, params) {
+    var route = routeCollections[routeName];
+    if (!route) {
+        route = routeCollections[routeConfig.fallback.name] || null;
+    }
+    patchParams(route, params || route.params);
+    var url = parseUrl(route.url, route.route.params);
+    return {
+        route,
+        url
+    };
+}
+function getRequiredRoute(url, params) {
+    var queryParam = url.split('?');
+    var foundRoute = getRouteObj(queryParam[0]);
     if (foundRoute) {
-        foundRoute.route.params = extend({}, foundRoute.params || {}, params || {});
-        if (foundRoute.route.paramsMapping.length && !params) {
-            foundRoute.route.regexp.exec(queryParam[0]).splice(1).forEach(function (val, inc) {
-                var isNumber = Number(val);
-                foundRoute.route.params[foundRoute.route.paramsMapping[inc]] = !isNaN(isNumber) ? isNumber : val;
-            });
-        }
+        patchParams(foundRoute, params, queryParam[0]);
         if (queryParam[1]) {
             foundRoute.route.params = extend(foundRoute.route.params, unserialize(queryParam[1]));
         }
@@ -6764,264 +7515,351 @@ function getRequiredRoute(routeName, params) {
 function parseUrl(href, params) {
     return href.replace(/\:(\w)+/g, function (index, key) {
         var param = index.split(':')[1];
-        return param in params ? params[param] : '';
+        return param in params ? encodeURIComponent(params[param]) : '';
     });
 }
-function getHref(stateName, params) {
-    var state = routeCollections[stateName];
-    if (state) {
-        params = params || state.params;
-        if (state.route.paramsMapping.length && !params) {
-            throw new Error(stateName + ' requires parameter, but none was provided');
+function getHref(routeName, params) {
+    var route = routeCollections[routeName];
+    if (route) {
+        params = params || route.params;
+        if (route.route.paramsMapping.length && !params) {
+            return errorBuilder(routeName + ' requires parameter, but none was provided');
         }
-        return parseUrl(state.url, params);
+        return parseUrl(route.url, params);
     }
     return routeConfig.fallback.url;
 }
+var ViewHandler = function () {
+    'use strict';
+    class ViewHandler {
+        constructor() {
+            this.viewsHolder = new Map();
+            this._pendingViewStack = new Map();
+            this.currentView = staticRoutePrefix;
+            this._resolvedRoute = {};
+        }
+        isResolved(parentName, setValue) {
+            var isResolved = this._resolvedRoute[parentName];
+            this._resolvedRoute[parentName] = setValue || false;
+            return isResolved;
+        }
+        setViewReference(elementRef, ref) {
+            this.viewsHolder.set(ref, {
+                element: elementRef,
+                compiledWith: null
+            });
+            this.handlePendingView(ref);
+        }
+        getView(view, name) {
+            var _viewHolder = this.viewsHolder.get(view);
+            return name ? _viewHolder[name] : _viewHolder;
+        }
+        compileViewTemplate(viewComponent, viewObjectInstance, callback) {
+            this.cleanUp(viewObjectInstance);
+            var isLazyLoaded = !!viewComponent.loadModule;
+            this._loadModule(viewComponent.loadModule).then(componentFactory => {
+                ComponentFactoryResolver(isLazyLoaded ? componentFactory : viewComponent, viewObjectInstance.element).then(componentRef => {
+                    viewObjectInstance.compiledWith = componentRef;
+                    callback();
+                }, errMessage => {
+                    errorBuilder(errMessage);
+                    callback();
+                });
+            });
+        }
+        removeViews(views) {
+            this.viewsHolder.forEach((view, key) => {
+                if (!views.includes(key)) {
+                    this.cleanUp(view);
+                    this.viewsHolder.delete(key);
+                }
+            });
+        }
+        getCurrentView(route) {
+            var views = [];
+            var mView = Object.keys(route.views).concat();
+            this.isResolved(route.name, true);
+            if (route.parent && !this.isResolved(route.parent, true)) {
+                return mView;
+            }
+            if (route.targetView) {
+                if (this.viewsHolder.has(route.targetView))
+                    return views.concat(route.targetView);
+                else if (!mView.includes(route.targetView))
+                    mView.push(route.targetView);
+                return mView;
+            }
+            views = views.concat(route.route._views);
+            this.removeViews(views);
+            mView = null;
+            return views;
+        }
+        resolveViews(route) {
+            return rxLoop(this.getCurrentView(route), (view, next) => {
+                view = view || staticRoutePrefix;
+                var viewObj = route.views[view] || route;
+                var viewObjectInstance = this.getView(view);
+                if (!viewObj) {
+                    errorBuilder('[Router] No view definition for ' + route.name);
+                    return next();
+                }
+                if (viewObjectInstance) {
+                    this.compileViewTemplate(viewObj, viewObjectInstance, next);
+                } else {
+                    this._pendingViewStack.set(view, viewObj);
+                    next();
+                }
+            });
+        }
+        destroy(ref) {
+            var viewInstance = this.viewsHolder.get(ref);
+            if (!viewInstance)
+                return;
+            this.cleanUp(viewInstance);
+            this.viewsHolder.delete(ref);
+            viewInstance = null;
+        }
+        handlePendingView(viewName) {
+            if (this._pendingViewStack.has(viewName)) {
+                this.compileViewTemplate(this._pendingViewStack.get(viewName), this.viewsHolder.get(viewName), () => {
+                    this._pendingViewStack.delete(viewName);
+                });
+            }
+        }
+        cleanUp(viewInstance) {
+            if (viewInstance.compiledWith) {
+                DOMHelper.remove(viewInstance.compiledWith);
+            } else {
+                viewInstance.element.children.forEach(DOMHelper.remove);
+            }
+        }
+        _loadModule(mLoader) {
+            if (!mLoader)
+                return Promise.resolve(null);
+            return mLoader().then(module => {
+                compileModule(module);
+                return module.rootElement;
+            });
+        }
+    }
+    ViewHandler.ctors = { name: 'ViewHandler' };
+    return ViewHandler;
+}();
 function RouteInterceptorInstance(route, path, currentRoute, redirectMethod) {
     this.name = route.name;
     this.path = path;
     this.locals = {};
     this.currentRoute = currentRoute;
     this.originalUrl = route.url;
-    this.params = route.params;
     this.data = route.data;
     this.redirect = redirectMethod;
+    Object.defineProperty(this, 'params', { get: () => route.route.params });
 }
-var ViewHandler = function () {
-    'use strict';
-    function ViewHandler() {
-        this.viewsHolder = new Map();
-        this.currentView = staticRoutePrefix;
-        this.stateInProgress;
-        this.stateQueue = [];
-        this.$stateTransitioned = false;
-        this.currentState = '';
-        this.previousState = '';
-        this._pendingViewStack = new Map();
-        this._resolvedParents = {};
+function RouteErrorEvent(path) {
+    this.url = path;
+    this.message = 'unable to resolve route';
+}
+function RouteEvent(path, route, previousRoute, previousPath) {
+    this.path = path;
+    this.name = route.name;
+    this.params = route.route.params;
+    this.data = route.data;
+    if (previousPath) {
+        this.previous = {
+            path: previousPath,
+            name: previousRoute.name,
+            params: previousRoute.route.params
+        };
     }
-    ViewHandler.prototype.setViewReference = function (elementRef, ref) {
-        this.viewsHolder.set(ref, {
-            element: elementRef,
-            compiledWith: null
-        });
-        this.handlePendingView(ref);
-    };
-    ViewHandler.prototype.getView = function (view, name) {
-        var _viewHolder = this.viewsHolder.get(view);
-        return name ? _viewHolder[name] : _viewHolder;
-    };
-    ViewHandler.prototype.compileViewTemplate = function (viewComponent, viewObjectInstance) {
-        this.cleanUp(viewObjectInstance);
-        if (viewComponent.loadModule) {
-            this._loadModule(viewComponent.loadModule, compileComponent);
-        } else {
-            compileComponent(viewComponent);
-        }
-        function compileComponent(componentFactory) {
-            ComponentFactoryResolver(componentFactory, viewObjectInstance.element, componentRef => {
-                viewObjectInstance.compiledWith = componentRef;
-            });
-        }
-    };
-    ViewHandler.prototype.removeViews = function (_views) {
-        this.viewsHolder.forEach((view, key) => {
-            if (!_views.includes(key)) {
-                this.cleanUp(view);
-                this.viewsHolder.delete(key);
-            }
-        });
-    };
-    ViewHandler.prototype.getCurrentView = function (_route) {
-        var _views = [], mView = Object.keys(_route.views).concat();
-        this._resolvedParents[_route.name] = true;
-        var parentName = _route.route.parent ? _route.route.parent.name : null;
-        if (parentName && !this._resolvedParents[parentName]) {
-            var parentRoute = getParentRoute(parentName);
-            this._resolvedParents[parentRoute.name] = true;
-            this._resolvedParents[parentName] = true;
-            return mView;
-        }
-        if (_route.targetView) {
-            if (this.viewsHolder.has(_route.targetView)) {
-                return _views.concat(_route.targetView);
-            }
-            return mView;
-        }
-        _views = _views.concat(_route.route._views);
-        this.removeViews(_views);
-        mView = null;
-        return _views;
-    };
-    ViewHandler.prototype.resolveViews = function (route) {
-        var _views = this.getCurrentView(route);
-        for (var idx = 0; idx < _views.length; idx++) {
-            var view = _views[idx] || staticRoutePrefix;
-            var viewObj = route.views ? route.views[view] : route;
-            var viewObjectInstance = this.getView(view);
-            if (viewObjectInstance) {
-                if (!viewObj)
-                    throw new TypeError('[Router] No view definition for ' + route.name);
-                this.compileViewTemplate(viewObj, viewObjectInstance);
-            } else {
-                this._pendingViewStack.set(view, viewObj);
-            }
-        }
-    };
-    ViewHandler.prototype.destroy = function (ref) {
-        var viewInstance = this.viewsHolder.get(ref);
-        if (!viewInstance)
-            return;
-        this.cleanUp(viewInstance);
-        this.viewsHolder.delete(ref);
-        viewInstance = null;
-    };
-    ViewHandler.prototype.handlePendingView = function (viewName) {
-        if (this._pendingViewStack.has(viewName)) {
-            this.compileViewTemplate(this._pendingViewStack.get(viewName), this.viewsHolder.get(viewName));
-            this._pendingViewStack.delete(viewName);
-        }
-    };
-    ViewHandler.prototype.cleanUp = function (viewInstance) {
-        if (viewInstance.compiledWith) {
-            DOMHelper.remove(viewInstance.compiledWith);
-        } else {
-            viewInstance.element.children.forEach(DOMHelper.remove);
-        }
-    };
-    ViewHandler.prototype._loadModule = function (mLoader, callback) {
-        if (!mLoader)
-            return callback(null);
-        mLoader().then(module => {
-            compileModule(module);
-            callback(module.rootElement);
-        });
-    };
-    ViewHandler.ctors = { name: 'ViewHandler' };
-    return ViewHandler;
-}();
+}
 var LocationService = function () {
     'use strict';
-    function LocationService(viewHandler, locationStrategy) {
-        this.viewHandler = viewHandler;
-        this.strategy = new locationStrategy(this);
-        this.lastVisited = '';
-        this.previousState = null;
-        this.locationState = null;
-        this.previous = null;
-        this.currentRoute = Object({ route: { params: {} } });
-        this.events = new EventManager((e, route, path) => {
-            if (route.loadModule) {
-                this.viewHandler._loadModule(route.loadModule, rootElement => {
-                    this._processState(e, route, path, rootElement);
-                });
-            } else {
-                this._processState(e, route, path);
-            }
-        });
-    }
-    LocationService.prototype.changed = function (path) {
-        return this.lastVisited !== path;
-    };
-    LocationService.prototype.replace = function (path) {
-        if (!this.locationState && !path)
-            return;
-        this.locationState = {
-            state: 'replaceState',
-            path: path || this.locationState.previous,
-            previous: this.previousState,
-            current: this.lastVisited
-        };
-        this.previous = this.locationState.path;
-    };
-    LocationService.prototype.getState = function (state) {
-        if (state) {
-            this.locationState = state;
-            return;
+    class LocationService {
+        constructor(viewHandler, locationStrategy) {
+            this.viewHandler = viewHandler;
+            this.strategy = new (locationStrategy || HashStrategyService)(this);
+            this.lastVisited = '';
+            this.previousState = null;
+            this.locationState = null;
+            this.transitionState = {
+                currentState: '',
+                previousState: '',
+                inProgress: false,
+                stateQueue: [],
+                transitioned: false,
+                stopped: false
+            };
+            this.previous = null;
+            this.currentRoute = Object({ route: { params: {} } });
+            this.events = new EventManager((e, route, path) => {
+                if (ROUTE_EVENT_ENUMS.RENDER === e.type) {
+                    var parentRoute = null;
+                    if (route.parent && !this.viewHandler.isResolved(route.parent, true)) {
+                        parentRoute = getParentRoute(route.parent);
+                    }
+                    this.viewHandler._loadModule(parentRoute ? parentRoute.loadModule : route.loadModule).then(rootElement => {
+                        this._processState(route, path, rootElement);
+                    }).catch(err => this.events.dispatch(ROUTE_EVENT_ENUMS.LME, err));
+                }
+            });
         }
-        return this.locationState;
-    };
-    LocationService.prototype.search = function (query) {
-        return window.location.search = query;
-    };
-    LocationService.prototype.go = function (path, params) {
-        if (!path) {
-            return false;
+        changed(path) {
+            return this.lastVisited !== path;
         }
-        this.viewHandler.previousState = this.viewHandler.currentState;
-        this.viewHandler.currentState = path;
-        var redirect = (path, params) => {
-            path = getHref(path, params);
-            if (this.changed(path)) {
-                this.go(path, params);
-            } else {
-                stopped = true;
-            }
-        };
-        if (this.viewHandler.stateInProgress) {
-            if (this.viewHandler.currentState === this.viewHandler.previousState) {
+        replace(path) {
+            if (!this.locationState && !path)
+                return;
+            this.locationState = {
+                state: 'replaceState',
+                path: path || this.locationState.previous,
+                previous: this.previousState,
+                current: this.lastVisited
+            };
+            this.previous = this.locationState.path;
+        }
+        getState(state) {
+            if (state) {
+                this.locationState = state;
                 return;
             }
-            this.viewHandler.stateQueue.push([
-                path,
-                params
-            ]);
-            this.viewHandler.$stateTransitioned = true;
-        } else if (this.changed(path)) {
-            var route = getRequiredRoute(path, params);
-            var stopped = false;
-            if (route) {
-                this.viewHandler.stateInProgress = true;
-                var routeInstance = new RouteInterceptorInstance(route, path, this.currentRoute, redirect);
-                InterceptorResolver(ROUTE_INTERCEPTOR, routeInstance).then(() => {
-                    if (!stopped) {
-                        this.events.dispatch(ROUTE_EVENT_ENUMS.START, route, path);
-                    }
+            return this.locationState;
+        }
+        go(routeObj) {
+            if (!routeObj || !routeObj.url || !routeObj.route) {
+                this.events.dispatch(ROUTE_EVENT_ENUMS.NOTFOUND, { message: 'unable to resolve route' });
+                return false;
+            }
+            var path = routeObj.url;
+            var redirect = (routeName, params) => this.redirect(routeName, params);
+            var transitioned = () => this.transitionState.currentState !== path;
+            var checkTransition = () => {
+                if (path === this.transitionState.currentState)
+                    return;
+                this.transitionState.stateQueue.push([
+                    path,
+                    routeObj.route.route.params
+                ]);
+                this.transitionState.transitioned = true;
+            };
+            this.transitionState.previousState = this.transitionState.currentState;
+            if (this.transitionState.inProgress) {
+                checkTransition(routeObj);
+            }
+            if (this.changed(path) && transitioned()) {
+                this.transitionState.currentState = path;
+                this.transitionState.inProgress = true;
+                this.events.dispatch(ROUTE_EVENT_ENUMS.START, {
+                    current: this.lastVisited,
+                    path,
+                    redirected: this.transitionState.transitioned
                 });
-            } else {
-                this.events.dispatch(ROUTE_EVENT_ENUMS.NOTFOUND, {
-                    path: path,
-                    params: params,
-                    message: 'unable to resolve route'
+                this.events.dispatch(ROUTE_EVENT_ENUMS.GUARDCHECK, routeObj.route);
+                var routeInstance = new RouteInterceptorInstance(routeObj.route, path, this.currentRoute, redirect);
+                InterceptorResolver(ROUTE_INTERCEPTOR, routeInstance).then(() => {
+                    if (!this.transitionState.stopped && !transitioned()) {
+                        this.events.dispatch(ROUTE_EVENT_ENUMS.RENDER, routeObj.route, path);
+                    } else if (!this.transitionState.transitioned) {
+                        Object.assign(this.transitionState, {
+                            inProgress: false,
+                            currentState: this.transitionState.previousState,
+                            stopped: false
+                        });
+                    }
+                    routeObj = null;
                 });
             }
         }
-    };
-    LocationService.prototype.getRootUrl = function () {
-        var rootUrl = document.location.protocol + '//' + (document.location.hostname || document.location.host);
-        if (document.location.port) {
-            rootUrl += ':' + document.location.port;
+        getRootUrl() {
+            var rootUrl = document.location.protocol + '//' + (document.location.hostname || document.location.host);
+            if (document.location.port) {
+                rootUrl += ':' + document.location.port;
+            }
+            return rootUrl;
         }
-        return rootUrl;
-    };
-    LocationService.prototype.getFullPath = function (path) {
-        return this.getRootUrl() + this.strategy.path(path);
-    };
-    LocationService.prototype._processState = function (event, route, path, rootElement) {
-        if (ROUTE_EVENT_ENUMS.START === event.type) {
+        getFullPath(path) {
+            return this.getRootUrl() + this.strategy.path(path);
+        }
+        _processState(route, path, rootElement) {
             var navigatedPath = route.name === routeConfig.fallback.name ? route.url : path;
-            var lastTransitionQueue = this.viewHandler.stateQueue.pop();
+            var lastTransitionQueue = this.transitionState.stateQueue.pop();
             if (lastTransitionQueue) {
                 navigatedPath = lastTransitionQueue[0];
                 route = getRequiredRoute.apply(null, lastTransitionQueue);
-                this.viewHandler.stateQueue.length = 0;
+                this.transitionState.stateQueue.length = 0;
             }
             if (this.changed(navigatedPath)) {
-                this.events.dispatch(ROUTE_EVENT_ENUMS.SUCCESS, route, this.currentRoute);
+                var routeEvent = new RouteEvent(navigatedPath, route, this.currentRoute, this.lastVisited);
+                this.events.dispatch(ROUTE_EVENT_ENUMS.SUCCESS, routeEvent);
                 this.currentRoute = route;
-                this.strategy.pushState({
-                    name: route.name,
-                    params: route.params
-                }, navigatedPath);
-                this.viewHandler.resolveViews(route, rootElement);
+                this.viewHandler.resolveViews(route, rootElement).then(() => {
+                    this.strategy.pushState({
+                        name: route.name,
+                        params: route.route.params
+                    }, navigatedPath);
+                    if (routeConfig.scrollTop)
+                        window.scrollTo(0, 0);
+                    this.events.dispatch(ROUTE_EVENT_ENUMS.COMPLETE, routeEvent);
+                    routeEvent = null;
+                });
             } else {
-                this.events.dispatch(ROUTE_EVENT_ENUMS.ERROR, route);
+                this.events.dispatch(ROUTE_EVENT_ENUMS.ERROR, new RouteErrorEvent(navigatedPath));
             }
-            this.viewHandler.stateInProgress = false;
+            this.transitionState.inProgress = false;
+            this.transitionState.stopped = false;
             this.lastVisited = navigatedPath;
         }
-    };
+        initializeRoute(restoreOnRefresh) {
+            if (routeConfig.isLoaded)
+                return;
+            var path = '';
+            if (restoreOnRefresh) {
+                path = this.strategy.path();
+            }
+            this.byUrl(path);
+            routeConfig.isLoaded = true;
+        }
+        search(query) {
+            return window.location.search = query;
+        }
+        getSearchParams() {
+            return unserialize(window.location.search.substring(1));
+        }
+        href(stateName, params) {
+            return getHref(stateName, params);
+        }
+        subscribe(eventName, callback) {
+            var eventList = Object.values(ROUTE_EVENT_ENUMS);
+            if (eventList.includes(eventName)) {
+                return this.events.add(eventName, callback);
+            } else {
+                console.error(eventName + ' does not exist, please use ' + eventList.join('|'));
+                return null;
+            }
+        }
+        redirect(routeName, params) {
+            var config = getRoute(routeName, params);
+            if (this.changed(config.url)) {
+                this.events.dispatch(ROUTE_EVENT_ENUMS.REDIRECT, {
+                    current: this.transitionState.currentState,
+                    path: config.url
+                });
+                this.go(config);
+            } else {
+                this.transitionState.stopped = true;
+            }
+        }
+        byUrl(url, params) {
+            url = url || routeConfig.fallback.url;
+            var route = getRequiredRoute(url, params);
+            this.go({
+                route,
+                url
+            });
+        }
+        byName(name, params) {
+            this.go(getRoute(name, params));
+        }
+    }
     LocationService.ctors = {
         DI: [
             ViewHandler,
@@ -7032,51 +7870,49 @@ var LocationService = function () {
 }();
 var WebStateService = function () {
     'use strict';
-    function WebStateService(locationService) {
-        this.onParamsChanged = new EventEmitter();
-        this.locationService = locationService;
-        Object.defineProperty(this, 'state', {
-            get: function () {
-                return this.locationService.currentRoute;
+    class WebStateService {
+        constructor(locationService) {
+            this.onParamsChanged = new EventEmitter();
+            this.locationService = locationService;
+        }
+        get state() {
+            return this.locationService.currentRoute;
+        }
+        go(routeName, params, targetWindow) {
+            var isHrefRequest = routeName.includes('/');
+            if (routeName.includes('//')) {
+                return targetWindow ? window.open(routeName, targetWindow) : location.href = routeName;
             }
-        });
+            if (!targetWindow) {
+                if (isHrefRequest) {
+                    this.locationService.byUrl(routeName, params);
+                } else {
+                    this.locationService.byName(routeName, params);
+                }
+            } else {
+                var url = isHrefRequest ? routeName : getHref(routeName, params);
+                window.open(this.locationService.getFullPath(url), targetWindow);
+            }
+        }
+        getParam(name) {
+            return this.locationService.currentRoute.route.params[name];
+        }
+        setParam(name, value) {
+            var params = this.locationService.currentRoute.route.params;
+            var newParam = {};
+            if (typeof name !== 'object') {
+                newParam[name] = value;
+            } else {
+                newParam = name;
+            }
+            Object.assign(params, newParam);
+            this.onParamsChanged.emit(newParam);
+            newParam = null;
+        }
+        getUrlParams() {
+            return Object.assign({}, this.locationService.currentRoute.route.params);
+        }
     }
-    ;
-    WebStateService.prototype.go = function (path, params, targetWindow) {
-        path = getHref(path, params);
-        if (!targetWindow) {
-            this.locationService.go(path, params);
-        } else {
-            window.open(this.locationService.getFullPath(path), targetWindow);
-        }
-    };
-    WebStateService.prototype.href = function (stateName, params) {
-        return getHref(stateName, params);
-    };
-    WebStateService.prototype.getParam = function (name) {
-        return this.locationService.currentRoute.route.params[name];
-    };
-    WebStateService.prototype.setParam = function (name, value) {
-        var params = this.locationService.currentRoute.route.params;
-        var newParam = {};
-        if (typeof name !== 'object') {
-            newParam[name] = value;
-        } else {
-            newParam = name;
-        }
-        Object.assign(params, newParam);
-        this.onParamsChanged.emit(newParam);
-        newParam = null;
-    };
-    WebStateService.prototype.getUrlParams = function () {
-        return Object.assign({}, this.locationService.currentRoute.route.params);
-    };
-    WebStateService.prototype.subscribe = function (eventName, callback) {
-        var eventList = Object.values(ROUTE_EVENT_ENUMS);
-        if (!eventList.includes(eventName))
-            throw new TypeError(eventName + ' does not exist, please use ' + eventList.join('|'));
-        return this.locationService.events.add(eventName, callback);
-    };
     WebStateService.ctors = { DI: [LocationService] };
     return WebStateService;
 }();
@@ -7084,8 +7920,9 @@ var GoFn = function () {
     'use strict';
     function GoFn(webStateService) {
         this.params = {};
-        this.clickHandler = function () {
-            webStateService.go(this.pathName, this.params);
+        this.clickHandler = function (event) {
+            event.preventDefault();
+            webStateService.go(this.pathName, this.params, this.target);
         };
     }
     GoFn.ctors = {
@@ -7095,14 +7932,16 @@ var GoFn = function () {
                 type: 'event',
                 value: [{
                         type: 'call',
-                        args: [],
+                        args: ['$event'],
                         fn: 'clickHandler'
-                    }]
+                    }],
+                node: 'go'
             }
         },
         props: {
             pathName: { value: 'go' },
-            params: {}
+            params: {},
+            target: {}
         },
         DI: [WebStateService]
     };
@@ -7134,163 +7973,171 @@ var jViewFn = function () {
 }();
 var ViewIntentService = function () {
     'use strict';
-    function ViewIntentService() {
-        this._currentOpenIntent = new Map();
-        this.intentContainer = null;
-        this.$currentIntent = '';
-    }
-    ViewIntentService.prototype.openIntent = function (intentName, params) {
-        if (this.$currentIntent === intentName) {
-            return;
+    class ViewIntentService {
+        constructor() {
+            this._currentOpenIntent = new Map();
+            this.intentContainer = null;
+            this._currentIntent = '';
+            this.onCloseEvent = new EventEmitter();
+            this.events = new EventManager((e, intentConfig, params) => {
+                if (INTENT_EVENT_ENUMS.RENDER === e.type) {
+                    var name = intentConfig.name;
+                    this._previousIntent = this._currentIntent;
+                    this._currentIntent = name;
+                    this._currentOpenIntent.set(name, {
+                        element: null,
+                        transitionTimer: intentConfig.transition || 0,
+                        route: {
+                            name,
+                            params,
+                            data: intentConfig.data || null
+                        }
+                    });
+                    ComponentFactoryResolver(intentConfig.component, this.intentContainer, componentRef => {
+                        var config = this._currentOpenIntent.get(name);
+                        config.element = componentRef;
+                        componentRef.nativeElement.classList.add('view-intent');
+                        this.intentContainer.nativeElement.appendChild(componentRef.nativeElement);
+                        if (intentConfig.data && intentConfig.data.attrs)
+                            AttributeAppender(componentRef.nativeElement, intentConfig.data.attrs);
+                        this.intentContainer.children.add(componentRef);
+                        this.transitIntent(name);
+                        this.events.dispatch(INTENT_EVENT_ENUMS.SUCCESS, {
+                            name,
+                            params
+                        });
+                    }, true);
+                }
+            });
         }
-        var intentConfig = $intentCollection[intentName];
-        if (intentConfig) {
-            if (!this._currentOpenIntent.has(intentName)) {
-                var _this = this;
-                this.$currentIntent = intentName;
-                this._currentOpenIntent.set(intentName, {
-                    element: null,
-                    route: {
-                        name: intentName,
-                        params: params,
-                        data: intentConfig.data
-                    }
+        openIntent(intentName, params) {
+            if (this._currentIntent === intentName)
+                return;
+            var intentConfig = $intentCollection[intentName];
+            if (intentConfig) {
+                if (!this._currentOpenIntent.has(intentName))
+                    this.events.dispatch(INTENT_EVENT_ENUMS.RENDER, intentConfig, params);
+                else
+                    this.transitIntent(intentName);
+            } else
+                this.events.dispatch(INTENT_EVENT_ENUMS.NOTFOUND, {
+                    name: intentName,
+                    current: this._currentIntent
                 });
-                ComponentFactoryResolver(intentConfig.view.component, this.intentContainer, function (componentRef) {
-                    DOMHelper.insertAfter(componentRef, componentRef.nativeElement, _this.intentContainer.nativeElement);
-                    var config = _this._currentOpenIntent.get(intentName);
-                    config.element = componentRef;
-                    componentRef.class.add('view-intent');
-                    _this.intentContainer.children.add(componentRef);
-                    _this.transitIntent(intentName, intentConfig.transition || 50);
-                }, true);
-            } else {
-                this.transitIntent(intentName, 50);
+        }
+        closeIntent(data) {
+            var allIntents = [];
+            this._currentOpenIntent.forEach((intent, key) => {
+                intent.element && intent.element.nativeElement.removeAttribute('style');
+                if (this._currentIntent === key)
+                    DOMHelper.remove(intent.element, true);
+                else
+                    allIntents.push(key);
+            });
+            var previous = this._currentIntent;
+            this._currentOpenIntent.delete(this._currentIntent);
+            this._currentIntent = allIntents.pop();
+            if (this._currentIntent)
+                this.transitIntent(this._currentIntent);
+            this.onCloseEvent.emit({
+                intent: previous,
+                current: this._currentIntent,
+                data
+            });
+        }
+        destroyAllIntent() {
+            this._currentOpenIntent.forEach(function (intentView) {
+                DOMHelper.remove(intentView.element);
+            });
+            this._currentIntent = undefined;
+            this._currentOpenIntent.clear();
+        }
+        animate(element, style, timer) {
+            var start = null;
+            function step(timestamp) {
+                if (!start)
+                    start = timestamp;
+                var progress = timestamp - start;
+                if (progress < timer) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    AttributeAppender(element, { style });
+                }
+            }
+            if (!element) {
+                return;
+            }
+            window.requestAnimationFrame(step);
+        }
+        removeIntent(intentName) {
+            this._currentOpenIntent.remove(intentName);
+        }
+        transitIntent(intentName) {
+            var intentView = this._currentOpenIntent.get(intentName);
+            if (intentView) {
+                this._currentIntent = intentName;
+                this.hideAllIntent();
+                this.animate(intentView.element.nativeElement, { transform: 'translateX(0%)' }, intentView.transitionTimer || 1);
             }
         }
-        ;
-    };
-    ViewIntentService.prototype.closeIntent = function () {
-        var allIntents = [];
-        var current = this.$currentIntent;
-        this._currentOpenIntent.forEach(function (intent, key) {
-            intent.element && intent.element.nativeElement.removeAttribute('style');
-            if (current === key) {
-                DOMHelper.remove(intent.element);
-            } else {
-                allIntents.push(key);
-            }
-        });
-        this._currentOpenIntent.delete(current);
-        this.$currentIntent = allIntents.pop();
-        if (this.$currentIntent) {
-            this.transitIntent(this.$currentIntent, 70);
+        getIntentView(intentName) {
+            return this._currentOpenIntent.get(intentName);
         }
-    };
-    ViewIntentService.prototype.$destroyAllIntent = function () {
-        this._currentOpenIntent.forEach(function (intentView) {
-            DOMHelper.remove(intentView.element);
-        });
-        this.$currentIntent = undefined;
-        this._currentOpenIntent.clear();
-    };
-    ViewIntentService.prototype.animate = function (elementRef, style, timer) {
-        var start = null;
-        function step(timestamp) {
-            if (!start)
-                start = timestamp;
-            var progress = timestamp - start;
-            if (progress < timer) {
-                window.requestAnimationFrame(step);
-            } else {
-                elementRef.style(style);
-            }
+        hideAllIntent() {
+            this._currentOpenIntent.forEach(function (intentView) {
+                intentView.element && intentView.element.nativeElement.removeAttribute('style');
+            });
         }
-        if (!elementRef) {
-            return;
+        getCurrentIntent() {
+            return (this.getIntentView(this._currentIntent) || {}).route;
         }
-        window.requestAnimationFrame(step);
-    };
-    ViewIntentService.prototype.removeIntent = function (intentName) {
-        this._currentOpenIntent.remove(intentName);
-    };
-    ViewIntentService.prototype.transitIntent = function (intentName, timer) {
-        var intentView = this._currentOpenIntent.get(intentName);
-        if (intentView) {
-            this.$currentIntent = intentName;
-            this.hideAllIntent();
-            this.animate(intentView.element, { transform: 'translateX(0%)' }, timer || 100);
+        getParams() {
+            var currentIntentRoute = this.getCurrentIntent();
+            return currentIntentRoute && currentIntentRoute.params;
         }
-    };
-    ViewIntentService.prototype.getIntentView = function (intentName) {
-        return this._currentOpenIntent.get(intentName);
-    };
-    ViewIntentService.prototype.hideAllIntent = function (removeIntent) {
-        this._currentOpenIntent.forEach(function (intentView) {
-            intentView.element && intentView.element.nativeElement.removeAttribute('style');
-        });
-    };
-    ViewIntentService.prototype.getCurrentIntent = function () {
-        return (this.getIntentView(this.$currentIntent) || {}).route;
-    };
+    }
     ViewIntentService.ctors = { name: 'viewIntent' };
     return ViewIntentService;
 }();
 var OpenIntent = function () {
     'use strict';
-    function OpenIntent(elementRef, viewIntent) {
+    function OpenIntent(viewIntent) {
         this.params = {};
-        this._open = null;
+        this.open = null;
         this.clickHandler = function () {
-            if (this.splitWhere.length) {
-                this.params = elementRef.context.evaluate(this.splitWhere.join(':'));
-            }
-            viewIntent.openIntent(this.pathName, this.params);
+            viewIntent.openIntent(this.open, this.params);
         };
-        Object.defineProperty(this, 'open', {
-            set: function (value) {
-                this.splitWhere = (value || '').split(':');
-                this.pathName = this.splitWhere.shift();
-                this._open = value;
-            },
-            get: function () {
-                return this._open;
-            }
-        });
     }
     OpenIntent.ctors = {
-        selector: 'open',
+        selector: 'openIntent',
         events: {
-            'event': {
-                type: 'click',
+            'click': {
+                type: 'event',
                 value: [{
                         type: 'call',
                         args: [],
                         fn: 'clickHandler'
-                    }]
+                    }],
+                node: 'openIntent'
             }
         },
         props: {
-            open: {},
+            open: { value: 'openIntent' },
             params: {}
         },
-        DI: [
-            {
-                optional: true,
-                tokenName: 'ElementRef'
-            },
-            ViewIntentService
-        ]
+        DI: [ViewIntentService]
     };
     return OpenIntent;
 }();
 var JIntentContainer = function () {
     'use strict';
-    function JIntentContainer(viewIntent, ElementRef) {
-        viewIntent.intentContainer = ElementRef;
-        this.viewDidDestroy = function () {
-            viewIntent.$destroyAllIntent();
-        };
+    class JIntentContainer {
+        constructor(viewIntent, ElementRef) {
+            viewIntent.intentContainer = ElementRef;
+            this.viewDidDestroy = function () {
+                viewIntent.destroyAllIntent();
+            };
+        }
     }
     JIntentContainer.ctors = {
         selector: 'router-intent-container',
@@ -7305,65 +8152,80 @@ var JIntentContainer = function () {
     return JIntentContainer;
 }();
 function RouterInitService(locationService) {
-    routeConfig.isLoaded = true;
-    var path = '';
-    if (routeConfig.restoreOnRefresh) {
-        path = locationService.strategy.path();
+    if (routeConfig.autoInitialize) {
+        locationService.initializeRoute(routeConfig.restoreOnRefresh);
     }
-    locationService.go(path || routeConfig.fallback.url);
 }
-function AbstractStrategy(locationService) {
-    this.originalState = null;
-    this.locationService = locationService;
-    this.isReplaceState = false;
-    this.stateChanged = false;
-}
-AbstractStrategy.prototype.getBaseHref = function () {
-};
-AbstractStrategy.prototype.path = function () {
-};
-AbstractStrategy.prototype.pushState = function (data, path) {
-    if (history) {
-        history.pushState(data, null, this.path(path));
+class AbstractStrategy {
+    constructor(locationService) {
+        this.originalState = null;
+        this.locationService = locationService;
+        this.isReplaceState = false;
+        this.stateChanged = false;
+        this.listenEvent();
     }
-};
-function HashStrategyService(locationService) {
-    AbstractStrategy.call(this, locationService);
-    this.hashRegEx = new RegExp(parseDelimeter());
-    window.addEventListener('hashchange', e => {
-        var locHash = location.hash.split(/#/)[1];
-        if (!locHash.length || !locationService.changed(locHash) || this.isReplaceState) {
-            this.isReplaceState = false;
-            return;
+    getBaseHref() {
+    }
+    path() {
+    }
+    pushState(data, path) {
+        if (history) {
+            history.pushState(data, null, this.locationService.getFullPath(path));
         }
-        e.preventDefault();
-        locationService.go(locHash);
-    }, false);
-}
-HashStrategyService.prototype = Object.create(AbstractStrategy.prototype);
-HashStrategyService.prototype.constructor = AbstractStrategy;
-HashStrategyService.prototype.replace = function () {
-    var state = this.locationService.getState();
-    this.isReplaceState = true;
-    if (state.hash !== state.previousHash || stateChanged) {
-        location.replace(state.hash);
-        this.originalState = state.currentLocation;
     }
-};
-HashStrategyService.prototype.path = function (path) {
-    if (path)
-        return routeConfig.delimiter.join(path);
-    var execPath = this.hashRegEx.exec(location.hash);
-    return execPath ? execPath[1] : '';
-};
-function PathStrategyService(locationService) {
-    AbstractStrategy.call(this, locationService);
+    listenEvent() {
+    }
 }
-PathStrategyService.prototype = Object.create(AbstractStrategy.prototype);
-PathStrategyService.prototype.constructor = AbstractStrategy;
-PathStrategyService.prototype.path = function () {
-    return '';
-};
+class HashStrategyService extends AbstractStrategy {
+    constructor(locationService) {
+        super(locationService);
+        this.hashRegEx = new RegExp(parseDelimeter());
+    }
+    replace() {
+        var state = this.locationService.getState();
+        this.isReplaceState = true;
+        if (state.hash !== state.previousHash || stateChanged) {
+            location.replace(state.hash);
+            this.originalState = state.currentLocation;
+        }
+    }
+    path(path) {
+        if (path)
+            return routeConfig.delimiter.join(path);
+        var execPath = this.hashRegEx.exec(location.hash);
+        return execPath ? execPath[1] : '';
+    }
+    listenEvent() {
+        window.addEventListener('hashchange', e => {
+            if (!routeConfig.allowChangeFromLocationBar)
+                return;
+            var locHash = location.hash.split(/#/)[1];
+            if (!locHash.length || !this.locationService.changed(locHash) || this.isReplaceState) {
+                this.isReplaceState = false;
+                return;
+            }
+            e.preventDefault();
+            this.locationService.byUrl(locHash);
+        }, false);
+    }
+}
+class PathStrategyService extends AbstractStrategy {
+    constructor(locationService) {
+        super(locationService);
+    }
+    path(path) {
+        return path || location.pathname;
+    }
+    listenEvent() {
+        window.addEventListener('popstate', e => {
+            e.preventDefault();
+            var state = e.state;
+            if (state && this.locationService.changed(state.name)) {
+                this.locationService.byName(state.name, state.params);
+            }
+        }, false);
+    }
+}
 var RouterModule = function () {
     'use strict';
     function RouterModule() {
@@ -7389,10 +8251,10 @@ var RouterModule = function () {
     return RouterModule;
 }();
 },
-1159 : (module, exports, __required, global) => {
+1170 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'CalculatorComponent', () => CalculatorComponent);
-var core = __required(1133);
+var core = __required(1143);
 /** compiled CalculatorComponent **/
 var CalculatorComponent = function(){
 "use strict";
@@ -7451,18 +8313,18 @@ CalculatorComponent.ctors = {
     exposeView: true
 };
 
-CalculatorComponent.view = /** jeli template **/ function(){ 'use strict'; var compiler = new core["ViewParser"].JSONCompiler( (id) => ({}[id]) );  return function(viewRef){ return compiler.compile([{"type":1,"name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attr$":{"value":{"prop":"currentNumber","once":false}}},{"type":1,"name":"div","index":3,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":1,"name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"+"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["+"]}]},{"type":1,"name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"-"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["-"]}]},{"type":1,"name":"button","index":5,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"*"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["×"]}]},{"type":1,"name":"button","index":7,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"/"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["÷"]}]},{"type":1,"name":"button","index":9,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"7"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["7"]}]},{"type":1,"name":"button","index":11,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"8"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["8"]}]},{"type":1,"name":"button","index":13,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"9"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["9"]}]},{"type":1,"name":"button","index":15,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"4"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["4"]}]},{"type":1,"name":"button","index":17,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"5"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["5"]}]},{"type":1,"name":"button","index":19,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"6"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["6"]}]},{"type":1,"name":"button","index":21,"isc":false,"attr":{"type":"button","value":1},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"1"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["1"]}]},{"type":1,"name":"button","index":23,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"2"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["2"]}]},{"type":1,"name":"button","index":25,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"3"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["3"]}]},{"type":1,"name":"button","index":27,"isc":false,"attr":{"type":"button","value":0},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"0"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["0"]}]},{"type":1,"name":"button","index":29,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":3,"ast":["."]}]},{"type":1,"name":"button","index":31,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":3,"ast":["AC"]}]},{"type":1,"name":"button","index":33,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"="}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["="]}]}]}]}], viewRef);}}()/** template loader **/
+CalculatorComponent.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.compiler.$({}[id], mtl); return core.ViewParser.compiler.jit(viewRef, [{"type":1,"name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attr$":{"value":{"prop":"currentNumber","once":false}}},{"type":1,"name":"div","index":3,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":1,"name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"+"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["+"]}]},{"type":1,"name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"-"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["-"]}]},{"type":1,"name":"button","index":5,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"*"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["×"]}]},{"type":1,"name":"button","index":7,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"/"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["÷"]}]},{"type":1,"name":"button","index":9,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"7"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["7"]}]},{"type":1,"name":"button","index":11,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"8"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["8"]}]},{"type":1,"name":"button","index":13,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"9"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["9"]}]},{"type":1,"name":"button","index":15,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"4"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["4"]}]},{"type":1,"name":"button","index":17,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"5"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["5"]}]},{"type":1,"name":"button","index":19,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"6"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["6"]}]},{"type":1,"name":"button","index":21,"isc":false,"attr":{"type":"button","value":1},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"1"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["1"]}]},{"type":1,"name":"button","index":23,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"2"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["2"]}]},{"type":1,"name":"button","index":25,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"3"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["3"]}]},{"type":1,"name":"button","index":27,"isc":false,"attr":{"type":"button","value":0},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"0"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["0"]}]},{"type":1,"name":"button","index":29,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":3,"ast":["."]}]},{"type":1,"name":"button","index":31,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":3,"ast":["AC"]}]},{"type":1,"name":"button","index":33,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"="}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["="]}]}]}]}], {}); };/** template loader **/
 return CalculatorComponent;
 }();
 
 },
-1160 : (module, exports, __required, global) => {
+1171 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'RouterPageElement', () => RouterPageElement);
-var common = __required(1134);
-var ItemList = __required(1163, 'ItemList');
-var core = __required(1133);
-var form = __required(1156);
+var common = __required(1144);
+var ItemList = __required(1174, 'ItemList');
+var core = __required(1143);
+var form = __required(1167);
 var FormControlService = form.FormControlService;
 /** compiled RouterPageElement **/
 var RouterPageElement = function(){
@@ -7537,21 +8399,21 @@ RouterPageElement.ctors = {
     ]
 };
 
-RouterPageElement.view = /** jeli template **/ function(){ 'use strict'; var compiler = new core["ViewParser"].JSONCompiler( (id) => ({}[id]) );  return function(viewRef){ return compiler.compile([{"type":1,"name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" Yes"]},{"type":1,"name":"br","index":3,"isc":false},{"type":1,"name":"input","index":5,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" No"]},{"type":1,"name":"br","index":7,"isc":false},{"type":1,"name":"input","index":9,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[form.CheckboxEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false}]},{"type":1,"name":"textarea","index":3,"isc":false,"props":{"formField":"textarea"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":4,"isc":false},{"type":1,"name":"input","index":6,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":7,"isc":false},{"type":1,"name":"input","index":9,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false},{"type":1,"name":"input","index":12,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[form.RangeEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":13,"isc":false},{"type":1,"name":"input","index":15,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[form.NumberEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":16,"isc":false},{"type":1,"name":"select","index":18,"isc":false,"props":{"formField":"select"},"providers":[form.SelectEventBinder,form.FormFieldDirective],"attr":{"multiple":""},"children":[{"type":1,"name":"option","index":1,"isc":false,"attr":{"value":"select_1"},"children":[{"type":3,"ast":["Select 1"]}]},{"type":1,"name":"option","index":3,"isc":false,"attr":{"value":"select_2"},"children":[{"type":3,"ast":["Select 2"]}]},{"type":1,"name":"option","index":5,"isc":false,"attr":{"value":"select_3"},"children":[{"type":3,"ast":["Select 3"]}]}]},{"type":1,"name":"div","index":20,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"input","index":3,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"input","index":5,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[form.NumberEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"div","index":22,"isc":false,"children":[{"type":1,"name":"button","index":0,"isc":false,"attr$":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":3,"ast":["Submit"]}]}]},{"type":1,"name":"item-list","index":24,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[ItemList],"children":[],"templates":{"place":{"@":[{"type":1,"name":"pre","index":1,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"value","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}}},{"type":1,"name":"pre","index":26,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":["testForm","value"],"args":[[3]],"fns":[common.jsonFilterFn]}]],false]}]}]}], viewRef);}}()/** template loader **/
+RouterPageElement.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.compiler.$({}[id], mtl); return core.ViewParser.compiler.jit(viewRef, [{"type":1,"name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" Yes"]},{"type":1,"name":"br","index":3,"isc":false},{"type":1,"name":"input","index":5,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" No"]},{"type":1,"name":"br","index":7,"isc":false},{"type":1,"name":"input","index":9,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[form.CheckboxEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false}]},{"type":1,"name":"textarea","index":3,"isc":false,"props":{"formField":"textarea"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":4,"isc":false},{"type":1,"name":"input","index":6,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":7,"isc":false},{"type":1,"name":"input","index":9,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false},{"type":1,"name":"input","index":12,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[form.RangeEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":13,"isc":false},{"type":1,"name":"input","index":15,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[form.NumberEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":16,"isc":false},{"type":1,"name":"select","index":18,"isc":false,"props":{"formField":"select"},"providers":[form.SelectEventBinder,form.FormFieldDirective],"attr":{"multiple":""},"children":[{"type":1,"name":"option","index":1,"isc":false,"attr":{"value":"select_1"},"children":[{"type":3,"ast":["Select 1"]}]},{"type":1,"name":"option","index":3,"isc":false,"attr":{"value":"select_2"},"children":[{"type":3,"ast":["Select 2"]}]},{"type":1,"name":"option","index":5,"isc":false,"attr":{"value":"select_3"},"children":[{"type":3,"ast":["Select 3"]}]}]},{"type":1,"name":"div","index":20,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"input","index":3,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"input","index":5,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[form.NumberEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"div","index":22,"isc":false,"children":[{"type":1,"name":"button","index":0,"isc":false,"attr$":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":3,"ast":["Submit"]}]}]},{"type":1,"name":"item-list","index":24,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[ItemList],"children":[],"templates":{"place":{"@":[{"type":1,"name":"pre","index":1,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"value","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}}},{"type":1,"name":"pre","index":26,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":["testForm","value"],"args":[[3]],"fns":[common.jsonFilterFn]}]],false]}]}]}], {}); };/** template loader **/
 return RouterPageElement;
 }();
 
 },
-1161 : (module, exports, __required, global) => {
+1172 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'AppRouteModule', () => AppRouteModule);
 __required.r(exports, 'validatorService', () => validatorService);
 __required.r(exports, 'InitializeApp', () => InitializeApp);
-var RouterPageElement = __required(1160, 'RouterPageElement');
-var CalculatorComponent = __required(1159, 'CalculatorComponent');
-var core = __required(1133);
+var RouterPageElement = __required(1171, 'RouterPageElement');
+var CalculatorComponent = __required(1170, 'CalculatorComponent');
+var core = __required(1143);
 var INITIALIZERS = core.INITIALIZERS;
-var router = __required(1158);
+var router = __required(1169);
 var WebStateService = router.WebStateService;
 var ROUTE_INTERCEPTOR = router.ROUTE_INTERCEPTOR;
 var RouterModule = router.RouterModule;
@@ -7596,17 +8458,17 @@ ROUTE_INTERCEPTOR.register({useClass: validatorService}, true);
 
 AppRouteModule.fac = () =>/** bootstrap module**/[
     RouterModule
-].forEach(m => { if(!m.k && typeof m == 'function') return (m.fac && m.fac(), m(), m.k = 1); });
+].forEach(m => { if(!m.k && typeof m == 'function') return (m.fac && m.fac(), new m(), m.k = 1); });
 ;
 return AppRouteModule;
 }();
 
 },
-1162 : (module, exports, __required, global) => {
+1173 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'TestPlaceElement', () => TestPlaceElement);
-var common = __required(1134);
-var core = __required(1133);
+var common = __required(1144);
+var core = __required(1143);
 /** compiled TestPlaceElement **/
 var TestPlaceElement = function(){
 "use strict";
@@ -7623,16 +8485,16 @@ TestPlaceElement.ctors = {
     }
 };
 
-TestPlaceElement.view = /** jeli template **/ function(){ 'use strict'; var compiler = new core["ViewParser"].JSONCompiler( (id) => ({}[id]) );  return function(viewRef){ return compiler.compile([{"type":1,"name":"div","index":0,"isc":false,"children":[{"type":11,"name":"#","index":0,"isc":false,"refId":"modal-body"}]},{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":1,"isc":false,"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[common.ClassDirective],"children":[{"type":1,"name":"p","index":0,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"opt","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[common.ForDirective]}], viewRef);}}()/** template loader **/
+TestPlaceElement.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.compiler.$({}[id], mtl); return core.ViewParser.compiler.jit(viewRef, [{"type":1,"name":"div","index":0,"isc":false,"children":[{"type":11,"name":"#","index":0,"isc":false,"refId":"modal-body"}]},{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":1,"isc":false,"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[common.ClassDirective],"children":[{"type":1,"name":"p","index":0,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"opt","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[common.ForDirective]}], {}); };/** template loader **/
 return TestPlaceElement;
 }();
 
 },
-1163 : (module, exports, __required, global) => {
+1174 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'ItemList', () => ItemList);
-var common = __required(1134);
-var core = __required(1133);
+var common = __required(1144);
+var core = __required(1143);
 /** compiled ItemList **/
 var ItemList = function(){
 "use strict";
@@ -7648,20 +8510,20 @@ ItemList.ctors = {
     }
 };
 
-ItemList.view = /** jeli template **/ function(){ 'use strict'; var compiler = new core["ViewParser"].JSONCompiler( (id) => ({}[id]) );  return function(viewRef){ return compiler.compile([{"type":11,"name":"#","index":0,"isc":false,"refId":"@"},{"type":1,"name":"#","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[common.SwitchDirective],"children":[{"type":8,"name":"##","text":"switchDefault","templates":{"switchDefault":{"type":1,"name":"h5","index":1,"isc":false,"children":[{"type":3,"ast":["Invalid form"]}]}},"providers":[common.SwitchDefaultDirective]},{"type":8,"name":"##","text":"switchCase","templates":{"switchCase":{"type":1,"name":"h5","index":3,"isc":false,"children":[{"type":3,"ast":["Valid form"]}]}},"props":{"switchCase":{"prop":{"type":"raw","value":"test"}}},"providers":[common.SwitchCaseDirective]}]}], viewRef);}}()/** template loader **/
+ItemList.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.compiler.$({}[id], mtl); return core.ViewParser.compiler.jit(viewRef, [{"type":11,"name":"#","index":0,"isc":false,"refId":"@"},{"type":1,"name":"#","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[common.SwitchDirective],"children":[{"type":8,"name":"##","text":"switchDefault","templates":{"switchDefault":{"type":1,"name":"h5","index":1,"isc":false,"children":[{"type":3,"ast":["Invalid form"]}]}},"providers":[common.SwitchDefaultDirective]},{"type":8,"name":"##","text":"switchCase","templates":{"switchCase":{"type":1,"name":"h5","index":3,"isc":false,"children":[{"type":3,"ast":["Valid form"]}]}},"props":{"switchCase":{"prop":{"type":"raw","value":"test"}}},"providers":[common.SwitchCaseDirective]}]}], {}); };/** template loader **/
 return ItemList;
 }();
 
 },
-1164 : (module, exports, __required, global) => {
+1175 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'AppRootElement', () => AppRootElement);
-var datetime = __required(1135);
-var TestPlaceElement = __required(1162, 'TestPlaceElement');
-var common = __required(1134);
-var form = __required(1156);
-var core = __required(1133);
-var http = __required(1157);
+var datetime = __required(1145);
+var TestPlaceElement = __required(1173, 'TestPlaceElement');
+var common = __required(1144);
+var form = __required(1167);
+var core = __required(1143);
+var http = __required(1168);
 var HttpService = http.HttpService;
 /** compiled AppRootElement **/
 var AppRootElement = function(){
@@ -7747,27 +8609,27 @@ AppRootElement.ctors = {
     ]
 };
 
-AppRootElement.view = /** jeli template **/ function(){ 'use strict'; var compiler = new core["ViewParser"].JSONCompiler( (id) => ({"fallback":{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":1,"isc":false,"context":{"i":"$context"},"children":[{"type":3,"ast":["Testing_${0}",[["${0}",{"prop":"i"}]],false]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[common.ForDirective],"refId":"fallback"}}[id]) );  return function(viewRef){ return compiler.compile([{"type":1,"name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":1,"name":"a","index":1,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":3,"ast":["                Todo Application              "]}]}]}]}]},{"type":1,"name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[form.CheckboxEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attr$":{"checked":{"prop":true,"once":true}},"vc":[{"name":"model","type":"jModel","value":"input"},"app-root"]},{"type":8,"name":"##","text":"if","templates":{"if":{"type":1,"name":"div","index":4,"isc":false,"children":[{"type":3,"ast":["I am Test Condition"]}]},"ifElse":compiler._GT('fallback', null)},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[common.IfDirective]},{"type":1,"name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[common.ClassDirective],"children":[{"type":3,"ast":["Class test"]}]},{"type":1,"name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[common.SwitchDirective],"children":[{"type":8,"name":"##","text":"switchCase","templates":{"switchCase":{"type":1,"name":"h5","index":1,"isc":false,"children":[{"type":3,"ast":["I am ${0} case",[["${0}",{"prop":"test"}]],false]}]}},"props":{"switchCase":{"prop":true}},"providers":[common.SwitchCaseDirective]},{"type":8,"name":"##","text":"switchDefault","templates":{"switchDefault":{"type":1,"name":"test-place","index":3,"isc":true,"providers":[TestPlaceElement],"children":[]}},"providers":[common.SwitchDefaultDirective]}]},{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":8,"isc":false,"context":{"item":"$context"},"attr":{"class":"another"},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"item","args":[],"fns":[common.jsonFilterFn]}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[common.FilterPipe]},"forTrackBy":"trackByFn"},"providers":[common.ForDirective]},{"type":3,"ast":["Selected: ${0}",[["${0}",{"prop":"valueBinding"}]],false]},{"type":1,"name":"select","index":10,"isc":false,"props":{"model":{"prop":"valueBinding"}},"providers":[form.SelectEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding","right":"$event"}],"custom":true}],"children":[{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"option","index":1,"isc":false,"props":{"option":"","value":{"prop":"opt","once":false}},"providers":[form.OptionDirective],"context":{"opt":"$context"},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"opt"}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[1,2,3,4,5,6]}}},"providers":[common.ForDirective]}]},{"type":1,"name":"br","index":12,"isc":false},{"type":3,"ast":[" Selected: ${0}",[["${0}",{"prop":"valueBinding2","args":[],"fns":[common.jsonFilterFn]}]],false]},{"type":1,"name":"select","index":14,"isc":false,"props":{"model":{"prop":"valueBinding2"}},"providers":[form.SelectEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding2","right":"$event"}],"custom":true}],"attr":{"multiple":""},"children":[{"type":1,"name":"option","index":1,"isc":false,"attr":{"value":"select_1"},"children":[{"type":3,"ast":["Select 1"]}]},{"type":1,"name":"option","index":3,"isc":false,"attr":{"value":"select_2"},"children":[{"type":3,"ast":["Select 2"]}]},{"type":1,"name":"option","index":5,"isc":false,"attr":{"value":"select_3"},"children":[{"type":3,"ast":["Select 3"]}]}]},{"type":1,"name":"p","index":16,"isc":false,"children":[{"type":3,"ast":["© ${0} FrontendOnly. All Rights Reserved ",[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[datetime.dateTimeFilterFN]}]],false]}]}], viewRef);}}()/** template loader **/
+AppRootElement.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.compiler.$({"fallback":{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":1,"isc":false,"context":{"i":"$context"},"children":[{"type":3,"ast":["Testing_${0}",[["${0}",{"prop":"i"}]],false]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[common.ForDirective],"refId":"fallback"}}[id], mtl); return core.ViewParser.compiler.jit(viewRef, [{"type":1,"name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":1,"name":"a","index":1,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":3,"ast":["                Todo Application              "]}]}]}]}]},{"type":1,"name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[form.CheckboxEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attr$":{"checked":{"prop":true,"once":true}},"vc":[{"name":"model","type":"jModel","value":"input"},"app-root"]},{"type":8,"name":"##","text":"if","templates":{"if":{"type":1,"name":"div","index":4,"isc":false,"children":[{"type":3,"ast":["I am Test Condition"]}]},"ifElse":_GT('fallback', null)},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[common.IfDirective]},{"type":1,"name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[common.ClassDirective],"children":[{"type":3,"ast":["Class test"]}]},{"type":1,"name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[common.SwitchDirective],"children":[{"type":8,"name":"##","text":"switchCase","templates":{"switchCase":{"type":1,"name":"h5","index":1,"isc":false,"children":[{"type":3,"ast":["I am ${0} case",[["${0}",{"prop":"test"}]],false]}]}},"props":{"switchCase":{"prop":true}},"providers":[common.SwitchCaseDirective]},{"type":8,"name":"##","text":"switchDefault","templates":{"switchDefault":{"type":1,"name":"test-place","index":3,"isc":true,"providers":[TestPlaceElement],"children":[]}},"providers":[common.SwitchDefaultDirective]}]},{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":8,"isc":false,"context":{"item":"$context"},"attr":{"class":"another"},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"item","args":[],"fns":[common.jsonFilterFn]}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[common.FilterPipe]},"forTrackBy":"trackByFn"},"providers":[common.ForDirective]},{"type":3,"ast":["Selected: ${0}",[["${0}",{"prop":"valueBinding"}]],false]},{"type":1,"name":"select","index":10,"isc":false,"props":{"model":{"prop":"valueBinding"}},"providers":[form.SelectEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding","right":"$event"}],"custom":true}],"children":[{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"option","index":1,"isc":false,"props":{"option":"","value":{"prop":"opt","once":false}},"providers":[form.OptionDirective],"context":{"opt":"$context"},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"opt"}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[1,2,3,4,5,6]}}},"providers":[common.ForDirective]}]},{"type":1,"name":"br","index":12,"isc":false},{"type":3,"ast":[" Selected: ${0}",[["${0}",{"prop":"valueBinding2","args":[],"fns":[common.jsonFilterFn]}]],false]},{"type":1,"name":"select","index":14,"isc":false,"props":{"model":{"prop":"valueBinding2"}},"providers":[form.SelectEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding2","right":"$event"}],"custom":true}],"attr":{"multiple":""},"children":[{"type":1,"name":"option","index":1,"isc":false,"attr":{"value":"select_1"},"children":[{"type":3,"ast":["Select 1"]}]},{"type":1,"name":"option","index":3,"isc":false,"attr":{"value":"select_2"},"children":[{"type":3,"ast":["Select 2"]}]},{"type":1,"name":"option","index":5,"isc":false,"attr":{"value":"select_3"},"children":[{"type":3,"ast":["Select 3"]}]}]},{"type":1,"name":"p","index":16,"isc":false,"children":[{"type":3,"ast":["© ${0} FrontendOnly. All Rights Reserved ",[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[datetime.dateTimeFilterFN]}]],false]}]}], {}); };/** template loader **/
 return AppRootElement;
 }();
 
 },
-1165 : (module, exports, __required, global) => {
+1176 : (module, exports, __required, global) => {
 "use strict";
 __required.r(exports, 'AppModule', () => AppModule);
-var RouterPageElement = __required(1160, 'RouterPageElement');
-var CalculatorComponent = __required(1159, 'CalculatorComponent');
-var AppRootElement = __required(1164, 'AppRootElement');
-var ItemList = __required(1163, 'ItemList');
-var TestPlaceElement = __required(1162, 'TestPlaceElement');
-var AppRouteModule = __required(1161, 'AppRouteModule');
-var http = __required(1157);
+var RouterPageElement = __required(1171, 'RouterPageElement');
+var CalculatorComponent = __required(1170, 'CalculatorComponent');
+var AppRootElement = __required(1175, 'AppRootElement');
+var ItemList = __required(1174, 'ItemList');
+var TestPlaceElement = __required(1173, 'TestPlaceElement');
+var AppRouteModule = __required(1172, 'AppRouteModule');
+var http = __required(1168);
 var HttpModule = http.HttpModule;
-var form = __required(1156);
+var form = __required(1167);
 var FormModule = form.FormModule;
-var datetime = __required(1135);
+var datetime = __required(1145);
 var DateTimeModule = datetime.DateTimeModule;
-var common = __required(1134);
+var common = __required(1144);
 var CommonModule = common.CommonModule;
 /** compiled AppModule **/
 var AppModule = function(){
@@ -7784,7 +8646,7 @@ AppModule.fac = () =>/** bootstrap module**/[
     FormModule,
     HttpModule,
     AppRouteModule
-].forEach(m => { if(!m.k && typeof m == 'function') return (m.fac && m.fac(), m(), m.k = 1); });
+].forEach(m => { if(!m.k && typeof m == 'function') return (m.fac && m.fac(), new m(), m.k = 1); });
 ;
 return AppModule;
 }();

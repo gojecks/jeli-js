@@ -5,7 +5,7 @@ export var ROUTE_INTERCEPTOR = new ProviderToken('RouteInterceptor', true);
 /**
  * ROUTE_LOCATION_STRATEGY
  */
-export var ROUTE_LOCATION_STRATEGY = new ProviderToken('RouteLocationStrategy', false, { value: HashStrategyService });
+export var ROUTE_LOCATION_STRATEGY = new ProviderToken('RouteLocationStrategy', false);
 
 export var staticRoutePrefix = '^';
 
@@ -36,6 +36,17 @@ export var ROUTE_EVENT_ENUMS = {
     RENDER: "WEB_ROUTE_RENDER",
     COMPLETE: "WEB_ROUTE_COMPLETE",
     LME: "WEB_ROUTE_MODULE_LOAD_ERROR"
+};
+
+export var INTENT_EVENT_ENUMS = {
+    SUCCESS: "INTENT_SUCCESS",
+    ERROR: "INTENT_ERROR",
+    START: "INTENT_START",
+    NOTFOUND: "INTENT_NOT_FOUND",
+    GUARDCHECK: "INTENT_GUARD_CHECK",
+    REDIRECT: "INTENT_REDIRECT",
+    RENDER: "INTENT_RENDER",
+    COMPLETE: "INTENT_COMPLETE",
 };
 
 /**

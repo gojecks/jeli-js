@@ -171,6 +171,9 @@ function _valueComparison(value, suscription) {
  */
 function triggerWhen(operators, args, callback) {       
     var passed = true;
+    if (!operators || !operators.length) 
+        return callback(passed);
+    
     rxLoop(operators, (operator, next) => {
         operator(args, value => {
             if (!value) {
@@ -193,6 +196,12 @@ function _eventRxTrigger(context, value) {
             context._listeners.forEach(function(fn) {
                 fn(value);
             });
+
+            // if context status  == 2
+            if (context._status == 2)
+                context.destroy();
+            else 
+            context._status = 0;
         }
     });
 }

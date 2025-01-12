@@ -1,7 +1,7 @@
 import './form-validator-current-instance';
 import { isobject, isfunction, isequal } from '@jeli/helpers';
 import { extend } from '@jeli/helpers/utils';
-import { formValidationStack } from './validator.stack';
+import { FormValidationStack } from './validator.stack';
 
 /**
  * 
@@ -13,28 +13,28 @@ export function FormValidatorService(callback, validators, isDeep) {
     var currentProcess = new CurrentInstance(callback, isDeep);
     var validatorPaths =  [];
 
+    function flatten (field, record, paths) {
+        if (isobject(record)){
+            paths.push(field);
+            var _reqStacks = Object.keys(record);
+            if(!FormValidationStack[_reqStacks[0].toUpperCase()] && !isfunction(record[_reqStacks[0]])){
+                _reqStacks.forEach(field => flatten(field, record[field], paths.slice()))
+            } else {
+                validatorPaths.push([paths, record]);
+            }
+        }
+    }
+
     /**
      * 
      * @param {*} vRecords 
      * @returns 
      */
     function flattenValdators(vRecords){
-        var flatten = function(field, record, paths) {
-            if (isobject(record)){
-                paths.push(field);
-                var _reqStacks = Object.keys(record);
-                if(!formValidationStack[_reqStacks[0].toUpperCase()] && !isfunction(record[_reqStacks[0]])){
-                    _reqStacks.forEach(field => flatten(field, record[field], paths.slice()))
-                } else {
-                    validatorPaths.push([paths, record]);
-                }
-            }
-        };
-
         if (vRecords) {
             var keys = Object.keys(vRecords);
             if (keys.length) {
-                if (!!formValidationStack[keys[0].toUpperCase()] || isfunction(vRecords[keys[0]])) return;
+                if (!!FormValidationStack[keys[0].toUpperCase()] || isfunction(vRecords[keys[0]])) return;
                 keys.forEach(field => flatten(field, vRecords[field], []));
                 currentProcess.isDeep = true;
             }
@@ -62,7 +62,7 @@ export function FormValidatorService(callback, validators, isDeep) {
         for (var i = 0; i < criteriaKeys.length; i++) {
             var validatorName = criteriaKeys[i];
             var passed = false;
-            var validatorFn = formValidationStack[validatorName.toUpperCase()];
+            var validatorFn = FormValidationStack[validatorName.toUpperCase()];
             var isAsync = isequal('async', validatorName);
             if (validatorFn) {
                 passed = validatorFn(value, criteria[validatorName]);
@@ -152,12 +152,12 @@ export function FormValidatorService(callback, validators, isDeep) {
  * @returns 
  */
 export function customFormValidator(validatorName, validatorFn, override) {
-    if (formValidationStack.hasOwnProperty(validatorName.toUpperCase()) && !override) {
+    if (FormValidationStack.hasOwnProperty(validatorName.toUpperCase()) && !override) {
         return errorBuilder('[' + validatorName + '] already exists, please pass the override parameter to the validator');
     }
 
     /**
      * register the validator
      */
-    formValidationStack[validatorName.toUpperCase()] = validatorFn;
+    FormValidationStack[validatorName.toUpperCase()] = validatorFn;
 };

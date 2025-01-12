@@ -19,19 +19,13 @@ Directive({
     resolve: [ResolveDefaultBinder],
     DI: ['ElementRef?']
 })
-
 /**
- * 
- * @param {*} elementRef 
+ *
+ * @param {*} elementRef
  */
-export function DefaultEventBinder(elementRef) {
-    AbstractValueAccessor.call(this, elementRef);
+export class DefaultEventBinder extends AbstractValueAccessor {
+    writeValue(value) {
+        value = (value === null || value === undefined) ? '' : value;
+        AttributeAppender.setProp(this.element.nativeElement, 'value', value);
+    }
 }
-
-DefaultEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
-DefaultEventBinder.prototype.constructor = AbstractValueAccessor;
-
-DefaultEventBinder.prototype.writeValue = function(value) {
-    value = (value === null || value === undefined) ? '' : value;
-    AttributeAppender.setProp(this.element.nativeElement, 'value', value);
-};

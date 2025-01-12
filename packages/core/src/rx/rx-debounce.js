@@ -1,14 +1,15 @@
 import { debounce } from "./rx.utils";
 
-export function EventDebounce(timer, immediate) {
-    AbstractEventRx.call(this);
-    this._callback = debounce(value => {
-        _eventRxTrigger(this, value);
-    }, timer, immediate);
-}
+export class EventDebounce extends AbstractEventRx {
+    constructor(timer, immediate){
+        super();
+        this._callback = debounce(value => {
+            this._status = 1;
+            _eventRxTrigger(this, value);
+        }, timer, immediate);
+    }
 
-EventDebounce.prototype = Object.create(AbstractEventRx.prototype);
-EventDebounce.prototype.constructor = AbstractEventRx;
-EventDebounce.prototype.next = function(args) {
-    this._callback(args);
-};
+    next (args) {
+        this._callback(args);
+    }
+}

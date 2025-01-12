@@ -1,4 +1,3 @@
-import { isequal } from '@jeli/helpers';
 import { staticInjectionToken } from '../../component/injectors';
 import { AttributeAppender } from '../attribute';
 import { QueryList } from '../queryList';
@@ -11,6 +10,7 @@ var isAllowedArrayType = ['style'];
  * @param {*} callback 
  */
 export function elementMutationObserver(nativeElement, callback) {
+    if (!nativeElement) return;
     // Create an observer instance linked to the callback function
     var observer = new MutationObserver(function(mutationsList) {
         if (mutationsList.length) {
@@ -90,6 +90,11 @@ function AttachComponentContentQuery(elementRef){
     }
 }
 
+/**
+ * @param {*} targetNode 
+ * @param {*} insertNode 
+ * @returns 
+ */
 function elementBefore(targetNode, insertNode){
     if (!targetNode || !targetNode.parentNode) return;
     if (targetNode.before)
@@ -118,8 +123,8 @@ function elementInsertAfter(hostElement, newNode, targetNode, ignoreDetector) {
  * @param {ElementRef} toElement 
  */
 function replaceElement(fromElement, toElement) {
-    if (!fromElement) return;
-    var targetNode = fromElement.nativeElement;
+    var targetNode = fromElement && fromElement.nativeElement;
+    if (!targetNode) return;
     if (11 === targetNode.nodeType) {
         targetNode = fromElement.children.first.nativeElement;
     }

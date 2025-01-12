@@ -2,18 +2,19 @@ import { ViewIntentService } from '../services/intent.service';
 Element({
     selector: 'router-intent-container',
     DI: [ViewIntentService, 'ElementRef?'],
-    style: '.view-intent {position: fixed;top: 0; width: 100vw; min-height:100vh; z-index: 1031; transition: all .5s ease 0s;\
-        transform: translateX(-105%); display: block; background: #fff}'
+    style: '.view-intent {position: fixed;top: 0; width: 100vw; height:100%; z-index: 1031; transition: all .1s ease 0s;\
+        transform: translateX(-105%); display: block; background: #fff; overflow-y:auto}'
 })
-
 /**
- * 
- * @param {*} viewIntent 
- * @param {*} ElementRef 
+ *
+ * @param {*} viewIntent
+ * @param {*} ElementRef
  */
-export function JIntentContainer(viewIntent, ElementRef) {
-    viewIntent.intentContainer = ElementRef;
-    this.viewDidDestroy = function() {
-        viewIntent.destroyAllIntent();
-    };
+export class JIntentContainer {
+    constructor(viewIntent, ElementRef) {
+        viewIntent.intentContainer = ElementRef;
+        this.viewDidDestroy = function () {
+            viewIntent.destroyAllIntent();
+        };
+    }
 }

@@ -4,52 +4,43 @@ import { TemplateRef } from "./templateref";
 import { createLocalVariables } from "./utils";
 
 export var ViewParser = function () {
-    function JSONCompiler(templates) {
-        var fragment = document.createDocumentFragment();
-        /**
-         * 
-         * @param {*} elementRef 
-         * @param {*} viewChild 
-         */
-        this.compile = function (transpiledHTML, elementRef) {
+    /**
+     * 
+     * @param {*} templates 
+     * @param {*} vt 
+     */
+    var compiler = {
+        $: (e, t) =>  t && t.type ? t : e ? t ? Object.assign(t, e) : "object" == typeof e ? e : e() : null,
+        jit: (elementRef, transpiledHTML, vt) => {
+            var fragment = document.createDocumentFragment();
+            var pushView = (compiled, isNativeMode) => {
+                if (!isNativeMode) {
+                    compiled.parent && compiled.parent.children.add(compiled);
+                    fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
+                    transverse(compiled);
+                } else {
+                    // nativeElement
+                    fragment.appendChild(compiled);
+                }
+            };
+
+
             for (var i = 0; i < transpiledHTML.length; i++) {
-                var compiled = ViewParser.builder[transpiledHTML[i].type](transpiledHTML[i], elementRef, this);
+                var compiled = ViewParser.builder[transpiledHTML[i].type](transpiledHTML[i], elementRef, pushView);
                 if (compiled) {
-                    this.pushToView(compiled);
+                    pushView(compiled);
                 }
             }
 
-            return fragment;
-        };
-
-        /**
-         * 
-         * @param {*} compiled 
-         */
-        this.pushToView = function (compiled, isNativeMode) {
-            if (!isNativeMode) {
-                compiled.parent && compiled.parent.children.add(compiled);
-                fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
-                transverse(compiled);
-            } else {
-                // nativeElement
-                fragment.appendChild(compiled);
+            var componentInstance = elementRef.componentInstance;
+            for(var name in vt){
+                componentInstance[name] = TemplateRef.reflect(elementRef, vt[name], newRef => {
+                    transverse(newRef);
+                    return newRef.nativeElement;
+                });
             }
-        };
 
-        /**
-         * 
-         * @param {*} tid 
-         * @param {*} mtl 
-         * @returns 
-         */
-        this._GT = function (tid, mtl) {
-            // extract the templates
-            if (mtl && mtl.type) return mtl;
-            var tmpl = templates(tid);
-            if (!tmpl) return null;
-            if (mtl) return Object.assign(mtl, tmpl);
-            return (typeof tmpl === 'object') ? tmpl : tmpl();
+            return fragment;
         }
     }
 
@@ -98,7 +89,7 @@ export var ViewParser = function () {
             parent.children.add(child, index);
             parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
         } else {
-            parent.nativeElement.appendChild(child); 
+            parent.nativeElement.appendChild(child);
         }
     }
 
@@ -159,8 +150,8 @@ export var ViewParser = function () {
                 // set the localVairables
                 if (haveLocalVairables)
                     child.context = context;
-                
-                 // Attach the child element to the origin, used for getting the right componentRef
+
+                // Attach the child element to the origin, used for getting the right componentRef
                 // actual hostRefId where content is appended
                 // ContentHostRef? should reolve the component instance
                 child.contentHostRefId = hostRef.refId;
@@ -169,7 +160,7 @@ export var ViewParser = function () {
             if (createPlaceElement || appendToParent) {
                 pushToParent(child || element, placeElement || parent, null, isNativeMode);
             } else {
-                viewContainer.pushToView(child || element, isNativeMode);
+                viewContainer(child || element, isNativeMode);
             }
 
             /**
@@ -229,7 +220,7 @@ export var ViewParser = function () {
                         return element;
                     // process  and replace
                     unsubscribeScheduler = scheduler.schedule(function () {
-                        if(element){
+                        if (element) {
                             transverse(element);
                             replaceElement(oldElement || fallbackNodes, element);
                         }
@@ -237,10 +228,10 @@ export var ViewParser = function () {
                     });
                 } else {
                     // previously compiled but document is not missing
-                    if (element){
+                    if (element) {
                         replaceElement(element, fallbackNodes);
                         // set element to null
-                        element = null; 
+                        element = null;
                     } else if (!fromObserver) {
                         return fallbackNodes;
                     }
@@ -271,7 +262,7 @@ export var ViewParser = function () {
     }
 
     return {
-        JSONCompiler: JSONCompiler,
+        compiler,
         builder: {
             1: element,
             3: text,
@@ -308,9 +299,8 @@ function transverse(node) {
         if (isequal(node.type, 8)) {
             return;
         };
-        /**
-         * Bind Listeners to the Element
-         **/
+        
+        // Bind Listeners to the Element
         EventHandler.registerListener(node);
         //proceed with the compilation
         //checking child elements
@@ -349,7 +339,7 @@ function addViewQuery(hostElement, option, childElement) {
             Object.defineProperty(hostElement.componentInstance, name, {
                 configurable: true,
                 enumerable: true,
-                get: function() {
+                get: function () {
                     return (childElement.nodes.has(type) ? childElement.nodes.get(type) : childElement.context);
                 }
             });

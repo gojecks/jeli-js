@@ -1,12 +1,25 @@
 import { AbstractStrategy } from "./abstract.strategy";
-export function PathStrategyService(locationService) {
-    AbstractStrategy.call(this, locationService);
+export class PathStrategyService extends AbstractStrategy {
+    constructor(locationService) {
+        super(locationService);
+    }
+    
+    path(path) {
+        return path || location.pathname;
+    }
 
-}
-
-PathStrategyService.prototype = Object.create(AbstractStrategy.prototype);
-PathStrategyService.prototype.constructor = AbstractStrategy;
-
-PathStrategyService.prototype.path = function() {
-    return "";
+    listenEvent(){
+        /**
+         * set the popstate Functionality
+         * First checked to see if window supports onhashchange Event
+         * @Function window.addEventListener("popstate", callback ,false)
+         */
+        window.addEventListener("popstate", e => {
+            e.preventDefault();
+            var state = e.state;
+            if (state && this.locationService.changed(state.name)){
+                this.locationService.byName(state.name, state.params);
+            }
+        }, false);
+    }
 }

@@ -80,9 +80,12 @@ export function animate(element, styles, speed, callback) {
         },
         complete: callback || function () { },
         step: function (delta) {
-            for (var prop in styles) {
-                element.style[prop] = Math.floor(styles[prop] * delta);
-            };
+            if (typeof styles == 'function')
+                styles(delta);
+            else 
+                for (var prop in styles) {
+                    element.style[prop] = Math.floor(styles[prop] * delta);
+                };
         }
     });
 };
@@ -121,8 +124,9 @@ animate.show = function (element, speed, callback) {
  * @param {*} to 
  * @param {*} style 
  * @param {*} speed 
+ * @param {*} callback 
  */
-function fadeFN(element, to, style, speed) {
+function fadeFN(element, to, style, speed, callback) {
     animationInterval({
         duration: speed || 1000,
         delta: function (progress) {
@@ -130,9 +134,10 @@ function fadeFN(element, to, style, speed) {
         },
         complete: function () {
             element.style.display = style;
+            triggerCallback(callback);
         },
         step: function (delta) {
-            element.style.opacity =  delta;
+            element.style.opacity =  delta ? to : delta;
         }
     });
 }
@@ -144,8 +149,7 @@ function fadeFN(element, to, style, speed) {
  * @param {*} callback 
  */
 animate.fadeIn = function (element, speed, callback) {
-    fadeFN(element, 0, 'block', speed, callback)
-    triggerCallback(callback);
+    fadeFN(element, 1, 'block', speed, callback)
 };
 
 /**
@@ -155,8 +159,7 @@ animate.fadeIn = function (element, speed, callback) {
  * @param {*} callback 
  */
 animate.fadeOut = function (element, speed, callback) {
-    fadeFN(element, 1, 'none', speed, callback)
-    triggerCallback(callback);
+    fadeFN(element, 0, 'none', speed, callback)
 };
 
 /**
@@ -178,14 +181,13 @@ animate.slideUp = function (element, speed, callback) {
         complete: function () {
             element.style.display = 'none';
             element.style.height = hgt + 'px';
+            triggerCallback(callback);
         },
         step: function (delta) {
             element.style.height = Math.floor(hgt - (hgt * delta)) + 'px';
             element.style.overflow = 'hidden';
         }
     });
-
-    triggerCallback(callback);
 };
 
 /**
@@ -208,14 +210,13 @@ animate.slideDown = function (element, speed, callback) {
         },
         complete: function () {
             element.style.overflow = 'auto';
+            triggerCallback(callback);
         },
         step: function (delta) {
             element.style.height = Math.floor(0 + (hgt * delta)) + 'px';
             element.style.overflow = 'hidden';
         }
     });
-
-    triggerCallback(callback);
 };
 
 animate.toggleSlide = function (element) {

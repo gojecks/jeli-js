@@ -34,7 +34,7 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
 
                 // attach mutationObserver
                 if (!asNative) {
-                    elementMutationObserver(elementRef.nativeElement, function (mutationList, observer) {
+                    elementMutationObserver(elementRef.nativeElement, (mutationList, observer) => {
                         triggerAndBindCQ();
                         observer.disconnect();
                     });
@@ -67,9 +67,8 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
             lifeCycle = null;
             componentRef = null;
         });
-        /**
-         * trigger tick
-         */
+        
+        // trigger tick
         componentRef.changeDetector.detectChanges(true, true);
     }
 
@@ -86,8 +85,9 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
 
         if (ctors.events) {
             for(var name in ctors.events) {
-                if(actions[ctors.events[name].type]){
-                    actions[ctors.events[name].type](name);
+                var eventName = ctors.events[name].type;
+                if(actions.hasOwnProperty(eventName)){
+                    actions[eventName](name);
                 }
             }
 
@@ -148,7 +148,7 @@ ElementCompiler.resolve = function (node, nextTick) {
     var componentInjectors = new ComponentInjectors(node);
 
     function next() {
-        var factory = node.providers[inc];
+        var factory = node.providers && node.providers[inc];
         inc++;
         if (factory) {
             componentInjectors.set('Selector', factory.ctors.selector);

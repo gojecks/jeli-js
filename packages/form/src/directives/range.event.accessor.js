@@ -25,20 +25,18 @@ Directive({
  * 
  * @param {*} elementRef 
  */
-export function RangeEventBinder(elementRef) {
-    AbstractValueAccessor.call(this, elementRef);
+/**
+ *
+ * @param {*} elementRef
+ */
+export class RangeEventBinder extends AbstractValueAccessor{
+    writeValue(value) {
+        value = (value === null || value === undefined) ? '' : value;
+        AttributeAppender.setProp(this.element.nativeElement, 'value', parseFloat(value), true);
+    }
+    registerOnChange(onChangeFn) {
+        this.onChange = function (value) {
+            onChangeFn(value == '' ? null : parseFloat(value));
+        };
+    }
 }
-
-RangeEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
-RangeEventBinder.prototype.constructor = AbstractValueAccessor;
-
-RangeEventBinder.prototype.writeValue = function(value) {
-    value = (value === null || value === undefined) ? '' : value;
-    AttributeAppender.setProp(this.element.nativeElement, 'value', parseFloat(value), true);
-};
-
-RangeEventBinder.prototype.registerOnChange = function(onChangeFn) {
-    this.onChange = function(value) {
-        onChangeFn(value == '' ? null : parseFloat(value));
-    };
-};

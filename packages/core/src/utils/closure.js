@@ -23,6 +23,13 @@ export function resolveClosureRef(ref) {
     }
 };
 
+resolveClosureRef.factory = function(token, localInjector) {
+    var args = resolveDeps(token.DI, localInjector);
+    return function() {
+        return resolveClosureRef(token.factory).apply(null, args);
+    }
+};
+
 export function noop(callback) {
     return (callback || function() {});
 };

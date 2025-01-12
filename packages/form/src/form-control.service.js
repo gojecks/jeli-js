@@ -13,208 +13,191 @@ Service({
  * @param {*} formFields 
  * @param {*} validators 
  */
-export function FormControlService(formFields, validators) {
-    FormControlAbstract.call(this, validators, true);
-    this.formFieldControls = {};
+/**
+ * requires ValidatorService
+ * @param {*} formFields
+ * @param {*} validators
+ */
+export class FormControlService extends FormControlAbstract{
+    constructor(formFields, validators) {
+        super(validators, true);
+        this.formFieldControls = {};
+        /**
+         * create the formField and validations
+         */
+        this.addFields(formFields);
+    }
     /**
-     * create the formField and validations
+     * @param name
+     * @param fieldControl
      */
-    this.addFields(formFields);
-}
+    addField(name, fieldControl) {
+        if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
+            this.formFieldControls[name] = fieldControl;
+        } else {
+            this.formFieldControls[name] = new FormFieldControlService(fieldControl);
+        }
 
-FormControlService.prototype = Object.create(FormControlAbstract.prototype);
-FormControlService.prototype.constructor = FormControlAbstract;
-
-/**
- * @param name
- * @param fieldControl
- */
-FormControlService.prototype.addField = function(name, fieldControl) {
-    if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
-        this.formFieldControls[name] = fieldControl;
-    } else {
-        this.formFieldControls[name] = new FormFieldControlService(fieldControl);
+        this._setupControl(this.formFieldControls[name]);
     }
-
-    this._setupControl(this.formFieldControls[name]);
-};
-
-/**
- * add multple fields to the contol instance
- * @param {*} fieldControls 
- */
-FormControlService.prototype.addFields = function(fieldControls) {
-    if (!isobject(fieldControls)) return;
-    for (var field in fieldControls) {
-        this.addField(field, fieldControls[field]);
+    /**
+     * add multple fields to the contol instance
+     * @param {*} fieldControls
+     */
+    addFields(fieldControls) {
+        if (!isobject(fieldControls)) return;
+        for (var field in fieldControls) {
+            this.addField(field, fieldControls[field]);
+        }
+        // update status and value
+        this.updateValueAndStatus();
     }
-    // collect all values
-    this._updateValue();
-}
-
-
-FormControlService.prototype.hasField = function(controlName) {
-    return this.formFieldControls.hasOwnProperty(controlName);
-};
-
-FormControlService.prototype.getField = function(controlName) {
-    var path = this.getPath(controlName);
-    if (isarray(path))
-        return this.getByPath(path);
-    return this.formFieldControls ? this.formFieldControls[controlName] : null;
-};
-
-FormControlService.prototype.getByPath = function(paths) {
-    return paths.reduce(function(accum, path) {
-        return accum.getField(path);
-    }, this);
-}
-
-FormControlService.prototype._setupControl = function(control) {
-    control.setParent(this);
-    control._registerOnControlChangeListener(this._onControlChangeListener);
-};
-
-
-FormControlService.prototype.patchValue = function(values, options) {
-    options = options || {};
-    if (isobject(values) || isarray(values)) {
-        for (var field in values) {
-            if (this.hasField(field) && !options.self) {
-                this.getField(field).patchValue(values[field], {
-                    self: options.self,
-                    updateView: true
-                });
+    hasField(controlName) {
+        return this.formFieldControls.hasOwnProperty(controlName);
+    }
+    getField(controlName) {
+        var path = this.getPath(controlName);
+        if (isarray(path))
+            return this.getByPath(path);
+        return this.formFieldControls ? this.formFieldControls[controlName] : null;
+    }
+    getByPath(paths) {
+        return paths.reduce(function (accum, path) {
+            return accum.getField(path);
+        }, this);
+    }
+    _setupControl(control) {
+        control.setParent(this);
+        control._registerOnControlChangeListener(this._onControlChangeListener);
+    }
+    patchValue(values, options) {
+        options = options || {};
+        if (isobject(values) || isarray(values)) {
+            for (var field in values) {
+                if (this.hasField(field) && !options.self) {
+                    this.getField(field).patchValue(values[field], {
+                        self: options.self,
+                        updateView: true
+                    });
+                }
             }
         }
     }
-};
-
-FormControlService.prototype.setValue = function(values, options) {
-    if (!values) return;
-    this._allValuePresent(values);
-    for (var field in values) {
-        this._isControlPresent(field);
-        this.formFieldControls[field].setValue(values[field], {
-            self: options && options.self,
+    setValue(values, options) {
+        if (!values) return;
+        this._allValuePresent(values);
+        for (var field in values) {
+            this._isControlPresent(field);
+            this.formFieldControls[field].setValue(values[field], {
+                self: options && options.self,
+            });
+        }
+    }
+    forEachField(callback) {
+        Object.keys(this.formFieldControls).forEach((field) => {
+            callback(this.formFieldControls[field], field);
         });
     }
-};
-
-FormControlService.prototype.forEachField = function(callback) {
-    Object.keys(this.formFieldControls).forEach((field) => {
-        callback(this.formFieldControls[field], field);
-    });
-};
-
-FormControlService.prototype.reset = function(value, options) {
-    options = (options || {});
-    value = (value || {});
-    this.forEachField(function(control, name) {
-        control.reset(value[name] || null, {
-            self: true,
-            emitEvent: options.emitEvent
+    reset(value, options) {
+        options = (options || {});
+        value = (value || {});
+        this.forEachField(function (control, name) {
+            control.reset(value[name] || null, {
+                self: true,
+                emitEvent: options.emitEvent
+            });
         });
-    });
+    }
+    setFormFieldValidators(fieldValidators) {
+        for (var field in fieldValidators) {
+            this.setFieldValidator(field, fieldValidators[field]);
+        }
+    }
+    setFieldValidator(field, validator) {
+        this.getField(field).setValidators(validator);
+        return this;
+    }
+    allTouched() {
+        var alltouched = true;
+        this.forEachField(function (control, name) {
+            if (!control.touched) {
+                alltouched = false;
+            }
+        });
+
+        return alltouched;
+    }
+    removeField(name) {
+        this.getField(name).destroy();
+        delete this.formFieldControls[name];
+        delete this.value[name];
+        this.valueChanges.emit(this.value);
+    }
+    getAllValues() {
+        return this._collectValues(false);
+    }
+    _allValuePresent(values) {
+        this.forEachField(function (control, field) {
+            if (isundefined(values[field])) {
+                errorBuilder('value for formField(' + field + ') is missing');
+            }
+        });
+    }
+    _isControlPresent(field) {
+        if (!Object.keys(this.formFieldControls).length) {
+            errorBuilder('There are no field controls registered to this form');
+        }
+
+        if (!this.hasField(field)) {
+            errorBuilder('Cannot find field control for ' + field);
+        }
+    }
+    _anyControl(callback) {
+        for (var field in this.formFieldControls) {
+            var found = callback(this.formFieldControls[field]);
+            if (found) {
+                return found;
+            }
+        }
+        return undefined;
+    }
+    _allFieldDisabled() {
+        for (var field in this.formFieldControls) {
+            if (this.formFieldControls[field].enabled) {
+                return false;
+            }
+        }
+
+        return Object.keys(this.formFieldControls).length > 0 || this.disabled;
+    }
+    _updateValue() {
+        this.value = this._collectValues(true);
+    }
+    _collectValues(enabledOnly) {
+        var values = {};
+        this.forEachField(function (control, field) {
+            if ((enabledOnly && control.enabled) || !enabledOnly) {
+                values[field] = control.value;
+            }
+        });
+
+        return values;
+    }
+
+    _getAllFieldErrors() {
+        var errors = {};
+        var invalid = false;
+        this.forEachField(function (control, field) {
+            if (control.error) {
+                errors[field] = control.error;
+                invalid = true;
+            }
+        });
+
+        return invalid ? errors : null;
+    }
+
+    _collectErrors(){
+        this.error = this._getAllFieldErrors();
+    }
 }
-
-FormControlService.prototype.setFormFieldValidators = function(fieldValidators) {
-    for (var field in fieldValidators) {
-        this.setFieldValidator(field, fieldValidators[field]);
-    }
-};
-
-FormControlService.prototype.setFieldValidator = function(field, validator) {
-    this.getField(field).setValidators(validator);
-    return this;
-};
-
-FormControlService.prototype.allTouched = function() {
-    var alltouched = true;
-    this.forEachField(function(control, name) {
-        if (!control.touched) {
-            alltouched = false;
-        }
-    });
-
-    return alltouched;
-}
-
-
-FormControlService.prototype.removeField = function(name) {
-    this.getField(name).destroy();
-    delete this.formFieldControls[name];
-    delete this.value[name];
-    this.valueChanges.emit(this.value);
-};
-
-FormControlService.prototype.getAllValues = function() {
-    return this._collectValues(false);
-};
-
-
-FormControlService.prototype._allValuePresent = function(values) {
-    this.forEachField(function(control, field) {
-        if (isundefined(values[field])) {
-            errorBuilder('value for formField(' + field + ') is missing');
-        }
-    });
-};
-
-FormControlService.prototype._isControlPresent = function(field) {
-    if (!Object.keys(this.formFieldControls).length) {
-        errorBuilder('There are no field controls registered to this form');
-    }
-
-    if (!this.hasField(field)) {
-        errorBuilder('Cannot find field control for ' + field);
-    }
-};
-
-FormControlService.prototype._anyControl = function(callback) {
-    for (var field in this.formFieldControls) {
-        var found = callback(this.formFieldControls[field]);
-        if (found) {
-            return found;
-        }
-    }
-    return undefined;
-}
-
-FormControlService.prototype._allFieldDisabled = function() {
-    for (var field in this.formFieldControls) {
-        if (this.formFieldControls[field].enabled) {
-            return false;
-        }
-    }
-
-    return Object.keys(this.formFieldControls).length > 0 || this.disabled;
-};
-
-FormControlService.prototype._updateValue = function() {
-    this.value = this._collectValues(true);
-};
-
-FormControlService.prototype._collectValues = function(enabledOnly) {
-    var values = {};
-    this.forEachField(function(control, field) {
-        if ((enabledOnly && control.enabled) || !enabledOnly) {
-            values[field] = control.value;
-        }
-    });
-
-    return values;
-};
-
-FormControlService.prototype._getFieldErrors = function() {
-    var errors = {};
-    var invalid = false;
-    this.forEachField(function(control, field) {
-        if (control.error) {
-            errors[field] = control.error;
-            invalid = true;
-        }
-    });
-
-    return invalid ? errors : null;
-};

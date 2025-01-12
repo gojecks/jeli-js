@@ -1,5 +1,3 @@
-import { noop } from "../utils/closure";
-
 /**
  * 
  * @param {*} componentFactory 
@@ -13,14 +11,12 @@ export function ComponentFactoryResolver(componentFactory, viewRef, callback, sk
         return Promise.reject('No exported factory found for <' + componentFactory.ctors.selector + '>');
     }
 
-    var viewDefinition = {
+    var componentRef = new ElementRef({
         name: componentFactory.ctors.selector,
         type: 'element',
         isc: true,
         providers: [componentFactory]
-    };
-
-    var componentRef = new ElementRef(viewDefinition, viewRef, true);
+    }, viewRef, true);
     var localInjectors = new ComponentInjectors(componentRef);
     return new Promise((resolve, reject) => {
         try {
@@ -30,6 +26,7 @@ export function ComponentFactoryResolver(componentFactory, viewRef, callback, sk
                     viewRef.children.add(componentRef);
                 }
 
+                EventHandler.registerListener(componentRef);
                 (callback || resolve)(componentRef, componentInstance);
             });
         } catch(exception) {
@@ -37,6 +34,5 @@ export function ComponentFactoryResolver(componentFactory, viewRef, callback, sk
         }
 
         localInjectors = null;
-        viewDefinition = null;
     });
 }

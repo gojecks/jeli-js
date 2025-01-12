@@ -11,32 +11,37 @@ Directive({
  * @param {*} eventBinder 
  * @param {*} validators 
  */
-export function FormFieldControlDirective(eventBinder, validators) {
-    this.eventBinder = getValueAccessor(eventBinder);
-    this.control = null;
-    this._validators = validators;
-    this._warning = false;
+/**
+ *
+ * @param {*} eventBinder
+ * @param {*} validators
+ */
+export class FormFieldControlDirective {
+    constructor(eventBinder, validators) {
+        this.eventBinder = getValueAccessor(eventBinder);
+        this.control = null;
+        this._validators = validators;
+        this._warning = false;
+    }
 
-    Object.defineProperty(this, 'disabled', {
-        set: function() {
-            if (!this._warning) {
-                this._warning = true;
-                console.warn('The use of disabled property with a form field control directive will not take effect');
-            }
+    set disabled(value) {
+        if (!this._warning) {
+            this._warning = true;
+            console.warn('The use of disabled property with a form field control directive will not take effect');
         }
-    })
+    }
+    didInit() {
+        if (!(this.control instanceof FormFieldControlService)) {
+            return errorBuilder('Expected instance of FormFieldControlService but got ' + typeof this.control);
+        }
+
+        setupControl(this.control, this);
+        if (this.control.disabled && this.eventBinder.setDisabledState) {
+            this.eventBinder.setDisabledState(true);
+        }
+        this.control.updateValueAndStatus({ emitEvent: false });
+    }
+    modelToViewUpdate() { }
 }
 
-FormFieldControlDirective.prototype.didInit = function() {
-    if (!(this.control instanceof FormFieldControlService)) {
-        return errorBuilder('Expected instance of FormFieldControlService but got ' + typeof this.control);
-    }
 
-    setupControl(this.control, this);
-    if (this.control.disabled && this.eventBinder.setDisabledState) {
-        this.eventBinder.setDisabledState(true);
-    }
-    this.control.updateValueAndStatus({ emitEvent: false });
-};
-
-FormFieldControlDirective.prototype.modelToViewUpdate = function() {};

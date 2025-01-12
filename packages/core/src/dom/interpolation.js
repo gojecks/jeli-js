@@ -23,7 +23,7 @@ function filterParser(filterClass, context) {
 function getFilteredTemplateValue(templateModel, context, componentInstance) {
     var value = resolveValueFromContext(templateModel.prop, context, componentInstance);
     if (templateModel.fns) {
-        value = templateModel.fns.reduce(function(accum, filterClass, idx) {
+        value = templateModel.fns.reduce(function (accum, filterClass, idx) {
             if (!filterClass) return accum;
             var filterArgs = [];
             if (templateModel.args[idx])
@@ -48,12 +48,12 @@ function getFilteredTemplateValue(templateModel, context, componentInstance) {
 function compileTemplate(definition, context, componentInstance) {
     var value = undefined;
     if (definition.length > 1)
-        value = definition[1].reduce(function(accum, options) {
+        value = definition[1].reduce(function (accum, options) {
             return accum.replace(options[0], evaluateExpression(options[1], context, componentInstance));
         }, definition[0]);
-    else 
+    else
         value = getFilteredTemplateValue(definition, context, componentInstance);
-    
+
     return ([null, undefined, 'null'].includes(value) ? '' : value);
 }
 
@@ -97,7 +97,7 @@ function generateArguments(args, context, componentInstance, event) {
         } else if (isobject(node) && node.arg)
             return generateArguments(node.arg, context, componentInstance, event);
         else if (isstring(node))
-            return isequal(node, '$event') ? event : context.hasOwnProperty(node) ? context[node] : node;
+            return isequal(node, '$event') ? event : (context.hasOwnProperty(node) ? context[node] : componentInstance.hasOwnProperty(node) ? componentInstance[node] : node);
 
         return resolveValueFromContext(node, context, componentInstance, event);
     }
@@ -145,18 +145,18 @@ function parseObjectExpression(expression, context, componentInstance, event) {
          * ConditionalExpression Method
          * a ? a : b ? b : c
          */
-        ite: function() {
+        ite: function () {
             return (
                 resolveValueFromContext(expression.test, context, componentInstance) ?
-                resolveValueFromContext(expression.cons, context, componentInstance) :
-                resolveValueFromContext(expression.alt, context, componentInstance)
+                    resolveValueFromContext(expression.cons, context, componentInstance) :
+                    resolveValueFromContext(expression.alt, context, componentInstance)
             );
         },
         /**
          * CallExpression Method
          * a.b.c(args) || a(1)
          */
-        call: function() {
+        call: function () {
             var dcontext = context;
             if (expression.namespaces) {
                 dcontext = resolveContext(expression.namespaces, context, componentInstance);
@@ -174,9 +174,9 @@ function parseObjectExpression(expression, context, componentInstance, event) {
         /**
          * ObjectExpression Method
          */
-        obj: function() {
+        obj: function () {
             if (expression.expr) {
-                return Object.keys(expression.expr).reduce(function(accum, key) {
+                return Object.keys(expression.expr).reduce(function (accum, key) {
                     accum[key] = resolveValueFromContext(expression.expr[key], context, componentInstance);
                     return accum;
                 }, {});
@@ -186,14 +186,14 @@ function parseObjectExpression(expression, context, componentInstance, event) {
          * ASSIGNMENTExpression Method
          * a = b
          */
-        asg: function() {
+        asg: function () {
             var value = generateArguments([expression.right], context, componentInstance, event)[0];
             return setModelValue(expression.left, context, componentInstance, value);
         },
         /**
          * UnaryExpression Method
          */
-        una: function() {
+        una: function () {
             var val = resolveValueFromContext(expression.args, context, componentInstance, event);
             if (expression.ops === '+') return +val
             if (expression.ops === '-') return -val
@@ -203,7 +203,7 @@ function parseObjectExpression(expression, context, componentInstance, event) {
         /**
          * BinaryExpression Method
          */
-        bin: function() {
+        bin: function () {
             if (expression.ops === '&&') {
                 var l = resolveValueFromContext(expression.left, context, componentInstance, event);
                 if (!l) return l;
@@ -233,16 +233,16 @@ function parseObjectExpression(expression, context, componentInstance, event) {
             if (expression.ops === '&') return l & r;
             if (expression.ops === '^') return l ^ r;
         },
-        new: function() {
+        new: function () {
             errorBuilder('NewExpression not allowed in template interpolation -> (new ' + expression.fn + ') ')
         },
-        raw: function() {
+        raw: function () {
             return expression.value;
         },
         /**
          * Member expressionf
          */
-        mem: function() {
+        mem: function () {
             return resolveValueFromContext(expression.list, context, componentInstance, event);
         }
     };
@@ -286,7 +286,7 @@ function setModelValue(key, context, componentInstance, value) {
  * @param {*} componentInstance 
  */
 function resolveContext(key, context, componentInstance, isEventType) {
-    return key.reduce(function(accum, property, idx) {
+    return key.reduce(function (accum, property, idx) {
         if (isEventType) {
             return accum[property];
         }
@@ -309,7 +309,7 @@ function resolveContext(key, context, componentInstance, isEventType) {
  */
 export function interpolationHelper(delimiterRegExp, str, replacerData) {
     if (typeof str === 'object' || isboolean(str) || isnumber(str)) return str;
-    return str.replace(delimiterRegExp, function(_, key) {
+    return str.replace(delimiterRegExp, function (_, key) {
         return resolveContext(key.split('.'), replacerData);
     });
 }

@@ -5,83 +5,84 @@ import { removeFromArray, addToArray, moveItemInArray } from '@jeli/helpers';
  * 
  * @param {*} elementRef 
  */
-export function ViewRef(elementRef) {
-    this._destroyed = false;
-    this.get = function(index) {
-        return this[index];
-    };
+/**
+ *
+ * @param {*} elementRef
+ */
+export class ViewRef extends Array {
+    constructor(elementRef) {
+        super();
+        this._destroyed = false;
+        this.get = function (index) {
+            return this[index];
+        };
 
-    /**
-     * @param {*} templateRef
-     * @param {*} context
-     * @param {*} index
-     */
-    this.createEmbededView = function(templateRef, context, index) {
-        var view = new EmbededViewContext(elementRef, templateRef, context);
-        view.renderView(index);
-        addToArray(this, view, index);
         /**
-         * ViewRef Object
+         * @param {*} templateRef
+         * @param {*} context
+         * @param {*} index
          */
-        return view;
-    };
-}
+        this.createEmbededView = function (templateRef, context, index) {
+            var view = new EmbededViewContext(elementRef, templateRef, context);
+            view.renderView(index);
+            addToArray(this, view, index);
+            /**
+             * ViewRef Object
+             */
+            return view;
+        };
+    }
+    /**
+     *
+     * @param {*} prev
+     * @param {*} curr
+     */
+    move(prev, curr) {
+        scheduler.schedule(() => {
+            var view = this.get(prev);
+            var targetNode = this.get(curr);
+            if (targetNode && view) {
+                // insert after
+                if (curr > prev) {
+                    elementInsertAfter(null, view.compiledElement.nativeElement, targetNode.compiledElement.nativeElement);
+                } else {
+                    // insert before
+                    elementBefore(targetNode.compiledElement.nativeElement, view.compiledElement.nativeElement);
+                }
 
-ViewRef.constructor = Array;
-ViewRef.prototype = Object.create(Array.prototype);
-
-/**
- * 
- * @param {*} prev 
- * @param {*} curr 
- */
-ViewRef.prototype.move = function(prev, curr) {
-    scheduler.schedule(() => {
-        var view = this.get(prev);
-        var targetNode = this.get(curr);
-        if (targetNode && view) {
-            // insert after
-            if (curr > prev){
-                elementInsertAfter(null, view.compiledElement.nativeElement, targetNode.compiledElement.nativeElement);
-            } else {
-                // insert before
-                elementBefore(targetNode.compiledElement.nativeElement, view.compiledElement.nativeElement);
+                moveItemInArray(this, prev, curr);
+                this.updateContext();
             }
-            
-            moveItemInArray(this, prev, curr);
-            this.updateContext();
-        }
-    });
-};
-
-ViewRef.prototype.remove = function(index) {
-    var view = removeFromArray(this, index);
-    if (view) {
-        view._destroyed_view = true;
-        view.destroy();
-    }
-    view = null;
-};
-
-/**
- * destroy the child view
- */
-ViewRef.prototype.clearView = function() {
-    while (this.length) {
-        var view = this.shift();
-        view.destroy();
-    }
-};
-
-ViewRef.prototype.updateContext = function(){
-    for (var i = 0; i < this.length; i++) {
-        var view = this.get(i);
-        view.updateContext({
-            index: i,
-            count: this.length
         });
     }
+    remove(index) {
+        var view = removeFromArray(this, index);
+        if (view) {
+            view._destroyed_view = true;
+            view.destroy();
+        }
+        view = null;
+    }
+    /**
+     * destroy the child view
+     */
+    clearView() {
+        while (this.length) {
+            var view = this.shift();
+            view.destroy();
+        }
+    }
+    updateContext() {
+        for (var i = 0; i < this.length; i++) {
+            var view = this.get(i);
+            view.updateContext({
+                index: i,
+                count: this.length
+            });
+        }
+    }
 }
+
 
 /**
  * 
@@ -90,48 +91,54 @@ ViewRef.prototype.updateContext = function(){
  * @param {*} context 
  * @param {*} index 
  */
-function EmbededViewContext(parentRef, templateRef, context) {
-    this.context = context;
-    var templateContext = templateRef.getContext();
-    var componentRefContext = createLocalVariables(templateContext, context, parentRef.context);
-    this.compiledElement = templateRef.createElement(parentRef, null, componentRefContext);
-    this.compiledElement.hasContext = !!templateContext;
-    this.unsubscribeScheduler;
-    /**
-     * create the Viewcontext if templateRef has a context
-     */
-    if (this.compiledElement && this.compiledElement.hasContext) {
-        this.compiledElement.context = componentRefContext;
-        // ComponentRef.create(this.compiledElement.refId, parentRef.hostRef.refId, componentRefContext);
+class EmbededViewContext {
+    constructor(parentRef, templateRef, context) {
+        this.context = context;
+        this.parentRef = parentRef;
+        var templateContext = templateRef.getContext();
+        var componentRefContext = createLocalVariables(templateContext, context, parentRef.context);
+        this.compiledElement = templateRef.createElement(parentRef, null, componentRefContext);
+        this.compiledElement.hasContext = !!templateContext;
+        this.unsubscribeScheduler;
+        /**
+         * create the Viewcontext if templateRef has a context
+         */
+        if (this.compiledElement && this.compiledElement.hasContext) {
+            this.compiledElement.context = componentRefContext;
+            // ComponentRef.create(this.compiledElement.refId, parentRef.hostRef.refId, componentRefContext);
+        }
     }
 
     /**
      * schedule a view rendering
-     * @param {*} index 
+     * @param {*} index
      */
-    this.renderView = function(index) {
-        var targetNode = (parentRef.children.last || parentRef).nativeElement;
+    renderView(index) {
+        var targetNode = (this.parentRef.children.last || this.parentRef).nativeElement;
         var _arrIndex = (index ? (index - 1) : index);
-        if (index !== undefined && parentRef.children.hasIndex(_arrIndex)) {
-            targetNode = parentRef.children.getByIndex(_arrIndex).nativeElement;
-        }
+        if (index !== undefined && this.parentRef.children.hasIndex(_arrIndex))
+            targetNode = this.parentRef.children.getByIndex(_arrIndex).nativeElement;
+
         // force return if compiledElement is destroyed
         if (!this.compiledElement) return;
         /**
          * view render scheduler
          */
-
         var nativeElement = this.compiledElement.nativeElement || this.compiledElement.nativeNode;
         var changeDetector = this.compiledElement && this.compiledElement.changeDetector;
-        parentRef.children.add(this.compiledElement, index);
+        this.parentRef.children.add(this.compiledElement, index);
 
-        var _scheduler  = () => {
+        var _scheduler = () => {
             try {
                 transverse(this.compiledElement);
-                elementInsertAfter(parentRef, nativeElement, targetNode, true);
-                if (changeDetector) {
+                if (index)
+                    elementInsertAfter(this.parentRef, nativeElement, targetNode, true);
+                else
+                    // insert before
+                    elementBefore(targetNode, nativeElement);
+                
+                if (changeDetector)
                     changeDetector.detectChanges();
-                }
 
                 nativeElement = null;
                 changeDetector = null;
@@ -146,23 +153,24 @@ function EmbededViewContext(parentRef, templateRef, context) {
         this.unsubscribeScheduler = scheduler.schedule(_scheduler);
     }
 
-
-    this.destroy = function() {
+    destroy() {
         this.unsubscribeScheduler();
         removeElement(this.compiledElement, true);
         this.compiledElement = null;
         this.context = null;
+        this.parentRef = null;
     }
 
-    this.setContext = function(context) {
+    setContext(context) {
         this.context = context;
         this.compiledElement.changeDetector.detectChanges();
-    };
-}
+    }
 
-EmbededViewContext.prototype.updateContext = function(updates) {
-    if (!this.context) return;
-    for (var prop in updates) {
-        this.context[prop] = updates[prop];
+    updateContext(updates) {
+        if (!this.context) return;
+        for (var prop in updates) {
+            this.context[prop] = updates[prop];
+        }
     }
 }
+

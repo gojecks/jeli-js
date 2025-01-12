@@ -24,20 +24,18 @@ Directive({
  * 
  * @param {*} elementRef 
  */
-export function NumberEventBinder(elementRef) {
-    AbstractValueAccessor.call(this, elementRef);
+/**
+ *
+ * @param {*} elementRef
+ */
+export class NumberEventBinder extends AbstractValueAccessor{
+    writeValue(value) {
+        value = (value === null || value === undefined) ? '' : value;
+        AttributeAppender.setProp(this.element.nativeElement, 'value', value);
+    }
+    registerOnChange(onChangeFn) {
+        this.onChange = function (value) {
+            onChangeFn(value == '' ? null : parseFloat(value));
+        };
+    }
 }
-
-NumberEventBinder.prototype = Object.create(AbstractValueAccessor.prototype);
-NumberEventBinder.prototype.constructor = AbstractValueAccessor;
-
-NumberEventBinder.prototype.writeValue = function(value) {
-    value = (value === null || value === undefined) ? '' : value;
-    AttributeAppender.setProp(this.element.nativeElement, 'value', value);
-};
-
-NumberEventBinder.prototype.registerOnChange = function(onChangeFn) {
-    this.onChange = function(value) {
-        onChangeFn(value == '' ? null : parseFloat(value));
-    };
-};
