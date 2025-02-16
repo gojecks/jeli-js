@@ -55,9 +55,10 @@ export var ViewParser = function () {
      */
     function element(definition, parent, viewContainer, context) {
         var elementRef = new ElementRef(definition, parent);
-        if (definition.attr)
-            AttributeAppender(elementRef.nativeElement, definition.attr);
-
+        if (definition.attr){
+            AttributeAppender.set(elementRef.nativeElement, definition.attr);
+        }
+            
         if (definition.children) {
             for (var i = 0; i < definition.children.length; i++) {
                 var childDefinition = (typeof definition.children[i] === 'function' ? definition.children[i]() : definition.children[i]);

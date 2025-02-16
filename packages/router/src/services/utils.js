@@ -179,9 +179,9 @@ function generateRoute(route, requireParent) {
     }
 
     // register authorities if defined in parent
-    if (route.parent && routeCollections.hasOwnProperty(route.parent)){
+    if (route.parent && routeCollections.hasOwnProperty(route.parent)) {
         var parent = routeCollections[route.parent];
-        if (parent.data && parent.data.authorities && (!route.data || !route.data.authorities)){
+        if (parent.data && parent.data.authorities && (!route.data || !route.data.authorities)) {
             route.data = route.data || {};
             route.data.authorities = parent.data.authorities;
         }
@@ -334,13 +334,13 @@ export function parseDelimeter() {
  */
 export function getRoute(routeName, params) {
     var route = routeCollections[routeName];
-    if (!route){
-        route  = routeCollections[routeConfig.fallback.name] || null;
+    if (!route) {
+        route = routeCollections[routeConfig.fallback.name] || null;
     }
     // patch params
     patchParams(route, params || route.params);
     var url = parseUrl(route.url, route.route.params);
-    return  {route, url};
+    return { route, url };
 }
 
 /**
@@ -356,7 +356,7 @@ export function getRequiredRoute(url, params) {
         patchParams(foundRoute, params, queryParam[0]);
         // route contains queryParam
         if (queryParam[1]) {
-            foundRoute.route.params = extend( foundRoute.route.params, unserialize(queryParam[1]));
+            foundRoute.route.params = extend(foundRoute.route.params, unserialize(queryParam[1]));
         }
     }
 

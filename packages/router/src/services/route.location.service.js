@@ -287,7 +287,7 @@ export class LocationService {
         url = url || routeConfig.fallback.url;
         var route = getRequiredRoute(url, params);
         // check url if matches
-        this.go({ route, url });
+        this.go({ route, url: (route && route.fallback) ? route.url : url });
     }
 
     byName(name, params) {

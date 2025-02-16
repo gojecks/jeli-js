@@ -12,7 +12,7 @@ var isAllowedArrayType = ['style'];
 export function elementMutationObserver(nativeElement, callback) {
     if (!nativeElement) return;
     // Create an observer instance linked to the callback function
-    var observer = new MutationObserver(function(mutationsList) {
+    var observer = new MutationObserver(function (mutationsList) {
         if (mutationsList.length) {
             callback.apply(null, arguments);
         }
@@ -26,9 +26,9 @@ export function elementMutationObserver(nativeElement, callback) {
  * Process light dom attachment
  * @param {*} elementRef 
  */
-function AttachComponentContentQuery(elementRef){
+function AttachComponentContentQuery(elementRef) {
     var querySet = elementRef.internal_getDefinition('cq');
-    if (querySet){
+    if (querySet) {
         var componentInstance = elementRef.componentInstance;
         var props = Object.keys(querySet);
         props.forEach(attachQueryValue);
@@ -36,19 +36,19 @@ function AttachComponentContentQuery(elementRef){
          * 
          * @param {*} prop 
          */
-        function attachQueryValue(prop){
+        function attachQueryValue(prop) {
             var mapping = querySet[prop];
             var value = null;
             // sinlgleton mapping
-            if (!mapping[3]){
+            if (!mapping[3]) {
                 if (Array.isArray(mapping[2])) {
                     value = QueryList.from(mapping[2].map(ast => processTmpl(ast, mapping[0])));
                 } else {
-                   value = processTmpl(mapping[2], mapping[0]);
+                    value = processTmpl(mapping[2], mapping[0]);
                 }
 
                 // preserve the generated value
-                if (mapping[0] === staticInjectionToken.TemplateRef){
+                if (mapping[0] === staticInjectionToken.TemplateRef) {
                     mapping[2] = value;
                     mapping[3] = true;
                 }
@@ -66,19 +66,19 @@ function AttachComponentContentQuery(elementRef){
          * @param {*} ast 
          * @param {*} type 
          */
-        function processTmpl(ast, type){
+        function processTmpl(ast, type) {
             // structural element
-            switch(type) {
-                case(staticInjectionToken.TemplateRef):
+            switch (type) {
+                case (staticInjectionToken.TemplateRef):
                     return new TemplateRef(ast, true);
-                case(staticInjectionToken.ContentData):
+                case (staticInjectionToken.ContentData):
                     return {}
             }
         }
 
         // attach element obsserver
         // clean up all mappings
-        attachElementObserver(elementRef, function(){
+        attachElementObserver(elementRef, function () {
             props.forEach(prop => {
                 if (QueryList.is(componentInstance[prop])) {
                     componentInstance[prop].destroy();
@@ -95,11 +95,11 @@ function AttachComponentContentQuery(elementRef){
  * @param {*} insertNode 
  * @returns 
  */
-function elementBefore(targetNode, insertNode){
+function elementBefore(targetNode, insertNode) {
     if (!targetNode || !targetNode.parentNode) return;
     if (targetNode.before)
         targetNode.before(insertNode)
-    else 
+    else
         targetNode.parentNode.insertBefore(insertNode, targetNode);
 }
 
@@ -151,7 +151,7 @@ function removeElement(elementRef, removeFromParent) {
         }
 
         cleanupElementRef(elementRef);
-    } else if(elementRef instanceof TextNodeRef){
+    } else if (elementRef instanceof TextNodeRef) {
         elementRef.nativeNode.remove();
     }
 }
@@ -198,7 +198,7 @@ function createElementByType(tag, text, fromDOM) {
 export function ObserveUntilDestroyed(elementRef, eventListener) {
     if (elementRef.hostRef) {
         var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, eventListener.next);
-        attachElementObserver(elementRef, function() {
+        attachElementObserver(elementRef, function () {
             unsubscribe();
             eventListener.done(true);
         });
@@ -284,16 +284,16 @@ export function setupAttributeObservers(element, attrObservers) {
             // only for styles
             if (isAllowedArrayType.includes(propName) && Array.isArray(attrObservers[propName])) {
                 var objectValues = attrObservers[propName].reduce((accum, item) => {
-                    if(item.once && observerStarted) return accum;
+                    if (item.once && observerStarted) return accum;
                     var value = compileTemplate(item, element.context, element.componentInstance);
                     if (value) {
-                       if (!accum) accum = {};
-                       Object.assign(accum, (isobject(value) ? value : {[item.type]: ElementStyle.fixValue(value, item.suffix)}));
+                        if (!accum) accum = {};
+                        Object.assign(accum, (isobject(value) ? value : { [item.type]: ElementStyle.fixValue(value, item.suffix) }));
                     }
                     return accum;
                 }, null);
 
-                AttributeAppender.helpers[propName](element.nativeElement, objectValues);
+                AttributeAppender.byType(propName, element.nativeElement, objectValues);
                 continue;
             }
 
@@ -336,7 +336,7 @@ export function createLocalVariables(localVariables, localContext, parentContext
      */
     function writePropertyBinding(propName) {
         Object.defineProperty(context, propName, {
-            get: function() {
+            get: function () {
                 if (!localContext) return null;
                 return evaluateExpression(localVariables[propName], localContext, parentContext);
             }
@@ -351,10 +351,10 @@ export function createLocalVariables(localVariables, localContext, parentContext
  * @param {*} targetElement 
  * return element context
  */
-export function getElementContext(targetContext, targetElement){
+export function getElementContext(targetContext, targetElement) {
     if (!targetContext) return targetElement.context;
 
-    if (targetContext.locaVariables){
+    if (targetContext.locaVariables) {
         return targetContext.locaVariables;
     }
     var componentRef = ComponentRef.get(targetContext.refId, targetContext.parentRefId);
@@ -377,11 +377,11 @@ export var DOMHelper = {
      * @param {*} replaceParentContent 
      * @returns 
      */
-    createElement: function(tag, attributes, content, parent, replaceParentContent) {
+    createElement: function (tag, attributes, content, parent, replaceParentContent) {
         var ele = document.createElement(tag);
-        AttributeAppender(ele, attributes || {});
-        if (content){
-            if(typeof content == 'function'){
+        AttributeAppender.set(ele, attributes || {});
+        if (content) {
+            if (typeof content == 'function') {
                 content(ele);
             } else {
                 ele.innerHTML = content
@@ -392,8 +392,8 @@ export var DOMHelper = {
             // empty the parent if flag is true
             if (replaceParentContent) parent.innerHTML = '';
             parent.appendChild(ele);
-        } 
-        
+        }
+
         return ele;
     },
     /**
@@ -402,7 +402,7 @@ export var DOMHelper = {
      * @param {*} parent 
      * @returns 
      */
-    createTextNode: function(textContent, parent){
+    createTextNode: function (textContent, parent) {
         var textNode = document.createTextNode(textContent);
         if (parent) parent.appendChild(textNode);
         return textNode;

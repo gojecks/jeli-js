@@ -49,8 +49,10 @@ export class ViewIntentService {
                     componentRef.nativeElement.classList.add('view-intent');
                     this.intentContainer.nativeElement.appendChild(componentRef.nativeElement);
                     // attach attributes if defined
-                    if (intentConfig.data && intentConfig.data.attrs) 
-                        AttributeAppender(componentRef.nativeElement, intentConfig.data.attrs);
+                    if (intentConfig.data && intentConfig.data.attrs){
+                        AttributeAppender.set(componentRef.nativeElement, intentConfig.data.attrs);
+                    }
+
                     this.intentContainer.children.add(componentRef);
                     this.transitIntent(name);
                     this.events.dispatch(INTENT_EVENT_ENUMS.SUCCESS, {name, params})
@@ -119,7 +121,7 @@ export class ViewIntentService {
             if (progress < timer) {
                 window.requestAnimationFrame(step);
             } else {
-                AttributeAppender(element, {style});
+                AttributeAppender.set(element, {style});
             }
         }
 
@@ -146,8 +148,10 @@ export class ViewIntentService {
         return this._currentOpenIntent.get(intentName);
     }
     hideAllIntent() {
-        this._currentOpenIntent.forEach(function (intentView) {
-            intentView.element && intentView.element.nativeElement.removeAttribute('style');
+        this._currentOpenIntent.forEach((intentView) => {
+            if (intentView.element){
+                intentView.element.nativeElement.removeAttribute('style');
+            }
         });
     }
     getCurrentIntent() {

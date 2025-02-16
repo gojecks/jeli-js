@@ -11,30 +11,39 @@ Directive({
     props: ['class=jClass']
 })
 
-export function ClassDirective(elementRef) {
-    this._jClass = undefined;
-    this.lastAddedClass = '';
+export class ClassDirective {
+    constructor(elementRef) {
+        this._jClass = undefined;
+        this.lastAddedClass = '';
+        this.elementRef = elementRef
+    }
 
-    this._changeClass = function() {
+    _changeClass() {
         if (isobject(this._jClass)) {
-            ElementClassList.add(elementRef.nativeElement, this._jClass);
+            ElementClassList.add(this.elementRef.nativeElement, this._jClass);
         } else {
             if (this.lastAddedClass == this._jClass) return;
-            ElementClassList.remove(elementRef.nativeElement, this.lastAddedClass);
+
+            ElementClassList.remove(this.elementRef.nativeElement, this.lastAddedClass);
             if (this._jClass) {
-                ElementClassList.add(elementRef.nativeElement, this._jClass);
+                ElementClassList.add(this.elementRef.nativeElement, this._jClass);
             }
             this.lastAddedClass = this._jClass;
         }
-    };
+    }
 
-    Object.defineProperty(this, 'class', {
-        set: function(value) {
-            this._jClass = value;
-            this._changeClass();
-        },
-        get: function() {
-            return this._jClass;
-        }
-    });
+    get class() {
+        return this._jClass
+    }
+
+    set class(value) {
+        this._jClass = value;
+        this._changeClass();
+    }
+
+    viewDidDestroy(){
+        this.elementRef = null;
+        this._jClass = null;
+        this.lastAddedClass = null;
+    }
 }
