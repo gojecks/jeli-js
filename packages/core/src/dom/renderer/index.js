@@ -2,49 +2,46 @@ import { scheduler } from "../../utils/scheduler";
 import { ElementRef } from "./element.ref";
 import { TemplateRef } from "./templateref";
 import { createLocalVariables } from "./utils";
-
-export var ViewParser = function () {
-    /**
-     * 
-     * @param {*} templates 
-     * @param {*} vt 
-     */
-    var compiler = {
-        $: (e, t) =>  t && t.type ? t : e ? t ? Object.assign(t, e) : "object" == typeof e ? e : e() : null,
-        jit: (elementRef, transpiledHTML, vt) => {
-            var fragment = document.createDocumentFragment();
-            var pushView = (compiled, isNativeMode) => {
-                if (!isNativeMode) {
-                    compiled.parent && compiled.parent.children.add(compiled);
-                    fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
-                    transverse(compiled);
-                } else {
-                    // nativeElement
-                    fragment.appendChild(compiled);
-                }
-            };
-
-
-            for (var i = 0; i < transpiledHTML.length; i++) {
-                var compiled = ViewParser.builder[transpiledHTML[i].type](transpiledHTML[i], elementRef, pushView);
-                if (compiled) {
-                    pushView(compiled);
-                }
-            }
-
-            var componentInstance = elementRef.componentInstance;
-            for(var name in vt){
-                componentInstance[name] = TemplateRef.reflect(elementRef, vt[name], newRef => {
-                    transverse(newRef);
-                    return newRef.nativeElement;
-                });
-            }
-
-            return fragment;
-        }
+export class ViewParser {
+    static $elementContextContainer =  new Map();
+    static $(e, t) {
+        return t && t.type ? t : e ? t ? Object.assign(t, e) : "object" == typeof e ? e : e() : null;
     }
 
+    static jit(elementRef, transpiledHTML, vt) {
+        var fragment = document.createDocumentFragment();
+        var pushView = (compiled, isNativeMode) => {
+            if (!isNativeMode) {
+                compiled.parent && compiled.parent.children.add(compiled);
+                fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
+                transverse(compiled);
+            } else {
+                // nativeElement
+                fragment.appendChild(compiled);
+            }
+        };
 
+
+        for (var i = 0; i < transpiledHTML.length; i++) {
+            var compiled = jitBuilder.compile(transpiledHTML[i], elementRef, pushView);
+            if (compiled) {
+                pushView(compiled);
+            }
+        }
+
+        var componentInstance = elementRef.componentInstance;
+        for (var name in vt) {
+            componentInstance[name] = TemplateRef.reflect(elementRef, vt[name], newRef => {
+                transverse(newRef);
+                return newRef.nativeElement;
+            });
+        }
+
+        return fragment;
+    }
+}
+
+class jitBuilder {
     /**
      * 
      * @param {*} definition 
@@ -53,20 +50,20 @@ export var ViewParser = function () {
      * @param {*} context 
      * @returns 
      */
-    function element(definition, parent, viewContainer, context) {
+    static $1(definition, parent, viewContainer, context) {
         var elementRef = new ElementRef(definition, parent);
-        if (definition.attr){
+        if (definition.attr) {
             AttributeAppender.set(elementRef.nativeElement, definition.attr);
         }
-            
+
         if (definition.children) {
             for (var i = 0; i < definition.children.length; i++) {
                 var childDefinition = (typeof definition.children[i] === 'function' ? definition.children[i]() : definition.children[i]);
                 if (!childDefinition) continue;
                 // conditional template checker
-                var child = ViewParser.builder[childDefinition.type](childDefinition, elementRef, viewContainer, context, true);
+                var child =  this.compile(childDefinition, elementRef, viewContainer, context, true);
                 if (child) {
-                    pushToParent(child, elementRef, i);
+                    this.pushToParent(child, elementRef, i);
                 }
             }
         }
@@ -85,7 +82,7 @@ export var ViewParser = function () {
      * @param {*} index 
      * @param {*} isNativeMode 
      */
-    function pushToParent(child, parent, index, isNativeMode) {
+    static pushToParent(child, parent, index, isNativeMode) {
         if (!isNativeMode) {
             parent.children.add(child, index);
             parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
@@ -100,7 +97,7 @@ export var ViewParser = function () {
      * @param {*} parent 
      * @returns 
      */
-    function comment(definition, parent) {
+    static $8(definition, parent) {
         return new AbstractElementRef(definition, parent);
     }
 
@@ -109,7 +106,7 @@ export var ViewParser = function () {
      * @param {*} definition 
      * @param {*} parent 
      */
-    function text(definition, parent) {
+    static $3(definition, parent) {
         return new TextNodeRef(definition, parent);
     }
 
@@ -123,7 +120,7 @@ export var ViewParser = function () {
      * @param {*} context
      * @param {*} appendToParent
      */
-    function place(definition, parent, viewContainer, context, appendToParent) {
+    static $11(definition, parent, viewContainer, context, appendToParent) {
         var hostRef = parent.hostRef;
         var isNativeMode = hostRef.internal_getDefinition('asNative');
         var haveLocalVairables = false;
@@ -147,7 +144,7 @@ export var ViewParser = function () {
          */
         function createAndAppend(element) {
             if (!isNativeMode) {
-                var child = ViewParser.builder[element.type](element, (definition.$ctx == true ? parent : hostRef.parent), viewContainer, context);
+                var child = jitBuilder.compile(element, (definition.$ctx == true ? parent : hostRef.parent), viewContainer, context);
                 // set the localVairables
                 if (haveLocalVairables)
                     child.context = context;
@@ -159,7 +156,7 @@ export var ViewParser = function () {
             }
 
             if (createPlaceElement || appendToParent) {
-                pushToParent(child || element, placeElement || parent, null, isNativeMode);
+                jitBuilder.pushToParent(child || element, placeElement || parent, null, isNativeMode);
             } else {
                 viewContainer(child || element, isNativeMode);
             }
@@ -191,7 +188,7 @@ export var ViewParser = function () {
      * @param {*} context 
      * @returns ElementRef | null
      */
-    function outlet(def, parent, viewContainer, context) {
+    static $13(def, parent, viewContainer, context) {
         var currentValue = null;
         var element = null;
         var unsubscribeScheduler = noop();
@@ -213,7 +210,7 @@ export var ViewParser = function () {
                 var template = def._GT && def._GT(templateId);
                 if (template) {
                     var oldElement = element;
-                    element = ViewParser.builder[template.type](template, parent, viewContainer, context);
+                    element = jitBuilder.compile(template, parent, viewContainer, context);
                     /**
                      * return element if element is null or compilation comes from observer
                      */
@@ -262,19 +259,19 @@ export var ViewParser = function () {
         return null;
     }
 
-    return {
-        compiler,
-        builder: {
-            1: element,
-            3: text,
-            11: place,
-            13: outlet,
-            8: comment
-        },
-        // holds a set of elements based of their refs
-        $elementContextContainer: new Map()
-    };
-}();
+    /**
+     * 
+     * @param {*} def 
+     * @param {*} elementRef 
+     * @param {*} pushView 
+     * @param {*} context 
+     * @param {*} appendToParent 
+     * @returns 
+     */
+    static compile(def, elementRef, pushView, context, appendToParent){
+        return this[`$${def.type}`](def, elementRef, pushView, context, appendToParent);
+    }
+}
 
 /**
  * transverse Template Compiler
@@ -300,7 +297,7 @@ function transverse(node) {
         if (isequal(node.type, 8)) {
             return;
         };
-        
+
         // Bind Listeners to the Element
         EventHandler.registerListener(node);
         //proceed with the compilation

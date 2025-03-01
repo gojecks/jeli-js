@@ -14,7 +14,7 @@ export class TemplateRef {
          * @param {*} parentNode
          */
         this.createElement = function (parentNode, viewContainer, context) {
-            return ViewParser.builder[templates.type](templates, parentNode, viewContainer, context);
+            return jitBuilder.compile(templates, parentNode, viewContainer, context);
         };
 
         this.getContext = function () {
@@ -37,7 +37,7 @@ export class TemplateRef {
             }
         };
     }
-    
+
     static factory(node, templateId, silent) {
         var templates = node.internal_getDefinition('templates');
         if (!templates || !templates.hasOwnProperty(templateId)) {
@@ -49,15 +49,38 @@ export class TemplateRef {
          * check if templateId is function
          * call the method to assign the value so we don't keep calling the method
          */
-        if ((typeof templates[templateId] === 'function')) {
-            templates[templateId] = templates[templateId]();
-        }
-
-        return new TemplateRef(templates[templateId]);
+        var template = templates[templateId] || templates;
+        return new TemplateRef((typeof template === 'function') ? template(templateId) : template);
     }
 
     static reflect(elementRef, nodeAst, callback) {
-        return context => callback(ViewParser.builder[1](nodeAst, elementRef, null, context));
+        return context => callback(jitBuilder.$1(nodeAst, elementRef, null, context));
+    }
+
+    static templatesCompiler(templates, asNative) {
+        var childrenNodesLen = asNative ? templates.length : 0;
+        var templateTypes = {
+            /**
+             * custom place handler for native compiler
+             * @returns
+             */
+            place: (placeSelector, callback) => {
+                var children = Array.from(selector.children).splice(0, childrenNodesLen);
+                if (placeSelector != '@') {
+                    children = children.filter(ele => (
+                        !ele.classList.has(placeSelector) ||
+                        ele.id != placeSelector ||
+                        ele.nodeName != placeSelector ||
+                        !ele.hasAttribute(placeSelector)));
+                }
+
+                // trigger callback
+                children.forEach(callback);
+                childrenNodesLen -= children.length;
+            }
+        };
+
+        return type => templateTypes[type];
     }
 }
 

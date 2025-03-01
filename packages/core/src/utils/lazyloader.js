@@ -65,13 +65,24 @@ export class LazyLoader {
      * @param {*} dropZone
      */
     static _resolve(filePaths, callback, type, assetURL, dropZone) {
+        assetURL = assetURL || '';
         var totalFiles = 0, resolved = 0, failed = 0;
         var types = ['js', 'css'];
         /**
          * path generator
          * @param {*} path
          */
-        var clink = (path, ftype) => path.includes("//") ? path : [assetURL || '', path, (ftype ? "." : ''), ftype].join('');
+        var clink = (path, ftype, params) => {
+            var url = path.includes('//') ? path : [assetURL, path, (ftype ? "." : ''), ftype].join('');
+            var urlParams = new URLSearchParams;
+            if (params) {
+                Object.keys(params).forEach(param => {
+                    urlParams.set(param, params[param]);
+                });
+            }
+            
+            return url + urlParams;
+        };
 
         //start the js process
         if (typeof callback !== 'function') {
@@ -80,19 +91,27 @@ export class LazyLoader {
         
         if (Array.isArray(filePaths)) {
             for (var filePath of filePaths) {
-                /**
-                 * check if file is already resolved else don't load
-                 */
-                if (lazyLoaderCachedPaths.includes(filePath)) {
+                var url = filePath;
+                var attrs = {};
+                var params = {};
+                // check for object attributes
+                if (typeof filePath == 'object'){
+                    url = filePath.url;
+                    attrs = filePath.attrs;
+                    params = filePath.params;
+                }
+
+                // check if file is already resolved else don't load
+                if (lazyLoaderCachedPaths.includes(url)) {
                     continue;
                 }
 
-                var ftype = type || filePath.substring(filePath.lastIndexOf('.') + 1);
+                var ftype = type || url.substring(url.lastIndexOf('.') + 1);
                 if (types.includes(ftype)) {
                     totalFiles++;
-                    lazyLoaderCachedPaths.push(filePath);
-                    var element = _createElement(clink(filePath, type || ''), ftype);
-                    attachListener(element, filePath);
+                    lazyLoaderCachedPaths.push(url);
+                    var element = _createElement(clink(url, type || '', params), ftype, attrs);
+                    attachListener(element, url);
                     (dropZone || document.getElementsByTagName('head')[0]).appendChild(element);
                 }
             }
@@ -102,9 +121,10 @@ export class LazyLoader {
          *
          * @param {*} filePath
          * @param {*} type
+         * @param {*} attrs
          * @returns HTMLELEMENT
          */
-        function _createElement(filePath, type) {
+        function _createElement(filePath, type, attrs) {
             var element = null;
             if (type === 'js') {
                 element = document.createElement('script');
@@ -115,6 +135,13 @@ export class LazyLoader {
                 element.setAttribute('type', 'text/css');
                 element.setAttribute('href', filePath);
                 element.setAttribute('rel', 'stylesheet');
+            }
+
+            // attach addtional attributes to it
+            if (attrs){
+                Object.keys(attrs).forEach(attr => {
+                    element[attr] = attrs[attr];
+                });
             }
 
             element.charset = "utf-8";

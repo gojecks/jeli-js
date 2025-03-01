@@ -19,6 +19,11 @@ export class EventHandler {
         this._events = events;
         this.registeredEvents = new Map();
     }
+    
+    push(event){
+        this._events.push(event);
+    }
+
     static registerListener(element) {
         if (!element.events || !element.events._events.length) return;
         var eventInstance = element.events;

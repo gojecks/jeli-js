@@ -78,7 +78,7 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
      */
     function eventsRegistry(componentInstance) {
         var actions = {
-            event: (name) => elementRef.events._events.push(Object.assign({name}, ctors.events[name])),
+            event: (name) => elementRef.events.push(Object.assign({name}, ctors.events[name])),
             emitter: (name) =>  EventHandler.attachEventEmitter(elementRef, name, componentInstance),
             dispatcher: name => EventHandler.attachEventDispatcher(elementRef, name, componentInstance)
         };
@@ -92,7 +92,7 @@ function ElementCompiler(factory, elementRef, componentInjectors, next) {
             }
 
             // register eventListener to element
-            if (!factory.view && ctors.asNative) {
+            if (((!factory.view && ctors.asNative) || elementRef.internal_getDefinition('fromDOM'))) {
                 EventHandler.registerListener(elementRef);
             }
         }

@@ -4,9 +4,6 @@
  */
 var $eUID = 1;
 var $elementContext = '__jContext__';
-// holds a set of elements based of their refs
-var $elementContainer = new Map();
-
 
 /**
  * Abstract element ref for generating components
