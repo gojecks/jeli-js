@@ -7,12 +7,22 @@ import { RadioEventBinder } from './directives/radio.event.accessor';
 import { NumberEventBinder } from './directives/number.event.accessor';
 import { RangeEventBinder } from './directives/range.event.accessor';
 
+
+var inbuiltAccessor = [
+    CheckboxEventBinder,
+    DefaultEventBinder,
+    RadioEventBinder,
+    SelectEventBinder,
+    NumberEventBinder,
+    RangeEventBinder
+];
+
 /**
  * 
  * @param {*} fieldControl 
  * @param {*} dir 
  */
-function setupControl(fieldControl, dir) {
+export function setupControl(fieldControl, dir) {
     if (!fieldControl) return errorBuilder('No field control found for ' + dir.name);
     if (!dir.eventBinder) return errorBuilder('No EventBinder defined');
 
@@ -29,7 +39,7 @@ function setupControl(fieldControl, dir) {
     }
 }
 
-function cleanupControl(fieldControl, dir){
+export function cleanupControl(fieldControl, dir){
     dir && dir.eventBinder.clearRegistries();
     fieldControl && fieldControl.clearListeners();
 }
@@ -40,7 +50,7 @@ function cleanupControl(fieldControl, dir){
  * @param {*} dir 
  */
 function setUpViewChangeEvent(fieldControl, dir) {
-    dir.eventBinder.registerOnChange(function(value) {
+    dir.eventBinder.registerOnChange(value => {
         fieldControl._pendingValue = value;
         fieldControl._pendingChange = true;
         if (!isequal(fieldControl.eventType, 'blur')) {
@@ -51,12 +61,23 @@ function setUpViewChangeEvent(fieldControl, dir) {
     /**
      * setup fieldControl changes
      */
-    fieldControl.registerOnChangeListener(function(value, emitEvent) {
+    fieldControl.registerOnChangeListener((value, emitEvent) => {
         dir.eventBinder.writeValue(value);
         if (emitEvent) {
             dir.modelToViewUpdate(value);
         }
     });
+}
+
+function parseValue(fieldControl){
+    let value = fieldControl._pendingValue;
+    if (fieldControl.valueType !== 'json') return value;
+
+    try{
+        return JSON.parse(value);
+    } catch(e){
+        return value;
+    }
 }
 
 /**
@@ -66,7 +87,7 @@ function setUpViewChangeEvent(fieldControl, dir) {
  */
 function setupBlurEvent(fieldControl, dir) {
     if (dir.eventBinder.registerOnBlur) {
-        dir.eventBinder.registerOnBlur(function() {
+        dir.eventBinder.registerOnBlur(() => {
             if (isequal(fieldControl.eventType, 'blur') && fieldControl._pendingChange) {
                 updateControl(fieldControl, dir);
             }
@@ -80,8 +101,9 @@ function setupBlurEvent(fieldControl, dir) {
  * @param {*} dir 
  */
 function updateControl(fieldControl, dir) {
-    fieldControl.setValue(fieldControl._pendingValue, { emitToView: false });
-    dir.modelToViewUpdate(fieldControl._pendingValue);
+    const value = parseValue(fieldControl);
+    fieldControl.setValue(value, { emitToView: false });
+    dir.modelToViewUpdate(value);
     fieldControl._pendingChange = false;
     fieldControl.markAsTouched();
 }
@@ -91,59 +113,48 @@ function updateControl(fieldControl, dir) {
  * @param {*} dir 
  * @returns 
  */
-function _validateAndBindStatus(dir) {
+export function _validateAndBindStatus(dir) {
     if (dir._registered) return
     if (!dir.form || !(dir.form instanceof FormControlService)) {
-        return errorBuilder((dir.formName ? '[' + dir.formName + ']' : '') + 'Expected instance of FormControlService but got ' + typeof dir.form);
+        return errorBuilder(
+            (dir.formName ? '[' + dir.formName + ']' : '') + 'Expected instance of FormControlService but got ' + typeof dir.form
+        );
     }
     /**
      * trigger for status changed
      */
     dir._registered = true;
-    dir.form.statusChanged.subscribe(function() {
+    dir.form.statusChanged.subscribe(() => {
         dir.changeDetector.detectChanges();
     });
 }
-
-var inbuiltAccessor = [
-    CheckboxEventBinder,
-    DefaultEventBinder,
-    RadioEventBinder,
-    SelectEventBinder,
-    NumberEventBinder,
-    RangeEventBinder
-];
 
 /**
  * 
  * @param {*} valueAccessors 
  */
 export function getValueAccessor(valueAccessors) {
-    var inbuilt = null,
-        custom = null;
-    valueAccessors.forEach(function(accessorInstance) {
+    let inbuilt = null;
+    let custom = null;
+    valueAccessors.forEach((accessorInstance) => {
         if (inbuiltAccessor.includes(accessorInstance.constructor)) {
             if (inbuilt) {
                 errorBuilder('found multiple inbuilt valueAccessor instance.');
             }
             inbuilt = accessorInstance;
         } else {
-            if (custom) {
-                errorBuilder('found multiple custom valueAccessor instance.');
-            }
+            if (custom) errorBuilder('found multiple custom valueAccessor instance.');
             custom = accessorInstance;
         }
     });
 
-    if (custom) {
-        return custom;
-    }
+    if (custom) return custom;
 
     return inbuilt;
 }
 
-function getValueByPath(value, paths) {
-    return paths.reduce(function(accum, key){
+export function getValueByPath(value, paths) {
+    return paths.reduce((accum, key) => {
         if (typeof accum !== 'object') return null;
         accum = accum[key];
         return accum;

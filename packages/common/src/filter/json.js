@@ -4,8 +4,8 @@
 Service({
     name: 'json'
 })
-export function jsonFilterFn() {
-    this.compile = function(value, spacing) {
-        return typeof value === "object" ? JSON.stringify(value, null, parseInt(spacing || '0')) : value;
-    };
+export class jsonFilterFn {
+    compile(value, spacing) {
+        return ((value && typeof value === "object") ? JSON.stringify(value, null, parseInt(spacing || '0')) : value);
+    }
 }

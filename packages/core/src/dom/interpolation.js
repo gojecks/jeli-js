@@ -145,13 +145,11 @@ function parseObjectExpression(expression, context, componentInstance, event) {
          * ConditionalExpression Method
          * a ? a : b ? b : c
          */
-        ite: function () {
-            return (
+        ite: ()  =>(
                 resolveValueFromContext(expression.test, context, componentInstance) ?
                     resolveValueFromContext(expression.cons, context, componentInstance) :
                     resolveValueFromContext(expression.alt, context, componentInstance)
-            );
-        },
+        ),
         /**
          * CallExpression Method
          * a.b.c(args) || a(1)
@@ -187,14 +185,14 @@ function parseObjectExpression(expression, context, componentInstance, event) {
          * a = b
          */
         asg: function () {
-            var value = generateArguments([expression.right], context, componentInstance, event)[0];
+            const value = generateArguments([expression.right], context, componentInstance, event)[0];
             return setModelValue(expression.left, context, componentInstance, value);
         },
         /**
          * UnaryExpression Method
          */
         una: function () {
-            var val = resolveValueFromContext(expression.args, context, componentInstance, event);
+            let val = resolveValueFromContext(expression.args, context, componentInstance, event);
             if (expression.ops === '+') return +val
             if (expression.ops === '-') return -val
             if (expression.ops === '~') return ~val
@@ -233,18 +231,12 @@ function parseObjectExpression(expression, context, componentInstance, event) {
             if (expression.ops === '&') return l & r;
             if (expression.ops === '^') return l ^ r;
         },
-        new: function () {
-            errorBuilder('NewExpression not allowed in template interpolation -> (new ' + expression.fn + ') ')
-        },
-        raw: function () {
-            return expression.value;
-        },
+        new: () => errorBuilder('NewExpression not allowed in template interpolation -> (new ' + expression.fn + ') '),
+        raw: () => expression.value,
         /**
          * Member expressionf
          */
-        mem: function () {
-            return resolveValueFromContext(expression.list, context, componentInstance, event);
-        }
+        mem: () => resolveValueFromContext(expression.list, context, componentInstance, event)
     };
 
     return internalParser[expression.type] && internalParser[expression.type]();

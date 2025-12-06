@@ -8,12 +8,6 @@ Directive({
 })
 
 /**
- * 
- * @param {*} parentContainer 
- * @param {*} eventBinder 
- * @param {*} validators 
- */
-/**
  *
  * @param {*} parentContainer
  * @param {*} eventBinder
@@ -26,9 +20,12 @@ export class FormFieldDirective {
         this._validators = validators;
         this.parent = parentContainer;
     }
+
     didInit() {
         if (!this.parent) {
-            return errorBuilder('[formField=' + this.name + ']: Expected an instance of FormControlDirective but got ' + typeof this.parent);
+            return errorBuilder(
+                `[formField=${this.name}]: Expected an instance of FormControlDirective but got ${typeof this.parent}`
+            );
         }
 
         this.control = this.parent.addField(this);
@@ -36,7 +33,9 @@ export class FormFieldDirective {
             this.eventBinder.setDisabledState(true);
         }
     }
+
     modelToViewUpdate() { }
+    
     viewDidDestroy() {
         if (this.parent) {
             this.parent.removeField(this);

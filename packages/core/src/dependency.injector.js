@@ -8,66 +8,84 @@ import { resolveClosureRef } from './utils/closure';
 var existingInstance = new Map();
 
 /**
- * 
- * @param {*} tokenName 
- * @param {*} multiple 
- * @param {*} provide 
+ *
+ * @param {*} tokenName
+ * @param {*} multiple
+ * @param {*} provide
  */
-export function ProviderToken(tokenName, multiple, provide) {
-    var tokenRecords = [];
-    var _persists = true;
-    var resolved = false;
-    this.tokenName = tokenName;
+export class ProviderToken {
     /**
-     * 
-     * @param {*} value 
-     * @param {*} persist 
+     *
+     * @param {*} token
      */
-    this.register = function(value, persist) {
-        if (multiple) {
-            tokenRecords.push(value);
-        } else {
-            tokenRecords = value;
+    static getToken(resolved, token) {
+        return resolved ? token : AutoWire(token);
+    }
+
+    constructor(tokenName, multiple, provide) {
+        this.tokenRecords = [];
+        this._persists = true;
+        this._pending = [];
+        this._resolved = false;
+        this.tokenName = tokenName;
+        this.multiple = multiple;
+        /**
+         * default provide was set
+         */
+        if (provide) {
+            this.register(provide, true);
         }
-        _persists = persist;
-        resolved = false;
-    };
-
-    this.resolve = function() {
-        if (resolved && _persists) return tokenRecords;
-
-        var token = null;
-        try {
-            if (multiple) {
-                token = tokenRecords.map(getToken);
-            } else {
-                token = getToken(tokenRecords);
-            }
-
-            if (!_persists) tokenRecords = [];
-            else tokenRecords = token;
-
-            resolved = _persists;
-        } catch (e) {
-            errorBuilder('error while resolving ' + tokenName);
-        }
-
-        return token;
-    };
-
-    /**
-     * default provide was set
-     */
-    if (provide) {
-        this.register(provide, true);
     }
 
     /**
-     * 
-     * @param {*} token 
+     *
+     * @param {*} value
+     * @param {*} persist
      */
-    function getToken(token) {
-        return resolved ? token : AutoWire(token);
+    register(value, persist) {
+        if (this.multiple) {
+            if (this._resolved){
+                this._pending.push(value);
+                return;
+            } else {
+                this.tokenRecords.push(value);
+            }
+        } else {
+            this.tokenRecords = value;
+        }
+        this._persists = persist;
+        this._resolved = false;
+    }
+
+    resolve() {
+        if (this._resolved && this._persists){
+            if (this._pending.length){
+                this.tokenRecords.push.apply(
+                    this.tokenRecords, 
+                    this._pending.map(record => ProviderToken.getToken(false, record))
+                );
+                this._pending.length = 0;
+            }
+
+            return this.tokenRecords;
+        };
+
+        let token = null;
+        
+        try {
+            if (this.multiple) {
+                token = this.tokenRecords.map(record => ProviderToken.getToken(this._resolved, record));
+            } else {
+                token = ProviderToken.getToken(this._resolved, this.tokenRecords);
+            }
+            
+            this.tokenRecords = !this._persists ? [] : token;
+            this._resolved = this._persists;
+        } catch (e) {
+            errorBuilder(`error while resolving ${this.tokenName}`);
+        }
+
+        return token;
     }
 }
 

@@ -21,7 +21,7 @@ export function CompileNativeElement(componentClass, selector, callback) {
     /**
      * bootstrap application
      */
-    ElementCompiler(componentClass, elementRef, componentInjectors, componentInstance => {
+    ElementCompiler.compile(componentClass, elementRef, componentInjectors, componentInstance => {
         if (typeof callback === 'function')
             callback(elementRef, componentInstance)
     });

@@ -7,8 +7,9 @@ import { QueryFactory } from '../services/query.service';
 Service({
     name: 'whereFilter'
 })
-export function whereFilterFn() {
-    this.compile = function(model, query) {
+export class whereFilterFn {
+    constructor() { }
+    compile(model, query) {
         return new QueryFactory(model).where(query);
     }
 }

@@ -1,8 +1,9 @@
 Service({
     name: 'reverse'
 })
-export function ReversePipe() {
-    this.compile = function(data) {
+export class ReversePipe {
+    constructor() { }
+    compile(data) {
         if (!Array.isArray(data)) {
             console.error('Reverse pipe expected array but got ', typeof data);
             return;

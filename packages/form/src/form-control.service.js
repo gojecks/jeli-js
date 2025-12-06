@@ -32,7 +32,7 @@ export class FormControlService extends FormControlAbstract{
      * @param fieldControl
      */
     addField(name, fieldControl) {
-        if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
+        if (fieldControl instanceof FormControlAbstract) {
             this.formFieldControls[name] = fieldControl;
         } else {
             this.formFieldControls[name] = new FormFieldControlService(fieldControl);
@@ -46,7 +46,7 @@ export class FormControlService extends FormControlAbstract{
      */
     addFields(fieldControls) {
         if (!isobject(fieldControls)) return;
-        for (var field in fieldControls) {
+        for (const field in fieldControls) {
             this.addField(field, fieldControls[field]);
         }
         // update status and value
@@ -56,23 +56,17 @@ export class FormControlService extends FormControlAbstract{
         return this.formFieldControls.hasOwnProperty(controlName);
     }
     getField(controlName) {
-        var path = this.getPath(controlName);
-        if (isarray(path))
-            return this.getByPath(path);
+        const path = this.getPath(controlName);
+        if (isarray(path)) return this.getByPath(path);
         return this.formFieldControls ? this.formFieldControls[controlName] : null;
     }
     getByPath(paths) {
-        return paths.reduce(function (accum, path) {
-            return accum.getField(path);
-        }, this);
+        return paths.reduce((accum, path) => accum && accum.getField(path), this);
     }
-    _setupControl(control) {
-        control.setParent(this);
-        control._registerOnControlChangeListener(this._onControlChangeListener);
-    }
+
     patchValue(values, options) {
         options = options || {};
-        if (isobject(values) || isarray(values)) {
+        if (values && typeof values == 'object') {
             for (var field in values) {
                 if (this.hasField(field) && !options.self) {
                     this.getField(field).patchValue(values[field], {
@@ -127,8 +121,8 @@ export class FormControlService extends FormControlAbstract{
 
         return alltouched;
     }
-    removeField(name) {
-        this.getField(name).destroy();
+    removeField(name, softDestroy) {
+        this.getField(name).destroy(softDestroy);
         delete this.formFieldControls[name];
         delete this.value[name];
         this.valueChanges.emit(this.value);
@@ -170,34 +164,8 @@ export class FormControlService extends FormControlAbstract{
 
         return Object.keys(this.formFieldControls).length > 0 || this.disabled;
     }
+    
     _updateValue() {
         this.value = this._collectValues(true);
-    }
-    _collectValues(enabledOnly) {
-        var values = {};
-        this.forEachField(function (control, field) {
-            if ((enabledOnly && control.enabled) || !enabledOnly) {
-                values[field] = control.value;
-            }
-        });
-
-        return values;
-    }
-
-    _getAllFieldErrors() {
-        var errors = {};
-        var invalid = false;
-        this.forEachField(function (control, field) {
-            if (control.error) {
-                errors[field] = control.error;
-                invalid = true;
-            }
-        });
-
-        return invalid ? errors : null;
-    }
-
-    _collectErrors(){
-        this.error = this._getAllFieldErrors();
     }
 }

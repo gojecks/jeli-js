@@ -15,56 +15,54 @@ Directive({
  * @param {*} viewRef 
  * @param {*} templateRef 
  */
-export function IfDirective(viewRef, templateRef) {
-    this._jIfValue = false;
-    this._thenTemplateRef = templateRef;
-    this._elseTemplateRef = null;
-    this._thenView = null;
-    this._elseView = null;
+export class IfDirective {
+    constructor(viewRef, templateRef) {
+        this.viewRef = viewRef;
+        this._jIfValue = false;
+        this._thenTemplateRef = templateRef;
+        this._elseTemplateRef = null;
+        this._thenView = null;
+        this._elseView = null;
+    }
 
-    this.createView = function() {
+    set if(value) {
+        this._jIfValue = value;
+        this.createView();
+    }
+
+    get if() {
+        return this._jIfValue;
+    }
+
+    set ifElse(templateRef) {
+        this._elseTemplateRef = templateRef;
+        this.createView();
+    }
+
+    set ifThen(templateRef) {
+        if (templateRef) {
+            this._thenTemplateRef = templateRef;
+            this.createView();
+        }
+    }
+
+    createView() {
         if (this._jIfValue) {
             if (!this._thenView) {
-                viewRef.clearView();
+                this.viewRef.clearView();
                 this._elseView = null;
                 if (this._thenTemplateRef) {
-                    this._thenView = viewRef.createEmbededView(this._thenTemplateRef);
+                    this._thenView = this.viewRef.createEmbededView(this._thenTemplateRef);
                 }
             }
         } else {
             if (!this._elseView) {
-                viewRef.clearView();
+                this.viewRef.clearView();
                 this._thenView = null;
                 if (this._elseTemplateRef) {
-                    this._elseView = viewRef.createEmbededView(this._elseTemplateRef);
+                    this._elseView = this.viewRef.createEmbededView(this._elseTemplateRef);
                 }
             }
         }
     };
-
-    Object.defineProperties(this, {
-        if: {
-            set: function(value) {
-                this._jIfValue = value;
-                this.createView();
-            },
-            get: function() {
-                return this._jIfValue;
-            }
-        },
-        ifElse: {
-            set: function(templateRef) {
-                this._elseTemplateRef = templateRef;
-                this.createView();
-            }
-        },
-        ifThen: {
-            set: function(templateRef) {
-                if (templateRef) {
-                    this._thenTemplateRef = templateRef;
-                    this.createView();
-                }
-            }
-        }
-    });
 }

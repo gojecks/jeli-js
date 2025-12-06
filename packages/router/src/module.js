@@ -34,19 +34,20 @@ jModule({
         OpenIntent
     ]
 })
-export function RouterModule() {}
-RouterModule.setRoutes = function(routes) {
-    if (Array.isArray(routes)) {
-        routes.forEach(route => setupRoute(route));
-    } else {
-        setupRoute(routes);
+export class RouterModule {
+    static setRoutes(routes) {
+        if (Array.isArray(routes)) {
+            routes.forEach(route => setupRoute(route));
+        } else {
+            setupRoute(routes);
+        }
     }
-};
-
-RouterModule.lazyLoad = function(routes){
-    if (Array.isArray(routes))  {
-        routes.forEach(lazyLoadRoute);
-    } else {
-        lazyLoadRoute(routes);
+    
+    static lazyLoad(routes){
+        if (Array.isArray(routes))  {
+            routes.forEach(lazyLoadRoute);
+        } else {
+            lazyLoadRoute(routes);
+        }
     }
 }

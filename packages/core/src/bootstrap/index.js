@@ -58,10 +58,10 @@ export function bootStrapApplication(moduleToBootStrap) {
 
 /**
  * 
- * @param {*} dModule 
+ * @param {*} m 
  */
-export function compileModule(dModule) {
-    return dModule && (dModule.fac(), dModule());
+export function compileModule(m) {
+    return m && (m.fac(), new m());
 }
 
 /**

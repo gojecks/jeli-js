@@ -3,25 +3,6 @@ import { isarray } from "@jeli/helpers";
 /**
  * LazyLoader class
  * used for lazy loading script that are not bundled in the application
- * @param {*} dropZone 
- * 
- * create a new instance of LazyLoader
- * var lazyLoader = new LazyLoader(element);
- * PATHS_TO_RESOLVE must be js path
- * lazyLoader.js([PATHS_TO_RESOLVE], function() {});
- * PATHS_TO_RESOLVE must be css path
- * lazyLoader.css([PATHS_TO_RESOLVE], function() {});
- *  PATHS_TO_RESOLVE must be css path
- *  lazyLoader.jscs({
- *      "css": [PATHS_TO_RESOLVE],
- *      "js": [PATHS_TO_RESOLVE]
- *  }, function() {});
- * 
- * callback is trigger only for js loaders
- */
-/**
- * LazyLoader class
- * used for lazy loading script that are not bundled in the application
  * @param {*} dropZone
  *
  * create a new instance of LazyLoader
@@ -36,13 +17,9 @@ import { isarray } from "@jeli/helpers";
  *      "js": [PATHS_TO_RESOLVE]
  *  }, function() {});
  *
- * callback is trigger only for js loaders
- */
-
-/**
  * static property for holding already resolve paths
  */
-var lazyLoaderCachedPaths = [];
+var lazyLoaderCachedPaths = new Map();
 export class LazyLoader {
     constructor(dropZone) {
         this.dropZone = dropZone;
@@ -66,7 +43,7 @@ export class LazyLoader {
      */
     static _resolve(filePaths, callback, type, assetURL, dropZone) {
         assetURL = assetURL || '';
-        var totalFiles = 0, resolved = 0, failed = 0;
+        var totalFiles = 0, resolved = 0, failed = 0, _triggerImmediately = [];
         var types = ['js', 'css'];
         /**
          * path generator
@@ -80,36 +57,52 @@ export class LazyLoader {
                     urlParams.set(param, params[param]);
                 });
             }
-            
+
             return url + urlParams;
         };
+
 
         //start the js process
         if (typeof callback !== 'function') {
             callback = function () { };
         }
-        
+
         if (Array.isArray(filePaths)) {
             for (var filePath of filePaths) {
                 var url = filePath;
                 var attrs = {};
                 var params = {};
                 // check for object attributes
-                if (typeof filePath == 'object'){
+                if (typeof filePath == 'object') {
                     url = filePath.url;
                     attrs = filePath.attrs;
                     params = filePath.params;
+                    type = type || LazyLoader.getExt(filePath.name);
+                    // create the url if content is defined
+                    if (filePath.content && type) {
+                        url = URL.createObjectURL(new Blob([filePath.content], LazyLoader.mimeType(type)));
+                    }
                 }
 
                 // check if file is already resolved else don't load
-                if (lazyLoaderCachedPaths.includes(url)) {
+                if (!url || lazyLoaderCachedPaths.has(url)) {
+                    const cached = lazyLoaderCachedPaths.get(url);
+                    if (cached){
+                        cached.callbacks.push(callback);
+                        if (cached.resolved && !_triggerImmediately.includes(url)) {
+                            _triggerImmediately.push(url);
+                        }
+                    }
                     continue;
                 }
 
-                var ftype = type || url.substring(url.lastIndexOf('.') + 1);
+                var ftype = type || LazyLoader.getExt(url);
                 if (types.includes(ftype)) {
                     totalFiles++;
-                    lazyLoaderCachedPaths.push(url);
+                    lazyLoaderCachedPaths.set(url, {
+                        callbacks: [callback],
+                        resolved: false
+                    });
                     var element = _createElement(clink(url, type || '', params), ftype, attrs);
                     attachListener(element, url);
                     (dropZone || document.getElementsByTagName('head')[0]).appendChild(element);
@@ -138,7 +131,7 @@ export class LazyLoader {
             }
 
             // attach addtional attributes to it
-            if (attrs){
+            if (attrs) {
                 Object.keys(attrs).forEach(attr => {
                     element[attr] = attrs[attr];
                 });
@@ -154,28 +147,50 @@ export class LazyLoader {
         function attachListener(element, filePath) {
             element.onload = function () {
                 resolved++;
-                triggerCallack();
+                triggerCallack(filePath);
                 element.parentNode.removeChild(element);
             };
 
-            element.onerror = element.onabort = function(){
+            element.onerror = element.onabort = function () {
                 failed++;
-                triggerCallack();
-                lazyLoaderCachedPaths.splice(lazyLoaderCachedPaths.indexOf(filePath), 1);
+                triggerCallack(filePath);
+                lazyLoaderCachedPaths.delete(filePath);
             };
         }
 
-        function triggerCallack() {
+        function triggerCallack(filePath) {
             var allResolved = (totalFiles == (resolved + failed));
-            if (allResolved)
-                callback({
-                    failed,
-                    resolved,
-                    allResolved
-                });
+            if (allResolved) {
+                const cached = lazyLoaderCachedPaths.get(filePath);
+                cached.resolved = true;
+                while (cached.callbacks.length) {
+                    const _callback = cached.callbacks.shift();
+                    _callback({
+                        failed,
+                        resolved,
+                        allResolved
+                    });
+                }
+            }
         }
 
-        triggerCallack();
+        // trigger already resolved
+        _triggerImmediately.forEach(triggerCallack);
+    }
+
+    static mimeType(type) {
+        var mimeTypes = {
+            js: 'application/javascript',
+            css: 'text/css',
+            json: 'application/json',
+            txt: 'application/text'
+        };
+
+        return { type: mimeTypes[type || 'js'] };
+    }
+
+    static getExt(name){
+        return (name || '').substring(name.lastIndexOf('.') + 1);
     }
 
     js(obj, callback) {

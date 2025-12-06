@@ -1,8 +1,9 @@
 Service({
     name: 'lowercase'
 })
-export function lowerCaseFilter() {
-    this.compile = function(value) {
+export class lowerCaseFilter {
+    constructor() {}
+    compile(value) {
         return (value || '').toLowerCase();
-    };
+    }
 }

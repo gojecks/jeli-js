@@ -1,11 +1,9 @@
 import { VALUE_ACCESSOR } from './abstract.event.accessor';
 import { closureRef, AttributeAppender } from '@jeli/core';
 
-export var ResolveCheckboxBinder = {
+export const ResolveCheckboxBinder = {
     name: VALUE_ACCESSOR,
-    reference: closureRef(function() {
-        return CheckboxEventBinder;
-    })
+    reference: closureRef(() => CheckboxEventBinder )
 };
 
 Directive({
@@ -22,14 +20,10 @@ Directive({
 })
 
 /**
- * 
- * @param {*} elementRef 
- */
-/**
  *
  * @param {*} elementRef
  */
-export class CheckboxEventBinder extends AbstractValueAccessor{
+export class CheckboxEventBinder extends AbstractValueAccessor {
     writeValue(checked) {
         AttributeAppender.setProp(this.element.nativeElement, 'checked', checked, true);
     }

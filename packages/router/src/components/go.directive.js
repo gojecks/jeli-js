@@ -7,13 +7,15 @@ Directive({
 })
 
 /**
- * 
- * @param {*} webStateService 
+ *
+ * @param {*} webStateService
  */
-export function GoFn(webStateService) {
-    this.params = {};
-    this.clickHandler = function(event) {
-        event.preventDefault();
-        webStateService.go(this.pathName, this.params, this.target);
-    };
+export class GoFn {
+    constructor(webStateService) {
+        this.params = {};
+        this.clickHandler = function (event) {
+            event.preventDefault();
+            webStateService.go(this.pathName, this.params, this.target);
+        };
+    }
 }

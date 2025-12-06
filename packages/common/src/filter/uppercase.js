@@ -1,8 +1,9 @@
 Service({
     name: 'uppercase'
 })
-export function upperCaseFilter() {
-    this.compile = function(value) {
+export class upperCaseFilter {
+    constructor() { }
+    compile(value) {
         return (value || '').toUpperCase();
-    };
+    }
 }

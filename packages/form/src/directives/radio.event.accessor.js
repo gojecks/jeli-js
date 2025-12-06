@@ -5,11 +5,9 @@ function isSameGroup(a, b) {
     return a.name === b.name;
 }
 
-export var ResolveRadioBinder = {
+export const ResolveRadioBinder = {
     name: VALUE_ACCESSOR,
-    reference: closureRef(function() {
-        return RadioEventBinder;
-    })
+    reference: closureRef(() => RadioEventBinder)
 };
 /**
  * @internal use only

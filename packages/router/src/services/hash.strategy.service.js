@@ -27,7 +27,7 @@ export class HashStrategyService extends AbstractStrategy {
          * First checked to see if window supports onhashchange Event
          * @Function window.addEventListener("haschange", callback ,false)
          */
-        window.addEventListener("hashchange", e => {
+        window.addEventListener('hashchange', e => {
             if (!routeConfig.allowChangeFromLocationBar) return;
             var locHash = location.hash.split(/#/)[1];
             if (!locHash.length || !this.locationService.changed(locHash) || this.isReplaceState) {

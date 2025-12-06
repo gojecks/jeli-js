@@ -131,6 +131,7 @@ export class ViewHandler {
         this.viewsHolder.delete(ref);
         viewInstance = null;
     }
+    
     handlePendingView(viewName) {
         if (this._pendingViewStack.has(viewName)) {
             this.compileViewTemplate(this._pendingViewStack.get(viewName), this.viewsHolder.get(viewName), () => {

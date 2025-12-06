@@ -4,8 +4,12 @@ Pipe({
     DI: [DatetimeService]
 })
 
-export function dateTimeFilterFN(dateTimeFactory) {
-    this.compile = function(text, replacer) {
-        return dateTimeFactory.format(text, replacer);
-    };
+export class dateTimeFilterFN {
+    constructor(dateTimeFactory) {
+        this.dateTimeFactory = dateTimeFactory;
+    }
+
+    compile(text, replacer) {
+        return this.dateTimeFactory.format(text, replacer);
+    }
 }

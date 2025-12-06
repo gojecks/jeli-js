@@ -3,10 +3,9 @@ import { closureRef, AttributeAppender } from '@jeli/core';
 
 export var ResolveRangeBinder = {
     name: VALUE_ACCESSOR,
-    reference: closureRef(function() {
-        return RangeEventBinder;
-    })
+    reference: closureRef(() => RangeEventBinder )
 };
+
 Directive({
     selector: 'input:type=range:[model|formField|fieldControl]',
     events: [
@@ -21,10 +20,6 @@ Directive({
     DI: ['ElementRef?']
 })
 
-/**
- * 
- * @param {*} elementRef 
- */
 /**
  *
  * @param {*} elementRef

@@ -1,3 +1,7 @@
+import { ElementCompiler } from "../component/compiler";
+import { ComponentInjectors } from "../component/injectors";
+import { ElementRef } from "../dom/renderer/element.ref";
+
 /**
  * 
  * @param {*} componentFactory 
@@ -7,32 +11,32 @@
  * @returns 
  */
 export function ComponentFactoryResolver(componentFactory, viewRef, callback, skipElementInsert) {
-    if (!componentFactory || !componentFactory.ctors.exposeView) {
-        return Promise.reject('No exported factory found for <' + componentFactory.ctors.selector + '>');
+    if (!componentFactory) {
+        return Promise.reject('No exported factory found for <' + componentFactory?.ctors?.selector + '>');
     }
 
-    var componentRef = new ElementRef({
+    const elementRef = new ElementRef({
         name: componentFactory.ctors.selector,
         type: 'element',
         isc: true,
         providers: [componentFactory]
     }, viewRef, true);
-    var localInjectors = new ComponentInjectors(componentRef);
+
+    const componentInjector = new ComponentInjectors(elementRef);
+
     return new Promise((resolve, reject) => {
         try {
-            ElementCompiler(componentFactory, componentRef, localInjectors, function(componentInstance) {
+            ElementCompiler.compile(componentFactory, elementRef, componentInjector, (componentInstance) => {
                 if (!skipElementInsert && viewRef) {
-                    elementInsertAfter(viewRef, componentRef.nativeElement, viewRef.nativeElement);
-                    viewRef.children.add(componentRef);
+                    elementInsertAfter(viewRef, elementRef.nativeElement, viewRef.nativeElement);
+                    viewRef.children.add(elementRef);
                 }
 
-                EventHandler.registerListener(componentRef);
-                (callback || resolve)(componentRef, componentInstance);
+                EventHandler.registerListener(elementRef);
+                (callback || resolve)(elementRef, componentInstance);
             });
         } catch(exception) {
             reject(exception)
         }
-
-        localInjectors = null;
     });
 }

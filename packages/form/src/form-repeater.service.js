@@ -19,8 +19,9 @@ Service({
  * @param {*} validators
  */
 export class FormRepeaterService extends FormControlAbstract{
-    constructor(fields, autoGenerate, validators) {
+    constructor(fields, validators, autoGenerate) {
         super(validators);
+        this.value = [];
         this.formFieldControls = [];
         this._defaultfields = fields;
         this._autoSetup(autoGenerate);
@@ -29,16 +30,34 @@ export class FormRepeaterService extends FormControlAbstract{
      *
      * @param {*} fieldControl
      */
-    addField(fieldControl) {
-        if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
-            this.formFieldControls.push(fieldControl);
-        } else if (this._defaultfields) {
-            this.formFieldControls.push(new FormControlService(this._defaultfields));
-        } else {
-            this.formFieldControls.push(new FormFieldControlService(fieldControl));
+    addField(fieldControl) {            
+        if (this._defaultfields && typeof this._defaultfields === 'object') {
+            fieldControl = new FormControlService(this._defaultfields);
+        } else if(!(fieldControl instanceof FormControlAbstract)){
+            fieldControl = new FormFieldControlService(fieldControl)
         }
 
-        this._setupControl(this.formFieldControls[this.formFieldControls.length - 1]);
+        if (fieldControl){
+            this.formFieldControls.push(fieldControl);
+            this._setupControl(fieldControl);
+            this.updateValueAndStatus();
+        }
+    }
+
+    patchValue(values, options){
+        if (Array.isArray(values)){
+            if (values.length) {
+                options = (options || {});
+                values.forEach((value, idx) => {
+                    if (!this.formFieldControls[idx]){
+                    this.addField();  
+                    }
+                    this.formFieldControls[idx].patchValue(value, options);
+                });
+            } else {
+                this.destroy();
+            }
+        }
     }
     /**
      *
@@ -48,21 +67,7 @@ export class FormRepeaterService extends FormControlAbstract{
     getField(index) {
         return this.formFieldControls[index] || null;
     }
-    /**
-     *
-     * @param {*} enabledOnly
-     * @returns
-     */
-    _collectValues(enabledOnly) {
-        var values = [];
-        this.forEachField(function (control) {
-            if ((enabledOnly && control.enabled) || !enabledOnly) {
-                values.push(control.value);
-            }
-        });
-
-        return values;
-    }
+    
     /**
      *
      * @param {*} index
@@ -72,8 +77,8 @@ export class FormRepeaterService extends FormControlAbstract{
         var len = this.formFieldControls.length;
         if (!len || len < index) return;
         this.formFieldControls[index].destroy();
-        this.value.splice(index, 1);
         this.formFieldControls.splice(index, 1);
+        this.updateValueAndStatus();
         this.valueChanges.emit(this.value);
     }
     /**
@@ -89,5 +94,23 @@ export class FormRepeaterService extends FormControlAbstract{
                 this.addField();
             }
         }
+    }
+
+    _updateValue() {
+        this.value = this._collectValues(true);
+    }
+
+    forEachField(callback) {
+        this.formFieldControls.forEach(callback);
+    }
+
+    destroy(){
+        while(this.formFieldControls.length){
+            const control = this.formFieldControls.shift();
+            control.destroy();
+        }
+        // update value and status
+        this.updateValueAndStatus();
+        this.valueChanges.emit(this.value);
     }
 }

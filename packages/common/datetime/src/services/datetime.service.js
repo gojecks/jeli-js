@@ -1,4 +1,4 @@
-import { leapYear, DateStringConverter, setText } from '../helpers';
+import { leapYear, DateStringConverter, generateTimeAgo } from '../helpers';
 import { CalendarService } from './calendar.service';
 import { MONTHS_HALF, MONTHS_FULL, DAYS_HALF, DAYS_FULL } from '../tokens';
 /**
@@ -91,6 +91,7 @@ export class DatetimeService {
 
         return outputDate;
     }
+
     static staticTimeConverter(dateToParse, context) {
         //dataToParse (Time) is undefined
         if (!dateToParse)
@@ -110,25 +111,30 @@ export class DatetimeService {
             x = new Date();
         }
 
-        var g = Date.UTC(date2ParseObject.getFullYear(), date2ParseObject.getMonth(), date2ParseObject.getDate()), 
-        f = Date.UTC(currentDateTime.getFullYear(), currentDateTime.getMonth(), currentDateTime.getDate()), 
-        days = Math.floor((f - g) / B), 
-        future = (j > l), 
-        futureDiff = (future) ? (j - l) : (l - j);
+        const future = (j > l);
+        const futureDiff = (future) ? (j - l) : (l - j);
+        const days = Math.floor(futureDiff / B);
 
         result.getTime = () => j;
-        result.ctimestamp = g;
-        result.timestamp = f;
+        result.ctimestamp = l;
+        result.timestamp = j;
         result.time_difference = {
-            seconds: Math.floor(futureDiff / 3600000 * (60 * 60)),
-            minutes: Math.floor(futureDiff / 3600000 * 60),
+            seconds: Math.floor(futureDiff / 1000),
+            minutes: Math.floor(futureDiff / 60000 ),
             hours: Math.floor(futureDiff / 3600000),
             weeks: Math.floor(days / 7),
             days: days,
             months: Math.floor(days / 30)
         };
 
-        var year = date2ParseObject.getFullYear(), month = date2ParseObject.getMonth() + 1, day = date2ParseObject.getDate(), weekDay = date2ParseObject.getDay(), timeSettings = date2ParseObject.current_time.split(' ')[1].split(':'), hours = timeSettings[0], minute = parseInt(timeSettings[1]), seconds = parseInt(timeSettings[2]);
+        const year = date2ParseObject.getFullYear(), 
+            month = date2ParseObject.getMonth() + 1, 
+            day = date2ParseObject.getDate(), 
+            weekDay = date2ParseObject.getDay(), 
+            timeSettings = date2ParseObject.current_time.split(' ')[1].split(':'), 
+            hours = timeSettings[0], 
+            minute = parseInt(timeSettings[1]), 
+            seconds = parseInt(timeSettings[2]);
 
         result.flags = {
             YYYY: year,
@@ -157,59 +163,16 @@ export class DatetimeService {
 
         //set leap year
         result.isLeapYear = leapYear(year);
-        result.today = context.dateTimeDayHalf[currentDateTime.getDay()] + ', ' + currentDateTime.getDate() + ' ' + context.dateTimeMonthHalf[currentDateTime.getMonth()];
+        result.today = `${context.dateTimeDayHalf[currentDateTime.getDay()]}, ${currentDateTime.getDate()} ${context.dateTimeMonthHalf[currentDateTime.getMonth()]}`;
         if (currentDateTime.getFullYear() > date2ParseObject.getFullYear()) {
-            result.date = context.dateTimeMonthHalf[date2ParseObject.getMonth()] + ', ' + date2ParseObject.getDate() + ' ' + date2ParseObject.getFullYear();
+            result.date = `${context.dateTimeMonthHalf[date2ParseObject.getMonth()]}, ${date2ParseObject.getDate()} ${date2ParseObject.getFullYear()}`;
         } else {
-            result.date = context.dateTimeDayHalf[date2ParseObject.getDay()] + ', ' + date2ParseObject.getDate() + ' ' + context.dateTimeMonthHalf[date2ParseObject.getMonth()];
+            result.date = `${context.dateTimeDayHalf[date2ParseObject.getDay()]}, ${date2ParseObject.getDate()} ${context.dateTimeMonthHalf[date2ParseObject.getMonth()]}`;
         }
 
-        if (result.time_difference.seconds <= 60) {
-            result.timeago = result.time_difference.seconds + setText(' seconds', future);
-        } else {
-            if (result.time_difference.minutes <= 60) {
-                if (result.time_difference.minutes == 1) {
-                    result.timeago = setText('1 minute', future);
-                } else {
-                    result.timeago = result.time_difference.minutes + setText(' minutes', future);
-                }
-            } else {
-                if (result.time_difference.hours <= 24) {
-                    if (result.time_difference.hours == 1) {
-                        result.timeago = setText('an hour', future);
-                    } else {
-                        result.timeago = result.time_difference.hours + setText(' hours', future);
-                    }
-                } else {
-                    if (result.time_difference.days <= 7) {
-                        if (result.time_difference.days == 1) {
-                            result.timeago = 'Yesterday';
-                        } else {
-                            result.timeago = result.time_difference.days + setText(' days', future);
-                        }
-                    } else {
-                        if (result.time_difference.weeks <= 4) {
-                            if (result.time_difference.weeks == 1) {
-                                result.timeago = setText('1 week');
-                            } else {
-                                result.timeago = result.time_difference.weeks + setText(' weeks', future);
-                            }
-                        } else {
-                            if (result.time_difference.months <= 12) {
-                                if (result.time_difference.months == 1) {
-                                    result.timeago = setText('1 month', future);
-                                } else {
-                                    result.timeago = result.date;
-                                }
-                            } else {
-                                result.timeago = result.date;
-                            }
-                        }
-                    }
-                }
-            }
-        }
 
+        // generate time ago
+        generateTimeAgo(result, future);
         return result;
     }
 

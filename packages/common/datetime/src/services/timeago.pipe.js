@@ -6,9 +6,15 @@ Pipe({
 
 //timeAgoFilterFn
 //@result converts date to timeago
-export function TimeAgoFilterFn(dateTimeFactory) {
-    this.compile = function(dateTime, fallback) {
-        if (!dateTime && fallback) return fallback;
-        return dateTimeFactory.timeConverter(dateTime).timeago;
-    };
+//timeAgoFilterFn
+//@result converts date to timeago
+export class TimeAgoFilterFn {
+    constructor(dateTimeFactory) {
+        this.dateTimeFactory = dateTimeFactory;
+    }
+
+    compile(dateTime, fallback) {
+            if (!dateTime && fallback) return fallback;
+            return this.dateTimeFactory.timeConverter(dateTime).timeago;
+    }
 }

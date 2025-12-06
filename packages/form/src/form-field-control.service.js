@@ -9,41 +9,43 @@ Service({
  * @param {*} fieldControl
  */
 export class FormFieldControlService extends FormControlAbstract {
-    constructor(fieldControl) {
+    constructor(fieldControl, isManualInit = false) {
         super(fieldControl ? fieldControl.validators : null, false);
         this.eventType = 'default';
+        this.valueType = 'default'
         this._onChangeEvents = [];
-        this._setInitialState(fieldControl);
+        if (!isManualInit){
+            this._setInitialState(fieldControl);
+        }
     }
+
     _setInitialState(state) {
         if (isobject(state)) {
-            this.value = state.value;
+            this.value = (![undefined, null].includes(state.value) ? state.value : this.value);
             state.disabled ? this.disable({ self: true }) : this.enable({ self: true });
             this.eventType = state.eventType || this.eventType;
+            this.valueType = state.valueType || this.valueType;
         } else {
             this.value = (state !== undefined ? state : null);
         }
     }
+
     setValue(value, options) {
         options = options || {};
         this.value = value;
-        if (this._onChangeEvents.length && !isequal(options.emitToView, false)) {
-            this._onChangeEvents.length && this._onChangeEvents.forEach(function (eventChange) {
-                return eventChange(value, !isequal(options.emitToView, false));
-            });
+        const emitToView = !isequal(options.emitToView, false);
+        if (this._onChangeEvents.length && emitToView) {
+            this._onChangeEvents.forEach(
+                (eventChange) => eventChange(value, emitToView)
+            );
         }
 
         this.updateValueAndStatus(options);
     }
-    /*
-      instance setViewValue Method
-    */
+    
+    // instance setViewValue Method
     patchValue(val, options) {
-        if (!options) {
-            options = {};
-        }
-
-        this.setValue(val, options);
+        this.setValue(val, options || {});
     }
     /**
      * reset a form field

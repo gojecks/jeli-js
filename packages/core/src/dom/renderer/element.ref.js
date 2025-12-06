@@ -11,7 +11,7 @@ var $elementContext = '__jContext__';
  * @param {*} parentRef 
  */
 class AbstractElementRef {
-    constructor(definition, parentRef) {
+    constructor(definition, parentRef, context) {
         var localVariables = null;
         this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
         // all registered observers goes in here
@@ -44,7 +44,7 @@ class AbstractElementRef {
          * <j-template />
          */
         if (definition.ctx$)
-            localVariables = createLocalVariables(definition.ctx$, parentRef.context, parentRef.componentInstance);
+            localVariables = createLocalVariables(definition.ctx$, context || parentRef.context, parentRef.componentInstance);
 
         Object.defineProperties(this, {
             context: {
@@ -69,18 +69,16 @@ class AbstractElementRef {
             });
         }
 
-        this.internal_getDefinition = function (prop) {
-            return definition[prop];
-        };
+        this.internal_getDefinition = prop => definition[prop];
     }
 
     get componentInstance() {
-        var hostElement = ComponentRef.get(this.refId, this.hostRefId);
+        const hostElement = ComponentRef.get(this.refId, this.hostRefId);
         return hostElement.componentInstance;
     }
 
     get changeDetector() {
-        var hostElement = ComponentRef.get(this.refId, this.hostRefId);
+        const hostElement = ComponentRef.get(this.refId, this.hostRefId);
         return hostElement.changeDetector;
     }
 

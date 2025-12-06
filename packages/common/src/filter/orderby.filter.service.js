@@ -3,8 +3,9 @@ import { QueryFactory } from "../services/query.service";
 Service({
     name: 'orderBy'
 })
-export function orderByFilterFn() {
-    this.compile = function(value, propertyName) {
+export class orderByFilterFn {
+    constructor() { }
+    compile(value, propertyName) {
         if (value.length < 2) {
             return value;
         }
@@ -32,7 +33,7 @@ export function orderByFilterFn() {
          */
         newList = _queryApi.sortBy.apply(_queryApi, propertyName.split(","));
         if (reverse) {
-            return newList.reverse()
+            return newList.reverse();
         }
 
         return value;

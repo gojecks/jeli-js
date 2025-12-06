@@ -9,13 +9,17 @@ Service({
     name: 'currency',
     DI: [NumberFilter]
 })
-export function CurrencyFilter(numberFilter) {
-    this.compile = function(value, style) {
+export class CurrencyFilter {
+    constructor(numberFilter) {
+        this.numberFilter = numberFilter;
+    }
+
+    compile(value, style) {
         if (!!window.Intl) {
             var currencyFormat = new Intl.NumberFormat(window.navigator.language, style);
             return currencyFormat.format(value);
         } else {
-            return (style && style.currency) + numberFilter.format(value);
+            return `${(style && style.currency)} ${this.numberFilter.format(value)}`;
         }
     }
 }

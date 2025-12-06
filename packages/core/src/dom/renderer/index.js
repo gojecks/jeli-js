@@ -9,8 +9,8 @@ export class ViewParser {
     }
 
     static jit(elementRef, transpiledHTML, vt) {
-        var fragment = document.createDocumentFragment();
-        var pushView = (compiled, isNativeMode) => {
+        const fragment = document.createDocumentFragment();
+        const pushView = (compiled, isNativeMode) => {
             if (!isNativeMode) {
                 compiled.parent && compiled.parent.children.add(compiled);
                 fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
@@ -33,7 +33,7 @@ export class ViewParser {
         for (var name in vt) {
             componentInstance[name] = TemplateRef.reflect(elementRef, vt[name], newRef => {
                 transverse(newRef);
-                return newRef.nativeElement;
+                return newRef.nativeElement || newRef.nativeNode;
             });
         }
 
@@ -51,17 +51,17 @@ class jitBuilder {
      * @returns 
      */
     static $1(definition, parent, viewContainer, context) {
-        var elementRef = new ElementRef(definition, parent);
+        const elementRef = new ElementRef(definition, parent);
         if (definition.attr) {
             AttributeAppender.set(elementRef.nativeElement, definition.attr);
         }
 
         if (definition.children) {
-            for (var i = 0; i < definition.children.length; i++) {
-                var childDefinition = (typeof definition.children[i] === 'function' ? definition.children[i]() : definition.children[i]);
+            for (let i = 0; i < definition.children.length; i++) {
+                const childDefinition = (typeof definition.children[i] === 'function' ? definition.children[i]() : definition.children[i]);
                 if (!childDefinition) continue;
                 // conditional template checker
-                var child =  this.compile(childDefinition, elementRef, viewContainer, context, true);
+                const child =  this.compile(childDefinition, elementRef, viewContainer, context, true);
                 if (child) {
                     this.pushToParent(child, elementRef, i);
                 }
@@ -95,10 +95,12 @@ class jitBuilder {
      * 
      * @param {*} definition 
      * @param {*} parent 
-     * @returns 
+     * @param {*} pushView 
+     * @param {*} context 
+     * @returns AbstractElementRef instance
      */
-    static $8(definition, parent) {
-        return new AbstractElementRef(definition, parent);
+    static $8(definition, parent, pushView, context,) {
+        return new AbstractElementRef(definition, parent, context);
     }
 
     /**
@@ -121,12 +123,15 @@ class jitBuilder {
      * @param {*} appendToParent
      */
     static $11(definition, parent, viewContainer, context, appendToParent) {
-        var hostRef = parent.hostRef;
-        var isNativeMode = hostRef.internal_getDefinition('asNative');
-        var haveLocalVairables = false;
-        var createPlaceElement = !(viewContainer || appendToParent);
-        var template = TemplateRef.factory(hostRef, 'place', true);
-        var placeElement = (createPlaceElement) ? new AbstractElementRef({
+        const hostRef = parent.hostRef;
+         const template = TemplateRef.factory(hostRef, 'place', true);
+        // fail fast if no template
+        if (!template) return null;
+
+        const isNativeMode = hostRef.internal_getDefinition('asNative');
+        let haveLocalVairables = false;
+        const createPlaceElement = !(viewContainer || appendToParent);
+        const placeElement = (createPlaceElement || parent.isc) ? new AbstractElementRef({
             name: "#",
             type: 11
         }, hostRef) : null;
@@ -143,8 +148,9 @@ class jitBuilder {
          * @param {*} element 
          */
         function createAndAppend(element) {
+            let child = element;
             if (!isNativeMode) {
-                var child = jitBuilder.compile(element, (definition.$ctx == true ? parent : hostRef.parent), viewContainer, context);
+                child = jitBuilder.compile(element, (definition.$ctx == true ? parent : hostRef.parent), viewContainer, context);
                 // set the localVairables
                 if (haveLocalVairables)
                     child.context = context;
@@ -155,10 +161,10 @@ class jitBuilder {
                 child.contentHostRefId = hostRef.refId;
             }
 
-            if (createPlaceElement || appendToParent) {
-                jitBuilder.pushToParent(child || element, placeElement || parent, null, isNativeMode);
+            if (parent.isc || createPlaceElement || appendToParent) {
+                jitBuilder.pushToParent(child, placeElement || parent, null, isNativeMode);
             } else {
-                viewContainer(child || element, isNativeMode);
+                viewContainer(child, isNativeMode);
             }
 
             /**

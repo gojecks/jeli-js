@@ -86,7 +86,7 @@ var componentDebugContext = new Map();
  * @param {*} refId 
  * @param {*} context 
  */
-class ComponentRef {
+export class ComponentRef {
     constructor(refId, context) {
         this.componentRefId = refId;
         this.observables = new Observer();

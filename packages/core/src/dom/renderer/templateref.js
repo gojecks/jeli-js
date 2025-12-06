@@ -27,7 +27,7 @@ export class TemplateRef {
          * @param {*} callback
          */
         this.forEach = function (selector, callback) {
-            var tmplCallback = tmpl => callback((isfunction(tmpl) ? tmpl() : tmpl));
+            const tmplCallback = tmpl => callback((isfunction(tmpl) ? tmpl() : tmpl));
             if (typeof templates == 'function')
                 return templates(selector, tmplCallback);
 
@@ -39,7 +39,7 @@ export class TemplateRef {
     }
 
     static factory(node, templateId, silent) {
-        var templates = node.internal_getDefinition('templates');
+        const templates = node.internal_getDefinition('templates');
         if (!templates || !templates.hasOwnProperty(templateId)) {
             if (!silent) errorBuilder('No templates Defined #' + templateId);
             return null;
@@ -49,23 +49,23 @@ export class TemplateRef {
          * check if templateId is function
          * call the method to assign the value so we don't keep calling the method
          */
-        var template = templates[templateId] || templates;
+        const template = templates[templateId] || templates;
         return new TemplateRef((typeof template === 'function') ? template(templateId) : template);
     }
 
     static reflect(elementRef, nodeAst, callback) {
-        return context => callback(jitBuilder.$1(nodeAst, elementRef, null, context));
+        return context => callback(jitBuilder[`$${nodeAst.type || 1}`](nodeAst, elementRef, null, context));
     }
 
     static templatesCompiler(templates, asNative) {
-        var childrenNodesLen = asNative ? templates.length : 0;
-        var templateTypes = {
+        const childrenNodesLen = asNative ? templates.length : 0;
+        const templateTypes = {
             /**
              * custom place handler for native compiler
              * @returns
              */
             place: (placeSelector, callback) => {
-                var children = Array.from(selector.children).splice(0, childrenNodesLen);
+                const children = Array.from(selector.children).splice(0, childrenNodesLen);
                 if (placeSelector != '@') {
                     children = children.filter(ele => (
                         !ele.classList.has(placeSelector) ||

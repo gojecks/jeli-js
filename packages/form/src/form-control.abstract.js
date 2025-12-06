@@ -66,9 +66,7 @@ export class FormControlAbstract {
         this._parent = context;
     }
     _anyFieldHasStatus(status) {
-        return this._anyControl(function (control) {
-            return isequal(control.status, status);
-        });
+        return this._anyControl((control) => isequal(control.status, status));
     }
     _anyControl() { }
     setStatus() {
@@ -76,8 +74,8 @@ export class FormControlAbstract {
         if (this.error || this._anyFieldHasStatus(INVALID)) return INVALID;
         return VALID;
     }
-    destroy() {
-        if (this.formFieldControls) {
+    destroy(softDestroy) {
+        if (!softDestroy && this.formFieldControls) {
             this.formFieldControls = null;
         }
         this._parent = null;
@@ -87,7 +85,7 @@ export class FormControlAbstract {
     markAsTouched(options) {
         options = options || {};
         this.touched = true;
-        if (this._parent && !option.self) {
+        if (this._parent && !options.self) {
             this._parent.markAsTouched(options);
         }
     }
@@ -120,19 +118,17 @@ export class FormControlAbstract {
         options = options || {};
         this.status = VALID;
         this.updateValueAndStatus({ self: true, emitEvent: options.emitEvent });
-        this.forEachField(function (control) {
+        this.forEachField((control) => {
             control.enable({
                 self: true
             });
         });
-        this._onDisableEvents.forEach(function (listener) {
-            listener(false);
-        });
+        this._onDisableEvents.forEach((listener) => listener(false));
     }
     disable(options) {
         options = options || {};
         this.status = DISABLED;
-        this.forEachField(function (control) {
+        this.forEachField((control) => {
             control.disable({
                 self: true
             });
@@ -172,9 +168,7 @@ export class FormControlAbstract {
     markAsUntouched(options) {
         options = options || {};
         this.touched = false;
-        this.forEachField(function (control) {
-            control.markAsUntouched({ self: true });
-        });
+        this.forEachField(control => control.markAsUntouched({ self: true }));
 
         // if (this.parent && !options.self) {
         //     this.parent.markAsUnTouched({
@@ -225,5 +219,46 @@ export class FormControlAbstract {
         if (this.parent && !options.self) {
             this.parent.markAsTouched(options);
         }
+    }
+
+    isValueChanged(value){
+        return (this._pendingValue !== value);
+    }
+    
+    _setupControl(control) {
+        control.setParent(this);
+        control._registerOnControlChangeListener(this._onControlChangeListener);
+    }
+
+    _collectErrors(){
+        this.error = this._getAllFieldErrors();
+    }
+
+    _getAllFieldErrors() {
+        var errors = this._getArryOrObjectType();
+        var invalid = false;
+        this.forEachField((control, field) => {
+            if (control.error) {
+                errors[field] = control.error;
+                invalid = true;
+            }
+        });
+
+        return invalid ? errors : null;
+    }
+
+    _collectValues(enabledOnly) {
+        var values = this._getArryOrObjectType();
+        this.forEachField((control, field) => {
+            if ((enabledOnly && control.enabled) || !enabledOnly) {
+                values[field] = control.value;
+            }
+        });
+
+        return values;
+    }
+
+    _getArryOrObjectType(){
+        return (Array.isArray(this.formFieldControls) ? [] : {});
     }
 }

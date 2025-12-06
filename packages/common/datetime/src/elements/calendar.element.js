@@ -4,14 +4,16 @@ Element({
     DI: [DatetimeService],
     props: ['config']
 })
-export function calendarFN($dateTimeFactory) {
-    var defaultConfig = {
-        fullYear: !1,
-        year: new Date().getFullYear()
-    };
-    this.config = '';
-    this.didInit = function() {
-        var config = extend(defaultConfig, this.config);
-        this.calendar = $dateTimeFactory.buildFullCalendar(config);
-    };
+export class calendarFN {
+    constructor(dateTimeFactory) {
+        this.config = {};
+        this.dateTimeFactory = dateTimeFactory;
+    }
+
+    didInit() {
+        this.calendar = this. dateTimeFactory.buildFullCalendar(extend({
+            fullYear: !1,
+            year: new Date().getFullYear()
+        }, this.config));
+    }
 }

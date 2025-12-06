@@ -1,43 +1,41 @@
 /**
  * Jeli event manager
- * @param {*} element 
- */
-/**
- * Jeli event manager
  * @param {*} element
  */
 export class CustomEventHandler {
+    static trigger(context){
+        return event => {
+            if (!context.registeredEvents.has(event.type)) return;
+            context.registeredEvents.get(event.type).forEach(listener => listener(event));
+        }
+    };
+
     constructor(element) {
-        var trigger = (event) => { this.trigger(event); };
         this.element = element;
-        this.registeredEvents = {};
-        this.register = function (type, callback) {
-            var index = -1;
-            if (element && `on${type}` in element) {
-                if (!this.registeredEvents.hasOwnProperty(type)) {
-                    this.registeredEvents[type] = [];
-                    this.element.addEventListener(type, trigger, false);
-                }
-                index = this.registeredEvents[type].push(callback);
-                // unregister
-                return () => this.registeredEvents[type].splice(index - 1, 1);
-            }
-        };
+        this.callback = CustomEventHandler.trigger(this);
+        this.registeredEvents = new Map();
     }
-    trigger(event) {
-        var listeners = this.registeredEvents[event.type] || [];
-        for (var i = 0; i < listeners.length; i++) {
-            listeners[i](event);
+
+    register(type, callback) {
+        let index = -1;
+        if (this.element) {
+            if (!this.registeredEvents.has(type)) {
+                this.registeredEvents.set(type, []);
+                this.element.addEventListener(type, this.callback, false);
+            }
+
+            index = this.registeredEvents.get(type).push(callback);
+            // unregister
+            return () => this.registeredEvents.get(type).splice(index - 1, 1);
         }
     }
 
     destroy() {
-        for (var type in this.registeredEvents) {
-            this.registeredEvents[type].length = 0;
-            delete this.registeredEvents[type];
-            this.element.removeEventListener(type, trigger, false);
-        }
+        this.registeredEvents.keys().forEach(type => {
+            this.registeredEvents.delete(type);
+            this.element.removeEventListener(type, this.callback, false);
+        });
         this.element = null;
-        this.registeredEvents = null;
+        this.registeredEvents.clear();
     }
 }

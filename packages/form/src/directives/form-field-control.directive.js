@@ -5,12 +5,6 @@ Directive({
     DI: [VALUE_ACCESSOR, 'VALIDATORS?'],
     props: ['control=fieldControl', 'disabled']
 })
-
-/**
- * 
- * @param {*} eventBinder 
- * @param {*} validators 
- */
 /**
  *
  * @param {*} eventBinder

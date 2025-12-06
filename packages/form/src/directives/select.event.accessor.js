@@ -2,11 +2,9 @@ import { isequal, inarray } from '@jeli/helpers';
 import { VALUE_ACCESSOR } from './abstract.event.accessor';
 import { closureRef, AttributeAppender } from '@jeli/core';
 
-export var ResolveSelectBinder = {
+export const ResolveSelectBinder = {
     name: VALUE_ACCESSOR,
-    reference: closureRef(function() {
-        return SelectEventBinder;
-    })
+    reference: closureRef(() => SelectEventBinder )
 };
 
 function _buildValueToString(id, value) {
@@ -39,20 +37,21 @@ export class SelectEventBinder extends AbstractValueAccessor {
         this.selectedValue;
         this._optionValueMap = new Map();
         this._compare = isequal;
-        Object.defineProperty(this, 'compareFn', {
-            set: function (fn) {
-                if (typeof fn !== 'function') {
-                    throw new Error('expected function for comparisonFN but got ' + typeof fn + ' instead.');
-                }
-
-                this._compare = fn;
-            }
-        });
     }
+
+    set compareFn(fn) {
+        if (typeof fn !== 'function') {
+            throw new Error('expected function for comparisonFN but got ' + typeof fn + ' instead.');
+        }
+
+        this._compare = fn;
+    }
+
     _handleSelection(value) {
         this.selectedValue = this._getValue(value);
         this.onChange(this.selectedValue);
     }
+
     writeValue(value) {
         if (!this.element.hasAttribute('multiple')) {
             var currentSelectedValue = this._getOptionValue(this.element.nativeElement.value);

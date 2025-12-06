@@ -3,15 +3,18 @@ import { isobject, isfunction, isundefined } from "@jeli/helpers";
 Service({
     name: 'filter'
 })
-export function FilterPipe() {
-    this.compile = function(array, expression) {
+export class FilterPipe {
+    constructor() {
+    }
+
+    compile(array, expression) {
         if (!Array.isArray(array)) {
             if (array == null)
                 return array;
-            console.error('expected Array type but got ' + typeof(array));
+            console.error('expected Array type but got ' + typeof (array));
         }
 
-        var expressionType = expression !== null ? typeof(expression) : 'null';
+        var expressionType = expression !== null ? typeof (expression) : 'null';
         var predicateFn = null;
         var matchAny;
         switch (expressionType) {
@@ -24,7 +27,7 @@ export function FilterPipe() {
             case 'string':
                 matchAny = true;
             case ('object'):
-                predicateFn = createPredicator(expression, matchAny);
+                predicateFn = this._createPredicator(expression, matchAny);
                 break;
             default:
                 return array;
@@ -33,8 +36,8 @@ export function FilterPipe() {
         return Array.prototype.filter.call(array, predicateFn);
     }
 
-    function createPredicator(expression, matchAny) {
-        return function(item) {
+    _createPredicator(expression, matchAny) {
+        return function (item) {
             if (isobject(expression)) {
                 for (var key in expression) {
                     var expectedValue = expression[key];
@@ -49,6 +52,6 @@ export function FilterPipe() {
 
                 return true;
             }
-        }
+        };
     }
 }

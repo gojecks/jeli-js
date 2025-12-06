@@ -91,16 +91,19 @@ function AttachComponentContentQuery(elementRef) {
 }
 
 /**
+ * 
+ * @param {*} hostElement 
  * @param {*} targetNode 
  * @param {*} insertNode 
  * @returns 
  */
 function elementBefore(targetNode, insertNode) {
     if (!targetNode || !targetNode.parentNode) return;
-    if (targetNode.before)
+    if (targetNode.before){
         targetNode.before(insertNode)
-    else
+    } else {
         targetNode.parentNode.insertBefore(insertNode, targetNode);
+    }
 }
 
 
@@ -147,7 +150,7 @@ function removeElement(elementRef, removeFromParent) {
         }
 
         if (removeFromParent && elementRef.parent) {
-            elementRef.parent.children.remove(elementRef);
+            elementRef.parent.children.remove(elementRef, true);
         }
 
         cleanupElementRef(elementRef);

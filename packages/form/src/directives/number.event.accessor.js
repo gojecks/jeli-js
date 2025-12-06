@@ -1,12 +1,11 @@
 import { VALUE_ACCESSOR } from "./abstract.event.accessor";
 import { closureRef, AttributeAppender } from '@jeli/core';
 
-export var ResolveNumberBinder = {
+export const ResolveNumberBinder = {
     name: VALUE_ACCESSOR,
-    reference: closureRef(function() {
-        return NumberEventBinder;
-    })
+    reference: closureRef(() => NumberEventBinder)
 };
+
 Directive({
     selector: 'input:type=number:[model|formField|fieldControl]',
     events: [
@@ -20,10 +19,6 @@ Directive({
     DI: ['ElementRef?']
 })
 
-/**
- * 
- * @param {*} elementRef 
- */
 /**
  *
  * @param {*} elementRef

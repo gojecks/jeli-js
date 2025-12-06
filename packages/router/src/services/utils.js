@@ -310,17 +310,39 @@ export function getParentRoute(name) {
 
 /**
  * 
- * @param {*} urlPath
+ * @param {*} urlPath 
+ * @param {*} deep 
  * @returns 
  */
-function getRouteObj(urlPath) {
+export function getFallback(urlPath, deep){
+    if (deep && urlPath.lastIndexOf('/') > 0){
+        const cPath = [];
+        for(const path of urlPath.split('/').filter(a => !!a)){
+            cPath.push(path);
+            const found = routeCollections[cPath.join('.')];
+            if (found){
+                return found;
+            } 
+        }
+    }
+    
+    return routeCollections[routeConfig.fallback.name] || null;
+}
+
+/**
+ * 
+ * @param {*} urlPath 
+ * @param {*} deep 
+ * @returns 
+ */
+function getRouteObj(urlPath, deep) {    
     for (var prop in routeCollections) {
         if (!routeCollections[prop].abstract && routeCollections[prop].route.regexp.test(urlPath)) {
             return routeCollections[prop];
         }
     }
 
-    return routeCollections[routeConfig.fallback.name] || null;
+    return getFallback(urlPath, deep);
 }
 
 export function parseDelimeter() {
@@ -347,11 +369,12 @@ export function getRoute(routeName, params) {
  * 
  * @param {*} url 
  * @param {*} params 
+ * @param {*} deep 
  * @returns 
  */
-export function getRequiredRoute(url, params) {
+export function getRequiredRoute(url, params, deep = false) {
     var queryParam = url.split("?");
-    var foundRoute = getRouteObj(queryParam[0]);
+    var foundRoute = getRouteObj(queryParam[0], deep);
     if (foundRoute) {
         patchParams(foundRoute, params, queryParam[0]);
         // route contains queryParam

@@ -6,32 +6,34 @@ import { getDays } from '../helpers';
  * @param {*} lastDate 
  * @param {*} date 
  */
-function CalendarObject(firstDay, lastDate, date) {
-    this.monthName = now.flags.MMMM;
-    this.year = now.flags.YYYY
-    this.weekDays = dateTimeDayHalf;
-    this.weeks = [];
-    // declaration and initialization of two variables to help with tables
-    var digit = 1
-    var curCell = 1
+class CalendarObject {
+    constructor(firstDay, lastDate, date) {
+        this.monthName = now.flags.MMMM;
+        this.year = now.flags.YYYY;
+        this.weekDays = dateTimeDayHalf;
+        this.weeks = [];
+        // declaration and initialization of two variables to help with tables
+        var digit = 1;
+        var curCell = 1;
 
-    for (var row = 1; row <= Math.ceil((lastDate + firstDay - 1) / 7); ++row) {
-        var weekDays = [];
-        for (var col = 1; col <= 7; ++col) {
-            if (digit > lastDate) {
-                break
+        for (var row = 1; row <= Math.ceil((lastDate + firstDay - 1) / 7); ++row) {
+            var weekDays = [];
+            for (var col = 1; col <= 7; ++col) {
+                if (digit > lastDate) {
+                    break;
+                }
+
+                if (curCell < firstDay) {
+                    weekDays.push({ date: null, current: false });
+                    curCell++;
+                } else {
+                    weekDays.push({ date: digit, current: (digit == date) });
+                    digit++;
+                }
             }
 
-            if (curCell < firstDay) {
-                weekDays.push({ date: null, current: false });
-                curCell++
-            } else {
-                weekDays.push({ date: digit, current: (digit == date) });
-                digit++
-            }
+            this.weeks.push(weekDays);
         }
-
-        this.weeks.push(weekDays);
     }
 }
 

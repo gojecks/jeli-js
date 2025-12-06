@@ -3,7 +3,7 @@ import { errorBuilder } from '../utils/errorLogger';
 import { CustomEventHandler } from './custom.event.handler';
 import { ProxyEvent } from './event.proxy';
 
-var customEventRegistry = new Map([
+const customEventRegistry = new Map([
     ['window', new CustomEventHandler(window)],
     ['document', new CustomEventHandler(document)],
     ['body', new CustomEventHandler(document.body)]
@@ -26,8 +26,8 @@ export class EventHandler {
 
     static registerListener(element) {
         if (!element.events || !element.events._events.length) return;
-        var eventInstance = element.events;
-        var handler = function ($ev) {
+        const eventInstance = element.events;
+        const handler = function ($ev) {
             EventHandler.handleEvent(element, $ev);
         };
 
@@ -42,16 +42,20 @@ export class EventHandler {
                  * events that goes with a . e.g (window.message)
                  */
                 if (eventName.includes('.')) {
-                    var event = eventName.split('.');
-                    var customRegistry = customEventRegistry.get(event.shift());
-                    if (customRegistry) {
+                    const event = eventName.split('.');
+                    const customRegistry = customEventRegistry.get(event.shift());
+                    const _customRegistryHandler = evName => {
+                        evName = evName.replace(/[_]/gi, '-');
                         eventInstance.registeredEvents.set(
                             eventName, 
-                            customRegistry.register(event.pop(), htmlEvent => {
+                            customRegistry.register(evName, htmlEvent => {
                                 EventHandler.handleEvent(element, htmlEvent, eventName);
                             })
                         );
-                        customRegistry = null;
+                    };
+
+                    if (customRegistry) {
+                        event.pop().split(',').forEach(_customRegistryHandler);                        
                     }
                 } else {
                     element.nativeElement.addEventListener(eventName, handler, useCapture);

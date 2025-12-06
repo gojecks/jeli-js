@@ -44,7 +44,7 @@ export class LocationService {
          * if slave function calls preventDefault
          * Master FN is not triggered
          */
-        this.events = new EventManager((e, route, path) => {
+        this.events = new EventManager((e, route, path, initial) => {
             if (ROUTE_EVENT_ENUMS.RENDER === e.type) {
                 var parentRoute = null;
                 if (route.parent && !this.viewHandler.isResolved(route.parent, true)) {
@@ -54,6 +54,17 @@ export class LocationService {
                 // process module loading
                 this.viewHandler._loadModule((parentRoute ? parentRoute.loadModule : route.loadModule))
                     .then(rootElement => {
+                        if (initial && initial !== path){
+                            const reroute = getRequiredRoute(initial, null, true);
+                            if (reroute.name !== route.name){
+                                return this.go({ 
+                                    route: reroute, 
+                                    url: initial, 
+                                    initial
+                                });
+                            }
+                        }
+                       
                         this._processState(route, path, rootElement);
                     }).catch(err => this.events.dispatch(ROUTE_EVENT_ENUMS.LME, err));
             }
@@ -142,7 +153,7 @@ export class LocationService {
             InterceptorResolver(ROUTE_INTERCEPTOR, routeInstance)
                 .then(() => {
                     if (!this.transitionState.stopped && !transitioned()) {
-                        this.events.dispatch(ROUTE_EVENT_ENUMS.RENDER, routeObj.route, path);
+                        this.events.dispatch(ROUTE_EVENT_ENUMS.RENDER, routeObj.route, path, routeObj.initial);
                     } else if(!this.transitionState.transitioned){
                         Object.assign(this.transitionState, {
                             inProgress: false,
@@ -286,8 +297,11 @@ export class LocationService {
     byUrl(url, params) {
         url = url || routeConfig.fallback.url;
         var route = getRequiredRoute(url, params);
-        // check url if matches
-        this.go({ route, url: (route && route.fallback) ? route.url : url });
+        this.go({ 
+            route, 
+            url: (route && route.fallback) ? route.url : url, 
+            initial: routeConfig.isLoaded ? null : url 
+        });
     }
 
     byName(name, params) {

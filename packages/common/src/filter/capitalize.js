@@ -1,10 +1,11 @@
 Service({
     name: 'capitalize'
 })
-export function capitalizeFilter() {
-    this.compile = function(value) {
+export class capitalizeFilter {
+    constructor() {}
+    compile(value) {
         if (!value) return '';
         if (typeof value !== 'string') return value;
-        return value.charAt(0).toUpperCase() + value.slice(1);
-    };
+        return `${value.charAt(0).toUpperCase()}${value.slice(1).toLowerCase()}`;
+    }
 }

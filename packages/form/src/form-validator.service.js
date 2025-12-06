@@ -3,36 +3,29 @@ import { isobject, isfunction, isequal } from '@jeli/helpers';
 import { extend } from '@jeli/helpers/utils';
 import { FormValidationStack } from './validator.stack';
 
-/**
- * 
- * @param {*} callback 
- * @param {*} validators 
- * @returns 
- */
-export function FormValidatorService(callback, validators, isDeep) {
-    var currentProcess = new CurrentInstance(callback, isDeep);
-    var validatorPaths =  [];
-
-    function flatten (field, record, paths) {
-        if (isobject(record)){
-            paths.push(field);
-            var _reqStacks = Object.keys(record);
-            if(!FormValidationStack[_reqStacks[0].toUpperCase()] && !isfunction(record[_reqStacks[0]])){
-                _reqStacks.forEach(field => flatten(field, record[field], paths.slice()))
-            } else {
-                validatorPaths.push([paths, record]);
-            }
-        }
-    }
-
+class ValidatorHelper {
     /**
      * 
+     * @param {*} validatorPaths 
      * @param {*} vRecords 
+     * @param {*} currentProcess 
      * @returns 
      */
-    function flattenValdators(vRecords){
+    static flattenValdators(validatorPaths, vRecords, currentProcess){
+        const flatten = (field, record, paths) => {
+            if (isobject(record)){
+                paths.push(field);
+                const _reqStacks = Object.keys(record);
+                if(!FormValidationStack[_reqStacks[0].toUpperCase()] && !isfunction(record[_reqStacks[0]])){
+                    _reqStacks.forEach(field => flatten(field, record[field], paths.slice()))
+                } else {
+                    validatorPaths.push([paths, record]);
+                }
+            }
+        };
+
         if (vRecords) {
-            var keys = Object.keys(vRecords);
+            const keys = Object.keys(vRecords);
             if (keys.length) {
                 if (!!FormValidationStack[keys[0].toUpperCase()] || isfunction(vRecords[keys[0]])) return;
                 keys.forEach(field => flatten(field, vRecords[field], []));
@@ -45,11 +38,21 @@ export function FormValidatorService(callback, validators, isDeep) {
      * 
      * @param {*} validatorsObj 
      */
-    function _throwErrorIfNoValidators(validatorsObj) {
+    static throwErrorIfNoValidators(validatorsObj) {
         if (!isobject(validatorsObj)) {
             throw new Error('Validators are required in order to perform validations');
         }
     }
+}
+/**
+ * 
+ * @param {*} callback 
+ * @param {*} validators 
+ * @returns 
+ */
+export function FormValidatorService(callback, validators, isDeep) {
+    const currentProcess = new CurrentInstance(callback, isDeep);
+    const validatorPaths =  [];
 
     /**
      * 
@@ -57,13 +60,13 @@ export function FormValidatorService(callback, validators, isDeep) {
      */
     function _formFieldValidator(value, criteria, fieldName) {
         //iterate through the criteria
-        var criteriaKeys = Object.keys(criteria);
+        const criteriaKeys = Object.keys(criteria);
         currentProcess.add(criteriaKeys.length);
         for (var i = 0; i < criteriaKeys.length; i++) {
-            var validatorName = criteriaKeys[i];
-            var passed = false;
-            var validatorFn = FormValidationStack[validatorName.toUpperCase()];
-            var isAsync = isequal('async', validatorName);
+            const validatorName = criteriaKeys[i];
+            let passed = false;
+            const validatorFn = FormValidationStack[validatorName.toUpperCase()];
+            const isAsync = isequal('async', validatorName);
             if (validatorFn) {
                 passed = validatorFn(value, criteria[validatorName]);
             }
@@ -93,18 +96,6 @@ export function FormValidatorService(callback, validators, isDeep) {
         return false;
     }
 
-    /**
-     * 
-     * @param {*} formValues 
-     */
-    function _formControlValidator(formValues) {
-        for(var path of validatorPaths){
-            if(_formFieldValidator(getValueByPath(formValues, path[0]), path[1], path[0].join('.'))){
-                break
-            }
-        }
-    }
-
    /**
     * 
     * @param {*} formValue 
@@ -112,15 +103,18 @@ export function FormValidatorService(callback, validators, isDeep) {
     * @returns 
     */
     function formValidator(formValue) {
-        if (!validators) {
-            return callback(null);
-        }
+        if (!validators) return callback(null);
 
-        _throwErrorIfNoValidators(validators);
+        ValidatorHelper.throwErrorIfNoValidators(validators);
         if (!currentProcess.isDeep)
             _formFieldValidator(formValue, validators);
-        else 
-            _formControlValidator(formValue);
+        else {
+            for(const path of validatorPaths){
+                if(_formFieldValidator(getValueByPath(formValue, path[0]), path[1], path[0].join('.'))){
+                    break
+                }
+            }
+        }
     }
 
     /**
@@ -128,18 +122,18 @@ export function FormValidatorService(callback, validators, isDeep) {
      * @param {*} newValidators 
      * @param {*} isDeep 
      */
-    formValidator.addValidators = function(newValidators) {
-        _throwErrorIfNoValidators(newValidators);
+    formValidator.addValidators = (newValidators) => {
+        ValidatorHelper.throwErrorIfNoValidators(newValidators);
         if (!validators) {
             validators = newValidators;
         } else {
             validators = extend(true, validators, newValidators);
         }
 
-        flattenValdators(newValidators);
+        ValidatorHelper.flattenValdators(validatorPaths, newValidators, currentProcess);
     };
 
-    flattenValdators(validators);
+    ValidatorHelper.flattenValdators(validatorPaths, validators, currentProcess);
 
     return formValidator;
 }
