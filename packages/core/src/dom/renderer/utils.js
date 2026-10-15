@@ -4,6 +4,28 @@ import { QueryList } from '../queryList';
 import { TemplateRef } from './templateref';
 
 var isAllowedArrayType = ['style'];
+// tags a createLocalVariables scope object, vs. componentInstance (never tagged) - see catalogue [[jeli-js]] "*for row click-assignment"
+// exported so resolveIdentifier can tell a real local scope (own-properties-only, walk SCOPE_PARENT)
+// apart from an arbitrary resolved value (e.g. a namespace segment) which needs normal `in` semantics
+export var LOCAL_SCOPE_TAG = Symbol('localVariablesScope');
+// explicit ref from a nested *for/*if row's context to its parent row's context (not a copy) - walked by resolveIdentifier and by jeli-cli's compiled [core.SCOPE_PARENT] hops
+export var SCOPE_PARENT = Symbol('localVariablesScopeParent');
+/**
+ * Tags that must be created in the SVG namespace - document.createElement()
+ * produces an inert HTMLUnknownElement for these (no rendering, no SVG DOM
+ * interface), so they need createElementNS instead.
+ */
+var SVG_NS = 'http://www.w3.org/2000/svg';
+var svgTags = new Set([
+    'svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon',
+    'text', 'tspan', 'textpath', 'defs', 'marker', 'symbol', 'use', 'image',
+    'clippath', 'mask', 'pattern', 'lineargradient', 'radialgradient', 'stop',
+    'foreignobject', 'switch', 'view', 'desc', 'title', 'metadata', 'filter'
+]);
+
+function isSvgTag(tag) {
+    return typeof tag === 'string' && svgTags.has(tag.toLowerCase());
+}
 /**
  * 
  * @param {*} nativeElement 
@@ -90,12 +112,21 @@ function AttachComponentContentQuery(elementRef) {
     }
 }
 
+// unwraps a DocumentFragment-shaped row (e.g. a bare <j-fragment>'s compiled '#' holder) to its real last child, recursively - a detached fragment's .parentNode is always null and can't anchor an insertion
+function resolveAnchorNode(elementRef) {
+    var node = elementRef && (elementRef.nativeElement || elementRef.nativeNode);
+    if (node && node.nodeType === 11 && elementRef.children && elementRef.children.last) {
+        return resolveAnchorNode(elementRef.children.last);
+    }
+    return node;
+}
+
 /**
- * 
- * @param {*} hostElement 
- * @param {*} targetNode 
- * @param {*} insertNode 
- * @returns 
+ *
+ * @param {*} hostElement
+ * @param {*} targetNode
+ * @param {*} insertNode
+ * @returns
  */
 function elementBefore(targetNode, insertNode) {
     if (!targetNode || !targetNode.parentNode) return;
@@ -189,7 +220,7 @@ function createElementByType(tag, text, fromDOM) {
         case ('#'):
             return document.createDocumentFragment();
         default:
-            return document.createElement(tag);
+            return isSvgTag(tag) ? document.createElementNS(SVG_NS, tag) : document.createElement(tag);
     }
 }
 
@@ -200,7 +231,7 @@ function createElementByType(tag, text, fromDOM) {
  */
 export function ObserveUntilDestroyed(elementRef, eventListener) {
     if (elementRef.hostRef) {
-        var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, eventListener.next);
+        var unsubscribe = SubscribeObservables(elementRef.hostRef.componentRef, eventListener.next);
         attachElementObserver(elementRef, function () {
             unsubscribe();
             eventListener.done(true);
@@ -209,19 +240,9 @@ export function ObserveUntilDestroyed(elementRef, eventListener) {
 }
 
 
-/**
- * 
- * @param {*} refId 
- * @param {*} fn 
- */
-function SubscribeObservables(refId, fn) {
-    var componentRef = componentDebugContext.get(refId);
-    var unsubscribe = null;
-    if (componentRef) {
-        unsubscribe = componentRef.observables.subscribe(fn);
-    }
-
-    return unsubscribe;
+// checks `.observables` (nulled by destroy()), not just componentRef's own liveness
+function SubscribeObservables(componentRef, fn) {
+    return (componentRef && componentRef.observables) ? componentRef.observables.subscribe(fn) : null;
 }
 
 /**
@@ -230,13 +251,23 @@ function SubscribeObservables(refId, fn) {
  */
 function textNodeCompiler(textNodeRef) {
     function setValue() {
-        var value = compileTemplate(textNodeRef.ast, textNodeRef.parent.context, textNodeRef.parent.componentInstance);
+        /**
+         * compiledBindings codegen (jeli-cli) emits a real function at
+         * ast[1] instead of the interpreted `[placeholder, filterModel]`
+         * pair list - call it directly instead of walking the AST
+         * interpreter. Falls through to the interpreter unchanged for
+         * every existing/uncompiled bundle (backward compatible, no
+         * version marker needed).
+         */
+        var value = typeof textNodeRef.ast[1] === 'function' ?
+            textNodeRef.ast[1](textNodeRef.parent.context, textNodeRef.parent.componentInstance) :
+            compileTemplate(textNodeRef.ast, textNodeRef.parent.context, textNodeRef.parent.componentInstance);
         if (textNodeRef.nativeNode.nodeValue === value) return;
         textNodeRef.nativeNode.nodeValue = value;
     }
 
-    if (!textNodeRef.ast.once && textNodeRef.parent && textNodeRef.parent.hostRef) {
-        attachElementObserver(textNodeRef.parent, SubscribeObservables(textNodeRef.parent.hostRef.refId, setValue));
+    if (!textNodeRef.ast[2] && textNodeRef.parent && textNodeRef.parent.hostRef) {
+        attachElementObserver(textNodeRef.parent, SubscribeObservables(textNodeRef.parent.hostRef.componentRef, setValue));
     };
 
     setValue();
@@ -276,8 +307,9 @@ function cleanupElementRef(elementRef) {
 export function setupAttributeObservers(element, attrObservers) {
     var observerStarted = false;
     var observerKeys = Object.keys(attrObservers);
-    var unsubscribe = SubscribeObservables(element.hostRef.refId, observe);
+    var unsubscribe = SubscribeObservables(element.hostRef.componentRef, observe);
     attachElementObserver(element, unsubscribe);
+    element._observeAttrs = observe;
 
     function observe() {
         for (var propName of observerKeys) {
@@ -288,10 +320,20 @@ export function setupAttributeObservers(element, attrObservers) {
             if (isAllowedArrayType.includes(propName) && Array.isArray(attrObservers[propName])) {
                 var objectValues = attrObservers[propName].reduce((accum, item) => {
                     if (item.once && observerStarted) return accum;
-                    var value = compileTemplate(item, element.context, element.componentInstance);
+                    /**
+                     * compiledBindings: each style-array item is the same
+                     * filterModel shape attributeEvaluator handles below -
+                     * .compiledFn sits alongside .prop/.type/.suffix, so
+                     * this dual-path swap doesn't touch how .type/.suffix
+                     * reach ElementStyle.fixValue just below.
+                     */
+                    var value = typeof item.compiledFn === 'function' ?
+                        item.compiledFn(element.context, element.componentInstance) :
+                        compileTemplate(item, element.context, element.componentInstance);
                     if (value) {
                         if (!accum) accum = {};
-                        Object.assign(accum, (isobject(value) ? value : { [item.type]: ElementStyle.fixValue(value, item.suffix) }));
+                        // fixValue(value, name, suffix): name is the CSS prop (item.type), not item.suffix
+                        Object.assign(accum, (isobject(value) ? value : { [item.type]: ElementStyle.fixValue(value, item.type, item.suffix) }));
                     }
                     return accum;
                 }, null);
@@ -304,12 +346,22 @@ export function setupAttributeObservers(element, attrObservers) {
         }
 
         /**
-         * 
-         * @param {*} propName 
-         * @param {*} template 
+         *
+         * @param {*} propName
+         * @param {*} template
          */
         function attributeEvaluator(propName, template) {
-            var value = compileTemplate(template, element.context, element.componentInstance);
+            /**
+             * compiledBindings: template is either the filterModel object
+             * shape (native attr / component-prop bindings - carries
+             * .compiledFn) or, for a plain attribute with an embedded
+             * ${} placeholder (e.g. class="btn-${state}"), the same
+             * array shape text nodes use (compiled function at index 1).
+             */
+            var compiledFn = Array.isArray(template) ? template[1] : template.compiledFn;
+            var value = typeof compiledFn === 'function' ?
+                compiledFn(element.context, element.componentInstance) :
+                compileTemplate(template, element.context, element.componentInstance);
             AttributeAppender.setProp(element.nativeElement, propName, value, template);
         }
 
@@ -318,14 +370,21 @@ export function setupAttributeObservers(element, attrObservers) {
 }
 
 /**
- * 
- * @param {*} localVariables 
+ * @param {*} localVariables
  */
 export function createLocalVariables(localVariables, localContext, parentContext) {
+    // never Object.create(parentContext) - no link to componentInstance; nested reads use the explicit SCOPE_PARENT ref below. See catalogue [[jeli-js]] "*for row click-assignment"
     var context = {};
+    if (parentContext && parentContext[LOCAL_SCOPE_TAG]) {
+        context[SCOPE_PARENT] = parentContext;
+    }
+    context[LOCAL_SCOPE_TAG] = true;
+
     if (localVariables) {
         for (var propName in localVariables) {
-            if (localVariables[propName] && typeof localVariables[propName] == 'string' && localVariables[propName].match(/\s/)) {
+            if (typeof localVariables[propName] === 'function') {
+                writeCompiledPropertyBinding(propName);
+            } else if (localVariables[propName] && typeof localVariables[propName] == 'string' && localVariables[propName].match(/\s/)) {
                 context[propName] = localVariables[propName];
             } else {
                 writePropertyBinding(propName);
@@ -334,14 +393,31 @@ export function createLocalVariables(localVariables, localContext, parentContext
     }
 
     /**
-     * 
-     * @param {*} propName 
+     *
+     * @param {*} propName
      */
     function writePropertyBinding(propName) {
         Object.defineProperty(context, propName, {
             get: function () {
                 if (!localContext) return null;
                 return evaluateExpression(localVariables[propName], localContext, parentContext);
+            }
+        });
+    }
+
+    /**
+     * compiledBindings: <j-place>/static <j-fragment> `context="{...}"`
+     * bindings compile per-key instead of the whole object - same lazy-
+     * getter contract as writePropertyBinding above (re-invoked on every
+     * read, not cached at creation time, since this context object
+     * persists and gets re-read across multiple change-detection ticks).
+     * @param {*} propName
+     */
+    function writeCompiledPropertyBinding(propName) {
+        Object.defineProperty(context, propName, {
+            get: function () {
+                if (!localContext) return null;
+                return localVariables[propName](localContext, parentContext);
             }
         });
     }
@@ -360,8 +436,8 @@ export function getElementContext(targetContext, targetElement) {
     if (targetContext.locaVariables) {
         return targetContext.locaVariables;
     }
-    var componentRef = ComponentRef.get(targetContext.refId, targetContext.parentRefId);
-    return componentRef.context;
+    var componentRef = targetContext.componentRef || (targetContext.hostRef && targetContext.hostRef.componentRef);
+    return componentRef && componentRef.context;
 }
 
 /**
@@ -381,7 +457,7 @@ export var DOMHelper = {
      * @returns 
      */
     createElement: function (tag, attributes, content, parent, replaceParentContent) {
-        var ele = document.createElement(tag);
+        var ele = isSvgTag(tag) ? document.createElementNS(SVG_NS, tag) : document.createElement(tag);
         AttributeAppender.set(ele, attributes || {});
         if (content) {
             if (typeof content == 'function') {

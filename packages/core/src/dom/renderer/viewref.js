@@ -2,26 +2,23 @@ import { scheduler } from '../../utils/scheduler';
 import { removeFromArray, addToArray, moveItemInArray } from '@jeli/helpers';
 
 /**
- * 
- * @param {*} elementRef 
- */
-/**
  *
  * @param {*} elementRef
  */
-export class ViewRef extends Array {
+// composition, not `extends Array` - same reasoning as QueryList
+export class ViewRef {
     _destroyed = false
     constructor(elementRef) {
-        super();
+        this._views = [];
         /**
          * @param {*} templateRef
          * @param {*} context
          * @param {*} index
          */
-        this.createEmbededView = function (templateRef, context, index) {
+        this.createEmbededView = (templateRef, context, index) => {
             const view = new EmbededViewContext(elementRef, templateRef, context);
             view.renderView(index);
-            addToArray(this, view, index);
+            addToArray(this._views, view, index);
             /**
              * ViewRef Object
              */
@@ -29,8 +26,12 @@ export class ViewRef extends Array {
         };
     }
 
+    get length() {
+        return this._views.length;
+    }
+
     get(index) {
-        return this[index];
+        return this._views[index];
     }
     /**
      *
@@ -50,14 +51,14 @@ export class ViewRef extends Array {
                     elementBefore(targetNode.compiledElement.nativeElement, view.compiledElement.nativeElement);
                 }
 
-                moveItemInArray(this, prev, curr);
+                moveItemInArray(this._views, prev, curr);
                 this.updateContext();
             }
         });
     }
 
     remove(index) {
-        const view = removeFromArray(this, index);
+        const view = removeFromArray(this._views, index);
         if (view) {
             view._destroyed_view = true;
             view.destroy();
@@ -67,29 +68,27 @@ export class ViewRef extends Array {
      * destroy the child view
      */
     clearView() {
-        while (this.length) {
-            const view = this.shift();
+        while (this._views.length) {
+            const view = this._views.shift();
             view.destroy();
         }
     }
     updateContext() {
-        for (var i = 0; i < this.length; i++) {
+        for (var i = 0; i < this._views.length; i++) {
             const view = this.get(i);
             view.updateContext({
                 index: i,
-                count: this.length
+                count: this._views.length
             });
         }
     }
 }
 
-
 /**
- * 
- * @param {*} parentRef 
- * @param {*} templateRef 
- * @param {*} context 
- * @param {*} index 
+ *
+ * @param {*} parentRef
+ * @param {*} templateRef
+ * @param {*} context
  */
 class EmbededViewContext {
     unsubscribeScheduler = null;
@@ -101,12 +100,17 @@ class EmbededViewContext {
         this.compiledElement = templateRef.createElement(parentRef, null, componentRefContext);
 
         if (this.compiledElement) {
-            this.compiledElement.hasContext = !!templateContext;
             /**
              * create the Viewcontext if templateRef has a context
              */
-            if (this.compiledElement.hasContext) {
+            if (templateContext) {
+                this.compiledElement.hasContext = true;
                 this.compiledElement.context = componentRefContext;
+            } else if (!context && parentRef.hasContext) {
+                this.compiledElement.hasContext = true;
+                this.compiledElement.context = parentRef.context;
+            } else {
+                this.compiledElement.hasContext = false;
             }
         }
     }
@@ -117,10 +121,10 @@ class EmbededViewContext {
      */
     renderView(index) {
         if (!this.compiledElement) return;
-        let targetNode = (this.parentRef.children.last || this.parentRef).nativeElement;
+        let targetNode = resolveAnchorNode(this.parentRef.children.last || this.parentRef);
         var _arrIndex = (index ? (index - 1) : index);
         if (index !== undefined && this.parentRef.children.hasIndex(_arrIndex))
-            targetNode = this.parentRef.children.getByIndex(_arrIndex).nativeElement;
+            targetNode = resolveAnchorNode(this.parentRef.children.getByIndex(_arrIndex));
 
         // force return if compiledElement is destroyed
         if(!targetNode) return;
@@ -128,18 +132,16 @@ class EmbededViewContext {
          * view render scheduler
          */
         const nativeElement = this.compiledElement.nativeElement || this.compiledElement.nativeNode;
-        const changeDetector = this.compiledElement && this.compiledElement.changeDetector;
         this.parentRef.children.add(this.compiledElement, index);
         /**
          * register our scheduler
          */
         this.unsubscribeScheduler = scheduler.schedule(() => {
             try {
+                // transverse() already populates this view's own bindings synchronously - no changeDetector call needed here (was O(n^2) across a *for batch)
                 transverse(this.compiledElement);
                 if (index)  elementInsertAfter(this.parentRef, nativeElement, targetNode, true);
                 else elementBefore(targetNode, nativeElement);
-                
-                if (changeDetector) changeDetector.detectChanges();
                 targetNode = null;
             } catch (e) { }
             finally {
@@ -169,4 +171,3 @@ class EmbededViewContext {
         }
     }
 }
-

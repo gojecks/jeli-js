@@ -9,7 +9,10 @@ export class HashStrategyService extends AbstractStrategy {
         var state = this.locationService.getState();
         this.isReplaceState = true;
         if ((state.hash !== state.previousHash) || stateChanged) {
-            location.replace(state.hash);
+            // server render: no real browser location to navigate
+            if (!this.locationService.locationContext) {
+                location.replace(state.hash);
+            }
             this.originalState = state.currentLocation;
         }
     }
@@ -17,7 +20,8 @@ export class HashStrategyService extends AbstractStrategy {
         //construct location path
         if (path) return routeConfig.delimiter.join(path);
         // extract path from location
-        var execPath = this.hashRegEx.exec(location.hash);
+        var hash = this.locationService.locationContext ? (this.locationService.locationContext.hash || '') : location.hash;
+        var execPath = this.hashRegEx.exec(hash);
         return execPath ? execPath[1] : '';
     }
 

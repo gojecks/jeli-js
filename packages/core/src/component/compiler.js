@@ -18,7 +18,7 @@ export class ElementCompiler {
          * @param {*} componentInstance 
          */
         function ConnectView(componentInstance) {
-            const componentRef = ComponentRef.get(elementRef.refId);
+            const componentRef = elementRef.componentRef;
             componentRef.componentInstance = componentInstance;
 
             if (factory.view) {
@@ -31,14 +31,10 @@ export class ElementCompiler {
                         lifeCycle.trigger(LifeCycle.lifeCycleConst.viewDidLoad);
                     };
 
-                    // attach mutationObserver
+                    // renderedElement is already fully built by this point - no need to wait on a MutationObserver, same as the shadow-DOM branch below
                     if (!asNative) {
-                        elementMutationObserver(elementRef.nativeElement, (mutationList, observer) => {
-                            triggerAndBindCQ();
-                            observer.disconnect();
-                        });
-
                         elementRef.nativeElement.appendChild(renderedElement);
+                        triggerAndBindCQ();
                     } else {
                         // attach shadow dom
                         // also append styles to shadow dom

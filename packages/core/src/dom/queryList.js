@@ -1,17 +1,18 @@
 import { Subject } from '../rx/subject';
 import { removeFromArray, addToArray } from '@jeli/helpers';
 
-export class QueryList extends Array {
+// composition, not `extends Array` - keeps add/remove/replace as the only way to mutate, so onChanges never gets bypassed
+export class QueryList {
     constructor() {
-        super();
+        this._items = [];
         this.onChanges = new Subject();
     }
 
     static from(iterable) {
         if (!Array.isArray(iterable)) throw new Error(typeof iterable + ' ' + iterable + ' is not iterable');
-        const instance = new QueryList(iterable);
-        // push all values
-        iterable.forEach(it => instance.push(it));
+        const instance = new QueryList();
+        // explicit index - add(it) with no index would insert at 0 every time, reversing order
+        iterable.forEach(it => instance.add(it, instance.length));
         return instance;
     }
 
@@ -19,16 +20,20 @@ export class QueryList extends Array {
         return instance instanceof QueryList;
     }
 
-    get first() {
-        return this[0];
+    get length() {
+        return this._items.length;
     }
 
-    get last(){
-        return this[this.length - 1];
+    get first() {
+        return this._items[0];
+    }
+
+    get last() {
+        return this._items[this._items.length - 1];
     }
 
     add(element, index, emitEvent) {
-        addToArray(this, element, index);
+        addToArray(this._items, element, index);
         if (emitEvent) {
             this.onChanges.next({
                 value: element,
@@ -39,9 +44,9 @@ export class QueryList extends Array {
     }
 
     replace(from, to, emitEvent) {
-        const index = this.indexOf(from);
+        const index = this._items.indexOf(from);
         if (index > -1) {
-            this[index] = to;
+            this._items[index] = to;
         }
 
         if (emitEvent) {
@@ -55,33 +60,33 @@ export class QueryList extends Array {
 
     get(element) {
         if (element) {
-            return this.find(ele => (ele === element));
+            return this._items.find(ele => (ele === element));
         }
 
-        return this;
+        return this._items;
     }
     getByIndex(index) {
-        return this[index];
+        return this._items[index];
     }
     destroy() {
-        while (this.length) {
-            const element = this.pop();
+        while (this._items.length) {
+            const element = this._items.pop();
             if (element) removeElement(element);
         }
         this.onChanges.destroy();
     }
     /**
-     * 
-     * @param {*} element 
-     * @param {*} deep 
-     * @returns 
+     *
+     * @param {*} element
+     * @param {*} deep
+     * @returns
      */
     remove(element, deep = false) {
-        let index = this.indexOf(element);
-        if (0 > index && deep && this.length){
-            for(let i=0; i<this.length; i++){
-                if (!this[i].children) continue;
-                const remChild = this[i].children.remove(element);
+        let index = this._items.indexOf(element);
+        if (0 > index && deep && this._items.length){
+            for(let i=0; i<this._items.length; i++){
+                if (!this._items[i].children) continue;
+                const remChild = this._items[i].children.remove(element);
                 if (remChild) return remChild;
             }
         }
@@ -89,11 +94,11 @@ export class QueryList extends Array {
         return this.removeByIndex(index);
     }
     hasIndex(index) {
-        return this.length - 1 > index;
+        return this._items.length - 1 > index;
     }
     removeByIndex(index) {
         if (0 > index) return null;
-        const element = removeFromArray(this, index);
+        const element = removeFromArray(this._items, index);
         this.onChanges.next({
             value: element,
             index: index,
@@ -101,5 +106,37 @@ export class QueryList extends Array {
         });
 
         return element;
+    }
+
+    // read/iteration surface - deliberately no push/pop/splice/sort/etc, see class comment
+    forEach(fn, thisArg) {
+        this._items.forEach(fn, thisArg);
+    }
+    map(fn, thisArg) {
+        return this._items.map(fn, thisArg);
+    }
+    filter(fn, thisArg) {
+        return this._items.filter(fn, thisArg);
+    }
+    find(fn, thisArg) {
+        return this._items.find(fn, thisArg);
+    }
+    some(fn, thisArg) {
+        return this._items.some(fn, thisArg);
+    }
+    every(fn, thisArg) {
+        return this._items.every(fn, thisArg);
+    }
+    indexOf(element) {
+        return this._items.indexOf(element);
+    }
+    includes(element) {
+        return this._items.includes(element);
+    }
+    toArray() {
+        return this._items.slice();
+    }
+    [Symbol.iterator]() {
+        return this._items[Symbol.iterator]();
     }
 }

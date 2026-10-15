@@ -8,9 +8,13 @@ export var csrfCookieConfig = {
 Service({
     DI: [HttpCookieManager]
 })
-export function CSRFCookieHeaderService(cookieManager) {
-    this.resolve = function(httpRequest, next) {
-        var cookie = cookieManager.get(csrfCookieConfig.cookieName);
+export class CSRFCookieHeaderService {
+    constructor(cookieManager) {
+        this.cookieManager = cookieManager;
+    }
+
+    resolve(httpRequest, next) {
+        var cookie = this.cookieManager.get(csrfCookieConfig.cookieName);
         if (cookie) {
             var tokenHeader = {};
             tokenHeader[csrfCookieConfig.headerName] = cookie;

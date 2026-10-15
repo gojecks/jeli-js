@@ -1,4 +1,4 @@
-import { inarray } from '@jeli/helpers';
+import { inarray, isequal } from '@jeli/helpers';
 import { errorBuilder } from '../utils/errorLogger';
 import { CustomEventHandler } from './custom.event.handler';
 import { ProxyEvent } from './event.proxy';
@@ -66,7 +66,7 @@ export class EventHandler {
             }
         }
 
-        for (var event of eventInstance._events) {
+        for (const event of eventInstance._events) {
             if (!event.custom) {
                 event.name.split(' ').forEach(eventName => _registerEvent(eventName, !!event.target));
             }
@@ -79,19 +79,24 @@ export class EventHandler {
      * @param {*} componentInstance
      */
     static attachEventEmitter(element, eventName, componentInstance) {
-        var registeredEvent = getEventsByType(element.events._events, eventName)[0];
-        if (registeredEvent && registeredEvent.value) {
-            var unSubscribe = componentInstance[eventName].subscribe(function (value) {
+        const registeredEvent = getEventsByType(element.events._events, eventName)[0];
+        if (registeredEvent && (registeredEvent.value || registeredEvent.compiledFn)) {
+            const unSubscribe = componentInstance[eventName].subscribe((value) => {
                 // trigger change detector if defined
                 var parentElement = element && element.parent;
                 if (!parentElement) return;
                 parentElement = (parentElement.isc ? parentElement : parentElement.hostRef);
-                _executeEventsTriggers(
-                    registeredEvent.value,
-                    parentElement.componentInstance,
-                    element.hasContext ? element.context : element.parent.hasContext ? element.parent.context : parentElement.context,
-                    value
-                );
+                const dispatchContext = element.hasContext ? element.context : element.parent.hasContext ? element.parent.context : parentElement.context;
+                if (typeof registeredEvent.compiledFn === 'function') {
+                    registeredEvent.compiledFn(dispatchContext, parentElement.componentInstance, value);
+                } else {
+                    _executeEventsTriggers(
+                        registeredEvent.value,
+                        parentElement.componentInstance,
+                        dispatchContext,
+                        value
+                    );
+                }
 
                 parentElement && parentElement.changeDetector && parentElement.changeDetector.detectChanges();
             });
@@ -108,9 +113,9 @@ export class EventHandler {
      * @param {*} componentInstance
      */
     static attachEventDispatcher(element, eventName, componentInstance) {
-        var registeredEvent = getEventsByType(element.events._events, eventName)[0];
-        var context = null;
-        if (registeredEvent && registeredEvent.value) {
+        const registeredEvent = getEventsByType(element.events._events, eventName)[0];
+        let context = null;
+        if (registeredEvent && (registeredEvent.value || registeredEvent.compiledFn)) {
             context = element.context;
             if (element.isc) {
                 context = element.parent.context;
@@ -122,13 +127,17 @@ export class EventHandler {
              * replace the default handler with dispatcher event handler
              */
             if (context.hasOwnProperty(eventName)) {
-                var unSubscribe = context[eventName].subscribe(function (value) {
-                    _executeEventsTriggers(
-                        registeredEvent.value,
-                        componentInstance,
-                        element.context,
-                        value
-                    );
+                const unSubscribe = context[eventName].subscribe(function (value) {
+                    if (typeof registeredEvent.compiledFn === 'function') {
+                        registeredEvent.compiledFn(element.context, componentInstance, value);
+                    } else {
+                        _executeEventsTriggers(
+                            registeredEvent.value,
+                            componentInstance,
+                            element.context,
+                            value
+                        );
+                    }
                     element && element.changeDetector.detectChanges();
                 });
 
@@ -161,8 +170,8 @@ export class EventHandler {
         }
 
         function getClosest(target) {
-            for (var query of target) {
-                var ele = event.target.closest(query);
+            for (const query of target) {
+                const ele = event.target.closest(query);
                 if (ele) return ele;
             }
 
@@ -175,8 +184,8 @@ export class EventHandler {
          * @param {*} event
          */
         function triggerEvents(registeredEvent) {
-            var _event = null;
-            var context = element.context;
+            let _event = null;
+            let context = element.context;
             if (registeredEvent.handler) {
                 return registeredEvent.handler(event);
             } else if (registeredEvent.target) {
@@ -189,19 +198,21 @@ export class EventHandler {
 
             // get the component instance
             // events set from directives have to getInstance from Map<nodes>
-            var componentInstance = registeredEvent.node ? element.nodes.get(registeredEvent.node) : element.hostRef.componentInstance;
-            _executeEventsTriggers(
-                registeredEvent.value,
-                componentInstance,
-                context,
-                _event || event
-            );
+            const componentInstance = registeredEvent.node ? element.nodes.get(registeredEvent.node) : element.hostRef.componentInstance;
+            // use the compiler-produced fn if present, see catalogue [[jeli-js]] "Compiled event bindings"
+            if (typeof registeredEvent.compiledFn === 'function') {
+                registeredEvent.compiledFn(context, componentInstance, _event || event);
+            } else {
+                _executeEventsTriggers(
+                    registeredEvent.value,
+                    componentInstance,
+                    context,
+                    _event || event
+                );
+            }
 
             // clean proxyEvent
-            context = componentInstance = null;
-            if (_event) {
-                _event.target = _event.preventDefault = null;
-            }
+            context = null;
         }
     }
 
@@ -211,13 +222,6 @@ export class EventHandler {
         this._events.length = 0;
     }
 }
-
-
-
-
-
-
-
 /**
  * static APIs
  */
@@ -241,42 +245,27 @@ function _executeEventsTriggers(eventTriggers, componentInstance, context, ev) {
      * @param {*} event 
      */
     function _dispatch(event) {
-        // check if Operation is set value
+        // check if operation is to set value
         if (event.left) {
             parseObjectExpression(event, context, componentInstance, ev);
         } else if (event.fn) {
-            // set nameSpaces
-            var fn = getFnFromContext(event, componentInstance, context);
-            if (!fn) return errorBuilder('No context found for this event');
+            let instance = componentInstance;
+            if (event.namespaces) {
+                // $event as the call-target root (e.g. $event.stopPropagation(),
+                // $event.target.closest(...)) resolves against the real DOM
+                // event, not componentInstance/context
+                instance = isequal(event.namespaces[0], '$event')
+                    ? resolveContext(event.namespaces.slice(1), ev, componentInstance, true)
+                    : resolveContext(event.namespaces, componentInstance, context);
+            }
 
+            // check FN and array instance
+            if (!instance[event.fn] && !context[event.fn]) return errorBuilder('No context found for this event');
             // Check if Arguments is required
-            var narg = generateArguments(event.args, context, componentInstance, ev);
-            fn.apply(fn.context, narg);
-            fn.context = null;
-            fn = null;
+            const narg = generateArguments(event.args, context, componentInstance, ev);
+            if(instance[event.fn]) instance[event.fn](...narg);
+            else context[event.fn](...narg);
         }
     }
-}
-
-/**
- * 
- * @param {*} eventInstance 
- * @param {*} componentInstance 
- * @param {*} context 
- * @returns 
- */
-function getFnFromContext(eventInstance, componentInstance, context) {
-    var instance = componentInstance;
-    if (eventInstance.namespaces) {
-        instance = resolveContext(eventInstance.namespaces, componentInstance, context);
-    }
-
-    var fn = instance[eventInstance.fn];
-    // check FN and array instace
-    if (!fn) return null;
-
-    fn.context = ((instance instanceof Array || !componentInstance[eventInstance.fn]) ? instance : componentInstance);
-    instance = null;
-    return fn;
 }
 

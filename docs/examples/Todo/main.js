@@ -3,39 +3,46 @@
     /** trigged factory **/ 
     factory(__required);
 }(function(__required) {
-    var core = __required(1143);
-var bootStrapApplication = core.bootStrapApplication;
-var AppModule = __required(1176, 'AppModule');
+    const core = __required(1145);
+const bootStrapApplication = core.bootStrapApplication;
+const AppModule = __required(1179, 'AppModule');
 bootStrapApplication(AppModule);
 }, (function(modules,  self) { 
     'use strict';
-    var OD = Object.defineProperty,
+    const OD = Object.defineProperty,
     dep_name = 'jeli_chunk_loaded',
-    buildArgs = {"buildTime":1734326607440,"version":"1.0.0","baseHref":"","assetURL":"","production":false},
+    buildArgs = {"buildTime":1790832897132,"version":"1.0.0","baseHref":"","assetURL":"","production":false},
     installedModules = {buildArgs},
     pendingLazyLoad = [];
     OD(self, dep_name, {
-        set: function(value) {
-            Object.assign(modules, value || {});
+        set: (value) => {
+            Object.assign(modules, value || {})
         }
     });
 
     function __required(moduleId, property) {
         'use strict';
         if (!installedModules.hasOwnProperty(moduleId)){
-            /** create a new ref **/ 
+            /** create a new ref **/
             installedModules[moduleId] = { exports: true };
             try {
                 modules[moduleId](installedModules[moduleId], installedModules[moduleId], __required, self);
-            } catch (e) {}
+            } catch (e) {
+                delete installedModules[moduleId];
+                throw e;
+            }
+        }
+        
+        if (installedModules[moduleId].exports && installedModules[moduleId].exports.__esModule){
+            return property ? installedModules[moduleId].exports[property] : installedModules[moduleId].exports;
         }
 
         return property ? installedModules[moduleId][property] : installedModules[moduleId];
     }
 
     function loadScript(mid){
-        var scriptElement = document.createElement('script');
-        var path = [buildArgs.assetURL || '', mid, ".js"].join('')
+        const scriptElement = document.createElement('script');
+        const path = [buildArgs.assetURL || '', mid, ".js"].join('')
         scriptElement.src = path;
         scriptElement.type = "module";
         scriptElement.async = true;
@@ -50,74 +57,73 @@ bootStrapApplication(AppModule);
 
     __required.r = function(context, name, value) {
         if (!context.hasOwnProperty(name)) {
-            OD(context, name, {
-                get: value,
-                configurable: false,
-                enumerable: true
-            });
+            context[name] = value;
         }
     };
 
-    __required.l = function(mid) {
-        return new Promise(function(resolve, reject){
-            if (pendingLazyLoad.includes(mid)) return;
-            if (installedModules[mid]) {
-                resolve(installedModules[mid]);
-            } else {
-                pendingLazyLoad.push(mid);
-                var scriptElement = loadScript(mid);
-                scriptElement.onreadystatechange = scriptElement.onload = scriptElement.onerror  = function() {
-                    var state = scriptElement.readyState;
-                    if ((!state || /loaded|complete/.test(state))) {
-                        resolve(__required(mid));
-                        pendingLazyLoad.splice(pendingLazyLoad.indexOf(mid), 1);
-                    }
+    __required.l = (mid) => new Promise((resolve, reject) => {
+        if (pendingLazyLoad.includes(mid)) return;
+        if (installedModules[mid]) {
+            resolve(installedModules[mid]);
+        } else {
+            pendingLazyLoad.push(mid);
+            const scriptElement = loadScript(mid);
+            scriptElement.onreadystatechange = scriptElement.onload = function() {
+                const state = scriptElement.readyState;
+                if ((!state || /loaded|complete/.test(state))) {
+                    resolve(__required(mid));
+                    pendingLazyLoad.splice(pendingLazyLoad.indexOf(mid), 1);
                     scriptElement.parentNode.removeChild(scriptElement);
-                };
-            }
-        });
-    };
+                }
+            };
+            scriptElement.onerror = function() {
+                pendingLazyLoad.splice(pendingLazyLoad.indexOf(mid), 1);
+                scriptElement.parentNode.removeChild(scriptElement);
+                reject(new Error('Failed to load lazy module: ' + mid));
+            };
+        }
+    });
 
     return __required;
-})( /** JELI DEPENDECY HUB **/ {1124 : (module, exports, __required, global) => {
+})( /** JELI DEPENDECY HUB **/ {1126 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str) {
     return typeof str === 'string' && new String(str) instanceof String;
 }
 },
-1125 : (module, exports, __required, global) => {
+1127 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (obj) {
     return Object.prototype.toString.call(obj) === '[object Array]';
 }
 },
-1126 : (module, exports, __required, global) => {
+1128 : (module, exports, __required, global) => {
 "use strict";
-var isarray = __required(1125, 'default');
-var isstring = __required(1124, 'default');
+const isarray = __required(1127, 'default');
+const isstring = __required(1126, 'default');
 exports.default = function (needle, haystack) {
     return (isstring(haystack) || isarray(haystack)) && haystack.indexOf(needle) > -1;
 }
 },
-1127 : (module, exports, __required, global) => {
+1129 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (bool) {
     return Object.prototype.toString.call(bool) === '[object Boolean]';
 }
 },
-1128 : (module, exports, __required, global) => {
+1130 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (val) {
     return typeof val !== 'undefined';
 }
 },
-1129 : (module, exports, __required, global) => {
+1131 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (n) {
     return parseFloat(n) > 0;
 }
 },
-1130 : (module, exports, __required, global) => {
+1132 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (val) {
     if (val && typeof val === 'object') {
@@ -126,14 +132,13 @@ exports.default = function (val) {
     return !val || val === '';
 }
 },
-1131 : (module, exports, __required, global) => {
+1133 : (module, exports, __required, global) => {
 "use strict";
-exports.default = equal;
 function equal(a, b) {
     if (a === b)
         return true;
     if (a && b && typeof a == 'object' && typeof b == 'object') {
-        if (a.constructor !== b.constructor || a !== b)
+        if (a.constructor !== b.constructor)
             return false;
         var length, i, keys;
         if (Array.isArray(a)) {
@@ -169,51 +174,52 @@ function equal(a, b) {
     return a !== a && b !== b;
 }
 ;
+exports.default = equal;
 },
-1132 : (module, exports, __required, global) => {
+1134 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (n) {
     return Number(n) === n && n % 1 !== 0;
 }
 },
-1133 : (module, exports, __required, global) => {
+1135 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (fn) {
     return typeof fn === 'function';
 }
 },
-1134 : (module, exports, __required, global) => {
+1136 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str) {
     return str && typeof str === 'string' && '{['.indexOf(str.charAt(0)) > -1 && '}]'.indexOf(str.charAt(str.length - 1)) > -1;
 }
 },
-1135 : (module, exports, __required, global) => {
+1137 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (val) {
     return null === val;
 }
 },
-1136 : (module, exports, __required, global) => {
+1138 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (n) {
     return Number(n) === n && n % 1 === 0;
 }
 },
-1137 : (module, exports, __required, global) => {
+1139 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (obj) {
     return typeof obj === 'object' && obj instanceof Object && Object.prototype.toString.call(obj) === '[object Object]';
 }
 ;
 },
-1138 : (module, exports, __required, global) => {
+1140 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (val) {
     return typeof val === 'undefined';
 }
 },
-1139 : (module, exports, __required, global) => {
+1141 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (list, item, index) {
     if (index >= list.length) {
@@ -223,7 +229,7 @@ exports.default = function (list, item, index) {
     }
 }
 },
-1140 : (module, exports, __required, global) => {
+1142 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (list, index) {
     if (index >= list.length - 1) {
@@ -233,123 +239,55 @@ exports.default = function (list, index) {
     }
 }
 },
-1141 : (module, exports, __required, global) => {
+1143 : (module, exports, __required, global) => {
 "use strict";
-exports.default = moveItemInArray;
 function moveItemInArray(arr, from, to) {
     if (!(arr instanceof Array))
         return;
     arr.splice(to, 0, arr.splice(from, 1)[0]);
 }
+exports.default = moveItemInArray;
 },
-1142 : (module, exports, __required, global) => {
+1144 : (module, exports, __required, global) => {
 "use strict";
 
-exports.moveItemInArray = __required(1141, 'default');
-exports.removeFromArray = __required(1140, 'default');
-exports.addToArray = __required(1139, 'default');
-exports.isundefined = __required(1138, 'default');
-exports.isstring = __required(1124, 'default');
-exports.isobject = __required(1137, 'default');
-exports.isnumber = __required(1136, 'default');
-exports.isnull = __required(1135, 'default');
-exports.isjsonstring = __required(1134, 'default');
-exports.isfunction = __required(1133, 'default');
-exports.isfloat = __required(1132, 'default');
-exports.isequal = __required(1131, 'default');
-exports.isempty = __required(1130, 'default');
-exports.isdouble = __required(1129, 'default');
-exports.isdefined = __required(1128, 'default');
-exports.isboolean = __required(1127, 'default');
-exports.isarray = __required(1125, 'default');
-exports.inarray = __required(1126, 'default');
+exports.inarray = __required(1128, 'default');
+exports.isarray = __required(1127, 'default');
+exports.isboolean = __required(1129, 'default');
+exports.isdefined = __required(1130, 'default');
+exports.isdouble = __required(1131, 'default');
+exports.isempty = __required(1132, 'default');
+exports.isequal = __required(1133, 'default');
+exports.isfloat = __required(1134, 'default');
+exports.isfunction = __required(1135, 'default');
+exports.isjsonstring = __required(1136, 'default');
+exports.isnull = __required(1137, 'default');
+exports.isnumber = __required(1138, 'default');
+exports.isobject = __required(1139, 'default');
+exports.isstring = __required(1126, 'default');
+exports.isundefined = __required(1140, 'default');
+exports.addToArray = __required(1141, 'default');
+exports.removeFromArray = __required(1142, 'default');
+exports.moveItemInArray = __required(1143, 'default');
 },
-1143 : (module, exports, __required, global) => {
+1145 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'LazyLoader', () => LazyLoader);
-__required.r(exports, 'InterceptorResolver', () => InterceptorResolver);
-__required.r(exports, 'IterableProfiler', () => IterableProfiler);
-__required.r(exports, 'ComponentFactoryResolver', () => ComponentFactoryResolver);
-__required.r(exports, 'MediaQueryEvent', () => MediaQueryEvent);
-__required.r(exports, 'EventDebounce', () => EventDebounce);
-__required.r(exports, 'rxInterval', () => rxInterval);
-__required.r(exports, 'rxTimeout', () => rxTimeout);
-__required.r(exports, 'rxLoop', () => rxLoop);
-__required.r(exports, 'rxEvents', () => rxEvents);
-__required.r(exports, 'rxWait', () => rxWait);
-__required.r(exports, 'rxUntilChanged', () => rxUntilChanged);
-__required.r(exports, 'rxWhile', () => rxWhile);
-__required.r(exports, 'rxDebounceTime', () => rxDebounceTime);
-__required.r(exports, 'debounce', () => debounce);
-__required.r(exports, 'EventManager', () => EventManager);
-__required.r(exports, 'Promise2', () => Promise2);
-__required.r(exports, 'EventEmitter', () => EventEmitter);
-__required.r(exports, 'StateManager', () => StateManager);
-__required.r(exports, 'animate', () => animate);
-__required.r(exports, 'interpolationHelper', () => interpolationHelper);
-__required.r(exports, 'ProxyEvent', () => ProxyEvent);
-__required.r(exports, 'CustomEventHandler', () => CustomEventHandler);
-__required.r(exports, 'TextNodeRef', () => TextNodeRef);
-__required.r(exports, 'ViewRef', () => ViewRef);
-__required.r(exports, 'AbstractObserver', () => AbstractObserver);
-__required.r(exports, 'Observable', () => Observable);
-__required.r(exports, 'Subscription', () => Subscription);
-__required.r(exports, 'SubscriptionStates', () => SubscriptionStates);
-__required.r(exports, 'Subject', () => Subject);
-__required.r(exports, 'QueryList', () => QueryList);
-__required.r(exports, 'ElementClassList', () => ElementClassList);
-__required.r(exports, 'ElementStyle', () => ElementStyle);
-__required.r(exports, 'sce', () => sce);
-__required.r(exports, 'AttributeAppender', () => AttributeAppender);
-__required.r(exports, 'DOMHelper', () => DOMHelper);
-__required.r(exports, 'getElementContext', () => getElementContext);
-__required.r(exports, 'createLocalVariables', () => createLocalVariables);
-__required.r(exports, 'setupAttributeObservers', () => setupAttributeObservers);
-__required.r(exports, 'ObserveUntilDestroyed', () => ObserveUntilDestroyed);
-__required.r(exports, 'elementMutationObserver', () => elementMutationObserver);
-__required.r(exports, 'scheduler', () => scheduler);
-__required.r(exports, 'ViewParser', () => ViewParser);
-__required.r(exports, 'ChangeDetector', () => ChangeDetector);
-__required.r(exports, 'compileModule', () => compileModule);
-__required.r(exports, 'bootStrapApplication', () => bootStrapApplication);
-__required.r(exports, 'APP_ASSET_URL', () => APP_ASSET_URL);
-__required.r(exports, 'APP_BASE_HREF', () => APP_BASE_HREF);
-__required.r(exports, 'APP_BOOTSTRAP', () => APP_BOOTSTRAP);
-__required.r(exports, 'INITIALIZERS', () => INITIALIZERS);
-__required.r(exports, 'ElementRef', () => ElementRef);
-__required.r(exports, 'CompileNativeElement', () => CompileNativeElement);
-__required.r(exports, 'createCustomElement', () => createCustomElement);
-__required.r(exports, 'Observer', () => Observer);
-__required.r(exports, 'staticInjectionToken', () => staticInjectionToken);
-__required.r(exports, 'TemplateRef', () => TemplateRef);
-__required.r(exports, 'elementInputLinker', () => elementInputLinker);
-__required.r(exports, 'LifeCycle', () => LifeCycle);
-__required.r(exports, 'LifeCycleConst', () => LifeCycleConst);
-__required.r(exports, 'noop', () => noop);
-__required.r(exports, 'resolveClosureRef', () => resolveClosureRef);
-__required.r(exports, 'closureRef', () => closureRef);
-__required.r(exports, 'AbstractInjectorInstance', () => AbstractInjectorInstance);
-__required.r(exports, 'wireResolvers', () => wireResolvers);
-__required.r(exports, 'AutoWire', () => AutoWire);
-__required.r(exports, 'Inject', () => Inject);
-__required.r(exports, 'ProviderToken', () => ProviderToken);
-__required.r(exports, 'errorBuilder', () => errorBuilder);
-var helpers = __required(1142);
-var isnumber = helpers.isnumber;
-var isarray = helpers.isarray;
-var isnull = helpers.isnull;
-var isundefined = helpers.isundefined;
-var isboolean = helpers.isboolean;
-var inarray = helpers.inarray;
-var moveItemInArray = helpers.moveItemInArray;
-var addToArray = helpers.addToArray;
-var removeFromArray = helpers.removeFromArray;
-var isstring = helpers.isstring;
-var isequal = helpers.isequal;
-var isobject = helpers.isobject;
-var isfunction = helpers.isfunction;
-var __buildOptions = {
-    'buildTime': 1734326607082,
+const helpers = __required(1144);
+const isnumber = helpers.isnumber;
+const isarray = helpers.isarray;
+const isnull = helpers.isnull;
+const isundefined = helpers.isundefined;
+const isboolean = helpers.isboolean;
+const inarray = helpers.inarray;
+const moveItemInArray = helpers.moveItemInArray;
+const addToArray = helpers.addToArray;
+const removeFromArray = helpers.removeFromArray;
+const isstring = helpers.isstring;
+const isequal = helpers.isequal;
+const isobject = helpers.isobject;
+const isfunction = helpers.isfunction;
+const __buildOptions = {
+    'buildTime': 1790832896577,
     'version': '1.0.0',
     'baseHref': '',
     'assetURL': '',
@@ -403,45 +341,67 @@ function noop(callback) {
 }
 ;
 var existingInstance = new Map();
-function ProviderToken(tokenName, multiple, provide) {
-    var tokenRecords = [];
-    var _persists = true;
-    var resolved = false;
-    this.tokenName = tokenName;
-    this.register = function (value, persist) {
-        if (multiple) {
-            tokenRecords.push(value);
-        } else {
-            tokenRecords = value;
+var singletonRegistry = null;
+function enableSingletonTracking() {
+    singletonRegistry = new Map();
+}
+function disableSingletonTracking() {
+    singletonRegistry = null;
+}
+function getSingletonRegistry() {
+    return singletonRegistry;
+}
+class ProviderToken {
+    static getToken(resolved, token) {
+        return resolved ? token : AutoWire(token);
+    }
+    constructor(tokenName, multiple, provide) {
+        this.tokenRecords = [];
+        this._persists = true;
+        this._pending = [];
+        this._resolved = false;
+        this.tokenName = tokenName;
+        this.multiple = multiple;
+        if (provide) {
+            this.register(provide, true);
         }
-        _persists = persist;
-        resolved = false;
-    };
-    this.resolve = function () {
-        if (resolved && _persists)
-            return tokenRecords;
-        var token = null;
-        try {
-            if (multiple) {
-                token = tokenRecords.map(getToken);
+    }
+    register(value, persist) {
+        if (this.multiple) {
+            if (this._resolved) {
+                this._pending.push(value);
+                return;
             } else {
-                token = getToken(tokenRecords);
+                this.tokenRecords.push(value);
             }
-            if (!_persists)
-                tokenRecords = [];
-            else
-                tokenRecords = token;
-            resolved = _persists;
+        } else {
+            this.tokenRecords = value;
+        }
+        this._persists = persist;
+        this._resolved = false;
+    }
+    resolve() {
+        if (this._resolved && this._persists) {
+            if (this._pending.length) {
+                this.tokenRecords.push.apply(this.tokenRecords, this._pending.map(record => ProviderToken.getToken(false, record)));
+                this._pending.length = 0;
+            }
+            return this.tokenRecords;
+        }
+        ;
+        let token = null;
+        try {
+            if (this.multiple) {
+                token = this.tokenRecords.map(record => ProviderToken.getToken(this._resolved, record));
+            } else {
+                token = ProviderToken.getToken(this._resolved, this.tokenRecords);
+            }
+            this.tokenRecords = !this._persists ? [] : token;
+            this._resolved = this._persists;
         } catch (e) {
-            errorBuilder('error while resolving ' + tokenName);
+            errorBuilder(`error while resolving ${ this.tokenName }`);
         }
         return token;
-    };
-    if (provide) {
-        this.register(provide, true);
-    }
-    function getToken(token) {
-        return resolved ? token : AutoWire(token);
     }
 }
 function Inject(dep, localInjector) {
@@ -462,6 +422,8 @@ function Inject(dep, localInjector) {
             instance = AutoWire(resolveClosureRef(dep), localInjector);
             if (!dep.ctors.noSingleton) {
                 dep.ctors.instance = instance;
+                if (singletonRegistry)
+                    singletonRegistry.set(dep, instance);
             }
         }
         return instance;
@@ -567,46 +529,16 @@ class AbstractInjectorInstance {
         this.injectors = null;
     }
 }
-var LifeCycleConst = {
-    willObserve: 0,
-    didChange: 1,
-    didInit: 2,
-    viewDidLoad: 3,
-    viewDidDestroy: 4,
-    AfterViewLoad: 5
-};
-var LifeCycleKeys = Object.keys(LifeCycleConst);
-class LifeCycle {
-    constructor(componentInstance) {
-        var _cycleState = {
-            didInit: !!componentInstance.didInit,
-            viewDidLoad: !!componentInstance.viewDidLoad,
-            viewDidDestroy: !!componentInstance.viewDidDestroy,
-            willObserve: !!componentInstance.willObserve,
-            didChange: !!componentInstance.didChange,
-            afterViewLoad: !!componentInstance.afterViewLoad
-        };
-        this.has = function (cycle) {
-            return _cycleState[cycle] && isfunction(componentInstance[cycle]);
-        };
-        this.trigger = function (cycle, args) {
-            var cycleId = LifeCycleKeys[cycle];
-            if (this.has(cycleId)) {
-                componentInstance[cycleId](args);
-            }
-        };
-    }
-}
 class TemplateRef {
     constructor(templates) {
         this.createElement = function (parentNode, viewContainer, context) {
-            return ViewParser.builder[templates.type](templates, parentNode, viewContainer, context);
+            return jitBuilder.compile(templates, parentNode, viewContainer, context);
         };
         this.getContext = function () {
             return templates.context;
         };
         this.forEach = function (selector, callback) {
-            var tmplCallback = tmpl => callback(isfunction(tmpl) ? tmpl() : tmpl);
+            const tmplCallback = tmpl => callback(isfunction(tmpl) ? tmpl() : tmpl);
             if (typeof templates == 'function')
                 return templates(selector, tmplCallback);
             if (templates.hasOwnProperty(selector)) {
@@ -615,19 +547,34 @@ class TemplateRef {
         };
     }
     static factory(node, templateId, silent) {
-        var templates = node.internal_getDefinition('templates');
-        if (!templates || !templates.hasOwnProperty(templateId)) {
+        const templates = node.internal_getDefinition('templates');
+        if (!templates || typeof templates !== 'function' && !templates.hasOwnProperty(templateId)) {
             if (!silent)
                 errorBuilder('No templates Defined #' + templateId);
             return null;
         }
-        if (typeof templates[templateId] === 'function') {
-            templates[templateId] = templates[templateId]();
-        }
-        return new TemplateRef(templates[templateId]);
+        const template = templates[templateId] || templates;
+        return new TemplateRef(typeof template === 'function' ? template(templateId) : template);
+    }
+    static reflect(elementRef, nodeAst, callback) {
+        return context => callback(jitBuilder[`$${ nodeAst.type || 1 }`](nodeAst, elementRef, null, context));
+    }
+    static templatesCompiler(templates, asNative) {
+        let childrenNodesLen = asNative ? templates.length : 0;
+        const templateTypes = {
+            place: (placeSelector, callback) => {
+                let children = Array.from(templates).splice(0, childrenNodesLen);
+                if (placeSelector != '@') {
+                    children = children.filter(ele => ele.classList.contains(placeSelector) || ele.id == placeSelector || ele.nodeName == placeSelector || ele.hasAttribute(placeSelector));
+                }
+                children.forEach(callback);
+                childrenNodesLen -= children.length;
+            }
+        };
+        return type => templateTypes[type];
     }
 }
-var staticInjectionToken = {
+const staticInjectionToken = {
     ElementRef: 'ElementRef',
     TemplateRef: 'TemplateRef',
     ContentData: 'ContentData',
@@ -642,35 +589,67 @@ var staticInjectionToken = {
     ContentHostRef: 'ContentHostRef',
     HostElement: 'HostElement'
 };
-var staticInjectionTokenHandlers = {
-    TemplateRef: context => TemplateRef.factory(context.injectors.ElementRef, context.get({ tokenName: 'Selector' })),
-    changeDetector: context => context.injectors.ElementRef.changeDetector,
-    ViewRef: context => new ViewRef(context.injectors.ElementRef),
-    ParentRef: (context, dep) => {
+class staticInjectionTokenHandlers {
+    static TemplateRef(context) {
+        return TemplateRef.factory(context.injectors.ElementRef, context.get({ tokenName: 'Selector' }));
+    }
+    static changeDetector(context) {
+        return context.injectors.ElementRef.changeDetector;
+    }
+    static ViewRef(context) {
+        return new ViewRef(context.injectors.ElementRef);
+    }
+    static ParentRef(context, dep) {
         if (dep.value) {
-            return findParentRef(context.injectors.ElementRef.parent, dep);
+            return this.findParentRef(context.injectors.ElementRef.parent, dep);
         }
         return context.injectors.ElementRef.parent.componentInstance;
-    },
-    VALIDATORS: context => getValidators(context.injectors.ElementRef),
-    ContentHostRef: context => {
-        var componentRef = ComponentRef.get(context.injectors.ElementRef.contentHostRefId);
-        return componentRef.componentInstance;
-    },
-    HostElement: context => {
-        var nativeElement = context.injectors.ElementRef.nativeElement;
-        var hRefId = 'jl-' + context.injectors.ElementRef.refId;
+    }
+    static VALIDATORS(context) {
+        return this.getValidators(context.injectors.ElementRef);
+    }
+    static ContentHostRef(context) {
+        const componentRef = context.injectors.ElementRef.contentHostRef;
+        return componentRef && componentRef.componentInstance;
+    }
+    static HostElement(context) {
+        const nativeElement = context.injectors.ElementRef.nativeElement;
+        const hRefId = 'jl-' + context.injectors.ElementRef.refId;
         nativeElement.setAttribute(hRefId, '');
         return Object.defineProperty({}, 'nativeElement', {
             get: () => {
-                var ele = document.querySelector('[' + hRefId + ']');
+                const ele = document.querySelector('[' + hRefId + ']');
                 if (ele && nativeElement)
                     nativeElement == null;
                 return ele || nativeElement;
             }
         });
     }
-};
+    static getValidators(elementRef) {
+        return [
+            'required',
+            'pattern',
+            'minlength',
+            'maxlength'
+        ].reduce(function (accum, key) {
+            if (elementRef.hasAttribute(key)) {
+                accum[key] = elementRef.getAttribute(key);
+            }
+            return accum;
+        }, {});
+    }
+    static findParentRef(parentRef, refInstance) {
+        const selector = refInstance.value + (refInstance.type ? ':' + refInstance.type : '');
+        if (parentRef && (!parentRef.nodes || !parentRef.nodes.has(selector))) {
+            return this.findParentRef(parentRef.parent, refInstance);
+        }
+        if (!parentRef) {
+            return null;
+        }
+        return parentRef.nodes.get(selector);
+    }
+}
+;
 class ComponentInjectors extends AbstractInjectorInstance {
     constructor(elementRef, selector) {
         super(elementRef);
@@ -692,85 +671,38 @@ class ComponentInjectors extends AbstractInjectorInstance {
             return staticInjectionTokenHandlers[dep.tokenName](this, dep);
     }
 }
-function getValidators(elementRef) {
-    return [
-        'required',
-        'pattern',
-        'minlength',
-        'maxlength'
-    ].reduce(function (accum, key) {
-        if (elementRef.hasAttribute(key)) {
-            accum[key] = elementRef.getAttribute(key);
-        }
-        return accum;
-    }, {});
+var _collectPromises = null;
+function enableLifecyclePromiseTracking() {
+    _collectPromises = [];
 }
-function findParentRef(parentRef, refInstance) {
-    var selector = refInstance.value + (refInstance.type ? ':' + refInstance.type : '');
-    if (parentRef && (!parentRef.nodes || !parentRef.nodes.has(selector))) {
-        return findParentRef(parentRef.parent, refInstance);
-    }
-    if (!parentRef) {
-        return null;
-    }
-    return parentRef.nodes.get(selector);
+function disableLifecyclePromiseTracking() {
+    _collectPromises = null;
 }
-function elementInputLinker(componentInstance, elementRef, lifeCycle, ctors) {
-    lifeCycle.trigger(LifeCycleConst.willObserve);
-    var propChanges = null;
-    var registeredProperty = {};
-    var ignoreChecks = [];
-    var always = false;
-    var elementProps = elementRef.internal_getDefinition('props');
-    var asNative = elementRef.internal_getDefinition('asNative');
-    if (ctors.props)
-        always = _updateViewBinding();
-    function getContext() {
+function drainLifecyclePromises() {
+    var pending = _collectPromises || [];
+    if (_collectPromises)
+        _collectPromises = [];
+    return pending;
+}
+class LifeCycle {
+    static lifeCycleConst = {
+        willObserve: 0,
+        didChange: 1,
+        didInit: 2,
+        viewDidLoad: 3,
+        viewDidDestroy: 4,
+        AfterViewLoad: 5
+    };
+    static lifeCycleKeys = Object.keys(LifeCycle.lifeCycleConst);
+    static getContext(elementRef) {
         if (elementRef.hasContext) {
             return elementRef.context;
         } else {
             return (isequal(elementRef.parent.type, 8) && !elementRef.isc ? elementRef : elementRef.parent).context;
         }
     }
-    function _updateViewBinding() {
-        var hasBinding = false;
-        for (var prop in ctors.props) {
-            if (ignoreChecks.includes(prop))
-                continue;
-            var item = ctors.props[prop];
-            var name = item.value || prop;
-            var value;
-            if (asNative) {
-                setValue(prop, elementRef.getProps(prop));
-                continue;
-            }
-            if (elementProps && elementProps.hasOwnProperty(name)) {
-                var context = getContext();
-                try {
-                    if (isobject(elementProps[name])) {
-                        hasBinding = true;
-                        value = getFilteredTemplateValue(elementProps[name], context, elementRef.parent.componentInstance);
-                    } else {
-                        value = getPrimitiveValue(item.type, name, elementProps[name]);
-                        ignoreChecks.push(prop);
-                    }
-                    setValue(prop, value);
-                } catch (e) {
-                    console.error(e);
-                }
-            } else if (elementRef.hasAttribute(name)) {
-                ignoreChecks.push(prop);
-                setValue(prop, elementRef.attr[name]);
-            }
-        }
-        if (propChanges) {
-            lifeCycle.trigger(LifeCycleConst.didChange, propChanges);
-            propChanges = null;
-        }
-        return hasBinding;
-    }
-    function hash(a, count) {
-        var count = count || 0;
+    static hash(a, count) {
+        count = count || 0;
         if (a === null || a === undefined)
             return count;
         else if (typeof a === 'number')
@@ -780,7 +712,7 @@ function elementInputLinker(componentInstance, elementRef, lifeCycle, ctors) {
         else if (typeof a === 'boolean')
             count += a ? 1 : 0;
         else if (typeof a === 'object' && (a.constructor === Object || a.constructor === Array)) {
-            for (var prop in a) {
+            for (const prop in a) {
                 if (typeof prop === 'number')
                     count += prop;
                 else
@@ -792,152 +724,225 @@ function elementInputLinker(componentInstance, elementRef, lifeCycle, ctors) {
         }
         return count;
     }
-    function setValue(property, value) {
-        var hasProp = registeredProperty.hasOwnProperty(property);
-        var sameValue = isequal(componentInstance[property], value);
+    constructor(componentInstance, elementRef, props) {
+        this.componentInstance = componentInstance;
+        this.propChanges = null;
+        this.registeredProperty = {};
+        this.ignoreChecks = [];
+        this.always = false;
+        this._onDestroy = [];
+        this._cycleState = {
+            didInit: !!componentInstance.didInit,
+            viewDidLoad: !!componentInstance.viewDidLoad,
+            viewDidDestroy: !!componentInstance.viewDidDestroy,
+            willObserve: !!componentInstance.willObserve,
+            didChange: !!componentInstance.didChange,
+            afterViewLoad: !!componentInstance.afterViewLoad
+        };
+        this.trigger(LifeCycle.lifeCycleConst.willObserve);
+        if (props)
+            this._updateViewBinding(elementRef, props);
+        this.trigger(LifeCycle.lifeCycleConst.didInit);
+        ObserveUntilDestroyed(elementRef, {
+            next: () => {
+                if (this.always)
+                    this._updateViewBinding(elementRef, props);
+                this.trigger(LifeCycle.lifeCycleConst.willObserve);
+            },
+            done: () => this._cleanUp()
+        });
+    }
+    onDestroy(callback) {
+        if (typeof callback == 'function') {
+            this._onDestroy.push(callback);
+        }
+    }
+    _updateViewBinding(elementRef, properties) {
+        let elementProps = elementRef.internal_getDefinition('props');
+        const asNative = elementRef.internal_getDefinition('asNative');
+        function getPrimitiveValue(type, name, value) {
+            switch (type) {
+            case staticInjectionToken.TemplateRef:
+                return TemplateRef.factory(elementRef, name);
+            case staticInjectionToken.Function:
+                return elementRef.parent.componentInstance[value];
+            default:
+                return value;
+            }
+        }
+        for (const prop in properties) {
+            if (this.ignoreChecks.includes(prop))
+                continue;
+            const item = properties[prop];
+            const name = item.value || prop;
+            let value;
+            if (asNative) {
+                this.setValue(prop, elementRef.getProps(prop));
+                continue;
+            }
+            if (elementProps && elementProps.hasOwnProperty(name)) {
+                const context = LifeCycle.getContext(elementRef);
+                try {
+                    const propValue = elementProps[name];
+                    if (isobject(propValue)) {
+                        if (propValue.prop || propValue.compiledFn) {
+                            this.always = true;
+                            value = typeof propValue.compiledFn === 'function' ? propValue.compiledFn(context, elementRef.parent.componentInstance) : getFilteredTemplateValue(propValue, context, elementRef.parent.componentInstance);
+                        } else if (propValue.type == 'raw') {
+                            value = propValue.value;
+                            this.ignoreChecks.push(prop);
+                        }
+                    } else {
+                        value = getPrimitiveValue(item.type, name, propValue);
+                        this.ignoreChecks.push(prop);
+                    }
+                    this.setValue(prop, value);
+                } catch (e) {
+                    console.error(e);
+                }
+            } else if (elementRef.hasAttribute(name)) {
+                this.ignoreChecks.push(prop);
+                this.setValue(prop, elementRef.attr[name]);
+            }
+        }
+        if (this.propChanges) {
+            this.trigger(LifeCycle.lifeCycleConst.didChange, this.propChanges);
+            this.propChanges = null;
+        }
+    }
+    setValue(property, value) {
+        const hasProp = this.registeredProperty.hasOwnProperty(property);
+        const sameValue = isequal(this.componentInstance[property], value);
         if (hasProp && sameValue)
             return;
-        if (propChanges === null) {
-            propChanges = {};
+        if (this.propChanges === null) {
+            this.propChanges = {};
         }
-        registeredProperty[property] = true;
-        propChanges[property] = value;
-        componentInstance[property] = value;
+        this.registeredProperty[property] = true;
+        this.propChanges[property] = value;
+        this.componentInstance[property] = value;
     }
-    function getPrimitiveValue(type, name, value) {
-        switch (type) {
-        case staticInjectionToken.TemplateRef:
-            return TemplateRef.factory(elementRef, name);
-        case staticInjectionToken.Function:
-            return elementRef.parent.componentInstance[value];
-        default:
-            return value;
+    has(cycle) {
+        return this._cycleState[cycle] && isfunction(this.componentInstance[cycle]);
+    }
+    trigger(cycle, args) {
+        const cycleId = LifeCycle.lifeCycleKeys[cycle];
+        if (this.has(cycleId)) {
+            const result = this.componentInstance[cycleId](args);
+            if (_collectPromises && result && typeof result.then === 'function') {
+                _collectPromises.push(result);
+            }
         }
     }
-    ObserveUntilDestroyed(elementRef, {
-        next: function () {
-            if (always)
-                _updateViewBinding();
-            lifeCycle.trigger(LifeCycleConst.willObserve);
-        },
-        done: function () {
-            registeredProperty = null;
-            ignoreChecks.length = 0;
-            elementProps = null;
+    _cleanUp() {
+        this.trigger(LifeCycle.lifeCycleConst.viewDidDestroy);
+        while (this._onDestroy.length) {
+            this._onDestroy.shift()();
         }
-    });
+        this.registeredProperty = null;
+        this.ignoreChecks.length = 0;
+        this.componentInstance = null;
+        this.propChanges = null;
+    }
 }
-function ElementCompiler(factory, elementRef, componentInjectors, next) {
-    var ctors = factory.ctors;
-    var asNative = elementRef.internal_getDefinition('asNative');
-    var lifeCycle;
-    function ConnectView(componentInstance) {
-        var componentRef = ComponentRef.get(elementRef.refId);
-        componentRef.componentInstance = componentInstance;
-        if (factory.view) {
-            try {
-                var renderedElement = factory.view(elementRef);
-                var triggerAndBindCQ = () => {
-                    AttachComponentContentQuery(elementRef);
-                    lifeCycle.trigger(LifeCycleConst.viewDidLoad);
-                };
-                if (!asNative) {
-                    elementMutationObserver(elementRef.nativeElement, (mutationList, observer) => {
-                        triggerAndBindCQ();
-                        observer.disconnect();
-                    });
-                    elementRef.nativeElement.appendChild(renderedElement);
-                } else {
-                    if (ctors.useShadowDom) {
-                        var shadow = elementRef.nativeElement.attachShadow({ mode: 'open' });
-                        shadow.appendChild(renderedElement);
-                    } else {
+class ElementCompiler {
+    static compile(factory, elementRef, componentInjectors, next) {
+        const ctors = factory.ctors;
+        const asNative = elementRef.internal_getDefinition('asNative');
+        let lifeCycle;
+        function ConnectView(componentInstance) {
+            const componentRef = elementRef.componentRef;
+            componentRef.componentInstance = componentInstance;
+            if (factory.view) {
+                try {
+                    const renderedElement = factory.view(elementRef);
+                    const triggerAndBindCQ = () => {
+                        AttachComponentContentQuery(elementRef);
+                        lifeCycle.trigger(LifeCycle.lifeCycleConst.viewDidLoad);
+                    };
+                    if (!asNative) {
                         elementRef.nativeElement.appendChild(renderedElement);
+                        triggerAndBindCQ();
+                    } else {
+                        if (ctors.useShadowDom) {
+                            const shadow = elementRef.nativeElement.attachShadow({ mode: 'open' });
+                            shadow.appendChild(renderedElement);
+                        } else {
+                            elementRef.nativeElement.appendChild(renderedElement);
+                        }
+                        triggerAndBindCQ();
                     }
-                    triggerAndBindCQ();
-                }
-                elementRef.changeDetector.detectChanges();
-            } catch (e) {
-                errorBuilder(e);
-            }
-        }
-        attachElementObserver(elementRef, function () {
-            lifeCycle.trigger(LifeCycleConst.viewDidDestroy);
-            componentRef.destroy();
-            lifeCycle = null;
-            componentRef = null;
-        });
-        componentRef.changeDetector.detectChanges(true, true);
-    }
-    function eventsRegistry(componentInstance) {
-        var actions = {
-            event: name => elementRef.events._events.push(Object.assign({ name }, ctors.events[name])),
-            emitter: name => EventHandler.attachEventEmitter(elementRef, name, componentInstance),
-            dispatcher: name => EventHandler.attachEventDispatcher(elementRef, name, componentInstance)
-        };
-        if (ctors.events) {
-            for (var name in ctors.events) {
-                if (actions[ctors.events[name].type]) {
-                    actions[ctors.events[name].type](name);
+                    elementRef.changeDetector.detectChanges();
+                } catch (e) {
+                    errorBuilder(e);
                 }
             }
-            if (!factory.view && ctors.asNative) {
-                EventHandler.registerListener(elementRef);
+            lifeCycle.onDestroy(() => {
+                componentRef.destroy();
+                lifeCycle = null;
+            });
+            componentRef.changeDetector.detectChanges(true, true);
+        }
+        function eventsRegistry(componentInstance) {
+            const actions = {
+                event: name => elementRef.events.push(Object.assign({ name }, ctors.events[name])),
+                emitter: name => EventHandler.attachEventEmitter(elementRef, name, componentInstance),
+                dispatcher: name => EventHandler.attachEventDispatcher(elementRef, name, componentInstance)
+            };
+            if (ctors.events) {
+                for (const name in ctors.events) {
+                    const eventName = ctors.events[name].type;
+                    if (actions.hasOwnProperty(eventName)) {
+                        actions[eventName](name);
+                    }
+                }
+                if (!factory.view && ctors.asNative || elementRef.internal_getDefinition('fromDOM')) {
+                    EventHandler.registerListener(elementRef);
+                }
             }
         }
-    }
-    function registerDirectiveInstance(componentInstance) {
-        if (elementRef.isc)
-            return;
-        elementRef.nodes.set(factory.ctors.exportAs || ctors.selector, componentInstance);
-        lifeCycle.trigger(LifeCycleConst.viewDidLoad);
-        attachElementObserver(elementRef, function () {
-            lifeCycle.trigger(LifeCycleConst.viewDidDestroy);
-            elementRef.nodes.delete(ctors.selector);
-        });
-    }
-    ElementFactoryInitializer(factory, componentInjectors, function triggerInstance(componentInstance) {
-        eventsRegistry(componentInstance);
-        lifeCycle = new LifeCycle(componentInstance);
-        elementInputLinker(componentInstance, elementRef, lifeCycle, ctors);
-        lifeCycle.trigger(LifeCycleConst.didInit);
-        registerDirectiveInstance(componentInstance);
-        next(componentInstance);
-        if (elementRef.isc)
-            ConnectView(componentInstance);
-    });
-}
-ElementCompiler.resolve = function (node, nextTick) {
-    var inc = 0;
-    var componentInjectors = new ComponentInjectors(node);
-    function next() {
-        var factory = node.providers && node.providers[inc];
-        inc++;
-        if (factory) {
-            componentInjectors.set('Selector', factory.ctors.selector);
+        function registerDirectiveInstance(componentInstance) {
+            if (elementRef.isc)
+                return;
+            elementRef.nodes.set(factory.ctors.exportAs || ctors.selector, componentInstance);
+            lifeCycle.trigger(LifeCycle.lifeCycleConst.viewDidLoad);
+            lifeCycle.onDestroy(() => elementRef.nodes.delete(ctors.selector));
+        }
+        wireResolvers(factory.ctors.resolve, componentInjectors);
+        AutoWire(factory, componentInjectors, componentInstance => {
             try {
-                ElementCompiler(factory, node, componentInjectors, next);
+                eventsRegistry(componentInstance);
+                lifeCycle = new LifeCycle(componentInstance, elementRef, ctors.props);
+                registerDirectiveInstance(componentInstance);
+                next(componentInstance);
+                if (elementRef.isc)
+                    ConnectView(componentInstance);
             } catch (e) {
                 errorBuilder(e);
             }
-        } else {
-            componentInjectors.destroy();
-            nextTick(node);
-        }
+        });
     }
-    next(null);
-};
-function ElementFactoryInitializer(factory, injectorInstance, CB) {
-    wireResolvers(factory.ctors.resolve, injectorInstance);
-    AutoWire(factory, injectorInstance, function (instance) {
-        try {
-            CB(instance);
-        } catch (e) {
-            errorBuilder(e);
+    static resolve(node, nextTick) {
+        let inc = 0;
+        const componentInjectors = new ComponentInjectors(node);
+        function next() {
+            const factory = node.providers && node.providers[inc];
+            inc++;
+            if (factory) {
+                componentInjectors.set('Selector', factory.ctors.selector);
+                try {
+                    ElementCompiler.compile(factory, node, componentInjectors, next);
+                } catch (e) {
+                    errorBuilder(e);
+                }
+            } else {
+                componentInjectors.destroy();
+                nextTick(node);
+            }
         }
-    });
+        next(null);
+    }
 }
-;
 class Observer {
     constructor() {
         this.$notifyInProgress = 0;
@@ -947,7 +952,8 @@ class Observer {
     }
     subscribe(callback) {
         var self = this, bindingIdx = this.bindingIdx++;
-        this.retry = true;
+        if (this.$notifyInProgress)
+            this.retry = true;
         this._entries.set(bindingIdx, {
             handler: callback,
             state: false
@@ -1009,23 +1015,26 @@ class InternalChangeDetector {
                 tick.apply(null, arguments);
             }
         };
+        this.manualCheck = function () {
+            tick.call(null, false, true);
+        };
         function tick(ignoreChild, ignoreParent) {
             if (!context.observables) {
                 return;
             }
-            if (context.parent && !ignoreParent && componentDebugContext.has(context.parent)) {
-                var parent = componentDebugContext.get(context.parent);
+            var parent = context.parent;
+            var hasParent = !parent || !!parent.changeDetector;
+            if (parent && !ignoreParent && hasParent) {
                 parent.changeDetector.detectChanges(true);
-                triggerChild(parent.child, [], context.parent);
+                triggerChild(parent.child, []);
             }
             context.observables && context.observables.notifyAllObservers(context.componentInstance);
             if (!ignoreChild) {
-                triggerChild(context.child, [], context.parent);
+                triggerChild(context.child, []);
             }
-            function triggerChild(children, ignore, parentRef) {
-                for (var refId of children) {
-                    if (componentDebugContext.has(parentRef) && !ignore.includes(refId) && componentDebugContext.has(refId)) {
-                        var child = componentDebugContext.get(refId);
+            function triggerChild(children, ignore) {
+                for (var child of children) {
+                    if (!ignore.includes(child) && child.changeDetector && hasParent) {
                         child.changeDetector.onlySelf();
                     }
                 }
@@ -1048,11 +1057,12 @@ class InternalChangeDetector {
     markAsOnce() {
         this._changeDetectorState = 2;
     }
+    markAsManual() {
+        this._changeDetectorState = 4;
+    }
 }
-var componentDebugContext = new Map();
 class ComponentRef {
-    constructor(refId, context) {
-        this.componentRefId = refId;
+    constructor(context) {
         this.observables = new Observer();
         this.child = [];
         this.parent = null;
@@ -1067,37 +1077,24 @@ class ComponentRef {
         return this.componentInstance;
     }
     get componentInstance() {
-        if (!this._componentInstance && this.parent && componentDebugContext.has(this.parent)) {
-            return componentDebugContext.get(this.parent).componentInstance;
+        if (!this._componentInstance && this.parent) {
+            return this.parent.componentInstance;
         }
         return this._componentInstance;
     }
     set componentInstance(value) {
         this._componentInstance = value;
     }
-    static create(refId, parentId, context) {
-        var componentRef = componentDebugContext.get(refId);
-        if (!componentRef) {
-            componentRef = new ComponentRef(refId, context);
-            componentDebugContext.set(refId, componentRef);
-        } else {
-            componentRef._context = context || null;
+    linkParent(parentComponentRef) {
+        if (parentComponentRef && parentComponentRef !== this) {
+            this.parent = parentComponentRef;
+            parentComponentRef.child.push(this);
         }
-        if (componentDebugContext.has(parentId) && parentId != refId) {
-            componentRef.parent = parentId;
-            componentDebugContext.get(parentId).child.push(refId);
-        }
-        componentRef = null;
     }
-    static get(refId, hostRefId) {
-        return componentDebugContext.get(refId) || componentDebugContext.get(hostRefId) || {};
-    }
-    static has(refId) {
-        return componentDebugContext.has(refId);
-    }
-    removeChild(refId) {
-        this.child.splice(this.child.indexOf(refId), 1);
-        componentDebugContext.delete(refId);
+    removeChild(componentRef) {
+        var idx = this.child.indexOf(componentRef);
+        if (idx > -1)
+            this.child.splice(idx, 1);
     }
     updateModel(propName, value) {
         if (isobject(propName)) {
@@ -1111,12 +1108,11 @@ class ComponentRef {
         return this;
     }
     destroy() {
-        if (!componentDebugContext.has(this.componentRefId))
+        if (!this.changeDetector)
             return;
         this.changeDetector.markAsChecked();
-        componentDebugContext.delete(this.componentRefId);
-        if (this.parent && componentDebugContext.has(this.parent)) {
-            componentDebugContext.get(this.parent).removeChild(this.componentRefId);
+        if (this.parent) {
+            this.parent.removeChild(this);
         }
         this._componentInstance = null;
         this._context = null;
@@ -1129,35 +1125,37 @@ class ComponentRef {
 }
 var $eUID = 1;
 var $elementContext = '__jContext__';
-var $elementContainer = new Map();
 class AbstractElementRef {
-    constructor(definition, parentRef) {
+    constructor(definition, parentRef, context) {
         var localVariables = null;
         this.nativeElement = createElementByType(definition.name, definition.text, definition.fromDOM);
         this.$observers = [];
         this.refId = $eUID++;
         this.children = new QueryList();
         this.parent = parentRef;
-        this.hostRefId = parentRef ? parentRef.isc ? parentRef.refId : parentRef.hostRefId || this.refId : this.refId;
-        this.contentHostRefId = parentRef ? parentRef.contentHostRefId : null;
+        this.hostRef = definition.isc ? this : parentRef ? parentRef.hostRef : this;
+        this.contentHostRef = parentRef ? parentRef.contentHostRef : null;
+        this.componentRef = null;
         this.tagName = (!definition.fromDOM ? definition.name : this.nativeElement.localName).toLowerCase();
         this.hasContext = !!definition.context || !definition.isc && parentRef && parentRef.hasContext;
         this.type = definition.type;
         this.attr = definition.attr;
         this.isc = definition.isc;
+        if (definition.hydrate)
+            this._hydrate = true;
         if (definition.providers) {
             this.providers = definition.providers;
             this.nodes = new Map();
         }
         if (definition.ctx$)
-            localVariables = createLocalVariables(definition.ctx$, parentRef.context, parentRef.componentInstance);
+            localVariables = createLocalVariables(definition.ctx$, context || parentRef.context, parentRef.componentInstance);
         Object.defineProperties(this, {
             context: {
                 get: function () {
                     if (localVariables)
                         return localVariables;
-                    if (ComponentRef.has(this.refId))
-                        return ComponentRef.get(this.refId).context;
+                    if (this.componentRef)
+                        return this.componentRef.context;
                     return this.parent && this.parent.context;
                 },
                 set: context => {
@@ -1169,22 +1167,15 @@ class AbstractElementRef {
         if (11 !== this.nativeElement.nodeType) {
             Object.defineProperty(this.nativeElement, $elementContext, { get: () => this.context });
         }
-        this.internal_getDefinition = function (prop) {
-            return definition[prop];
-        };
+        this.internal_getDefinition = prop => definition[prop];
     }
     get componentInstance() {
-        var hostElement = ComponentRef.get(this.refId, this.hostRefId);
-        return hostElement.componentInstance;
+        const componentRef = this.componentRef || this.hostRef && this.hostRef.componentRef;
+        return componentRef && componentRef.componentInstance;
     }
     get changeDetector() {
-        var hostElement = ComponentRef.get(this.refId, this.hostRefId);
-        return hostElement.changeDetector;
-    }
-    get hostRef() {
-        if (this.isc)
-            return this;
-        return this.parent && this.parent.hostRef;
+        const componentRef = this.componentRef || this.hostRef && this.hostRef.componentRef;
+        return componentRef && componentRef.changeDetector;
     }
     get nativeNode() {
         return this.type === 8 ? this.nativeElement : null;
@@ -1205,35 +1196,30 @@ class ElementRef extends AbstractElementRef {
         this.events = new EventHandler((definition.events || []).slice());
         this._lcmp = lcmp;
         if (definition.isc) {
-            ComponentRef.create(this.refId, definition.fromDOM ? 1 : parent && parent.hostRef.refId);
+            this.componentRef = new ComponentRef();
+            const parentComponentRef = parent && parent.hostRef && parent.hostRef.componentRef;
+            if (parentComponentRef) {
+                this.componentRef.linkParent(parentComponentRef);
+            }
         }
         if (definition.attr$) {
             setupAttributeObservers(this, definition.attr$);
         }
     }
 }
-function CompileNativeElement(componentClass, selector, callback) {
+function CompileNativeElement(componentClass, selector, callback, hydrate) {
     var asNative = componentClass.ctors.asNative;
-    var childrenNodesLen = asNative ? selector.children.length : 0;
     var elementRef = new ElementRef({
         name: selector,
         isc: true,
         type: 1,
         fromDOM: true,
         asNative,
-        templates: {
-            place: () => (placeSelector, callback) => {
-                var children = Array.from(selector.children).splice(0, childrenNodesLen);
-                if (placeSelector != '@') {
-                    children = children.filter(ele => !ele.classList.has(placeSelector) || ele.id != placeSelector || ele.nodeName != placeSelector || !ele.hasAttribute(placeSelector));
-                }
-                children.forEach(callback);
-                childrenNodesLen -= children.length;
-            }
-        }
+        hydrate: !!hydrate,
+        templates: TemplateRef.templatesCompiler(selector.children, asNative)
     }, null);
     var componentInjectors = new ComponentInjectors(elementRef);
-    ElementCompiler(componentClass, elementRef, componentInjectors, function (componentInstance) {
+    ElementCompiler.compile(componentClass, elementRef, componentInjectors, componentInstance => {
         if (typeof callback === 'function')
             callback(elementRef, componentInstance);
     });
@@ -1344,6 +1330,13 @@ var INITIALIZERS = new ProviderToken('AppInitializers', true);
 var APP_BOOTSTRAP = new ProviderToken('AppBootstrap', true);
 var APP_BASE_HREF = new ProviderToken('AppBaseHref', false);
 var APP_ASSET_URL = new ProviderToken('AppAssetsURL', false);
+var _hydrateMode = false;
+function enableHydrationMode() {
+    _hydrateMode = true;
+}
+function disableHydrationMode() {
+    _hydrateMode = false;
+}
 function bootStrapApplication(moduleToBootStrap) {
     return new Promise(function (resolve, reject) {
         try {
@@ -1370,13 +1363,13 @@ function bootStrapApplication(moduleToBootStrap) {
                 Inject(APP_BOOTSTRAP, CoreBootstrapContext.injector).forEach(function (callback) {
                     callback();
                 });
-            });
+            }, _hydrateMode);
         }
     }
 }
 ;
-function compileModule(dModule) {
-    return dModule && (dModule.fac(), dModule());
+function compileModule(m) {
+    return m && (m.fac(), new m());
 }
 function ChangeDetector() {
     if (!CoreBootstrapContext.bootStrapComponent)
@@ -1384,6 +1377,23 @@ function ChangeDetector() {
     CoreBootstrapContext.bootStrapComponent.changeDetector.detectChanges();
 }
 ;
+function _getBootstrapRoot() {
+    return CoreBootstrapContext.bootStrapComponent;
+}
+function _isDebuggerEnabled() {
+    return CoreBootstrapContext.enableDebugger;
+}
+var pending = [];
+var flushScheduled = false;
+function flush() {
+    var tasks = pending;
+    pending = [];
+    flushScheduled = false;
+    for (var i = 0; i < tasks.length; i++) {
+        if (!tasks[i].cancelled)
+            tasks[i].fn();
+    }
+}
 var scheduler = {
     schedule: function (taskFn, timer) {
         if (!window.requestAnimationFrame) {
@@ -1392,9 +1402,17 @@ var scheduler = {
                 clearTimeout(taskId);
             };
         }
-        var taskId = window.requestAnimationFrame(taskFn);
+        var task = {
+            fn: taskFn,
+            cancelled: false
+        };
+        pending.push(task);
+        if (!flushScheduled) {
+            flushScheduled = true;
+            window.requestAnimationFrame(flush);
+        }
         return function () {
-            window.cancelAnimationFrame(taskId);
+            task.cancelled = true;
         };
     }
 };
@@ -1453,131 +1471,123 @@ ElementStyle.fixValue = function (value, name, suffix) {
     }
     return value;
 };
-function ElementClassList(nativeElement, classList, type) {
-    if (type) {
-        nativeElement.classList[type].apply(nativeElement.classList, toClass(classList));
-    } else if (classList) {
-        nativeElement.classList.value = classList;
-    } else {
-        return nativeElement.classList.value;
-    }
-}
-function toClass(classList) {
-    return classList.split(/\s/g).filter(function (k) {
-        return !!k;
-    });
-}
-ElementClassList.add = function (nativeElement, classList, removeClass) {
-    if (!classList || !nativeElement) {
-        return;
-    }
-    if (isobject(classList)) {
-        for (var className in classList) {
-            if (classList[className]) {
-                nativeElement.classList.add(className);
-            } else {
-                nativeElement.classList.remove(className);
-            }
-        }
-    } else {
-        nativeElement.classList.add.apply(nativeElement.classList, toClass(classList));
-    }
-};
-ElementClassList.remove = function (nativeElement, classList) {
-    if (!classList || !nativeElement) {
-        return;
-    }
-    nativeElement.classList.remove.apply(nativeElement.classList, toClass(classList));
-};
-ElementClassList.contains = function (nativeElement, className) {
-    return nativeElement.classList.contains(className);
-};
-function AttributeAppender(nativeElement, prop, value) {
-    if (11 === nativeElement.nodeType)
-        return;
-    if (isobject(prop)) {
-        for (var name in prop) {
-            if (AttributeAppender.helpers[name]) {
-                AttributeAppender.helpers[name](nativeElement, prop[name]);
-            } else {
-                AttributeAppender.setValue(nativeElement, name, prop[name]);
-            }
-        }
-    } else {
-        AttributeAppender.setValue(nativeElement, prop, value);
-    }
-}
-AttributeAppender.setValue = function (nativeElement, prop, value, canRemoveAttr) {
-    var elementValue = nativeElement.getAttribute(prop);
-    if (elementValue === value)
-        return;
-    if (canRemoveAttr && !value) {
-        nativeElement.removeAttribute(prop);
-    } else {
-        nativeElement.setAttribute(prop, value);
-    }
-};
-AttributeAppender.helpers = {
-    style: function (nativeElement, value, template) {
-        if (isobject(value)) {
-            ElementStyle(nativeElement, value);
-        } else if (template && template.type) {
-            ElementStyle.set(nativeElement, template.type, value, template.suffix);
+class ElementClassList {
+    static set(nativeElement, classList, type) {
+        if (type) {
+            nativeElement.classList[type].apply(nativeElement.classList, this.toClass(classList));
+        } else if (classList) {
+            nativeElement.classList.value = classList;
         } else {
-            nativeElement.setAttribute('style', value);
+            return nativeElement.classList.value;
         }
-    },
-    innerhtml: function (nativeElement, value) {
-        AttributeAppender.setValue(nativeElement, 'innerHTML', sce.trustAsHTML(value));
-    },
-    src: function (nativeElement, value) {
-        if (![
-                'IMG',
-                'IFRAME',
-                'SOURCE',
-                'SCRIPT'
-            ].includes(nativeElement.tagName))
-            return errorBuilder('src is not a valid property of ' + nativeElement.tagName);
-        AttributeAppender.setValue(nativeElement, 'src', value);
-    },
-    href: function (nativeElement, value) {
-        if (!isequal('A', nativeElement.tagName))
-            return errorBuilder('href is not a valid property of ' + nativeElement.nativeElement.tagName);
-        AttributeAppender.setValue(nativeElement, 'href', value);
-    },
-    class: function (nativeElement, value) {
-        ElementClassList.add(nativeElement, value);
-    },
-    list: function (nativeElement, value) {
-        AttributeAppender.setValue(nativeElement, 'list', value);
-    },
-    readonly: function (nativeElement, value) {
-        AttributeAppender.setValue(nativeElement, 'readonly', value, true);
-    },
-    aria: (nativeElement, value) => singleOrMultipeUpdate(nativeElement, 'aria-', value),
-    data: (nativeElement, value) => singleOrMultipeUpdate(nativeElement, 'data-', value)
-};
-AttributeAppender.setProp = function (nativeElement, propName, propValue, template) {
-    try {
-        if (propValue === undefined || !nativeElement || nativeElement.nodeType !== 1)
-            return;
-        if (AttributeAppender.helpers[propName])
-            return AttributeAppender.helpers[propName](nativeElement, propValue, template);
-        if (propName in nativeElement)
-            nativeElement[propName] = propValue;
-        else
-            AttributeAppender.setValue(nativeElement, propName, propValue);
-    } catch (e) {
-        console.error(e);
     }
-};
-function singleOrMultipeUpdate(nativeElement, prop, value) {
-    if (isobject(value)) {
-        for (var name in value) {
-            nativeElement.setAttribute(prop + name, value[name]);
+    static add(nativeElement, classList) {
+        if (!classList || !nativeElement) {
+            return;
         }
-    } else {
-        nativeElement.setAttribute(prop, value);
+        if (isobject(classList)) {
+            for (var className in classList) {
+                this.set(nativeElement, className, classList[className] ? 'add' : 'remove');
+            }
+        } else {
+            this.set(nativeElement, classList, 'add');
+        }
+    }
+    static remove(nativeElement, classList) {
+        if (!classList || !nativeElement) {
+            return;
+        }
+        nativeElement.classList.remove.apply(nativeElement.classList, this.toClass(classList));
+    }
+    static contains(nativeElement, className) {
+        return nativeElement.classList.contains(className);
+    }
+    static toClass(classList) {
+        return (classList || '').split(/\s/g).filter(function (k) {
+            return !!k;
+        });
+    }
+}
+class AttributeAppender {
+    static set(nativeElement, prop, value) {
+        if (11 === nativeElement.nodeType)
+            return;
+        if (isobject(prop)) {
+            for (var name in prop) {
+                this.byType(name, nativeElement, prop[name]);
+            }
+        } else {
+            this.setValue(nativeElement, prop, value);
+        }
+    }
+    static setValue(nativeElement, prop, value, canRemoveAttr) {
+        const elementValue = nativeElement.getAttribute(prop);
+        if (elementValue === value)
+            return;
+        if (canRemoveAttr && !value) {
+            nativeElement.removeAttribute(prop);
+        } else {
+            nativeElement.setAttribute(prop, value);
+        }
+    }
+    static byType(type, nativeElement, value, template) {
+        const types = {
+            style: () => {
+                if (isobject(value)) {
+                    ElementStyle(nativeElement, value);
+                } else if (template && template.type) {
+                    ElementStyle.set(nativeElement, template.type, value, template.suffix);
+                } else {
+                    nativeElement.setAttribute('style', value);
+                }
+            },
+            innerhtml: () => this.setValue(nativeElement, 'innerHTML', sce.trustAsHTML(value)),
+            src: () => {
+                if (![
+                        'IMG',
+                        'IFRAME',
+                        'SOURCE',
+                        'SCRIPT'
+                    ].includes(nativeElement.tagName))
+                    return errorBuilder('src is not a valid property of ' + nativeElement.tagName);
+                this.setValue(nativeElement, 'src', value);
+            },
+            href: () => {
+                if (!isequal('A', nativeElement.tagName))
+                    return errorBuilder('href is not a valid property of ' + nativeElement.nativeElement.tagName);
+                this.setValue(nativeElement, 'href', value);
+            },
+            class: () => ElementClassList.add(nativeElement, value),
+            list: () => this.setValue(nativeElement, 'list', value),
+            readonly: () => this.setValue(nativeElement, 'readonly', value, true),
+            aria: () => this.singleOrMultipeUpdate(nativeElement, 'aria-', value),
+            data: () => this.singleOrMultipeUpdate(nativeElement, 'data-', value)
+        };
+        if (types[type]) {
+            types[type]();
+        } else if (type in nativeElement) {
+            nativeElement[type] = value;
+        } else {
+            this.setValue(nativeElement, type, value);
+        }
+    }
+    static setProp(nativeElement, propName, propValue, template) {
+        try {
+            if (propValue !== undefined && nativeElement && nativeElement.nodeType === 1) {
+                this.byType(propName, nativeElement, propValue, template);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    static singleOrMultipeUpdate(nativeElement, prop, value) {
+        if (isobject(value)) {
+            for (var name in value) {
+                nativeElement.setAttribute(prop + name, value[name]);
+            }
+        } else {
+            nativeElement.setAttribute(prop, value);
+        }
     }
 }
 var SubscriptionStates = {
@@ -1615,7 +1625,7 @@ class Subscription {
         for (var subscription of this.subscriptions) {
             var callback = subscription[stateId];
             if (callback && isfunction(callback)) {
-                callback(args);
+                callback.apply(null, args);
             }
         }
         this.state.pending = this.subscriptions.length < 1;
@@ -1662,19 +1672,19 @@ class AbstractObserver {
             return subscriptions.length > 0;
         };
     }
-    next(value) {
+    next(...values) {
         this._forEach(function (subscription) {
-            subscription.notify(SubscriptionStates.onCompleted, value);
+            subscription.notify(SubscriptionStates.onSuccess, values);
         });
     }
     error(errorObject) {
         this._forEach(function (subscription) {
-            subscription.notify(SubscriptionStates.onError, errorObject);
+            subscription.notify(SubscriptionStates.onError, [errorObject]);
         });
     }
     completed() {
         this._forEach(function (subscription) {
-            subscription.notify(SubscriptionStates.onCompleted);
+            subscription.notify(SubscriptionStates.onCompleted, []);
         });
     }
     destroy() {
@@ -1700,8 +1710,8 @@ class Subject {
     hasObservers() {
         return this._observer.hasObservers();
     }
-    next(value) {
-        this._observer.next(value);
+    next(...values) {
+        this._observer.next(...values);
     }
     error(error) {
         this._observer.error(error);
@@ -1710,35 +1720,32 @@ class Subject {
         this._observer.completed();
     }
 }
-class QueryList extends Array {
+class QueryList {
     constructor() {
-        super();
+        this._items = [];
         this.onChanges = new Subject();
-        Object.defineProperties(this, {
-            first: {
-                get: function () {
-                    return this[0];
-                }
-            },
-            last: {
-                get: function () {
-                    return this[this.length - 1];
-                }
-            }
-        });
     }
     static from(iterable) {
         if (!Array.isArray(iterable))
             throw new Error(typeof iterable + ' ' + iterable + ' is not iterable');
-        var instance = new QueryList(iterable);
-        iterable.forEach(it => instance.push(it));
+        const instance = new QueryList();
+        iterable.forEach(it => instance.add(it, instance.length));
         return instance;
     }
     static is(instance) {
         return instance instanceof QueryList;
     }
+    get length() {
+        return this._items.length;
+    }
+    get first() {
+        return this._items[0];
+    }
+    get last() {
+        return this._items[this._items.length - 1];
+    }
     add(element, index, emitEvent) {
-        addToArray(this, element, index);
+        addToArray(this._items, element, index);
         if (emitEvent) {
             this.onChanges.next({
                 value: element,
@@ -1748,9 +1755,9 @@ class QueryList extends Array {
         }
     }
     replace(from, to, emitEvent) {
-        var index = this.indexOf(from);
+        const index = this._items.indexOf(from);
         if (index > -1) {
-            this[index] = to;
+            this._items[index] = to;
         }
         if (emitEvent) {
             this.onChanges.next({
@@ -1762,34 +1769,41 @@ class QueryList extends Array {
     }
     get(element) {
         if (element) {
-            return this.find(function (ele) {
-                return ele === element;
-            });
+            return this._items.find(ele => ele === element);
         }
-        return this;
+        return this._items;
     }
     getByIndex(index) {
-        return this[index];
+        return this._items[index];
     }
     destroy() {
-        while (this.length) {
-            var element = this.pop();
+        while (this._items.length) {
+            const element = this._items.pop();
             if (element)
                 removeElement(element);
         }
         this.onChanges.destroy();
     }
-    remove(element) {
-        var index = this.indexOf(element);
+    remove(element, deep = false) {
+        let index = this._items.indexOf(element);
+        if (0 > index && deep && this._items.length) {
+            for (let i = 0; i < this._items.length; i++) {
+                if (!this._items[i].children)
+                    continue;
+                const remChild = this._items[i].children.remove(element);
+                if (remChild)
+                    return remChild;
+            }
+        }
         return this.removeByIndex(index);
     }
     hasIndex(index) {
-        return this.length - 1 > index;
+        return this._items.length - 1 > index;
     }
     removeByIndex(index) {
         if (0 > index)
             return null;
-        var element = removeFromArray(this, index);
+        const element = removeFromArray(this._items, index);
         this.onChanges.next({
             value: element,
             index: index,
@@ -1797,8 +1811,76 @@ class QueryList extends Array {
         });
         return element;
     }
+    forEach(fn, thisArg) {
+        this._items.forEach(fn, thisArg);
+    }
+    map(fn, thisArg) {
+        return this._items.map(fn, thisArg);
+    }
+    filter(fn, thisArg) {
+        return this._items.filter(fn, thisArg);
+    }
+    find(fn, thisArg) {
+        return this._items.find(fn, thisArg);
+    }
+    some(fn, thisArg) {
+        return this._items.some(fn, thisArg);
+    }
+    every(fn, thisArg) {
+        return this._items.every(fn, thisArg);
+    }
+    indexOf(element) {
+        return this._items.indexOf(element);
+    }
+    includes(element) {
+        return this._items.includes(element);
+    }
+    toArray() {
+        return this._items.slice();
+    }
+    [Symbol.iterator]() {
+        return this._items[Symbol.iterator]();
+    }
 }
 var isAllowedArrayType = ['style'];
+var LOCAL_SCOPE_TAG = Symbol('localVariablesScope');
+var SCOPE_PARENT = Symbol('localVariablesScopeParent');
+var SVG_NS = 'http://www.w3.org/2000/svg';
+var svgTags = new Set([
+    'svg',
+    'g',
+    'path',
+    'rect',
+    'circle',
+    'ellipse',
+    'line',
+    'polyline',
+    'polygon',
+    'text',
+    'tspan',
+    'textpath',
+    'defs',
+    'marker',
+    'symbol',
+    'use',
+    'image',
+    'clippath',
+    'mask',
+    'pattern',
+    'lineargradient',
+    'radialgradient',
+    'stop',
+    'foreignobject',
+    'switch',
+    'view',
+    'desc',
+    'title',
+    'metadata',
+    'filter'
+]);
+function isSvgTag(tag) {
+    return typeof tag === 'string' && svgTags.has(tag.toLowerCase());
+}
 function elementMutationObserver(nativeElement, callback) {
     if (!nativeElement)
         return;
@@ -1857,13 +1939,21 @@ function AttachComponentContentQuery(elementRef) {
         });
     }
 }
+function resolveAnchorNode(elementRef) {
+    var node = elementRef && (elementRef.nativeElement || elementRef.nativeNode);
+    if (node && node.nodeType === 11 && elementRef.children && elementRef.children.last) {
+        return resolveAnchorNode(elementRef.children.last);
+    }
+    return node;
+}
 function elementBefore(targetNode, insertNode) {
     if (!targetNode || !targetNode.parentNode)
         return;
-    if (targetNode.before)
+    if (targetNode.before) {
         targetNode.before(insertNode);
-    else
+    } else {
         targetNode.parentNode.insertBefore(insertNode, targetNode);
+    }
 }
 function elementInsertAfter(hostElement, newNode, targetNode, ignoreDetector) {
     if (!targetNode || !targetNode.parentNode)
@@ -1873,9 +1963,9 @@ function elementInsertAfter(hostElement, newNode, targetNode, ignoreDetector) {
         hostElement.changeDetector.onlySelf();
 }
 function replaceElement(fromElement, toElement) {
-    if (!fromElement)
+    var targetNode = fromElement && fromElement.nativeElement;
+    if (!targetNode)
         return;
-    var targetNode = fromElement.nativeElement;
     if (11 === targetNode.nodeType) {
         targetNode = fromElement.children.first.nativeElement;
     }
@@ -1892,7 +1982,7 @@ function removeElement(elementRef, removeFromParent) {
             elementRef.nativeElement.remove();
         }
         if (removeFromParent && elementRef.parent) {
-            elementRef.parent.children.remove(elementRef);
+            elementRef.parent.children.remove(elementRef, true);
         }
         cleanupElementRef(elementRef);
     } else if (elementRef instanceof TextNodeRef) {
@@ -1913,35 +2003,30 @@ function createElementByType(tag, text, fromDOM) {
     case '#':
         return document.createDocumentFragment();
     default:
-        return document.createElement(tag);
+        return isSvgTag(tag) ? document.createElementNS(SVG_NS, tag) : document.createElement(tag);
     }
 }
 function ObserveUntilDestroyed(elementRef, eventListener) {
     if (elementRef.hostRef) {
-        var unsubscribe = SubscribeObservables(elementRef.hostRef.refId, eventListener.next);
+        var unsubscribe = SubscribeObservables(elementRef.hostRef.componentRef, eventListener.next);
         attachElementObserver(elementRef, function () {
             unsubscribe();
             eventListener.done(true);
         });
     }
 }
-function SubscribeObservables(refId, fn) {
-    var componentRef = componentDebugContext.get(refId);
-    var unsubscribe = null;
-    if (componentRef) {
-        unsubscribe = componentRef.observables.subscribe(fn);
-    }
-    return unsubscribe;
+function SubscribeObservables(componentRef, fn) {
+    return componentRef && componentRef.observables ? componentRef.observables.subscribe(fn) : null;
 }
 function textNodeCompiler(textNodeRef) {
     function setValue() {
-        var value = compileTemplate(textNodeRef.ast, textNodeRef.parent.context, textNodeRef.parent.componentInstance);
+        var value = typeof textNodeRef.ast[1] === 'function' ? textNodeRef.ast[1](textNodeRef.parent.context, textNodeRef.parent.componentInstance) : compileTemplate(textNodeRef.ast, textNodeRef.parent.context, textNodeRef.parent.componentInstance);
         if (textNodeRef.nativeNode.nodeValue === value)
             return;
         textNodeRef.nativeNode.nodeValue = value;
     }
-    if (!textNodeRef.ast.once && textNodeRef.parent && textNodeRef.parent.hostRef) {
-        attachElementObserver(textNodeRef.parent, SubscribeObservables(textNodeRef.parent.hostRef.refId, setValue));
+    if (!textNodeRef.ast[2] && textNodeRef.parent && textNodeRef.parent.hostRef) {
+        attachElementObserver(textNodeRef.parent, SubscribeObservables(textNodeRef.parent.hostRef.componentRef, setValue));
     }
     ;
     setValue();
@@ -1965,8 +2050,9 @@ function cleanupElementRef(elementRef) {
 function setupAttributeObservers(element, attrObservers) {
     var observerStarted = false;
     var observerKeys = Object.keys(attrObservers);
-    var unsubscribe = SubscribeObservables(element.hostRef.refId, observe);
+    var unsubscribe = SubscribeObservables(element.hostRef.componentRef, observe);
     attachElementObserver(element, unsubscribe);
+    element._observeAttrs = observe;
     function observe() {
         for (var propName of observerKeys) {
             if (attrObservers[propName].once && observerStarted)
@@ -1975,21 +2061,22 @@ function setupAttributeObservers(element, attrObservers) {
                 var objectValues = attrObservers[propName].reduce((accum, item) => {
                     if (item.once && observerStarted)
                         return accum;
-                    var value = compileTemplate(item, element.context, element.componentInstance);
+                    var value = typeof item.compiledFn === 'function' ? item.compiledFn(element.context, element.componentInstance) : compileTemplate(item, element.context, element.componentInstance);
                     if (value) {
                         if (!accum)
                             accum = {};
-                        Object.assign(accum, isobject(value) ? value : { [item.type]: ElementStyle.fixValue(value, item.suffix) });
+                        Object.assign(accum, isobject(value) ? value : { [item.type]: ElementStyle.fixValue(value, item.type, item.suffix) });
                     }
                     return accum;
                 }, null);
-                AttributeAppender.helpers[propName](element.nativeElement, objectValues);
+                AttributeAppender.byType(propName, element.nativeElement, objectValues);
                 continue;
             }
             attributeEvaluator(propName, attrObservers[propName]);
         }
         function attributeEvaluator(propName, template) {
-            var value = compileTemplate(template, element.context, element.componentInstance);
+            var compiledFn = Array.isArray(template) ? template[1] : template.compiledFn;
+            var value = typeof compiledFn === 'function' ? compiledFn(element.context, element.componentInstance) : compileTemplate(template, element.context, element.componentInstance);
             AttributeAppender.setProp(element.nativeElement, propName, value, template);
         }
         observerStarted = true;
@@ -1997,9 +2084,15 @@ function setupAttributeObservers(element, attrObservers) {
 }
 function createLocalVariables(localVariables, localContext, parentContext) {
     var context = {};
+    if (parentContext && parentContext[LOCAL_SCOPE_TAG]) {
+        context[SCOPE_PARENT] = parentContext;
+    }
+    context[LOCAL_SCOPE_TAG] = true;
     if (localVariables) {
         for (var propName in localVariables) {
-            if (localVariables[propName] && typeof localVariables[propName] == 'string' && localVariables[propName].match(/\s/)) {
+            if (typeof localVariables[propName] === 'function') {
+                writeCompiledPropertyBinding(propName);
+            } else if (localVariables[propName] && typeof localVariables[propName] == 'string' && localVariables[propName].match(/\s/)) {
                 context[propName] = localVariables[propName];
             } else {
                 writePropertyBinding(propName);
@@ -2015,6 +2108,15 @@ function createLocalVariables(localVariables, localContext, parentContext) {
             }
         });
     }
+    function writeCompiledPropertyBinding(propName) {
+        Object.defineProperty(context, propName, {
+            get: function () {
+                if (!localContext)
+                    return null;
+                return localVariables[propName](localContext, parentContext);
+            }
+        });
+    }
     return context;
 }
 function getElementContext(targetContext, targetElement) {
@@ -2023,16 +2125,16 @@ function getElementContext(targetContext, targetElement) {
     if (targetContext.locaVariables) {
         return targetContext.locaVariables;
     }
-    var componentRef = ComponentRef.get(targetContext.refId, targetContext.parentRefId);
-    return componentRef.context;
+    var componentRef = targetContext.componentRef || targetContext.hostRef && targetContext.hostRef.componentRef;
+    return componentRef && componentRef.context;
 }
 var DOMHelper = {
     insert: elementInsertAfter,
     remove: removeElement,
     replace: replaceElement,
     createElement: function (tag, attributes, content, parent, replaceParentContent) {
-        var ele = document.createElement(tag);
-        AttributeAppender(ele, attributes || {});
+        var ele = isSvgTag(tag) ? document.createElementNS(SVG_NS, tag) : document.createElement(tag);
+        AttributeAppender.set(ele, attributes || {});
         if (content) {
             if (typeof content == 'function') {
                 content(ele);
@@ -2054,45 +2156,98 @@ var DOMHelper = {
         return textNode;
     }
 };
-var ViewParser = function () {
-    var compiler = {
-        $: (tmpl, mtl) => mtl ? mtl.type ? mtl : Object.assign(mtl, tmpl) : typeof tmpl === 'object' ? tmpl : tmpl(),
-        jit: (elementRef, transpiledHTML, vt) => {
-            var fragment = document.createDocumentFragment();
-            var pushView = (compiled, isNativeMode) => {
-                if (!isNativeMode) {
-                    compiled.parent && compiled.parent.children.add(compiled);
-                    fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
-                    transverse(compiled);
-                } else {
-                    fragment.appendChild(compiled);
-                }
-            };
-            for (var i = 0; i < transpiledHTML.length; i++) {
-                var compiled = ViewParser.builder[transpiledHTML[i].type](transpiledHTML[i], elementRef, pushView);
-                if (compiled) {
-                    pushView(compiled);
-                }
+function containsStructuralDirective(astNodes) {
+    if (!astNodes)
+        return false;
+    for (var i = 0; i < astNodes.length; i++) {
+        var node = astNodes[i];
+        if (!node)
+            continue;
+        if (node.type === 8 || node.type === 13)
+            return true;
+        if (node.children && containsStructuralDirective(node.children))
+            return true;
+    }
+    return false;
+}
+function clearChildNodes(nativeElement) {
+    while (nativeElement.firstChild) {
+        nativeElement.removeChild(nativeElement.firstChild);
+    }
+}
+function discardRemainingHydrationSiblings(parent) {
+    if (!parent || parent._hydrateCursor === undefined)
+        return;
+    var node = parent._hydrateCursor;
+    while (node) {
+        var next = node.nextSibling;
+        if (node.parentNode)
+            node.parentNode.removeChild(node);
+        node = next;
+    }
+    parent._hydrateCursor = undefined;
+}
+function reportHydrationMismatch(parent, definition, foundNode) {
+    var expected = definition.type === 3 ? 'a text node' : '<' + definition.name + '>';
+    var found = !foundNode ? 'nothing (ran out of server-rendered nodes)' : foundNode.nodeType === 3 ? 'a text node ("' + foundNode.textContent.slice(0, 30) + '")' : '<' + foundNode.nodeName.toLowerCase() + '>';
+    console.warn('[hydration mismatch] expected ' + expected + ' but found ' + found + ' - falling back to a full remount for the remaining siblings at this position.');
+}
+class ViewParser {
+    static $elementContextContainer = new Map();
+    static $(e, t) {
+        return t && t.type ? t : e ? t ? Object.assign(t, e) : 'object' == typeof e ? e : e() : null;
+    }
+    static jit(elementRef, transpiledHTML, vt) {
+        if (elementRef._hydrate) {
+            if (containsStructuralDirective(transpiledHTML)) {
+                clearChildNodes(elementRef.nativeElement);
+            } else {
+                elementRef._hydrateCursor = elementRef.nativeElement.firstChild;
             }
-            var componentInstance = elementRef.componentInstance;
-            for (var name in vt) {
-                componentInstance[name] = new TemplateRef(vt[name]);
-            }
-            return fragment;
         }
-    };
-    function element(definition, parent, viewContainer, context) {
-        var elementRef = new ElementRef(definition, parent);
-        if (definition.attr)
-            AttributeAppender(elementRef.nativeElement, definition.attr);
+        const fragment = document.createDocumentFragment();
+        const pushView = (compiled, isNativeMode) => {
+            if (!isNativeMode) {
+                compiled.parent && compiled.parent.children.add(compiled);
+                fragment.appendChild(compiled.nativeElement || compiled.nativeNode);
+                transverse(compiled);
+            } else {
+                fragment.appendChild(compiled);
+            }
+        };
+        for (var i = 0; i < transpiledHTML.length; i++) {
+            var compiled = jitBuilder.compile(transpiledHTML[i], elementRef, pushView);
+            if (compiled) {
+                pushView(compiled);
+            }
+        }
+        var componentInstance = elementRef.componentInstance;
+        for (var name in vt) {
+            componentInstance[name] = TemplateRef.reflect(elementRef, vt[name], newRef => {
+                transverse(newRef);
+                return newRef.nativeElement || newRef.nativeNode;
+            });
+        }
+        return fragment;
+    }
+}
+class jitBuilder {
+    static $1(definition, parent, viewContainer, context) {
+        const elementRef = createOrAdoptElement(definition, parent);
+        if (definition.attr) {
+            AttributeAppender.set(elementRef.nativeElement, definition.attr);
+        }
         if (definition.children) {
-            for (var i = 0; i < definition.children.length; i++) {
-                var childDefinition = typeof definition.children[i] === 'function' ? definition.children[i]() : definition.children[i];
+            if (elementRef._adopted) {
+                elementRef._hydrateCursor = elementRef.nativeElement.firstChild;
+            }
+            for (let i = 0; i < definition.children.length; i++) {
+                const childDefinition = typeof definition.children[i] === 'function' ? definition.children[i]() : definition.children[i];
                 if (!childDefinition)
                     continue;
-                var child = ViewParser.builder[childDefinition.type](childDefinition, elementRef, viewContainer, context, true);
+                const child = this.compile(childDefinition, elementRef, viewContainer, context, true);
                 if (child) {
-                    pushToParent(child, elementRef, i);
+                    this.pushToParent(child, elementRef, i);
                 }
             }
         }
@@ -2101,7 +2256,7 @@ var ViewParser = function () {
         }
         return elementRef;
     }
-    function pushToParent(child, parent, index, isNativeMode) {
+    static pushToParent(child, parent, index, isNativeMode) {
         if (!isNativeMode) {
             parent.children.add(child, index);
             parent.nativeElement.appendChild(child.nativeElement || child.nativeNode);
@@ -2109,19 +2264,21 @@ var ViewParser = function () {
             parent.nativeElement.appendChild(child);
         }
     }
-    function comment(definition, parent) {
-        return new AbstractElementRef(definition, parent);
+    static $8(definition, parent, pushView, context) {
+        return new AbstractElementRef(definition, parent, context);
     }
-    function text(definition, parent) {
-        return new TextNodeRef(definition, parent);
+    static $3(definition, parent) {
+        return createOrAdoptTextNode(definition, parent);
     }
-    function place(definition, parent, viewContainer, context, appendToParent) {
-        var hostRef = parent.hostRef;
-        var isNativeMode = hostRef.internal_getDefinition('asNative');
-        var haveLocalVairables = false;
-        var createPlaceElement = !(viewContainer || appendToParent);
-        var template = TemplateRef.factory(hostRef, 'place', true);
-        var placeElement = createPlaceElement ? new AbstractElementRef({
+    static $11(definition, parent, viewContainer, context, appendToParent) {
+        const hostRef = parent.hostRef;
+        const template = TemplateRef.factory(hostRef, 'place', true);
+        if (!template && !definition.fallback)
+            return null;
+        const isNativeMode = hostRef.internal_getDefinition('asNative');
+        let haveLocalVairables = false;
+        const createPlaceElement = !(viewContainer || appendToParent);
+        const placeElement = createPlaceElement || parent.isc ? new AbstractElementRef({
             name: '#',
             type: 11
         }, hostRef) : null;
@@ -2130,17 +2287,21 @@ var ViewParser = function () {
             if (haveLocalVairables)
                 context = createLocalVariables(definition.$ctx, parent.context, context);
         }
+        let placedCount = 0;
+        const useHostLoopContext = !definition.$ctx && hostRef.hasContext;
         function createAndAppend(element) {
+            placedCount++;
+            let child = element;
             if (!isNativeMode) {
-                var child = ViewParser.builder[element.type](element, definition.$ctx == true ? parent : hostRef.parent, viewContainer, context);
+                child = jitBuilder.compile(element, definition.$ctx == true ? parent : useHostLoopContext ? hostRef : hostRef.parent, viewContainer, useHostLoopContext ? hostRef.context : context);
                 if (haveLocalVairables)
                     child.context = context;
-                child.contentHostRefId = hostRef.refId;
+                child.contentHostRef = hostRef.componentRef;
             }
-            if (createPlaceElement || appendToParent) {
-                pushToParent(child || element, placeElement || parent, null, isNativeMode);
+            if (parent.isc || createPlaceElement || appendToParent) {
+                jitBuilder.pushToParent(child, placeElement || parent, null, isNativeMode);
             } else {
-                viewContainer(child || element, isNativeMode);
+                viewContainer(child, isNativeMode);
             }
             if (definition.vc && [
                     element.refId,
@@ -2152,9 +2313,20 @@ var ViewParser = function () {
         if (template) {
             template.forEach(definition.refId, createAndAppend);
         }
+        if (!placedCount && definition.fallback && definition._GT && !isNativeMode) {
+            const fallbackTemplate = definition._GT(definition.fallback);
+            if (fallbackTemplate) {
+                const child = jitBuilder.compile(fallbackTemplate, parent, viewContainer, context);
+                if (parent.isc || createPlaceElement || appendToParent) {
+                    jitBuilder.pushToParent(child, placeElement || parent, null, isNativeMode);
+                } else {
+                    viewContainer(child, isNativeMode);
+                }
+            }
+        }
         return placeElement;
     }
-    function outlet(def, parent, viewContainer, context) {
+    static $13(def, parent, viewContainer, context) {
         var currentValue = null;
         var element = null;
         var unsubscribeScheduler = noop();
@@ -2164,14 +2336,15 @@ var ViewParser = function () {
             parent: { get: () => parent }
         });
         function checkAndCompileTemplate(fromObserver) {
-            var templateId = getFilteredTemplateValue(def.$templateId, context || parent.context, parent.componentInstance);
+            var ctxArg = context || parent.context;
+            var templateId = typeof def.$templateId.compiledFn === 'function' ? def.$templateId.compiledFn(ctxArg, parent.componentInstance) : getFilteredTemplateValue(def.$templateId, ctxArg, parent.componentInstance);
             if (currentValue != templateId) {
                 unsubscribeScheduler();
                 currentValue = templateId;
                 var template = def._GT && def._GT(templateId);
                 if (template) {
                     var oldElement = element;
-                    element = ViewParser.builder[template.type](template, parent, viewContainer, context);
+                    element = jitBuilder.compile(template, parent, viewContainer, context);
                     if (!fromObserver || !element)
                         return element;
                     unsubscribeScheduler = scheduler.schedule(function () {
@@ -2206,18 +2379,41 @@ var ViewParser = function () {
         }
         return null;
     }
-    return {
-        compiler,
-        builder: {
-            1: element,
-            3: text,
-            11: place,
-            13: outlet,
-            8: comment
-        },
-        $elementContextContainer: new Map()
-    };
-}();
+    static compile(def, elementRef, pushView, context, appendToParent) {
+        return this[`$${ def.type }`](def, elementRef, pushView, context, appendToParent);
+    }
+}
+function createOrAdoptElement(definition, parent) {
+    if (parent && parent._hydrateCursor !== undefined) {
+        const node = parent._hydrateCursor;
+        if (node && node.nodeType === 1 && node.tagName.toLowerCase() === String(definition.name).toLowerCase()) {
+            parent._hydrateCursor = node.nextSibling;
+            const elementRef = new ElementRef(Object.assign({}, definition, {
+                fromDOM: true,
+                name: node
+            }), parent);
+            elementRef._adopted = true;
+            if (definition.isc)
+                elementRef._hydrate = true;
+            return elementRef;
+        }
+        reportHydrationMismatch(parent, definition, node);
+        discardRemainingHydrationSiblings(parent);
+    }
+    return new ElementRef(definition, parent);
+}
+function createOrAdoptTextNode(definition, parent) {
+    if (parent && parent._hydrateCursor !== undefined) {
+        const node = parent._hydrateCursor;
+        if (node && node.nodeType === 3) {
+            parent._hydrateCursor = node.nextSibling;
+            return new TextNodeRef(Object.assign({}, definition, { adoptedNode: node }), parent);
+        }
+        reportHydrationMismatch(parent, definition, node);
+        discardRemainingHydrationSiblings(parent);
+    }
+    return new TextNodeRef(definition, parent);
+}
 function transverse(node) {
     if (node._lcmp)
         return;
@@ -2236,6 +2432,8 @@ function transverse(node) {
         }
         ;
         EventHandler.registerListener(node);
+        if (node._observeAttrs)
+            node._observeAttrs();
         node.children.forEach(transverse);
     }
 }
@@ -2269,101 +2467,104 @@ function addViewQuery(hostElement, option, childElement) {
         break;
     }
 }
-class ViewRef extends Array {
+class ViewRef {
+    _destroyed = false;
     constructor(elementRef) {
-        super();
-        this._destroyed = false;
-        this.get = function (index) {
-            return this[index];
-        };
-        this.createEmbededView = function (templateRef, context, index) {
-            var view = new EmbededViewContext(elementRef, templateRef, context);
+        this._views = [];
+        this.createEmbededView = (templateRef, context, index) => {
+            const view = new EmbededViewContext(elementRef, templateRef, context);
             view.renderView(index);
-            addToArray(this, view, index);
+            addToArray(this._views, view, index);
             return view;
         };
     }
+    get length() {
+        return this._views.length;
+    }
+    get(index) {
+        return this._views[index];
+    }
     move(prev, curr) {
         scheduler.schedule(() => {
-            var view = this.get(prev);
-            var targetNode = this.get(curr);
+            const view = this.get(prev);
+            const targetNode = this.get(curr);
             if (targetNode && view) {
                 if (curr > prev) {
                     elementInsertAfter(null, view.compiledElement.nativeElement, targetNode.compiledElement.nativeElement);
                 } else {
                     elementBefore(targetNode.compiledElement.nativeElement, view.compiledElement.nativeElement);
                 }
-                moveItemInArray(this, prev, curr);
+                moveItemInArray(this._views, prev, curr);
                 this.updateContext();
             }
         });
     }
     remove(index) {
-        var view = removeFromArray(this, index);
+        const view = removeFromArray(this._views, index);
         if (view) {
             view._destroyed_view = true;
             view.destroy();
         }
-        view = null;
     }
     clearView() {
-        while (this.length) {
-            var view = this.shift();
+        while (this._views.length) {
+            const view = this._views.shift();
             view.destroy();
         }
     }
     updateContext() {
-        for (var i = 0; i < this.length; i++) {
-            var view = this.get(i);
+        for (var i = 0; i < this._views.length; i++) {
+            const view = this.get(i);
             view.updateContext({
                 index: i,
-                count: this.length
+                count: this._views.length
             });
         }
     }
 }
 class EmbededViewContext {
+    unsubscribeScheduler = null;
     constructor(parentRef, templateRef, context) {
         this.context = context;
         this.parentRef = parentRef;
-        var templateContext = templateRef.getContext();
-        var componentRefContext = createLocalVariables(templateContext, context, parentRef.context);
+        const templateContext = templateRef.getContext();
+        const componentRefContext = createLocalVariables(templateContext, context, parentRef.context);
         this.compiledElement = templateRef.createElement(parentRef, null, componentRefContext);
-        this.compiledElement.hasContext = !!templateContext;
-        this.unsubscribeScheduler;
-        if (this.compiledElement && this.compiledElement.hasContext) {
-            this.compiledElement.context = componentRefContext;
+        if (this.compiledElement) {
+            this.compiledElement.hasContext = !!templateContext;
+            if (this.compiledElement.hasContext) {
+                this.compiledElement.context = componentRefContext;
+            }
         }
     }
     renderView(index) {
-        var targetNode = (this.parentRef.children.last || this.parentRef).nativeElement;
-        var _arrIndex = index ? index - 1 : index;
-        if (index !== undefined && this.parentRef.children.hasIndex(_arrIndex))
-            targetNode = this.parentRef.children.getByIndex(_arrIndex).nativeElement;
         if (!this.compiledElement)
             return;
-        var nativeElement = this.compiledElement.nativeElement || this.compiledElement.nativeNode;
-        var changeDetector = this.compiledElement && this.compiledElement.changeDetector;
+        let targetNode = resolveAnchorNode(this.parentRef.children.last || this.parentRef);
+        var _arrIndex = index ? index - 1 : index;
+        if (index !== undefined && this.parentRef.children.hasIndex(_arrIndex))
+            targetNode = resolveAnchorNode(this.parentRef.children.getByIndex(_arrIndex));
+        if (!targetNode)
+            return;
+        const nativeElement = this.compiledElement.nativeElement || this.compiledElement.nativeNode;
         this.parentRef.children.add(this.compiledElement, index);
-        var _scheduler = () => {
+        this.unsubscribeScheduler = scheduler.schedule(() => {
             try {
                 transverse(this.compiledElement);
                 if (index)
                     elementInsertAfter(this.parentRef, nativeElement, targetNode, true);
                 else
                     elementBefore(targetNode, nativeElement);
-                if (changeDetector)
-                    changeDetector.detectChanges();
-                nativeElement = null;
-                changeDetector = null;
                 targetNode = null;
             } catch (e) {
+            } finally {
+                this.unsubscribeScheduler();
+                this.unsubscribeScheduler = null;
             }
-        };
-        this.unsubscribeScheduler = scheduler.schedule(_scheduler);
+        });
     }
     destroy() {
-        this.unsubscribeScheduler();
+        this.unsubscribeScheduler && this.unsubscribeScheduler();
         removeElement(this.compiledElement, true);
         this.compiledElement = null;
         this.context = null;
@@ -2376,13 +2577,13 @@ class EmbededViewContext {
     updateContext(updates) {
         if (!this.context)
             return;
-        for (var prop in updates) {
+        for (const prop in updates) {
             this.context[prop] = updates[prop];
         }
     }
 }
 function TextNodeRef(definition, parent) {
-    this.nativeNode = document.createTextNode(definition.ast[0]);
+    this.nativeNode = definition.adoptedNode || document.createTextNode(definition.ast[0]);
     this.type = 3;
     this.hasBinding = definition.ast.length > 1;
     if (this.hasBinding) {
@@ -2400,63 +2601,63 @@ function TextNodeRef(definition, parent) {
         });
     }
 }
-function CustomEventHandler(element) {
-    var trigger = event => {
-        this.trigger(event);
-    };
-    this.element = element;
-    this.registeredEvents = {};
-    this.register = function (type, callback) {
-        var index = -1;
-        if (this.element && this.registeredEvents) {
-            if (!this.registeredEvents.hasOwnProperty(type)) {
-                this.registeredEvents[type] = [];
-                this.element.addEventListener(type, trigger, false);
+class CustomEventHandler {
+    static trigger(context) {
+        return event => {
+            if (!context.registeredEvents.has(event.type))
+                return;
+            context.registeredEvents.get(event.type).forEach(listener => listener(event));
+        };
+    }
+    constructor(element) {
+        this.element = element;
+        this.callback = CustomEventHandler.trigger(this);
+        this.registeredEvents = new Map();
+    }
+    register(type, callback) {
+        let index = -1;
+        if (this.element) {
+            if (!this.registeredEvents.has(type)) {
+                this.registeredEvents.set(type, []);
+                this.element.addEventListener(type, this.callback, false);
             }
-            index = this.registeredEvents[type].push(callback);
-            return () => this.registeredEvents[type].splice(index - 1, 1);
+            index = this.registeredEvents.get(type).push(callback);
+            return () => this.registeredEvents.get(type).splice(index - 1, 1);
         }
-    };
+    }
+    destroy() {
+        this.registeredEvents.keys().forEach(type => {
+            this.registeredEvents.delete(type);
+            this.element.removeEventListener(type, this.callback, false);
+        });
+        this.element = null;
+        this.registeredEvents.clear();
+    }
 }
-CustomEventHandler.prototype.trigger = function (event) {
-    var listeners = this.registeredEvents[event.type] || [];
-    for (var i = 0; i < listeners.length; i++) {
-        listeners[i](event);
-    }
-};
-CustomEventHandler.prototype.destroy = function () {
-    for (var type in this.registeredEvents) {
-        this.registeredEvents[type].length = 0;
-        delete this.registeredEvents[type];
-        this.element.removeEventListener(type, trigger, false);
-    }
-    this.element = null;
-    this.registeredEvents = null;
-};
+const eventProps = [
+    'key',
+    'keyCode',
+    'pageX',
+    'pageY',
+    'screenX',
+    'screenY',
+    'x',
+    'y',
+    'clientX',
+    'clientY',
+    'type',
+    'width',
+    'height',
+    'offsetX',
+    'offsetY'
+];
 function ProxyEvent(event, target) {
-    var eventProps = [
-        'key',
-        'keyCode',
-        'pageX',
-        'pageY',
-        'screenX',
-        'screenY',
-        'x',
-        'y',
-        'clientX',
-        'clientY',
-        'type',
-        'width',
-        'height',
-        'offsetX',
-        'offsetY'
-    ];
     return eventProps.reduce((accum, name) => (accum[name] = event[name], accum), {
         target,
-        preventDefault: event.preventDefault
+        preventDefault: () => event.preventDefault()
     });
 }
-var customEventRegistry = new Map([
+const customEventRegistry = new Map([
     [
         'window',
         new CustomEventHandler(window)
@@ -2464,6 +2665,10 @@ var customEventRegistry = new Map([
     [
         'document',
         new CustomEventHandler(document)
+    ],
+    [
+        'body',
+        new CustomEventHandler(document.body)
     ]
 ]);
 class EventHandler {
@@ -2471,24 +2676,29 @@ class EventHandler {
         this._events = events;
         this.registeredEvents = new Map();
     }
+    push(event) {
+        this._events.push(event);
+    }
     static registerListener(element) {
         if (!element.events || !element.events._events.length)
             return;
-        var eventInstance = element.events;
-        var handler = function ($ev) {
+        const eventInstance = element.events;
+        const handler = function ($ev) {
             EventHandler.handleEvent(element, $ev);
         };
         function _registerEvent(eventName, useCapture) {
             if (!eventInstance.registeredEvents.has(eventName)) {
                 if (eventName.includes('.')) {
-                    var event = eventName.split('.');
-                    var customRegistry = customEventRegistry.get(event[0]);
-                    if (customRegistry) {
-                        var unsubscribe = customRegistry.register(event[1], function (htmlEvent) {
+                    const event = eventName.split('.');
+                    const customRegistry = customEventRegistry.get(event.shift());
+                    const _customRegistryHandler = evName => {
+                        evName = evName.replace(/[_]/gi, '-');
+                        eventInstance.registeredEvents.set(eventName, customRegistry.register(evName, htmlEvent => {
                             EventHandler.handleEvent(element, htmlEvent, eventName);
-                        });
-                        eventInstance.registeredEvents.set(eventName, unsubscribe);
-                        customRegistry = null;
+                        }));
+                    };
+                    if (customRegistry) {
+                        event.pop().split(',').forEach(_customRegistryHandler);
                     }
                 } else {
                     element.nativeElement.addEventListener(eventName, handler, useCapture);
@@ -2498,37 +2708,46 @@ class EventHandler {
                 }
             }
         }
-        for (var event of eventInstance._events) {
+        for (const event of eventInstance._events) {
             if (!event.custom) {
                 event.name.split(' ').forEach(eventName => _registerEvent(eventName, !!event.target));
             }
         }
     }
     static attachEventEmitter(element, eventName, componentInstance) {
-        var registeredEvent = getEventsByType(element.events._events, eventName)[0];
-        if (registeredEvent && registeredEvent.value) {
-            var unSubscribe = componentInstance[eventName].subscribe(function (value) {
+        const registeredEvent = getEventsByType(element.events._events, eventName)[0];
+        if (registeredEvent && (registeredEvent.value || registeredEvent.compiledFn)) {
+            const unSubscribe = componentInstance[eventName].subscribe(value => {
                 var parentElement = element && element.parent;
                 if (!parentElement)
                     return;
                 parentElement = parentElement.isc ? parentElement : parentElement.hostRef;
-                _executeEventsTriggers(registeredEvent.value, parentElement.componentInstance, element.hasContext ? element.context : element.parent.hasContext ? element.parent.context : parentElement.context, value);
+                const dispatchContext = element.hasContext ? element.context : element.parent.hasContext ? element.parent.context : parentElement.context;
+                if (typeof registeredEvent.compiledFn === 'function') {
+                    registeredEvent.compiledFn(dispatchContext, parentElement.componentInstance, value);
+                } else {
+                    _executeEventsTriggers(registeredEvent.value, parentElement.componentInstance, dispatchContext, value);
+                }
                 parentElement && parentElement.changeDetector && parentElement.changeDetector.detectChanges();
             });
             element.events.registeredEvents.set(eventName, unSubscribe);
         }
     }
     static attachEventDispatcher(element, eventName, componentInstance) {
-        var registeredEvent = getEventsByType(element.events._events, eventName)[0];
-        var context = null;
-        if (registeredEvent && registeredEvent.value) {
+        const registeredEvent = getEventsByType(element.events._events, eventName)[0];
+        let context = null;
+        if (registeredEvent && (registeredEvent.value || registeredEvent.compiledFn)) {
             context = element.context;
             if (element.isc) {
                 context = element.parent.context;
             }
             if (context.hasOwnProperty(eventName)) {
-                var unSubscribe = context[eventName].subscribe(function (value) {
-                    _executeEventsTriggers(registeredEvent.value, componentInstance, element.context, value);
+                const unSubscribe = context[eventName].subscribe(function (value) {
+                    if (typeof registeredEvent.compiledFn === 'function') {
+                        registeredEvent.compiledFn(element.context, componentInstance, value);
+                    } else {
+                        _executeEventsTriggers(registeredEvent.value, componentInstance, element.context, value);
+                    }
                     element && element.changeDetector.detectChanges();
                 });
                 element.events.registeredEvents.set(eventName, unSubscribe);
@@ -2553,16 +2772,16 @@ class EventHandler {
             element && element.changeDetector && element.changeDetector.detectChanges();
         }
         function getClosest(target) {
-            for (var query of target) {
-                var ele = event.target.closest(query);
+            for (const query of target) {
+                const ele = event.target.closest(query);
                 if (ele)
                     return ele;
             }
             return null;
         }
         function triggerEvents(registeredEvent) {
-            var _event = null;
-            var context = element.context;
+            let _event = null;
+            let context = element.context;
             if (registeredEvent.handler) {
                 return registeredEvent.handler(event);
             } else if (registeredEvent.target) {
@@ -2572,18 +2791,17 @@ class EventHandler {
                 context = mainElement[$elementContext];
                 _event = ProxyEvent(event, mainElement);
             }
-            var componentInstance = registeredEvent.node ? element.nodes.get(registeredEvent.node) : element.hostRef.componentInstance;
-            _executeEventsTriggers(registeredEvent.value, componentInstance, context, _event || event);
-            context = componentInstance = null;
-            if (_event) {
-                _event.target = _event.preventDefault = null;
+            const componentInstance = registeredEvent.node ? element.nodes.get(registeredEvent.node) : element.hostRef.componentInstance;
+            if (typeof registeredEvent.compiledFn === 'function') {
+                registeredEvent.compiledFn(context, componentInstance, _event || event);
+            } else {
+                _executeEventsTriggers(registeredEvent.value, componentInstance, context, _event || event);
             }
+            context = null;
         }
     }
     destroy() {
-        this.registeredEvents.forEach(function (removeListenerFn) {
-            removeListenerFn();
-        });
+        this.registeredEvents.forEach(cb => cb && cb());
         this.registeredEvents.clear();
         this._events.length = 0;
     }
@@ -2600,27 +2818,19 @@ function _executeEventsTriggers(eventTriggers, componentInstance, context, ev) {
         if (event.left) {
             parseObjectExpression(event, context, componentInstance, ev);
         } else if (event.fn) {
-            var fn = getFnFromContext(event, componentInstance, context);
-            if (!fn)
+            let instance = componentInstance;
+            if (event.namespaces) {
+                instance = isequal(event.namespaces[0], '$event') ? resolveContext(event.namespaces.slice(1), ev, componentInstance, true) : resolveContext(event.namespaces, componentInstance, context);
+            }
+            if (!instance[event.fn] && !context[event.fn])
                 return errorBuilder('No context found for this event');
-            var narg = generateArguments(event.args, context, componentInstance, ev);
-            fn.apply(fn.context, narg);
-            fn.context = null;
-            fn = null;
+            const narg = generateArguments(event.args, context, componentInstance, ev);
+            if (instance[event.fn])
+                instance[event.fn](...narg);
+            else
+                context[event.fn](...narg);
         }
     }
-}
-function getFnFromContext(eventInstance, componentInstance, context) {
-    var instance = componentInstance;
-    if (eventInstance.namespaces) {
-        instance = resolveContext(eventInstance.namespaces, componentInstance, context);
-    }
-    var fn = instance[eventInstance.fn];
-    if (!fn)
-        return null;
-    fn.context = instance instanceof Array || !componentInstance[eventInstance.fn] ? instance : componentInstance;
-    instance = null;
-    return fn;
 }
 function filterParser(filterClass, context) {
     var filterInstance = Inject(filterClass);
@@ -2677,7 +2887,7 @@ function generateArguments(args, context, componentInstance, event) {
         } else if (isobject(node) && node.arg)
             return generateArguments(node.arg, context, componentInstance, event);
         else if (isstring(node))
-            return isequal(node, '$event') ? event : context.hasOwnProperty(node) ? context[node] : componentInstance.hasOwnProperty(node) ? componentInstance[node] : node;
+            return isequal(node, '$event') ? event : resolveIdentifier(node, context, componentInstance, node);
         return resolveValueFromContext(node, context, componentInstance, event);
     }
 }
@@ -2690,25 +2900,58 @@ function resolveValueFromContext(expression, context, componentInstance) {
         return resolveContext(expression, context, componentInstance);
     else if (expression === '$this')
         return componentInstance;
-    else if (isobject(context) && expression in context)
-        return context[expression];
-    else if (isobject(componentInstance) && expression in componentInstance)
-        return componentInstance[expression];
-    return context && context.hasOwnProperty(expression) ? context[expression] : null;
+    return resolveIdentifier(expression, context, componentInstance);
+}
+function resolveIdentifier(name, context, componentInstance, notFoundValue = null) {
+    var scope = context;
+    while (scope !== null && typeof scope === 'object' && scope[LOCAL_SCOPE_TAG]) {
+        if (Object.prototype.hasOwnProperty.call(scope, name)) {
+            return scope[name];
+        }
+        scope = scope[SCOPE_PARENT];
+    }
+    if (scope !== null && typeof scope === 'object' && name in scope) {
+        return scope[name];
+    }
+    return isobject(componentInstance) && name in componentInstance ? componentInstance[name] : notFoundValue;
+}
+function resolveCall(name, args, context, componentInstance) {
+    var dcontext = context && name in context ? context : componentInstance;
+    var hasContext = !isnull(dcontext) && !isundefined(dcontext);
+    if (hasContext && isfunction(dcontext[name])) {
+        return dcontext[name].apply(dcontext, args);
+    }
+    return null;
+}
+function resolveNamespacedCall(namespaces, name, args, context, componentInstance) {
+    var dcontext = resolveContext(namespaces, context, componentInstance);
+    var hasContext = !isnull(dcontext) && !isundefined(dcontext);
+    if (hasContext && isfunction(dcontext[name])) {
+        return dcontext[name].apply(dcontext, args);
+    }
+    return null;
+}
+function resolveEventNamespacedCall(remainingNamespaces, name, args, event) {
+    var dcontext = remainingNamespaces.reduce(function (accum, property) {
+        return isnull(accum) || isundefined(accum) ? accum : accum[property];
+    }, event);
+    var hasContext = !isnull(dcontext) && !isundefined(dcontext);
+    if (hasContext && isfunction(dcontext[name])) {
+        return dcontext[name].apply(dcontext, args);
+    }
+    return null;
 }
 function parseObjectExpression(expression, context, componentInstance, event) {
     var internalParser = {
-        ite: function () {
-            return resolveValueFromContext(expression.test, context, componentInstance) ? resolveValueFromContext(expression.cons, context, componentInstance) : resolveValueFromContext(expression.alt, context, componentInstance);
-        },
+        ite: () => resolveValueFromContext(expression.test, context, componentInstance) ? resolveValueFromContext(expression.cons, context, componentInstance) : resolveValueFromContext(expression.alt, context, componentInstance),
         call: function () {
-            var dcontext = context;
             if (expression.namespaces) {
-                dcontext = resolveContext(expression.namespaces, context, componentInstance);
-            } else {
-                dcontext = dcontext && expression.fn in dcontext ? context : componentInstance;
+                var namespacedArgs = generateArguments(expression.args, context, componentInstance, event);
+                return resolveNamespacedCall(expression.namespaces, expression.fn, namespacedArgs, context, componentInstance);
             }
-            if (dcontext && isfunction(dcontext[expression.fn])) {
+            var dcontext = context && expression.fn in context ? context : componentInstance;
+            var hasContext = !isnull(dcontext) && !isundefined(dcontext);
+            if (hasContext && isfunction(dcontext[expression.fn])) {
                 var args = generateArguments(expression.args, context, componentInstance, event);
                 return dcontext[expression.fn].apply(dcontext, args);
             }
@@ -2723,11 +2966,11 @@ function parseObjectExpression(expression, context, componentInstance, event) {
             }
         },
         asg: function () {
-            var value = generateArguments([expression.right], context, componentInstance, event)[0];
+            const value = generateArguments([expression.right], context, componentInstance, event)[0];
             return setModelValue(expression.left, context, componentInstance, value);
         },
         una: function () {
-            var val = resolveValueFromContext(expression.args, context, componentInstance, event);
+            let val = resolveValueFromContext(expression.args, context, componentInstance, event);
             if (expression.ops === '+')
                 return +val;
             if (expression.ops === '-')
@@ -2784,33 +3027,30 @@ function parseObjectExpression(expression, context, componentInstance, event) {
             if (expression.ops === '^')
                 return l ^ r;
         },
-        new: function () {
-            errorBuilder('NewExpression not allowed in template interpolation -> (new ' + expression.fn + ') ');
-        },
-        raw: function () {
-            return expression.value;
-        },
-        mem: function () {
-            return resolveValueFromContext(expression.list, context, componentInstance, event);
-        }
+        new: () => errorBuilder('NewExpression not allowed in template interpolation -> (new ' + expression.fn + ') '),
+        raw: () => expression.value,
+        mem: () => resolveValueFromContext(expression.list, context, componentInstance, event)
     };
     return internalParser[expression.type] && internalParser[expression.type]();
 }
 function setModelValue(key, context, componentInstance, value) {
-    var modelContext = {};
-    if (isarray(key)) {
-        modelContext = resolveContext(key.slice(0, key.length - 1), context, componentInstance);
-        key = key[key.length - 1];
-    } else {
-        modelContext = key in context ? context : componentInstance;
+    const entries = !isarray(key) ? key.split('.') : key.concat();
+    let modelContext = Object.is(context, componentInstance) ? componentInstance : entries[0] in context ? context : componentInstance;
+    let property = entries.pop();
+    if (isarray(property)) {
+        property = resolveContext(property, context, componentInstance);
+    }
+    if (key.length) {
+        modelContext = entries.reduce((accum, k) => {
+            if (!accum.hasOwnProperty(k)) {
+                accum[k] = {};
+            }
+            return accum[k];
+        }, modelContext);
     }
     if (modelContext) {
-        if (Array.isArray(key)) {
-            key = resolveContext(key, context, componentInstance);
-        }
-        modelContext[key] = value;
+        modelContext[property] = value;
     }
-    modelContext = null;
     return value;
 }
 function resolveContext(key, context, componentInstance, isEventType) {
@@ -2820,7 +3060,7 @@ function resolveContext(key, context, componentInstance, isEventType) {
         }
         var componentEntry = idx ? null : componentInstance;
         if (Array.isArray(property)) {
-            var value = resolveValueFromContext(property, context, componentEntry);
+            const value = resolveValueFromContext(property, context, componentEntry);
             return accum && accum[value];
         }
         return resolveValueFromContext(property, accum, componentEntry);
@@ -2894,11 +3134,11 @@ function getAttrFx(element, show) {
         opacity
     };
 }
-function animate(element, styles, speed, callback) {
+function animate(element, styles, speed, callback, easing) {
     animationInterval({
         duration: speed,
         delta: function (progress) {
-            return FX.easing.swing(progress);
+            return (FX.easing[easing] || FX.easing.swing)(progress);
         },
         complete: callback || function () {
         },
@@ -2993,6 +3233,41 @@ animate.slideDown = function (element, speed, callback) {
 animate.toggleSlide = function (element) {
     animate[element.style.display === 'none' ? 'slideDown' : 'slideUp'](element);
 };
+var ANIMATION_STATE_KEY = '__jeliAnimationState__';
+function createAnimation(config) {
+    var states = config.states || {};
+    var transitions = config.transitions || {};
+    var defaults = config.defaults || {};
+    function resolveTransition(fromName, toName) {
+        return transitions[fromName + ' => ' + toName] || transitions['* => ' + toName] || transitions[fromName + ' => *'] || transitions['* => *'] || {};
+    }
+    return {
+        trigger: function (element, toName, fromName) {
+            var to = states[toName];
+            if (!to)
+                return Promise.reject(new Error('createAnimation: unknown state "' + toName + '"'));
+            fromName = fromName || element[ANIMATION_STATE_KEY] || 'void';
+            var from = states[fromName] || {};
+            var transition = resolveTransition(fromName, toName);
+            var duration = transition.duration || defaults.duration || 1000;
+            var easing = transition.easing || defaults.easing || 'swing';
+            return new Promise(function (resolve) {
+                animate(element, function (delta) {
+                    for (var prop in to) {
+                        var start = prop in from ? from[prop] : to[prop];
+                        element.style[prop] = start + (to[prop] - start) * delta;
+                    }
+                }, duration, function () {
+                    element[ANIMATION_STATE_KEY] = toName;
+                    resolve();
+                }, easing);
+            });
+        },
+        currentState: function (element) {
+            return element[ANIMATION_STATE_KEY] || 'void';
+        }
+    };
+}
 var rxEventStatus = [
     'pending',
     'inprogress',
@@ -3034,20 +3309,10 @@ class AbstractEventRx {
     }
 }
 class StateManager {
-    constructor(current, callback, states) {
+    constructor(current, validator, states) {
         this.current = current || '';
         this.states = states || [];
-        this.set = function (name) {
-            if (!validateAction(this.current, name) && this.states.length) {
-                this.current = name;
-                this.lastStateIndex = this.states.indexOf(name);
-            }
-        };
-        function validateAction(current, next) {
-            return (callback || function () {
-                return false;
-            })(current, next);
-        }
+        this.validator = validator || (() => false);
         this.set(current);
     }
     get isLast() {
@@ -3056,6 +3321,13 @@ class StateManager {
     get isFirst() {
         return this.lastStateIndex < 1;
     }
+    set(state) {
+        const stateIndex = this.states.indexOf(state);
+        if (this.states.length && !this.validator(this.current, state, stateIndex > -1)) {
+            this.current = state;
+            this.lastStateIndex = stateIndex;
+        }
+    }
     pushStates(states) {
         this.states.push.apply(this.states, states);
         if (this.current && !this.lastStateIndex) {
@@ -3063,7 +3335,7 @@ class StateManager {
         }
     }
     next() {
-        var next = this.lastStateIndex + 1;
+        const next = this.lastStateIndex + 1;
         if (this.states.length - 1 >= next) {
             this.set(this.states[next]);
         }
@@ -3253,7 +3525,7 @@ class EventManager {
     unlink(eventName, index) {
         var eventListeners = this.get(eventName);
         if (eventListeners) {
-            eventListeners.splice(1, index);
+            eventListeners.splice(index, 1);
         }
     }
     destroy(eventName) {
@@ -3321,6 +3593,13 @@ function rxEvents(targetInstance, eventNames) {
     return () => {
         eventNames.forEach(eventName => targetInstance.removeEventListener(eventName, coreEventListener));
     };
+}
+function rxWatch(source, changeDetector, onNext) {
+    return source.subscribe(function (value) {
+        if (onNext)
+            onNext(value);
+        changeDetector && changeDetector.manualCheck();
+    });
 }
 function rxLoop(operations, callback) {
     return new Promise(resolve => {
@@ -3458,179 +3737,221 @@ class EventDebounce extends AbstractEventRx {
     }
 }
 function MediaQueryEvent(breakPoints, callback) {
-    if (!Array.isArray(breakPoints) || typeof callback != 'function')
+    if (!Array.isArray(breakPoints) || typeof callback != 'function') {
         return errorBuilder('MediaQueryEvent requires list of breakPoints to observe and also a callback function');
+    }
     var attachQuery = (screenSize, idx) => {
         var handleChange = event => callback(event, screenSize);
         var query = `(min-width: ${ screenSize }px)`;
         var nextPoint = breakPoints[idx + 1];
-        if (nextPoint)
+        if (nextPoint) {
             query += ` and (max-width: ${ nextPoint - 0.02 }px)`;
+        }
         var media = matchMedia(`${ query }`);
         media.addEventListener('change', handleChange);
-        if (media.matches)
+        if (media.matches) {
             handleChange(media);
+        }
         return () => media.removeEventListener('change', handleChange);
     };
     var breakPointHandlers = breakPoints.map(attachQuery);
     return () => breakPointHandlers.forEach(listener => listener());
 }
 function ComponentFactoryResolver(componentFactory, viewRef, callback, skipElementInsert) {
-    if (!componentFactory || !componentFactory.ctors.exposeView) {
-        return Promise.reject('No exported factory found for <' + componentFactory.ctors.selector + '>');
+    if (!componentFactory) {
+        return Promise.reject('No exported factory found for <' + componentFactory?.ctors?.selector + '>');
     }
-    var viewDefinition = {
+    const elementRef = new ElementRef({
         name: componentFactory.ctors.selector,
         type: 'element',
         isc: true,
         providers: [componentFactory]
-    };
-    var componentRef = new ElementRef(viewDefinition, viewRef, true);
-    var localInjectors = new ComponentInjectors(componentRef);
+    }, viewRef, true);
+    const componentInjector = new ComponentInjectors(elementRef);
     return new Promise((resolve, reject) => {
         try {
-            ElementCompiler(componentFactory, componentRef, localInjectors, function (componentInstance) {
+            ElementCompiler.compile(componentFactory, elementRef, componentInjector, componentInstance => {
                 if (!skipElementInsert && viewRef) {
-                    elementInsertAfter(viewRef, componentRef.nativeElement, viewRef.nativeElement);
-                    viewRef.children.add(componentRef);
+                    elementInsertAfter(viewRef, elementRef.nativeElement, viewRef.nativeElement);
+                    viewRef.children.add(elementRef);
                 }
-                (callback || resolve)(componentRef, componentInstance);
+                EventHandler.registerListener(elementRef);
+                (callback || resolve)(elementRef, componentInstance);
             });
         } catch (exception) {
             reject(exception);
         }
-        localInjectors = null;
-        viewDefinition = null;
     });
 }
-function IterableProfiler(trackBy) {
-    this._destroyed = false;
-    this._typeError = false;
-    this.cacheHash = [];
-    this.out = null;
-    this.trackBy = trackBy || function (item, index) {
-        return item || index;
-    };
+var TAIL_SENTINEL = Symbol('iterable-profiler-tail');
+function DiffNode(hash) {
+    this.hash = hash;
+    this.prev = null;
+    this.next = null;
 }
-IterableProfiler.prototype.diff = function (source) {
-    if (this._destroyed)
-        return false;
-    if (source && !(source instanceof Array)) {
-        if (!this._typeError) {
-            this._typeError = true;
-            return errorBuilder(new TypeError('Collection should be an array'));
+function unlinkNode(node) {
+    node.prev.next = node.next;
+    node.next.prev = node.prev;
+}
+function insertNodeBefore(node, ref) {
+    node.prev = ref.prev;
+    node.next = ref;
+    ref.prev.next = node;
+    ref.prev = node;
+}
+class IterableProfiler {
+    _destroyed = false;
+    _typeError = false;
+    cacheHash = [];
+    out = null;
+    _trackBy = null;
+    constructor(trackBy) {
+        this._trackBy = trackBy;
+    }
+    trackBy(item, index) {
+        if (this._trackBy) {
+            if (isfunction(this._trackBy)) {
+                return this._trackBy(item, index);
+            } else if (isstring(this._trackBy)) {
+                return item[this._trackBy];
+            }
         }
-        return false;
+        return item || index;
     }
-    this.out = {
-        deleted: [],
-        order: []
-    };
-    this._typeError = false;
-    var noSource = !source || !source.length;
-    if (noSource && (!this.cacheHash || !this.cacheHash.length)) {
-        return false;
-    }
-    if (noSource && this.cacheHash.length) {
-        this.out.deleted = Object.keys(this.cacheHash).map(Number);
-        this.cacheHash.length = 0;
-        return true;
-    }
-    var len = source.length;
-    var totalCacheItem = this.cacheHash.length;
-    var newCacheHash = new Array(source.length).fill('-').map((_, idx) => this.trackBy(source[idx], idx));
-    var operationOrder = [];
-    var isDirty = false;
-    for (var inc = 0; inc < len; inc++) {
-        var newCacheIndex = newCacheHash.indexOf(this.cacheHash[inc]);
-        var indexInCache = this.cacheHash.indexOf(newCacheHash[inc]);
-        var prevIndex = this.cacheHash.indexOf(newCacheHash[newCacheIndex]);
-        var existsInCache = indexInCache > -1;
-        var cacheIndexExistsInSource = newCacheIndex > -1;
-        var outOfCacheRange = inc > totalCacheItem - 1;
-        if (existsInCache) {
-            if (prevIndex !== newCacheIndex || !cacheIndexExistsInSource) {
-                isDirty = true;
-                if (!cacheIndexExistsInSource) {
-                    if (!outOfCacheRange) {
-                        this.cacheHash.splice(inc, 1);
-                        totalCacheItem--;
-                        this.out.deleted.push(inc);
-                    }
-                } else {
-                    var prev = operationOrder[operationOrder.length - 1];
-                    if (prev && prev.state == 'move' && [
-                            prev.index,
-                            prev.prevIndex
-                        ].includes(prevIndex)) {
-                        continue;
-                    }
-                    var from = indexInCache > newCacheIndex ? indexInCache : prevIndex;
-                    var to = indexInCache > newCacheIndex ? prevIndex : newCacheIndex;
-                    moveItemInArray(this.cacheHash, from, to);
-                    operationOrder.push({
-                        index: to,
-                        prevIndex: from,
-                        state: 'move'
-                    });
+    diff(source) {
+        if (this._destroyed)
+            return false;
+        if (source && !(source instanceof Array)) {
+            if (!this._typeError) {
+                this._typeError = true;
+                return errorBuilder(new TypeError('Collection should be an array'));
+            }
+            return false;
+        }
+        this.out = {
+            deleted: [],
+            order: []
+        };
+        this._typeError = false;
+        var noSource = !source || !source.length;
+        if (noSource && (!this.cacheHash || !this.cacheHash.length)) {
+            return false;
+        }
+        if (noSource && this.cacheHash.length) {
+            for (var d = this.cacheHash.length - 1; d >= 0; d--) {
+                this.out.deleted.push(d);
+            }
+            this.cacheHash.length = 0;
+            return true;
+        }
+        var len = source.length;
+        var seenHashes = new Set();
+        var newHash = new Array(len);
+        var newHashIndex = new Map();
+        for (var idx = 0; idx < len; idx++) {
+            var hash = this.trackBy(source[idx], idx);
+            this.checkDuplicateRepeater(hash, seenHashes);
+            seenHashes.add(hash);
+            newHash[idx] = hash;
+            newHashIndex.set(hash, idx);
+        }
+        var oldHash = this.cacheHash;
+        var deleted = [];
+        var working = [];
+        for (var oi = 0; oi < oldHash.length; oi++) {
+            if (newHashIndex.has(oldHash[oi])) {
+                working.push(oldHash[oi]);
+            } else {
+                deleted.push(oi);
+            }
+        }
+        deleted.sort(function (a, b) {
+            return b - a;
+        });
+        this.out.deleted = deleted;
+        var tail = new DiffNode(TAIL_SENTINEL);
+        tail.next = tail;
+        tail.prev = tail;
+        var nodeByHash = new Map();
+        var prevNode = tail;
+        for (var wi = 0; wi < working.length; wi++) {
+            var wNode = new DiffNode(working[wi]);
+            nodeByHash.set(working[wi], wNode);
+            wNode.prev = prevNode;
+            prevNode.next = wNode;
+            prevNode = wNode;
+        }
+        prevNode.next = tail;
+        tail.prev = prevNode;
+        var operationOrder = [];
+        var isDirty = deleted.length > 0;
+        var cursor = tail.next;
+        for (var i = 0; i < len; i++) {
+            var h = newHash[i];
+            if (cursor.hash === h) {
+                cursor = cursor.next;
+                continue;
+            }
+            var target = nodeByHash.get(h);
+            if (target) {
+                var prevIndex = i;
+                var scan = cursor;
+                while (scan !== target) {
+                    prevIndex++;
+                    scan = scan.next;
                 }
+                unlinkNode(target);
+                insertNodeBefore(target, cursor);
+                operationOrder.push({
+                    index: i,
+                    prevIndex: prevIndex,
+                    state: 'move'
+                });
+            } else {
+                var created = new DiffNode(h);
+                nodeByHash.set(h, created);
+                insertNodeBefore(created, cursor);
+                operationOrder.push({
+                    index: i,
+                    state: 'create'
+                });
             }
-        } else {
             isDirty = true;
-            var isCreateMode = outOfCacheRange || cacheIndexExistsInSource;
-            if (isCreateMode) {
-                this.cacheHash.splice(inc, 0, newCacheHash[inc]);
-                totalCacheItem++;
+        }
+        this.out.order = operationOrder;
+        this.cacheHash = newHash;
+        return isDirty;
+    }
+    forEachDeleted(callback) {
+        this.out.deleted.forEach(callback);
+    }
+    forEachOperation(callback) {
+        var len = this.out.order.length;
+        for (var i = 0; i < len; i++) {
+            if (this.out.order[i]) {
+                callback(this.out.order[i], i);
             }
-            operationOrder.push({
-                index: inc,
-                state: isCreateMode ? 'create' : 'update'
-            });
         }
     }
-    if (totalCacheItem > len) {
-        for (var i = len; i < totalCacheItem; i++) {
-            isDirty = true;
-            this.out.deleted.push(i);
+    checkDuplicateRepeater(hash, seenHashes) {
+        if (seenHashes.has(hash)) {
+            errorBuilder('Duplicate values are not allowed in repeaters. Use \'track by\' expression to specify unique keys');
         }
     }
-    this.cacheHash = newCacheHash;
-    this.out.order = operationOrder;
-    newCacheHash = null;
-    operationOrder = null;
-    return isDirty;
-};
-IterableProfiler.prototype.forEachDeleted = function (callback) {
-    this.out.deleted.forEach(callback);
-};
-IterableProfiler.prototype.forEachOperation = function (callback) {
-    var len = this.out.order.length;
-    for (var i = 0; i < len; i++) {
-        if (this.out.order[i]) {
-            callback(this.out.order[i], i);
-        }
+    attachTrackBy(trackBy) {
+        this._trackBy = trackBy;
     }
-};
-IterableProfiler.prototype.checkDuplicateRepeater = function (hash) {
-    if (this.cacheHash.indexOf(hash) > -1) {
-        errorBuilder('Duplicate values are not allowed in repeaters. Use \'track by\' expression to specify unique keys');
+    destroy() {
+        this._destroyed = true;
+        this.cacheHash.length = 0;
+        this.out = null;
     }
-};
-IterableProfiler.prototype.attachTrackBy = function (fn) {
-    if (!isfunction(fn))
-        return;
-    this.trackBy = fn;
-};
-IterableProfiler.prototype.destroy = function () {
-    this._destroyed = true;
-    this.cacheHash.length = 0;
-    this.out = null;
-};
+}
 function InterceptorResolver(interceptorToken, locals) {
     var interceptors = Inject(interceptorToken);
     return new Promise(function (resolve, reject) {
         if (!interceptors || !interceptors.length) {
-            return resolve();
+            return resolve(locals);
         }
         var len = 0;
         function next() {
@@ -3639,13 +3960,13 @@ function InterceptorResolver(interceptorToken, locals) {
             if (interceptor) {
                 interceptor.resolve(locals, next, reject);
             } else {
-                resolve();
+                resolve(locals);
             }
         }
         next();
     });
 }
-var lazyLoaderCachedPaths = [];
+var lazyLoaderCachedPaths = new Map();
 class LazyLoader {
     constructor(dropZone) {
         this.dropZone = dropZone;
@@ -3658,37 +3979,69 @@ class LazyLoader {
         LazyLoader._resolve.apply({}, arguments);
     }
     static _resolve(filePaths, callback, type, assetURL, dropZone) {
-        var totalFiles = 0, resolved = 0, failed = 0;
+        assetURL = assetURL || '';
+        var totalFiles = 0, resolved = 0, failed = 0, _triggerImmediately = [];
         var types = [
             'js',
             'css'
         ];
-        var clink = (path, ftype) => path.includes('//') ? path : [
-            assetURL || '',
-            path,
-            ftype ? '.' : '',
-            ftype
-        ].join('');
+        var clink = (path, ftype, params) => {
+            var url = path.includes('//') ? path : [
+                assetURL,
+                path,
+                ftype ? '.' : '',
+                ftype
+            ].join('');
+            var urlParams = new URLSearchParams();
+            if (params) {
+                Object.keys(params).forEach(param => {
+                    urlParams.set(param, params[param]);
+                });
+            }
+            return url + urlParams;
+        };
         if (typeof callback !== 'function') {
             callback = function () {
             };
         }
         if (Array.isArray(filePaths)) {
             for (var filePath of filePaths) {
-                if (lazyLoaderCachedPaths.includes(filePath)) {
+                var url = filePath;
+                var attrs = {};
+                var params = {};
+                if (typeof filePath == 'object') {
+                    url = filePath.url;
+                    attrs = filePath.attrs;
+                    params = filePath.params;
+                    type = type || LazyLoader.getExt(filePath.name);
+                    if (filePath.content && type) {
+                        url = URL.createObjectURL(new Blob([filePath.content], LazyLoader.mimeType(type)));
+                    }
+                }
+                if (!url || lazyLoaderCachedPaths.has(url)) {
+                    const cached = lazyLoaderCachedPaths.get(url);
+                    if (cached) {
+                        cached.callbacks.push(callback);
+                        if (cached.resolved && !_triggerImmediately.includes(url)) {
+                            _triggerImmediately.push(url);
+                        }
+                    }
                     continue;
                 }
-                var ftype = type || filePath.substring(filePath.lastIndexOf('.') + 1);
+                var ftype = type || LazyLoader.getExt(url);
                 if (types.includes(ftype)) {
                     totalFiles++;
-                    lazyLoaderCachedPaths.push(filePath);
-                    var element = _createElement(clink(filePath, type || ''), ftype);
-                    attachListener(element, filePath);
+                    lazyLoaderCachedPaths.set(url, {
+                        callbacks: [callback],
+                        resolved: false
+                    });
+                    var element = _createElement(clink(url, type || '', params), ftype, attrs);
+                    attachListener(element, url);
                     (dropZone || document.getElementsByTagName('head')[0]).appendChild(element);
                 }
             }
         }
-        function _createElement(filePath, type) {
+        function _createElement(filePath, type, attrs) {
             var element = null;
             if (type === 'js') {
                 element = document.createElement('script');
@@ -3699,6 +4052,11 @@ class LazyLoader {
                 element.setAttribute('href', filePath);
                 element.setAttribute('rel', 'stylesheet');
             }
+            if (attrs) {
+                Object.keys(attrs).forEach(attr => {
+                    element[attr] = attrs[attr];
+                });
+            }
             element.charset = 'utf-8';
             element.timeout = 120;
             element.async = true;
@@ -3707,25 +4065,109 @@ class LazyLoader {
         function attachListener(element, filePath) {
             element.onload = function () {
                 resolved++;
-                triggerCallack();
-                element.parentNode.removeChild(element);
+                triggerCallack(filePath);
+                if (element.tagName === 'SCRIPT') {
+                    element.parentNode.removeChild(element);
+                }
             };
             element.onerror = element.onabort = function () {
                 failed++;
-                triggerCallack();
-                lazyLoaderCachedPaths.splice(lazyLoaderCachedPaths.indexOf(filePath), 1);
+                triggerCallack(filePath);
+                lazyLoaderCachedPaths.delete(filePath);
             };
         }
-        function triggerCallack() {
+        function triggerCallack(filePath) {
             var allResolved = totalFiles == resolved + failed;
-            if (allResolved)
-                callback({
-                    failed,
-                    resolved,
-                    allResolved
-                });
+            if (allResolved) {
+                const cached = lazyLoaderCachedPaths.get(filePath);
+                cached.resolved = true;
+                while (cached.callbacks.length) {
+                    const _callback = cached.callbacks.shift();
+                    _callback({
+                        failed,
+                        resolved,
+                        allResolved
+                    });
+                }
+            }
         }
-        triggerCallack();
+        _triggerImmediately.forEach(triggerCallack);
+    }
+    static resolveModule(filePaths, callback) {
+        if (typeof callback !== 'function') {
+            callback = function () {
+            };
+        }
+        var paths = Array.isArray(filePaths) ? filePaths : [filePaths];
+        var totalFiles = paths.length, resolved = 0, failed = 0;
+        var modules = {};
+        var _triggerImmediately = [];
+        function triggerCallback(url) {
+            var allResolved = totalFiles == resolved + failed;
+            if (allResolved) {
+                paths.forEach(function (path) {
+                    var cached = lazyLoaderCachedPaths.get(path);
+                    if (!cached)
+                        return;
+                    cached.resolved = true;
+                    while (cached.callbacks.length) {
+                        var _callback = cached.callbacks.shift();
+                        _callback({
+                            failed,
+                            resolved,
+                            allResolved,
+                            modules
+                        });
+                    }
+                });
+            }
+        }
+        paths.forEach(function (url) {
+            if (!url || lazyLoaderCachedPaths.has(url)) {
+                var cached = lazyLoaderCachedPaths.get(url);
+                if (cached) {
+                    cached.callbacks.push(callback);
+                    if (cached.resolved) {
+                        resolved++;
+                        if (cached.module)
+                            modules[url] = cached.module;
+                        if (!_triggerImmediately.includes(url))
+                            _triggerImmediately.push(url);
+                    }
+                }
+                return;
+            }
+            lazyLoaderCachedPaths.set(url, {
+                callbacks: [callback],
+                resolved: false,
+                module: null
+            });
+            import(url).then(function (mod) {
+                resolved++;
+                modules[url] = mod;
+                var cached = lazyLoaderCachedPaths.get(url);
+                if (cached)
+                    cached.module = mod;
+                triggerCallback(url);
+            }).catch(function () {
+                failed++;
+                triggerCallback(url);
+                lazyLoaderCachedPaths.delete(url);
+            });
+        });
+        _triggerImmediately.forEach(triggerCallback);
+    }
+    static mimeType(type) {
+        var mimeTypes = {
+            js: 'application/javascript',
+            css: 'text/css',
+            json: 'application/json',
+            txt: 'application/text'
+        };
+        return { type: mimeTypes[type || 'js'] };
+    }
+    static getExt(name) {
+        return (name || '').substring(name.lastIndexOf('.') + 1);
     }
     js(obj, callback) {
         LazyLoader._resolve(obj, callback, 'js', this.resourcePath, this.dropZone);
@@ -3745,27 +4187,98 @@ var jeliContext = Object.create({
     version: __buildOptions.version,
     debug: jeliDebugger
 });
-function jeliQuerySelector(b, c) {
-    if ((b.nativeElement || b.nativeNode) === c) {
-        return b;
-    } else if (b.children) {
-        for (var e of b.children._list) {
-            const f = jeliQuerySelector(e, c);
-            if (f)
-                return f;
-        }
-    } else {
+function jeliQuerySelector(root, nativeNode) {
+    if (!root)
         return null;
+    if ((root.nativeElement || root.nativeNode) === nativeNode) {
+        return root;
     }
-}
-;
-function jeliDebugger(element) {
-    if (element && CoreBootstrapContext.enableDebugger) {
-        return element[$elementContext];
+    if (root.children) {
+        for (var child of root.children) {
+            var found = jeliQuerySelector(child, nativeNode);
+            if (found)
+                return found;
+        }
     }
     return null;
 }
-global.jeli = jeliContext;
+function jeliDebugger(element) {
+    if (!element || !_isDebuggerEnabled())
+        return null;
+    var ref = jeliQuerySelector(_getBootstrapRoot(), element);
+    return ref ? ref.context : null;
+}
+function describeDep(dep) {
+    if (!dep)
+        return String(dep);
+    if (dep instanceof ProviderToken)
+        return dep.tokenName + (dep.multiple ? '[]' : '');
+    if (typeof dep === 'function')
+        return dep.name || '(anonymous)';
+    if (dep.tokenName)
+        return dep.tokenName + (dep.optional ? '?' : '');
+    return String(dep);
+}
+function getComponentTree(elementRef) {
+    var root = elementRef || _getBootstrapRoot();
+    if (!root)
+        return null;
+    return walk(root);
+    function walk(ref) {
+        var node = {
+            refId: ref.refId,
+            tagName: ref.tagName,
+            isComponent: !!ref.isc,
+            children: (ref.children || []).map(walk)
+        };
+        if (ref.isc) {
+            node.componentInstance = ref.componentInstance;
+        }
+        return node;
+    }
+}
+function inspectElement(nativeNode) {
+    return jeliQuerySelector(_getBootstrapRoot(), nativeNode);
+}
+function inspectComponent(target) {
+    var ref = target && target.nodeType ? jeliQuerySelector(_getBootstrapRoot(), target) : null;
+    var instance = ref ? ref.componentInstance : target;
+    if (!instance || !instance.constructor || !instance.constructor.ctors)
+        return null;
+    var di = instance.constructor.ctors.DI || [];
+    return {
+        selector: instance.constructor.ctors.selector,
+        instance: instance,
+        refId: ref ? ref.refId : undefined,
+        changeDetectorStatus: ref ? ref.changeDetector.status : undefined,
+        dependencies: di.map(function (dep) {
+            return {
+                description: describeDep(dep),
+                resolvedInstance: typeof dep === 'function' && dep.ctors ? dep.ctors.instance : undefined
+            };
+        })
+    };
+}
+function getSingletonInstances() {
+    var registry = getSingletonRegistry();
+    if (!registry)
+        return null;
+    return Array.from(registry.entries()).map(function (entry) {
+        return {
+            name: entry[0].name || '(anonymous)',
+            instance: entry[1]
+        };
+    });
+}
+global.jeli = Object.assign(global.jeli || {}, jeliContext);
+global.jeli.devtools = {
+    getComponentTree: getComponentTree,
+    inspectElement: inspectElement,
+    inspectComponent: inspectComponent,
+    enableSingletonTracking: enableSingletonTracking,
+    disableSingletonTracking: disableSingletonTracking,
+    getSingletonInstances: getSingletonInstances
+};
 var nativeTimeout = window.setTimeout;
 var nativeInterval = window.setInterval;
 window.setTimeout = function (fn, timer, trigerDetector) {
@@ -3780,75 +4293,135 @@ function trigger(fn, trigerDetector) {
         trigerDetector && ChangeDetector();
     };
 }
-;
+;__required.r(exports, 'ElementCompiler', ElementCompiler);
+__required.r(exports, 'errorBuilder', errorBuilder);
+__required.r(exports, 'enableSingletonTracking', enableSingletonTracking);
+__required.r(exports, 'disableSingletonTracking', disableSingletonTracking);
+__required.r(exports, 'getSingletonRegistry', getSingletonRegistry);
+__required.r(exports, 'ProviderToken', ProviderToken);
+__required.r(exports, 'Inject', Inject);
+__required.r(exports, 'AutoWire', AutoWire);
+__required.r(exports, 'wireResolvers', wireResolvers);
+__required.r(exports, 'AbstractInjectorInstance', AbstractInjectorInstance);
+__required.r(exports, 'closureRef', closureRef);
+__required.r(exports, 'resolveClosureRef', resolveClosureRef);
+__required.r(exports, 'noop', noop);
+__required.r(exports, 'enableLifecyclePromiseTracking', enableLifecyclePromiseTracking);
+__required.r(exports, 'disableLifecyclePromiseTracking', disableLifecyclePromiseTracking);
+__required.r(exports, 'drainLifecyclePromises', drainLifecyclePromises);
+__required.r(exports, 'LifeCycle', LifeCycle);
+__required.r(exports, 'TemplateRef', TemplateRef);
+__required.r(exports, 'staticInjectionToken', staticInjectionToken);
+__required.r(exports, 'ComponentInjectors', ComponentInjectors);
+__required.r(exports, 'ComponentRef', ComponentRef);
+__required.r(exports, 'Observer', Observer);
+__required.r(exports, 'createCustomElement', createCustomElement);
+__required.r(exports, 'CompileNativeElement', CompileNativeElement);
+__required.r(exports, 'ElementRef', ElementRef);
+__required.r(exports, 'INITIALIZERS', INITIALIZERS);
+__required.r(exports, 'APP_BOOTSTRAP', APP_BOOTSTRAP);
+__required.r(exports, 'APP_BASE_HREF', APP_BASE_HREF);
+__required.r(exports, 'APP_ASSET_URL', APP_ASSET_URL);
+__required.r(exports, 'enableHydrationMode', enableHydrationMode);
+__required.r(exports, 'disableHydrationMode', disableHydrationMode);
+__required.r(exports, 'bootStrapApplication', bootStrapApplication);
+__required.r(exports, 'compileModule', compileModule);
+__required.r(exports, 'ChangeDetector', ChangeDetector);
+__required.r(exports, '_getBootstrapRoot', _getBootstrapRoot);
+__required.r(exports, '_isDebuggerEnabled', _isDebuggerEnabled);
+__required.r(exports, 'ViewParser', ViewParser);
+__required.r(exports, 'scheduler', scheduler);
+__required.r(exports, 'LOCAL_SCOPE_TAG', LOCAL_SCOPE_TAG);
+__required.r(exports, 'SCOPE_PARENT', SCOPE_PARENT);
+__required.r(exports, 'elementMutationObserver', elementMutationObserver);
+__required.r(exports, 'ObserveUntilDestroyed', ObserveUntilDestroyed);
+__required.r(exports, 'setupAttributeObservers', setupAttributeObservers);
+__required.r(exports, 'createLocalVariables', createLocalVariables);
+__required.r(exports, 'getElementContext', getElementContext);
+__required.r(exports, 'DOMHelper', DOMHelper);
+__required.r(exports, 'AttributeAppender', AttributeAppender);
+__required.r(exports, 'sce', sce);
+__required.r(exports, 'ElementStyle', ElementStyle);
+__required.r(exports, 'ElementClassList', ElementClassList);
+__required.r(exports, 'QueryList', QueryList);
+__required.r(exports, 'Subject', Subject);
+__required.r(exports, 'SubscriptionStates', SubscriptionStates);
+__required.r(exports, 'Subscription', Subscription);
+__required.r(exports, 'Observable', Observable);
+__required.r(exports, 'AbstractObserver', AbstractObserver);
+__required.r(exports, 'ViewRef', ViewRef);
+__required.r(exports, 'TextNodeRef', TextNodeRef);
+__required.r(exports, 'EventHandler', EventHandler);
+__required.r(exports, 'CustomEventHandler', CustomEventHandler);
+__required.r(exports, 'ProxyEvent', ProxyEvent);
+__required.r(exports, 'resolveIdentifier', resolveIdentifier);
+__required.r(exports, 'resolveCall', resolveCall);
+__required.r(exports, 'resolveNamespacedCall', resolveNamespacedCall);
+__required.r(exports, 'resolveEventNamespacedCall', resolveEventNamespacedCall);
+__required.r(exports, 'interpolationHelper', interpolationHelper);
+__required.r(exports, 'animate', animate);
+__required.r(exports, 'createAnimation', createAnimation);
+__required.r(exports, 'StateManager', StateManager);
+__required.r(exports, 'EventEmitter', EventEmitter);
+__required.r(exports, 'Promise2', Promise2);
+__required.r(exports, 'EventManager', EventManager);
+__required.r(exports, 'debounce', debounce);
+__required.r(exports, 'rxDebounceTime', rxDebounceTime);
+__required.r(exports, 'rxWhile', rxWhile);
+__required.r(exports, 'rxUntilChanged', rxUntilChanged);
+__required.r(exports, 'rxWait', rxWait);
+__required.r(exports, 'rxEvents', rxEvents);
+__required.r(exports, 'rxWatch', rxWatch);
+__required.r(exports, 'rxLoop', rxLoop);
+__required.r(exports, 'rxTimeout', rxTimeout);
+__required.r(exports, 'rxInterval', rxInterval);
+__required.r(exports, 'EventDebounce', EventDebounce);
+__required.r(exports, 'MediaQueryEvent', MediaQueryEvent);
+__required.r(exports, 'ComponentFactoryResolver', ComponentFactoryResolver);
+__required.r(exports, 'IterableProfiler', IterableProfiler);
+__required.r(exports, 'InterceptorResolver', InterceptorResolver);
+__required.r(exports, 'LazyLoader', LazyLoader);
+
 },
-1144 : (module, exports, __required, global) => {
+1146 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'SizeToUnitPipe', () => SizeToUnitPipe);
-__required.r(exports, 'ReversePipe', () => ReversePipe);
-__required.r(exports, 'FilterPipe', () => FilterPipe);
-__required.r(exports, 'whereFilterFn', () => whereFilterFn);
-__required.r(exports, 'upperCaseFilter', () => upperCaseFilter);
-__required.r(exports, 'QueryFactory', () => QueryFactory);
-__required.r(exports, 'orderByFilterFn', () => orderByFilterFn);
-__required.r(exports, 'lowerCaseFilter', () => lowerCaseFilter);
-__required.r(exports, 'jsonFilterFn', () => jsonFilterFn);
-__required.r(exports, 'NumberFilter', () => NumberFilter);
-__required.r(exports, 'CurrencyFilter', () => CurrencyFilter);
-__required.r(exports, 'capitalizeFilter', () => capitalizeFilter);
-__required.r(exports, 'ClassDirective', () => ClassDirective);
-__required.r(exports, 'SwitchDefaultDirective', () => SwitchDefaultDirective);
-__required.r(exports, 'SwitchCaseDirective', () => SwitchCaseDirective);
-__required.r(exports, 'SwitchDirective', () => SwitchDirective);
-__required.r(exports, 'IfDirective', () => IfDirective);
-__required.r(exports, 'ForDirective', () => ForDirective);
-__required.r(exports, 'CommonModule', () => CommonModule);
-var helpers = __required(1142);
-var isundefined = helpers.isundefined;
-var isfunction = helpers.isfunction;
-var isarray = helpers.isarray;
-var isobject = helpers.isobject;
-var isequal = helpers.isequal;
-var core = __required(1143);
-var ElementClassList = core.ElementClassList;
-var IterableProfiler = core.IterableProfiler;
-var __buildOptions = {
-    'buildTime': 1734326607141,
+const helpers = __required(1144);
+const isundefined = helpers.isundefined;
+const isfunction = helpers.isfunction;
+const isarray = helpers.isarray;
+const isobject = helpers.isobject;
+const isequal = helpers.isequal;
+const core = __required(1145);
+const ElementClassList = core.ElementClassList;
+const IterableProfiler = core.IterableProfiler;
+const __buildOptions = {
+    'buildTime': 1790832896642,
     'version': '1.0.0',
     'baseHref': '',
     'assetURL': '',
     'production': false
 };
-function jForRow(context, index, count) {
-    this.count = count;
-    this.index = index;
-    this.$context = context;
-    Object.defineProperties(this, {
-        first: {
-            get: function () {
-                return this.index > 0;
-            }
-        },
-        last: {
-            get: function () {
-                return this.count - 1 === this.index;
-            }
-        },
-        even: {
-            get: function () {
-                return this.index % 2 === 0;
-            }
-        },
-        odd: {
-            get: function () {
-                return !this.even;
-            }
-        }
-    });
+class jForRow {
+    constructor(context, index, count) {
+        this.count = count;
+        this.index = index;
+        this.$context = context;
+    }
+    get first() {
+        return this.index > 0;
+    }
+    get last() {
+        return this.count - 1 === this.index;
+    }
+    get even() {
+        return this.index % 2 === 0;
+    }
+    get odd() {
+        return !this.even;
+    }
 }
-var ForDirective = function () {
-    'use strict';
-    function ForDirective(viewRef, templateRef) {
+class ForDirective {
+    constructor(viewRef, templateRef) {
         this.viewRef = viewRef;
         this.templateRef = templateRef;
         this.iterable = new IterableProfiler();
@@ -3857,43 +4430,35 @@ var ForDirective = function () {
         this._isForIn = false;
         this._isForOf = false;
         this.inProgress = false;
-        Object.defineProperties(this, {
-            forIn: {
-                set: function (value) {
-                    this._isForIn = true;
-                    this._forValue = value;
-                    this.willObserve();
-                },
-                get: function () {
-                    if (!this._isForIn)
-                        return null;
-                    return this._forValue;
-                }
-            },
-            forOf: {
-                set: function (value) {
-                    this._isForOf = true;
-                    this._forValue = value;
-                    this.willObserve();
-                },
-                get: function () {
-                    if (!this._isForOf)
-                        return null;
-                    return this._forValue;
-                }
-            },
-            forTrackBy: {
-                set: function (fn) {
-                    this.iterable.attachTrackBy(fn);
-                    this._forTrackBy = fn;
-                },
-                get: function () {
-                    return this._forTrackBy;
-                }
-            }
-        });
     }
-    ForDirective.prototype._listenerFn = function () {
+    set forIn(value) {
+        this._isForIn = true;
+        this._forValue = value;
+        this.willObserve();
+    }
+    get forIn() {
+        if (!this._isForIn)
+            return null;
+        return this._forValue;
+    }
+    set forOf(value) {
+        this._isForOf = true;
+        this._forValue = value;
+        this.willObserve();
+    }
+    get forOf() {
+        if (!this._isForOf)
+            return null;
+        return this._forValue;
+    }
+    set forTrackBy(fn) {
+        this.iterable.attachTrackBy(fn);
+        this._forTrackBy = fn;
+    }
+    get forTrackBy() {
+        return this._forTrackBy;
+    }
+    _listenerFn() {
         this.iterable.forEachDeleted(index => {
             this.viewRef.remove(index);
         });
@@ -3914,159 +4479,150 @@ var ForDirective = function () {
         });
         this.viewRef.updateContext();
         this.inProgress = false;
-    };
-    ForDirective.prototype.willObserve = function () {
+    }
+    willObserve() {
         var changes = this.iterable.diff(this._forValue);
         if (changes && !this.inProgress) {
             this.inProgress = true;
             this._listenerFn();
         }
-    };
-    ForDirective.prototype.viewDidDestroy = function () {
+    }
+    viewDidDestroy() {
         this.viewRef.clearView();
         this.iterable.destroy();
         this.viewRef = null;
         this.templateRef = null;
-    };
-    ForDirective.ctors = {
-        selector: 'for',
-        props: {
-            forIn: {},
-            forOf: {},
-            forTrackBy: { type: 'Function' }
+    }
+}
+ForDirective.ctors = {
+    selector: 'for',
+    props: {
+        forIn: {},
+        forOf: {},
+        forTrackBy: { type: 'any' }
+    },
+    DI: [
+        {
+            optional: true,
+            tokenName: 'ViewRef'
         },
-        DI: [
-            {
-                optional: true,
-                tokenName: 'ViewRef'
-            },
-            {
-                optional: true,
-                tokenName: 'TemplateRef'
-            }
-        ]
-    };
-    return ForDirective;
-}();
-var IfDirective = function () {
-    'use strict';
-    function IfDirective(viewRef, templateRef) {
+        {
+            optional: true,
+            tokenName: 'TemplateRef'
+        }
+    ]
+};
+class IfDirective {
+    constructor(viewRef, templateRef) {
+        this.viewRef = viewRef;
         this._jIfValue = false;
         this._thenTemplateRef = templateRef;
         this._elseTemplateRef = null;
         this._thenView = null;
         this._elseView = null;
-        this.createView = function () {
-            if (this._jIfValue) {
-                if (!this._thenView) {
-                    viewRef.clearView();
-                    this._elseView = null;
-                    if (this._thenTemplateRef) {
-                        this._thenView = viewRef.createEmbededView(this._thenTemplateRef);
-                    }
-                }
-            } else {
-                if (!this._elseView) {
-                    viewRef.clearView();
-                    this._thenView = null;
-                    if (this._elseTemplateRef) {
-                        this._elseView = viewRef.createEmbededView(this._elseTemplateRef);
-                    }
-                }
-            }
-        };
-        Object.defineProperties(this, {
-            if: {
-                set: function (value) {
-                    this._jIfValue = value;
-                    this.createView();
-                },
-                get: function () {
-                    return this._jIfValue;
-                }
-            },
-            ifElse: {
-                set: function (templateRef) {
-                    this._elseTemplateRef = templateRef;
-                    this.createView();
-                }
-            },
-            ifThen: {
-                set: function (templateRef) {
-                    if (templateRef) {
-                        this._thenTemplateRef = templateRef;
-                        this.createView();
-                    }
-                }
-            }
-        });
     }
-    IfDirective.ctors = {
-        selector: 'if',
-        props: {
-            if: {},
-            ifElse: { type: 'TemplateRef' },
-            ifThen: { type: 'TemplateRef' }
-        },
-        DI: [
-            {
-                optional: true,
-                tokenName: 'ViewRef'
-            },
-            {
-                optional: true,
-                tokenName: 'TemplateRef'
+    set if(value) {
+        this._jIfValue = value;
+        this.createView();
+    }
+    get if() {
+        return this._jIfValue;
+    }
+    set ifElse(templateRef) {
+        this._elseTemplateRef = templateRef;
+        this.createView();
+    }
+    set ifThen(templateRef) {
+        if (templateRef) {
+            this._thenTemplateRef = templateRef;
+            this.createView();
+        }
+    }
+    createView() {
+        if (this._jIfValue) {
+            if (!this._thenView) {
+                this.viewRef.clearView();
+                this._elseView = null;
+                if (this._thenTemplateRef) {
+                    this._thenView = this.viewRef.createEmbededView(this._thenTemplateRef);
+                }
             }
-        ]
-    };
-    return IfDirective;
-}();
-function SwitchViewContext(viewRef, templateRef) {
-    this._isCreated = false;
-    this.setState = function (create) {
+        } else {
+            if (!this._elseView) {
+                this.viewRef.clearView();
+                this._thenView = null;
+                if (this._elseTemplateRef) {
+                    this._elseView = this.viewRef.createEmbededView(this._elseTemplateRef);
+                }
+            }
+        }
+    }
+}
+IfDirective.ctors = {
+    selector: 'if',
+    props: {
+        if: {},
+        ifElse: { type: 'TemplateRef' },
+        ifThen: { type: 'TemplateRef' }
+    },
+    DI: [
+        {
+            optional: true,
+            tokenName: 'ViewRef'
+        },
+        {
+            optional: true,
+            tokenName: 'TemplateRef'
+        }
+    ]
+};
+class SwitchViewContext {
+    constructor(viewRef, templateRef) {
+        this._isCreated = false;
+        this.viewRef = viewRef;
+        this.templateRef = templateRef;
+    }
+    setState(create) {
         if (create && !this._isCreated) {
             this.createView();
         } else if (!create && this._isCreated) {
             this.destroyView();
         }
-    };
-    this.createView = function () {
+    }
+    createView() {
         this._isCreated = true;
-        viewRef.createEmbededView(templateRef);
-    };
-    this.destroyView = function () {
+        this.viewRef.createEmbededView(this.templateRef);
+    }
+    destroyView() {
         this._isCreated = false;
-        viewRef.clearView();
-    };
+        this.viewRef.clearView();
+    }
 }
-var SwitchDirective = function () {
-    'use strict';
-    function SwitchDirective() {
+class SwitchDirective {
+    constructor() {
         this._caseCount = 0;
         this.defaultViews;
         this._lastCaseCheckIndex = 0;
         this._isDefaultCase = false;
         this._previousValue = undefined;
         this._lastCaseMatched = false;
-        this._addCase = function () {
-            this._caseCount++;
-        };
-        this._addDefaultView = function (viewContext) {
-            if (!this.defaultViews) {
-                this.defaultViews = [];
-            }
-            this.defaultViews.push(viewContext);
-        };
-        Object.defineProperty(this, 'switch', {
-            set: function (value) {
-                this._jSwitch = value;
-                if (isequal(this._caseCount, 0)) {
-                    this._compileDefaultView(true);
-                }
-            }
-        });
     }
-    SwitchDirective.prototype._compileDefaultView = function (isDefaultCase) {
+    _addCase() {
+        this._caseCount++;
+    }
+    _addDefaultView(viewContext) {
+        if (!this.defaultViews) {
+            this.defaultViews = [];
+        }
+        this.defaultViews.push(viewContext);
+    }
+    set switch(value) {
+        this._jSwitch = value;
+        if (isequal(this._caseCount, 0)) {
+            this._compileDefaultView(true);
+        }
+    }
+    _compileDefaultView(isDefaultCase) {
         if (this.defaultViews && !isequal(this._isDefaultCase, isDefaultCase)) {
             this._isDefaultCase = isDefaultCase;
             for (var i = 0; i < this.defaultViews.length; i++) {
@@ -4074,10 +4630,10 @@ var SwitchDirective = function () {
                 defaultView.setState(isDefaultCase);
             }
         }
-    };
-    SwitchDirective.prototype.viewDidDestroy = function () {
-    };
-    SwitchDirective.prototype._matchCase = function (caseValue) {
+    }
+    viewDidDestroy() {
+    }
+    _matchCase(caseValue) {
         var matched = isequal(this._jSwitch, caseValue);
         this._lastCaseMatched = this._lastCaseMatched || matched;
         this._lastCaseCheckIndex++;
@@ -4087,379 +4643,349 @@ var SwitchDirective = function () {
             this._lastCaseMatched = false;
         }
         return matched;
-    };
-    SwitchDirective.ctors = {
-        selector: 'switch',
-        props: { switch: {} }
-    };
-    return SwitchDirective;
-}();
-var SwitchCaseDirective = function () {
-    'use strict';
-    function SwitchCaseDirective(viewRef, templateRef, jSwitch) {
+    }
+}
+SwitchDirective.ctors = {
+    selector: 'switch',
+    props: { switch: {} }
+};
+class SwitchCaseDirective {
+    constructor(viewRef, templateRef, jSwitch) {
         jSwitch._addCase();
         this._view = new SwitchViewContext(viewRef, templateRef);
         this.willObserve = function () {
             this._view.setState(jSwitch._matchCase(this.switchCase));
         };
     }
-    SwitchCaseDirective.ctors = {
-        selector: 'switchCase',
-        props: { switchCase: {} },
-        DI: [
-            {
-                optional: true,
-                tokenName: 'ViewRef'
-            },
-            {
-                optional: true,
-                tokenName: 'TemplateRef'
-            },
-            {
-                optional: true,
-                value: 'switch',
-                tokenName: 'ParentRef'
-            }
-        ]
-    };
-    return SwitchCaseDirective;
-}();
-var SwitchDefaultDirective = function () {
-    'use strict';
-    function SwitchDefaultDirective(viewRef, templateRef, jSwitch) {
-        jSwitch._addDefaultView(new SwitchViewContext(viewRef, templateRef));
-    }
-    SwitchDefaultDirective.ctors = {
-        selector: 'switchDefault',
-        DI: [
-            {
-                optional: true,
-                tokenName: 'ViewRef'
-            },
-            {
-                optional: true,
-                tokenName: 'TemplateRef'
-            },
-            {
-                optional: true,
-                value: 'switch',
-                tokenName: 'ParentRef'
-            }
-        ]
-    };
-    return SwitchDefaultDirective;
-}();
-var ClassDirective = function () {
-    'use strict';
-    function ClassDirective(elementRef) {
+}
+SwitchCaseDirective.ctors = {
+    selector: 'switchCase',
+    props: { switchCase: {} },
+    DI: [
+        {
+            optional: true,
+            tokenName: 'ViewRef'
+        },
+        {
+            optional: true,
+            tokenName: 'TemplateRef'
+        },
+        {
+            optional: true,
+            value: 'switch',
+            tokenName: 'ParentRef'
+        }
+    ]
+};
+function SwitchDefaultDirective(viewRef, templateRef, jSwitch) {
+    jSwitch._addDefaultView(new SwitchViewContext(viewRef, templateRef));
+}
+SwitchDefaultDirective.ctors = {
+    selector: 'switchDefault',
+    DI: [
+        {
+            optional: true,
+            tokenName: 'ViewRef'
+        },
+        {
+            optional: true,
+            tokenName: 'TemplateRef'
+        },
+        {
+            optional: true,
+            value: 'switch',
+            tokenName: 'ParentRef'
+        }
+    ]
+};
+class ClassDirective {
+    constructor(elementRef) {
         this._jClass = undefined;
         this.lastAddedClass = '';
-        this._changeClass = function () {
-            if (isobject(this._jClass)) {
-                ElementClassList.add(elementRef.nativeElement, this._jClass);
-            } else {
-                if (this.lastAddedClass == this._jClass)
-                    return;
-                ElementClassList.remove(elementRef.nativeElement, this.lastAddedClass);
-                if (this._jClass) {
-                    ElementClassList.add(elementRef.nativeElement, this._jClass);
-                }
-                this.lastAddedClass = this._jClass;
-            }
-        };
-        Object.defineProperty(this, 'class', {
-            set: function (value) {
-                this._jClass = value;
-                this._changeClass();
-            },
-            get: function () {
-                return this._jClass;
-            }
-        });
+        this.elementRef = elementRef;
     }
-    ClassDirective.ctors = {
-        selector: 'jClass',
-        props: { class: { value: 'jClass' } },
-        DI: [{
-                optional: true,
-                tokenName: 'ElementRef'
-            }]
-    };
-    return ClassDirective;
-}();
-var capitalizeFilter = function () {
-    'use strict';
-    function capitalizeFilter() {
-        this.compile = function (value) {
-            if (!value)
-                return '';
-            if (typeof value !== 'string')
-                return value;
-            return value.charAt(0).toUpperCase() + value.slice(1);
-        };
-    }
-    capitalizeFilter.ctors = { name: 'capitalize' };
-    return capitalizeFilter;
-}();
-var NumberFilter = function () {
-    'use strict';
-    function NumberFilter() {
-        function format(n, x, s, c) {
-            if (!!window.Intl) {
-                var numFormat = new Intl.NumberFormat(navigator.language);
-                return numFormat.format(this);
-            } else {
-                var re = '\\d(?=(\\d{' + (x || 3) + '})+' + (n > 0 ? '\\D' : '$') + ')', num = this.toFixed(Math.max(0, ~~n));
-                return (c ? num.replace('.', c) : num).replace(new RegExp(re, 'g'), '$&' + (s || ','));
+    _changeClass() {
+        if (isobject(this._jClass)) {
+            ElementClassList.add(this.elementRef.nativeElement, this._jClass);
+        } else {
+            if (this.lastAddedClass == this._jClass)
+                return;
+            ElementClassList.remove(this.elementRef.nativeElement, this.lastAddedClass);
+            if (this._jClass) {
+                ElementClassList.add(this.elementRef.nativeElement, this._jClass);
             }
+            this.lastAddedClass = this._jClass;
         }
-        this.compile = function (value, factoRize) {
-            if (!isarray(factoRize)) {
-                factoRize = [
-                    factoRize,
-                    3,
-                    ',',
-                    '.'
-                ];
-            }
-            return format.apply(value || 0, factoRize);
-        };
     }
-    NumberFilter.ctors = { name: 'number' };
-    return NumberFilter;
-}();
-var CurrencyFilter = function () {
-    'use strict';
-    function CurrencyFilter(numberFilter) {
-        this.compile = function (value, style) {
-            if (!!window.Intl) {
-                var currencyFormat = new Intl.NumberFormat(window.navigator.language, style);
-                return currencyFormat.format(value);
-            } else {
-                return (style && style.currency) + numberFilter.format(value);
-            }
-        };
+    get class() {
+        return this._jClass;
     }
-    CurrencyFilter.ctors = {
-        name: 'currency',
-        DI: [NumberFilter]
-    };
-    return CurrencyFilter;
-}();
-var jsonFilterFn = function () {
-    'use strict';
-    function jsonFilterFn() {
-        this.compile = function (value, spacing) {
-            return typeof value === 'object' ? JSON.stringify(value, null, parseInt(spacing || '0')) : value;
-        };
+    set class(value) {
+        this._jClass = value;
+        this._changeClass();
     }
-    jsonFilterFn.ctors = { name: 'json' };
-    return jsonFilterFn;
-}();
-var lowerCaseFilter = function () {
-    'use strict';
-    function lowerCaseFilter() {
-        this.compile = function (value) {
-            return (value || '').toLowerCase();
-        };
+    viewDidDestroy() {
+        this.elementRef = null;
+        this._jClass = null;
+        this.lastAddedClass = null;
     }
-    lowerCaseFilter.ctors = { name: 'lowercase' };
-    return lowerCaseFilter;
-}();
-var QueryFactory = function () {
-    'use strict';
-    function QueryFactory(data) {
-        this.sortBy = function () {
-            var sortArguments = arguments;
-            if (isarray(data) && isobject(data[0])) {
-                return data.sort(function (obj1, obj2) {
-                    var props = sortArguments, i = 0, result = 0, numberOfProperties = props.length, compare = _compare(obj1, obj2);
-                    while (result === 0 && i < numberOfProperties) {
-                        result = compare(props[i]);
-                        i++;
-                    }
-                    return result;
-                });
-            }
-            function _compare(a, b) {
-                var sortOrder = 1;
-                return function (property) {
-                    var result = a[property] < b[property] ? -1 : a[property] > b[property] ? 1 : 0;
-                    return result * sortOrder;
-                };
-            }
-            return data;
-        };
-        return this;
+}
+ClassDirective.ctors = {
+    selector: 'jClass',
+    props: { class: { value: 'jClass' } },
+    DI: [{
+            optional: true,
+            tokenName: 'ElementRef'
+        }]
+};
+class capitalizeFilter {
+    constructor() {
     }
-    ;
-    QueryFactory.ctors = {};
-    return QueryFactory;
-}();
-var orderByFilterFn = function () {
-    'use strict';
-    function orderByFilterFn() {
-        this.compile = function (value, propertyName) {
-            if (value.length < 2) {
-                return value;
-            }
-            var _queryApi = new QueryFactory(value);
-            var newList;
-            var reverse;
-            var splitedProps = propertyName.split(':');
-            if (splitedProps.length > 1) {
-                reverse = splitedProps.pop();
-            }
-            propertyName = splitedProps.pop();
-            newList = _queryApi.sortBy.apply(_queryApi, propertyName.split(','));
-            if (reverse) {
-                return newList.reverse();
-            }
+    compile(value) {
+        if (!value)
+            return '';
+        if (typeof value !== 'string')
             return value;
-        };
+        return `${ value.charAt(0).toUpperCase() }${ value.slice(1).toLowerCase() }`;
     }
-    orderByFilterFn.ctors = { name: 'orderBy' };
-    return orderByFilterFn;
-}();
-var upperCaseFilter = function () {
-    'use strict';
-    function upperCaseFilter() {
-        this.compile = function (value) {
-            return (value || '').toUpperCase();
-        };
+}
+capitalizeFilter.ctors = {};
+class NumberFilter {
+    constructor() {
     }
-    upperCaseFilter.ctors = { name: 'uppercase' };
-    return upperCaseFilter;
-}();
-var whereFilterFn = function () {
-    'use strict';
-    function whereFilterFn() {
-        this.compile = function (model, query) {
-            return new QueryFactory(model).where(query);
-        };
+    compile(value, factoRize) {
+        if (!isarray(factoRize)) {
+            factoRize = [
+                factoRize,
+                3,
+                ',',
+                '.'
+            ];
+        }
+        return this._format.apply(value || 0, factoRize);
     }
-    whereFilterFn.ctors = { name: 'whereFilter' };
-    return whereFilterFn;
-}();
-var FilterPipe = function () {
-    'use strict';
-    function FilterPipe() {
-        this.compile = function (array, expression) {
-            if (!Array.isArray(array)) {
-                if (array == null)
-                    return array;
-                console.error('expected Array type but got ' + typeof array);
-            }
-            var expressionType = expression !== null ? typeof expression : 'null';
-            var predicateFn = null;
-            var matchAny;
-            switch (expressionType) {
-            case 'function':
-                predicateFn = expression;
-                break;
-            case 'boolean':
-            case 'null':
-            case 'number':
-            case 'string':
-                matchAny = true;
-            case 'object':
-                predicateFn = createPredicator(expression, matchAny);
-                break;
-            default:
-                return array;
-            }
-            return Array.prototype.filter.call(array, predicateFn);
-        };
-        function createPredicator(expression, matchAny) {
-            return function (item) {
-                if (isobject(expression)) {
-                    for (var key in expression) {
-                        var expectedValue = expression[key];
-                        if (isfunction(expectedValue) || isundefined(expectedValue)) {
-                            continue;
-                        }
-                        if (expectedValue != item[key]) {
-                            return false;
-                        }
-                    }
-                    return true;
+    _format(n, x, s, c) {
+        if (!!window.Intl) {
+            var numFormat = new Intl.NumberFormat(navigator.language);
+            return numFormat.format(this);
+        } else {
+            var re = '\\d(?=(\\d{' + (x || 3) + '})+' + (n > 0 ? '\\D' : '$') + ')', num = this.toFixed(Math.max(0, ~~n));
+            return (c ? num.replace('.', c) : num).replace(new RegExp(re, 'g'), '$&' + (s || ','));
+        }
+    }
+}
+NumberFilter.ctors = {};
+class CurrencyFilter {
+    constructor(numberFilter) {
+        this.numberFilter = numberFilter;
+    }
+    compile(value, style) {
+        if (!!window.Intl) {
+            var currencyFormat = new Intl.NumberFormat(window.navigator.language, style);
+            return currencyFormat.format(value);
+        } else {
+            return `${ style && style.currency } ${ this.numberFilter.format(value) }`;
+        }
+    }
+}
+CurrencyFilter.ctors = { DI: [NumberFilter] };
+class jsonFilterFn {
+    compile(value, spacing) {
+        return value && typeof value === 'object' ? JSON.stringify(value, null, parseInt(spacing || '0')) : value;
+    }
+}
+jsonFilterFn.ctors = {};
+class lowerCaseFilter {
+    constructor() {
+    }
+    compile(value) {
+        if (typeof value !== 'string')
+            return value;
+        return (value || '').toLowerCase();
+    }
+}
+lowerCaseFilter.ctors = {};
+function QueryFactory(data) {
+    this.sortBy = function () {
+        var sortArguments = arguments;
+        if (isarray(data) && isobject(data[0])) {
+            return data.sort(function (obj1, obj2) {
+                var props = sortArguments, i = 0, result = 0, numberOfProperties = props.length, compare = _compare(obj1, obj2);
+                while (result === 0 && i < numberOfProperties) {
+                    result = compare(props[i]);
+                    i++;
                 }
+                return result;
+            });
+        }
+        function _compare(a, b) {
+            var sortOrder = 1;
+            return function (property) {
+                var result = a[property] < b[property] ? -1 : a[property] > b[property] ? 1 : 0;
+                return result * sortOrder;
             };
         }
+        return data;
+    };
+    return this;
+}
+;
+QueryFactory.ctors = {};
+class orderByFilterFn {
+    constructor() {
     }
-    FilterPipe.ctors = { name: 'filter' };
-    return FilterPipe;
-}();
-var ReversePipe = function () {
-    'use strict';
-    function ReversePipe() {
-        this.compile = function (data) {
-            if (!Array.isArray(data)) {
-                console.error('Reverse pipe expected array but got ', typeof data);
-                return;
+    compile(value, propertyName) {
+        if (value.length < 2) {
+            return value;
+        }
+        var _queryApi = new QueryFactory(value);
+        var newList;
+        var reverse;
+        var splitedProps = propertyName.split(':');
+        if (splitedProps.length > 1) {
+            reverse = splitedProps.pop();
+        }
+        propertyName = splitedProps.pop();
+        newList = _queryApi.sortBy.apply(_queryApi, propertyName.split(','));
+        if (reverse) {
+            return newList.reverse();
+        }
+        return value;
+    }
+}
+orderByFilterFn.ctors = {};
+class upperCaseFilter {
+    constructor() {
+    }
+    compile(value) {
+        if (typeof value !== 'string')
+            return value;
+        return (value || '').toUpperCase();
+    }
+}
+upperCaseFilter.ctors = {};
+class whereFilterFn {
+    constructor() {
+    }
+    compile(model, query) {
+        return new QueryFactory(model).where(query);
+    }
+}
+whereFilterFn.ctors = {};
+class FilterPipe {
+    constructor() {
+    }
+    compile(array, expression) {
+        if (!Array.isArray(array)) {
+            if (array == null)
+                return array;
+            console.error('expected Array type but got ' + typeof array);
+        }
+        var expressionType = expression !== null ? typeof expression : 'null';
+        var predicateFn = null;
+        var matchAny;
+        switch (expressionType) {
+        case 'function':
+            predicateFn = expression;
+            break;
+        case 'boolean':
+        case 'null':
+        case 'number':
+        case 'string':
+            matchAny = true;
+        case 'object':
+            predicateFn = this._createPredicator(expression, matchAny);
+            break;
+        default:
+            return array;
+        }
+        return Array.prototype.filter.call(array, predicateFn);
+    }
+    _createPredicator(expression, matchAny) {
+        return function (item) {
+            if (isobject(expression)) {
+                for (var key in expression) {
+                    var expectedValue = expression[key];
+                    if (isfunction(expectedValue) || isundefined(expectedValue)) {
+                        continue;
+                    }
+                    if (expectedValue != item[key]) {
+                        return false;
+                    }
+                }
+                return true;
             }
-            return data.reverse();
         };
     }
-    ReversePipe.ctors = { name: 'reverse' };
-    return ReversePipe;
-}();
-var SizeToUnitPipe = function () {
-    'use strict';
-    function SizeToUnitPipe() {
-        this.compile = function (size) {
-            var t = Math.floor(Math.log(size, 1024));
-            var unit = [
-                'b',
-                'kb',
-                'mb',
-                'gb',
-                'tb',
-                'pb'
-            ];
-            return Math.round(size / Math.pow(1024, t), 2) + ' ' + unit[t];
-        };
+}
+FilterPipe.ctors = {};
+class ReversePipe {
+    constructor() {
     }
-    SizeToUnitPipe.ctors = { name: 'sizeToUnit' };
-    return SizeToUnitPipe;
-}();
-var CommonModule = function () {
-    'use strict';
-    function CommonModule() {
+    compile(data) {
+        if (!Array.isArray(data)) {
+            console.error('Reverse pipe expected array but got ', typeof data);
+            return;
+        }
+        return data.reverse();
     }
-    return CommonModule;
-}();
+}
+ReversePipe.ctors = {};
+class SizeToUnitPipe {
+    constructor() {
+    }
+    compile(size) {
+        var t = Math.floor(Math.log(size, 1024));
+        var unit = [
+            'b',
+            'kb',
+            'mb',
+            'gb',
+            'tb',
+            'pb'
+        ];
+        return Math.round(size / Math.pow(1024, t), 2) + ' ' + unit[t];
+    }
+}
+SizeToUnitPipe.ctors = {};
+function CommonModule() {
+}__required.r(exports, 'CommonModule', CommonModule);
+__required.r(exports, 'ForDirective', ForDirective);
+__required.r(exports, 'IfDirective', IfDirective);
+__required.r(exports, 'SwitchDirective', SwitchDirective);
+__required.r(exports, 'SwitchCaseDirective', SwitchCaseDirective);
+__required.r(exports, 'SwitchDefaultDirective', SwitchDefaultDirective);
+__required.r(exports, 'ClassDirective', ClassDirective);
+__required.r(exports, 'capitalizeFilter', capitalizeFilter);
+__required.r(exports, 'CurrencyFilter', CurrencyFilter);
+__required.r(exports, 'NumberFilter', NumberFilter);
+__required.r(exports, 'jsonFilterFn', jsonFilterFn);
+__required.r(exports, 'lowerCaseFilter', lowerCaseFilter);
+__required.r(exports, 'orderByFilterFn', orderByFilterFn);
+__required.r(exports, 'QueryFactory', QueryFactory);
+__required.r(exports, 'upperCaseFilter', upperCaseFilter);
+__required.r(exports, 'whereFilterFn', whereFilterFn);
+__required.r(exports, 'FilterPipe', FilterPipe);
+__required.r(exports, 'ReversePipe', ReversePipe);
+__required.r(exports, 'SizeToUnitPipe', SizeToUnitPipe);
+
 },
-1145 : (module, exports, __required, global) => {
+1147 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'TimeAgoFilterFn', () => TimeAgoFilterFn);
-__required.r(exports, 'dateTimeFilterFN', () => dateTimeFilterFN);
-__required.r(exports, 'DAYS_FULL', () => DAYS_FULL);
-__required.r(exports, 'DAYS_HALF', () => DAYS_HALF);
-__required.r(exports, 'MONTHS_FULL', () => MONTHS_FULL);
-__required.r(exports, 'MONTHS_HALF', () => MONTHS_HALF);
-__required.r(exports, 'CalendarService', () => CalendarService);
-__required.r(exports, 'setText', () => setText);
-__required.r(exports, 'DateStringConverter', () => DateStringConverter);
-__required.r(exports, 'getDays', () => getDays);
-__required.r(exports, 'leapYear', () => leapYear);
-__required.r(exports, 'DatetimeService', () => DatetimeService);
-__required.r(exports, 'calendarFN', () => calendarFN);
-__required.r(exports, 'DateTimeModule', () => DateTimeModule);
-var core = __required(1143);
-var ProviderToken = core.ProviderToken;
-var __buildOptions = {
-    'buildTime': 1734326607179,
+const core = __required(1145);
+const ProviderToken = core.ProviderToken;
+const __buildOptions = {
+    'buildTime': 1790832896681,
     'version': '1.0.0',
     'baseHref': '',
     'assetURL': '',
     'production': false
 };
-var leapYear = function (year) {
+function leapYear(year) {
     return year % 4 == 0 ? 1 : 0;
-};
-var getDays = function (month, year) {
-    var ar = [
+}
+function getDays(month, year) {
+    const ar = [
         31,
         leapYear(year) ? 29 : 28,
         31,
@@ -4474,8 +5000,8 @@ var getDays = function (month, year) {
         31
     ];
     return ar[month];
-};
-var DateStringConverter = function (dateString) {
+}
+function DateStringConverter(dateString) {
     var str2Date = null;
     if (typeof dateString === 'string') {
         str2Date = new Date(dateString);
@@ -4488,38 +5014,123 @@ var DateStringConverter = function (dateString) {
         }
     }
     return str2Date || new Date();
-};
-var setText = function (text, future) {
+}
+function setText(text, future) {
     return text + (future ? ' from now' : ' ago');
-};
-function CalendarObject(firstDay, lastDate, date) {
-    this.monthName = now.flags.MMMM;
-    this.year = now.flags.YYYY;
-    this.weekDays = dateTimeDayHalf;
-    this.weeks = [];
-    var digit = 1;
-    var curCell = 1;
-    for (var row = 1; row <= Math.ceil((lastDate + firstDay - 1) / 7); ++row) {
-        var weekDays = [];
-        for (var col = 1; col <= 7; ++col) {
-            if (digit > lastDate) {
-                break;
-            }
-            if (curCell < firstDay) {
-                weekDays.push({
-                    date: null,
-                    current: false
-                });
-                curCell++;
+}
+function generateTimeAgo(obj, future) {
+    const setters = {
+        hours: () => {
+            if (obj.time_difference.hours == 1) {
+                obj.timeago = setText('an hour', future);
             } else {
-                weekDays.push({
-                    date: digit,
-                    current: digit == date
-                });
-                digit++;
+                obj.timeago = obj.time_difference.hours + setText(' hours', future);
+            }
+        },
+        minutes: () => {
+            if (obj.time_difference.minutes == 1) {
+                obj.timeago = setText('1 minute', future);
+            } else {
+                obj.timeago = setText(`${ obj.time_difference.minutes } minutes`, future);
+            }
+        },
+        weeks: () => {
+            if (obj.time_difference.weeks == 1) {
+                obj.timeago = setText('1 week');
+            } else {
+                obj.timeago = setText(`${ obj.time_difference.weeks } weeks`, future);
+            }
+        },
+        days: () => {
+            if (obj.time_difference.days == 1) {
+                obj.timeago = future ? 'Tomorrow' : 'Yesterday';
+            } else {
+                obj.timeago = +setText(`${ obj.time_difference.days } days`, future);
+            }
+        },
+        months: () => {
+            const months = obj.time_difference.months;
+            if (months <= 12) {
+                if (months == 1) {
+                    obj.timeago = setText('1 month', future);
+                } else {
+                    obj.timeago = setText(`${ months } months`, future);
+                }
+            } else {
+                let diff = '' + (months / 12).toFixed(1);
+                diff = diff.split('.').map(Number);
+                obj.timeago = setText(`${ diff[0] } years ${ diff[1] > 0 ? ', ' + diff[1] + ' months' : '' }`, future);
+            }
+        },
+        seconds: () => {
+            obj.timeago = obj.time_difference.seconds + setText(' seconds', future);
+        }
+    };
+    if (future) {
+        const days = obj.time_difference.days;
+        if (days > 30) {
+            setters.months();
+        } else if (days) {
+            setters.days();
+        } else if (obj.time_difference.hours <= 24 && obj.time_difference.minutes > 60) {
+            setters.hours();
+        } else if (obj.time_difference.minutes <= 60) {
+            setters.minutes();
+        } else if (obj.time_difference.seconds <= 60) {
+            setters.seconds();
+        }
+    } else {
+        if (obj.time_difference.seconds <= 60) {
+            setters.seconds();
+        } else if (obj.time_difference.minutes <= 60) {
+            setters.minutes();
+        } else {
+            if (obj.time_difference.hours <= 24) {
+                setters.hours();
+            } else {
+                if (obj.time_difference.days <= 7) {
+                    setters.days();
+                } else {
+                    if (obj.time_difference.weeks <= 4) {
+                        setters.weeks();
+                    } else {
+                        setters.months();
+                    }
+                }
             }
         }
-        this.weeks.push(weekDays);
+    }
+}
+class CalendarObject {
+    constructor(firstDay, lastDate, date) {
+        this.monthName = now.flags.MMMM;
+        this.year = now.flags.YYYY;
+        this.weekDays = dateTimeDayHalf;
+        this.weeks = [];
+        var digit = 1;
+        var curCell = 1;
+        for (var row = 1; row <= Math.ceil((lastDate + firstDay - 1) / 7); ++row) {
+            var weekDays = [];
+            for (var col = 1; col <= 7; ++col) {
+                if (digit > lastDate) {
+                    break;
+                }
+                if (curCell < firstDay) {
+                    weekDays.push({
+                        date: null,
+                        current: false
+                    });
+                    curCell++;
+                } else {
+                    weekDays.push({
+                        date: digit,
+                        current: digit == date
+                    });
+                    digit++;
+                }
+            }
+            this.weeks.push(weekDays);
+        }
     }
 }
 function CalendarService(year, month) {
@@ -4586,245 +5197,204 @@ var DAYS_FULL = new ProviderToken('dateTimeDayFull', false, {
         'Saturday'
     ]
 });
-var DatetimeService = function () {
-    'use strict';
-    class DatetimeService {
-        constructor(dateTimeMonthHalf, dateTimeMonthFull, dateTimeDayHalf, dateTimeDayFull) {
-            var dateFormatRegExp = /D{1,4}|M{1,4}|YY(?:YY)?|([HhMmsTt])\1?|[LloSZ]|"[^"]*"|'[^']*'/g;
-            this.dateTimeDayHalf = dateTimeDayHalf;
-            this.dateTimeMonthHalf = dateTimeMonthHalf;
-            this.dateTimeMonthFull = dateTimeMonthFull;
-            this.dateTimeDayFull = dateTimeDayFull;
-            this.format = function (date, format) {
-                var toFormat = this.timeConverter(date).flags;
-                return String(format).replace(dateFormatRegExp, function ($0) {
-                    return $0 in toFormat ? toFormat[$0] : $0.slice(1, $0.length - 1);
-                });
-            };
-        }
-        buildFullCalendar(config) {
-            var monthList = [], months = config.fullYear ? 0 : new Date().getMonth();
-            for (months; months < 12; months++) {
-                var date = new Date(config.year, months, 1);
-                var year = date.getFullYear();
-                var month = date.getMonth() + 1;
-                var month = CalendarService(year, month);
-                month.monthName = this.dateTimeMonthFull[month - 1];
-                month.year = year;
-                month.weekDays = dateTimeDayHalf;
-                monthList.push(month);
-            }
-            return monthList;
-        }
-        _dateTime(datetime) {
-            return DatetimeService.staticDateTime(datetime);
-        }
-        timeConverter(dateToParse) {
-            return DatetimeService.staticTimeConverter(dateToParse, this);
-        }
-        static staticDateTime(datetime) {
-            datetime = isNaN(Number(datetime)) ? datetime : Number(datetime);
-            var outputDate = typeof datetime == 'number' ? new Date(datetime) : DateStringConverter(datetime);
-            var g = j => (typeof j == 'number' && j < 10 ? '0' : '') + j;
-            outputDate.current_time = [
-                outputDate.getFullYear(),
-                '-',
-                g(Math.ceil(outputDate.getMonth() + 1)),
-                '-',
-                g(outputDate.getDate()),
-                ' ',
-                g(outputDate.getHours()),
-                ':',
-                g(outputDate.getMinutes()),
-                ':',
-                g(outputDate.getSeconds())
-            ].join('');
-            return outputDate;
-        }
-        static staticTimeConverter(dateToParse, context) {
-            if (!dateToParse)
-                dateToParse = DatetimeService.staticDateTime();
-            var currentDateTime = DatetimeService.staticDateTime();
-            var date2ParseObject = dateToParse.current_time ? dateToParse : DatetimeService.staticDateTime(dateToParse);
-            var j = date2ParseObject.getTime();
-            var l = currentDateTime.getTime();
-            var B = 1000 * 60 * 60 * 24;
-            var result = {};
-            var p = m => (typeof m == 'number' && m < 10 ? '0' : '') + m;
-            if (isNaN(date2ParseObject.getTime())) {
-                var f = n.replace(' ', 'T');
-                var r = n.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/), D = r[1] + '-' + p(r[2] - 1) + '-' + r[3] + ' ' + r[4] + ':' + r[5] + ':' + r[6], date2ParseObject = new Date(Date.fromISO(f)), j = q.getTime();
-                x = new Date();
-            }
-            var g = Date.UTC(date2ParseObject.getFullYear(), date2ParseObject.getMonth(), date2ParseObject.getDate()), f = Date.UTC(currentDateTime.getFullYear(), currentDateTime.getMonth(), currentDateTime.getDate()), days = Math.floor((f - g) / B), future = j > l, futureDiff = future ? j - l : l - j;
-            result.getTime = () => j;
-            result.ctimestamp = g;
-            result.timestamp = f;
-            result.time_difference = {
-                seconds: Math.floor(futureDiff / 3600000 * (60 * 60)),
-                minutes: Math.floor(futureDiff / 3600000 * 60),
-                hours: Math.floor(futureDiff / 3600000),
-                weeks: Math.floor(days / 7),
-                days: days,
-                months: Math.floor(days / 30)
-            };
-            var year = date2ParseObject.getFullYear(), month = date2ParseObject.getMonth() + 1, day = date2ParseObject.getDate(), weekDay = date2ParseObject.getDay(), timeSettings = date2ParseObject.current_time.split(' ')[1].split(':'), hours = timeSettings[0], minute = parseInt(timeSettings[1]), seconds = parseInt(timeSettings[2]);
-            result.flags = {
-                YYYY: year,
-                YY: String(year).slice(2),
-                M: month,
-                MM: p(month),
-                MMM: context.dateTimeMonthHalf[month - 1],
-                MMMM: context.dateTimeMonthFull[month - 1],
-                D: day,
-                DD: p(day),
-                DDD: context.dateTimeDayHalf[weekDay],
-                DDDD: context.dateTimeDayFull[weekDay],
-                h: hours % 12 || 12,
-                hh: p(hours),
-                H: hours,
-                HH: p(hours),
-                m: minute,
-                mm: p(minute),
-                s: seconds,
-                ss: p(seconds),
-                t: hours < 12 ? 'a' : 'p',
-                tt: hours < 12 ? 'am' : 'pm',
-                T: hours < 12 ? 'A' : 'P',
-                TT: hours < 12 ? 'AM' : 'PM'
-            };
-            result.isLeapYear = leapYear(year);
-            result.today = context.dateTimeDayHalf[currentDateTime.getDay()] + ', ' + currentDateTime.getDate() + ' ' + context.dateTimeMonthHalf[currentDateTime.getMonth()];
-            if (currentDateTime.getFullYear() > date2ParseObject.getFullYear()) {
-                result.date = context.dateTimeMonthHalf[date2ParseObject.getMonth()] + ', ' + date2ParseObject.getDate() + ' ' + date2ParseObject.getFullYear();
-            } else {
-                result.date = context.dateTimeDayHalf[date2ParseObject.getDay()] + ', ' + date2ParseObject.getDate() + ' ' + context.dateTimeMonthHalf[date2ParseObject.getMonth()];
-            }
-            if (result.time_difference.seconds <= 60) {
-                result.timeago = result.time_difference.seconds + setText(' seconds', future);
-            } else {
-                if (result.time_difference.minutes <= 60) {
-                    if (result.time_difference.minutes == 1) {
-                        result.timeago = setText('1 minute', future);
-                    } else {
-                        result.timeago = result.time_difference.minutes + setText(' minutes', future);
-                    }
-                } else {
-                    if (result.time_difference.hours <= 24) {
-                        if (result.time_difference.hours == 1) {
-                            result.timeago = setText('an hour', future);
-                        } else {
-                            result.timeago = result.time_difference.hours + setText(' hours', future);
-                        }
-                    } else {
-                        if (result.time_difference.days <= 7) {
-                            if (result.time_difference.days == 1) {
-                                result.timeago = 'Yesterday';
-                            } else {
-                                result.timeago = result.time_difference.days + setText(' days', future);
-                            }
-                        } else {
-                            if (result.time_difference.weeks <= 4) {
-                                if (result.time_difference.weeks == 1) {
-                                    result.timeago = setText('1 week');
-                                } else {
-                                    result.timeago = result.time_difference.weeks + setText(' weeks', future);
-                                }
-                            } else {
-                                if (result.time_difference.months <= 12) {
-                                    if (result.time_difference.months == 1) {
-                                        result.timeago = setText('1 month', future);
-                                    } else {
-                                        result.timeago = result.date;
-                                    }
-                                } else {
-                                    result.timeago = result.date;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return result;
-        }
-        static isSameDate(dateA, dateB) {
-            if (!dateA || !dateB)
-                return false;
-            if (dateA == dateB)
-                return true;
-            dateA = new Date(dateA);
-            dateB = new Date(dateB);
-            if (isNaN(dateA) || isNaN(dateB))
-                return false;
-            return dateA.getFullYear() == dateB.getFullYear() && dateA.getMonth() == dateB.getMonth() && dateA.getDate() == dateB.getDate();
-        }
+class DatetimeService {
+    constructor(dateTimeMonthHalf, dateTimeMonthFull, dateTimeDayHalf, dateTimeDayFull) {
+        var dateFormatRegExp = /D{1,4}|M{1,4}|YY(?:YY)?|([HhMmsTt])\1?|[LloSZ]|"[^"]*"|'[^']*'/g;
+        this.dateTimeDayHalf = dateTimeDayHalf;
+        this.dateTimeMonthHalf = dateTimeMonthHalf;
+        this.dateTimeMonthFull = dateTimeMonthFull;
+        this.dateTimeDayFull = dateTimeDayFull;
+        this.format = function (date, format) {
+            const toFormat = this.timeConverter(date);
+            return toFormat && String(format).replace(dateFormatRegExp, $0 => $0 in toFormat.flags ? toFormat.flags[$0] : $0.slice(1, $0.length - 1));
+        };
     }
-    DatetimeService.ctors = {
-        DI: [
-            MONTHS_HALF,
-            MONTHS_FULL,
-            DAYS_HALF,
-            DAYS_FULL
-        ]
-    };
-    return DatetimeService;
-}();
-var calendarFN = function () {
-    'use strict';
-    function calendarFN($dateTimeFactory) {
-        var defaultConfig = {
+    buildFullCalendar(config) {
+        var monthList = [], months = config.fullYear ? 0 : new Date().getMonth();
+        for (months; months < 12; months++) {
+            var date = new Date(config.year, months, 1);
+            var year = date.getFullYear();
+            var month = date.getMonth() + 1;
+            var month = CalendarService(year, month);
+            month.monthName = this.dateTimeMonthFull[month - 1];
+            month.year = year;
+            month.weekDays = dateTimeDayHalf;
+            monthList.push(month);
+        }
+        return monthList;
+    }
+    _dateTime(datetime) {
+        return DatetimeService.staticDateTime(datetime);
+    }
+    timeConverter(dateToParse) {
+        return DatetimeService.staticTimeConverter(dateToParse, this);
+    }
+    static staticDateTime(datetime) {
+        datetime = isNaN(Number(datetime)) ? datetime : Number(datetime);
+        const outputDate = typeof datetime == 'number' ? new Date(datetime) : DateStringConverter(datetime);
+        const g = j => (typeof j == 'number' && j < 10 ? '0' : '') + j;
+        outputDate.current_time = [
+            outputDate.getFullYear(),
+            '-',
+            g(Math.ceil(outputDate.getMonth() + 1)),
+            '-',
+            g(outputDate.getDate()),
+            ' ',
+            g(outputDate.getHours()),
+            ':',
+            g(outputDate.getMinutes()),
+            ':',
+            g(outputDate.getSeconds())
+        ].join('');
+        return outputDate;
+    }
+    static staticTimeConverter(dateToParse, context) {
+        if (!dateToParse)
+            dateToParse = DatetimeService.staticDateTime();
+        var currentDateTime = DatetimeService.staticDateTime();
+        var date2ParseObject = dateToParse.current_time ? dateToParse : DatetimeService.staticDateTime(dateToParse);
+        var j = date2ParseObject.getTime();
+        var l = currentDateTime.getTime();
+        var B = 1000 * 60 * 60 * 24;
+        var result = {};
+        var p = m => (typeof m == 'number' && m < 10 ? '0' : '') + m;
+        if (isNaN(date2ParseObject.getTime())) {
+            const f = dateToParse.replace(' ', 'T');
+            const r = dateToParse.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/);
+            if (r) {
+                const D = r[1] + '-' + p(r[2] - 1) + '-' + r[3] + ' ' + r[4] + ':' + r[5] + ':' + r[6];
+                date2ParseObject = new Date(Date.fromISO(f));
+                j = date2ParseObject.getTime();
+            } else {
+                console.warn('[Datetime] Invalid Date received', dateToParse);
+                return null;
+            }
+        }
+        const future = j > l;
+        const futureDiff = future ? j - l : l - j;
+        const days = Math.floor(futureDiff / B);
+        result.getTime = () => j;
+        result.ctimestamp = l;
+        result.timestamp = j;
+        result.time_difference = {
+            seconds: Math.floor(futureDiff / 1000),
+            minutes: Math.floor(futureDiff / 60000),
+            hours: Math.floor(futureDiff / 3600000),
+            weeks: Math.floor(days / 7),
+            days,
+            months: Math.floor(days / 30)
+        };
+        const year = date2ParseObject.getFullYear(), month = date2ParseObject.getMonth() + 1, day = date2ParseObject.getDate(), weekDay = date2ParseObject.getDay(), timeSettings = date2ParseObject.current_time.split(' ')[1].split(':'), hours = timeSettings[0], minute = parseInt(timeSettings[1]), seconds = parseInt(timeSettings[2]);
+        result.flags = {
+            YYYY: year,
+            YY: String(year).slice(2),
+            M: month,
+            MM: p(month),
+            MMM: context.dateTimeMonthHalf[month - 1],
+            MMMM: context.dateTimeMonthFull[month - 1],
+            D: day,
+            DD: p(day),
+            DDD: context.dateTimeDayHalf[weekDay],
+            DDDD: context.dateTimeDayFull[weekDay],
+            h: hours % 12 || 12,
+            hh: p(hours),
+            H: hours,
+            HH: p(hours),
+            m: minute,
+            mm: p(minute),
+            s: seconds,
+            ss: p(seconds),
+            t: hours < 12 ? 'a' : 'p',
+            tt: hours < 12 ? 'am' : 'pm',
+            T: hours < 12 ? 'A' : 'P',
+            TT: hours < 12 ? 'AM' : 'PM'
+        };
+        result.isLeapYear = leapYear(year);
+        result.today = `${ context.dateTimeDayHalf[currentDateTime.getDay()] }, ${ currentDateTime.getDate() } ${ context.dateTimeMonthHalf[currentDateTime.getMonth()] }`;
+        if (currentDateTime.getFullYear() > date2ParseObject.getFullYear()) {
+            result.date = `${ context.dateTimeMonthHalf[date2ParseObject.getMonth()] }, ${ date2ParseObject.getDate() } ${ date2ParseObject.getFullYear() }`;
+        } else {
+            result.date = `${ context.dateTimeDayHalf[date2ParseObject.getDay()] }, ${ date2ParseObject.getDate() } ${ context.dateTimeMonthHalf[date2ParseObject.getMonth()] }`;
+        }
+        generateTimeAgo(result, future);
+        return result;
+    }
+    static isSameDate(dateA, dateB) {
+        if (!dateA || !dateB)
+            return false;
+        if (dateA == dateB)
+            return true;
+        dateA = new Date(dateA);
+        dateB = new Date(dateB);
+        if (isNaN(dateA) || isNaN(dateB))
+            return false;
+        return dateA.getFullYear() == dateB.getFullYear() && dateA.getMonth() == dateB.getMonth() && dateA.getDate() == dateB.getDate();
+    }
+}
+DatetimeService.ctors = {
+    DI: [
+        MONTHS_HALF,
+        MONTHS_FULL,
+        DAYS_HALF,
+        DAYS_FULL
+    ]
+};
+class calendarFN {
+    constructor(dateTimeFactory) {
+        this.config = {};
+        this.dateTimeFactory = dateTimeFactory;
+    }
+    didInit() {
+        this.calendar = this.dateTimeFactory.buildFullCalendar(extend({
             fullYear: !1,
             year: new Date().getFullYear()
-        };
-        this.config = '';
-        this.didInit = function () {
-            var config = extend(defaultConfig, this.config);
-            this.calendar = $dateTimeFactory.buildFullCalendar(config);
-        };
+        }, this.config));
     }
-    calendarFN.ctors = {
-        selector: 'jx-calendar',
-        props: { config: {} },
-        DI: [DatetimeService]
-    };
-    return calendarFN;
-}();
-var dateTimeFilterFN = function () {
-    'use strict';
-    function dateTimeFilterFN(dateTimeFactory) {
-        this.compile = function (text, replacer) {
-            return dateTimeFactory.format(text, replacer);
-        };
+}
+calendarFN.ctors = {
+    selector: 'jx-calendar',
+    props: { config: {} },
+    DI: [DatetimeService]
+};
+class dateTimeFilterFN {
+    constructor(dateTimeFactory) {
+        this.dateTimeFactory = dateTimeFactory;
     }
-    dateTimeFilterFN.ctors = {
-        name: 'dateTime',
-        DI: [DatetimeService]
-    };
-    return dateTimeFilterFN;
-}();
-var TimeAgoFilterFn = function () {
-    'use strict';
-    function TimeAgoFilterFn(dateTimeFactory) {
-        this.compile = function (dateTime, fallback) {
-            if (!dateTime && fallback)
-                return fallback;
-            return dateTimeFactory.timeConverter(dateTime).timeago;
-        };
+    compile(text, replacer) {
+        return this.dateTimeFactory.format(text, replacer);
     }
-    TimeAgoFilterFn.ctors = {
-        name: 'timeAgo',
-        DI: [DatetimeService]
-    };
-    return TimeAgoFilterFn;
-}();
-var DateTimeModule = function () {
-    'use strict';
-    function DateTimeModule() {
+}
+dateTimeFilterFN.ctors = { DI: [DatetimeService] };
+class TimeAgoFilterFn {
+    constructor(dateTimeFactory) {
+        this.dateTimeFactory = dateTimeFactory;
     }
-    return DateTimeModule;
-}();
+    compile(dateTime, fallback) {
+        if (!dateTime && fallback)
+            return fallback;
+        return this.dateTimeFactory.timeConverter(dateTime)?.timeago || fallback;
+    }
+}
+TimeAgoFilterFn.ctors = { DI: [DatetimeService] };
+function DateTimeModule() {
+}__required.r(exports, 'DateTimeModule', DateTimeModule);
+__required.r(exports, 'calendarFN', calendarFN);
+__required.r(exports, 'DatetimeService', DatetimeService);
+__required.r(exports, 'leapYear', leapYear);
+__required.r(exports, 'getDays', getDays);
+__required.r(exports, 'DateStringConverter', DateStringConverter);
+__required.r(exports, 'setText', setText);
+__required.r(exports, 'generateTimeAgo', generateTimeAgo);
+__required.r(exports, 'CalendarService', CalendarService);
+__required.r(exports, 'MONTHS_HALF', MONTHS_HALF);
+__required.r(exports, 'MONTHS_FULL', MONTHS_FULL);
+__required.r(exports, 'DAYS_HALF', DAYS_HALF);
+__required.r(exports, 'DAYS_FULL', DAYS_FULL);
+__required.r(exports, 'dateTimeFilterFN', dateTimeFilterFN);
+__required.r(exports, 'TimeAgoFilterFn', TimeAgoFilterFn);
+
 },
-1146 : (module, exports, __required, global) => {
+1148 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function () {
     return {
@@ -4841,37 +5411,27 @@ exports.default = function () {
     };
 }
 },
-1147 : (module, exports, __required, global) => {
+1149 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str) {
-    return str.replace(/^([A-Z])|[\s-_](\w)/g, function (match, p1, p2, offset) {
-        if (p2) {
-            return p2.toUpperCase();
-        }
-        return p1.toLowerCase();
-    });
+    return str.replace(/^([A-Z])|[\s-_](\w)/g, (_, p1, p2) => p2 ? p2.toUpperCase() : p1.toLowerCase());
 }
 },
-1148 : (module, exports, __required, global) => {
+1150 : (module, exports, __required, global) => {
 "use strict";
-var camelCase = __required(1147, 'default');
+const camelCase = __required(1149, 'default');
 exports.default = function (str) {
     return str.charAt(0).toUpperCase() + camelCase(str.substring(1));
 }
 },
-1149 : (module, exports, __required, global) => {
+1151 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str) {
-    return str.split('').map(function (char, idx) {
-        if (/[A-Z]/.test(char)) {
-            return '-' != str[idx - 1] ? '-' + char.toLowerCase() : char.toLowerCase();
-        }
-        return char;
-    }).join('');
+    return (str | '').replace(/[A-Z]/g, (a, k, t) => '-' != t[k - 1] ? '-' + a.toLowerCase() : a.toLowerCase());
 }
 ;
 },
-1150 : (module, exports, __required, global) => {
+1152 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (name, value) {
     if (typeof value != 'undefined') {
@@ -4926,9 +5486,8 @@ function getCookie(name) {
     return cookieValue;
 }
 },
-1151 : (module, exports, __required, global) => {
+1153 : (module, exports, __required, global) => {
 "use strict";
-exports.default = extend;
 function extend() {
     var extended = {};
     var deep = typeof arguments[0] === 'boolean';
@@ -4960,10 +5519,11 @@ function extend() {
     }
     return extended;
 }
+exports.default = extend;
 },
-1152 : (module, exports, __required, global) => {
+1154 : (module, exports, __required, global) => {
 "use strict";
-var extend = __required(1151, 'default');
+const extend = __required(1153, 'default');
 exports.default = function (item, deep) {
     var type = {};
     if (Object.prototype.toString.call(item) === '[object Array]') {
@@ -4991,9 +5551,8 @@ exports.default = function (item, deep) {
     return extend(type, item);
 }
 },
-1153 : (module, exports, __required, global) => {
+1155 : (module, exports, __required, global) => {
 "use strict";
-exports.default = copyFrom;
 function copyFrom(to, from) {
     for (var key in to) {
         if (from.hasOwnProperty(key)) {
@@ -5006,16 +5565,17 @@ function copyFrom(to, from) {
     }
     return to;
 }
+exports.default = copyFrom;
 },
-1154 : (module, exports, __required, global) => {
+1156 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (obj) {
     return Object.keys(obj).length;
 }
 },
-1155 : (module, exports, __required, global) => {
+1157 : (module, exports, __required, global) => {
 "use strict";
-var isobject = __required(1137, 'default');
+const isobject = __required(1139, 'default');
 exports.default = function (objToInspect) {
     var isObject = isobject(objToInspect);
     function contains(ins) {
@@ -5065,7 +5625,7 @@ exports.default = function (objToInspect) {
     };
 }
 },
-1156 : (module, exports, __required, global) => {
+1158 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (code) {
     var hash = 0, i, chr, len;
@@ -5079,9 +5639,8 @@ exports.default = function (code) {
     return hash;
 }
 },
-1157 : (module, exports, __required, global) => {
+1159 : (module, exports, __required, global) => {
 "use strict";
-exports.default = logger;
 var logLevels = {
     DEBUG: 4,
     LOG: 3,
@@ -5129,8 +5688,9 @@ var logger = {
         return this._log(m, a, logLevels.ERROR);
     }
 };
+exports.default = logger;
 },
-1158 : (module, exports, __required, global) => {
+1160 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (e) {
     var uid = '';
@@ -5141,7 +5701,7 @@ exports.default = function (e) {
     return uid;
 }
 },
-1159 : (module, exports, __required, global) => {
+1161 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (arr) {
     return arr.reduce(function (all, item, index) {
@@ -5152,12 +5712,11 @@ exports.default = function (arr) {
     }, []);
 }
 },
-1160 : (module, exports, __required, global) => {
+1162 : (module, exports, __required, global) => {
 "use strict";
-var isFunction = __required(1133, 'default');
-var isObject = __required(1137, 'default');
-var isArray = __required(1125, 'default');
-exports.default = serialize;
+const isFunction = __required(1135, 'default');
+const isObject = __required(1139, 'default');
+const isArray = __required(1127, 'default');
 function serialize(obj) {
     if (!obj)
         return;
@@ -5188,8 +5747,9 @@ function serialize(obj) {
         return buildParams(key, obj[key]);
     }).join('&').replace(/%20/g, '+');
 }
+exports.default = serialize;
 },
-1161 : (module, exports, __required, global) => {
+1163 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str, regexp) {
     return (str || '').split(regexp).map(function (val) {
@@ -5197,7 +5757,7 @@ exports.default = function (str, regexp) {
     });
 }
 },
-1162 : (module, exports, __required, global) => {
+1164 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (str, replacerObj) {
     var newObj;
@@ -5212,7 +5772,7 @@ exports.default = function (str, replacerObj) {
     return newObj;
 }
 },
-1163 : (module, exports, __required, global) => {
+1165 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (par) {
     if (!par || typeof par !== 'string')
@@ -5233,7 +5793,7 @@ exports.default = function (par) {
     }
 }
 },
-1164 : (module, exports, __required, global) => {
+1166 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function ($boolValue) {
     return {
@@ -5250,7 +5810,7 @@ exports.default = function ($boolValue) {
     }[$boolValue];
 }
 },
-1165 : (module, exports, __required, global) => {
+1167 : (module, exports, __required, global) => {
 "use strict";
 exports.default = function (size) {
     var t = Math.floor(Math.log(size, 1024));
@@ -5265,82 +5825,51 @@ exports.default = function (size) {
     return Math.round(size / Math.pow(1024, t), 2) + ' ' + unit[t];
 }
 },
-1166 : (module, exports, __required, global) => {
+1168 : (module, exports, __required, global) => {
 "use strict";
 
-exports.sizetounit = __required(1165, 'default');
-exports.simpleBooleanParser = __required(1164, 'default');
-exports.kebabCase = __required(1149, 'default');
-exports.pascalCase = __required(1148, 'default');
-exports.camelcase = __required(1147, 'default');
-exports.unserialize = __required(1163, 'default');
-exports.toobject = __required(1162, 'default');
-exports.splitntrim = __required(1161, 'default');
-exports.serialize = __required(1160, 'default');
-exports.nodubs = __required(1159, 'default');
-exports.makeuid = __required(1158, 'default');
-exports.logger = __required(1157, 'default');
-exports.hashcode = __required(1156, 'default');
-exports.extend = __required(1151, 'default');
-exports.expect = __required(1155, 'default');
-exports.count = __required(1154, 'default');
-exports.copyfrom = __required(1153, 'default');
-exports.copy = __required(1152, 'default');
-exports.cookie = __required(1150, 'default');
-exports.base64 = __required(1146, 'default');
+exports.base64 = __required(1148, 'default');
+exports.cookie = __required(1152, 'default');
+exports.copy = __required(1154, 'default');
+exports.copyfrom = __required(1155, 'default');
+exports.count = __required(1156, 'default');
+exports.expect = __required(1157, 'default');
+exports.extend = __required(1153, 'default');
+exports.hashcode = __required(1158, 'default');
+exports.logger = __required(1159, 'default');
+exports.makeuid = __required(1160, 'default');
+exports.nodubs = __required(1161, 'default');
+exports.serialize = __required(1162, 'default');
+exports.splitntrim = __required(1163, 'default');
+exports.toobject = __required(1164, 'default');
+exports.unserialize = __required(1165, 'default');
+exports.camelcase = __required(1149, 'default');
+exports.pascalCase = __required(1150, 'default');
+exports.kebabCase = __required(1151, 'default');
+exports.simpleBooleanParser = __required(1166, 'default');
+exports.sizetounit = __required(1167, 'default');
 },
-1167 : (module, exports, __required, global) => {
+1169 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'FormRepeaterService', () => FormRepeaterService);
-__required.r(exports, 'RangeEventBinder', () => RangeEventBinder);
-__required.r(exports, 'ResolveRangeBinder', () => ResolveRangeBinder);
-__required.r(exports, 'NumberEventBinder', () => NumberEventBinder);
-__required.r(exports, 'ResolveNumberBinder', () => ResolveNumberBinder);
-__required.r(exports, 'getValueAccessor', () => getValueAccessor);
-__required.r(exports, 'ModelDirective', () => ModelDirective);
-__required.r(exports, 'OptionDirective', () => OptionDirective);
-__required.r(exports, 'SelectEventBinder', () => SelectEventBinder);
-__required.r(exports, 'ResolveSelectBinder', () => ResolveSelectBinder);
-__required.r(exports, 'RadioEventBinder', () => RadioEventBinder);
-__required.r(exports, 'RadioEventContainer', () => RadioEventContainer);
-__required.r(exports, 'ResolveRadioBinder', () => ResolveRadioBinder);
-__required.r(exports, 'CheckboxEventBinder', () => CheckboxEventBinder);
-__required.r(exports, 'ResolveCheckboxBinder', () => ResolveCheckboxBinder);
-__required.r(exports, 'DefaultEventBinder', () => DefaultEventBinder);
-__required.r(exports, 'ResolveDefaultBinder', () => ResolveDefaultBinder);
-__required.r(exports, 'FormFieldDirective', () => FormFieldDirective);
-__required.r(exports, 'AbstractValueAccessor', () => AbstractValueAccessor);
-__required.r(exports, 'VALUE_ACCESSOR', () => VALUE_ACCESSOR);
-__required.r(exports, 'FormFieldControlDirective', () => FormFieldControlDirective);
-__required.r(exports, 'FormFieldControlService', () => FormFieldControlService);
-__required.r(exports, 'FormValidationStack', () => FormValidationStack);
-__required.r(exports, 'customFormValidator', () => customFormValidator);
-__required.r(exports, 'FormValidatorService', () => FormValidatorService);
-__required.r(exports, 'FormControlAbstract', () => FormControlAbstract);
-__required.r(exports, 'FormControlService', () => FormControlService);
-__required.r(exports, 'AbstractFormControl', () => AbstractFormControl);
-__required.r(exports, 'FormControlNameDirective', () => FormControlNameDirective);
-__required.r(exports, 'FormControlDirective', () => FormControlDirective);
-__required.r(exports, 'FormModule', () => FormModule);
-var utils = __required(1166);
-var extend = utils.extend;
-var helpers = __required(1142);
-var inarray = helpers.inarray;
-var isboolean = helpers.isboolean;
-var isempty = helpers.isempty;
-var isfunction = helpers.isfunction;
-var isequal = helpers.isequal;
-var isarray = helpers.isarray;
-var isundefined = helpers.isundefined;
-var isobject = helpers.isobject;
-var core = __required(1143);
-var AttributeAppender = core.AttributeAppender;
-var closureRef = core.closureRef;
-var ProviderToken = core.ProviderToken;
-var EventEmitter = core.EventEmitter;
-var errorBuilder = core.errorBuilder;
-var __buildOptions = {
-    'buildTime': 1734326607274,
+const utils = __required(1168);
+const extend = utils.extend;
+const helpers = __required(1144);
+const inarray = helpers.inarray;
+const isboolean = helpers.isboolean;
+const isempty = helpers.isempty;
+const isfunction = helpers.isfunction;
+const isequal = helpers.isequal;
+const isarray = helpers.isarray;
+const isundefined = helpers.isundefined;
+const isobject = helpers.isobject;
+const core = __required(1145);
+const AttributeAppender = core.AttributeAppender;
+const closureRef = core.closureRef;
+const ProviderToken = core.ProviderToken;
+const EventEmitter = core.EventEmitter;
+const errorBuilder = core.errorBuilder;
+const __buildOptions = {
+    'buildTime': 1790832896836,
     'version': '1.0.0',
     'baseHref': '',
     'assetURL': '',
@@ -5381,58 +5910,50 @@ class AbstractFormControl {
         }
     }
 }
-var FormControlDirective = function () {
-    'use strict';
-    class FormControlDirective extends AbstractFormControl {
-        set formControl(formControl) {
-            this.form = formControl;
-            _validateAndBindStatus(this);
+class FormControlDirective extends AbstractFormControl {
+    set formControl(formControl) {
+        this.form = formControl;
+        _validateAndBindStatus(this);
+    }
+}
+FormControlDirective.ctors = {
+    selector: 'formControl',
+    props: { formControl: {} },
+    DI: [{
+            optional: true,
+            tokenName: 'changeDetector'
+        }]
+};
+class FormControlNameDirective extends AbstractFormControl {
+    constructor(parentControl, changeDetector) {
+        super(changeDetector);
+        this.parentControl = parentControl;
+        if (!parentControl || !(parentControl instanceof FormControlDirective)) {
+            return errorBuilder('Expected instance of FormControlService but got ' + typeof parentControl);
         }
     }
-    FormControlDirective.ctors = {
-        selector: 'formControl',
-        props: { formControl: {} },
-        DI: [{
-                optional: true,
-                tokenName: 'changeDetector'
-            }]
-    };
-    return FormControlDirective;
-}();
-var FormControlNameDirective = function () {
-    'use strict';
-    class FormControlNameDirective extends AbstractFormControl {
-        constructor(parentControl, changeDetector) {
-            super(changeDetector);
-            this.parentControl = parentControl;
-            if (!parentControl || !(parentControl instanceof FormControlDirective)) {
-                return errorBuilder('Expected instance of FormControlService but got ' + typeof parentControl);
-            }
-        }
-        set formControlName(formName) {
-            this.formName = formName;
-            this.form = this.parentControl.getField(formName);
-            _validateAndBindStatus(this);
-        }
+    set formControlName(formName) {
+        this.formName = formName;
+        this.form = this.parentControl.getField(formName);
+        _validateAndBindStatus(this);
     }
-    FormControlNameDirective.ctors = {
-        selector: 'formControlName',
-        props: { formControlName: {} },
-        DI: [
-            {
-                optional: true,
-                value: 'formControl',
-                tokenName: 'ParentRef'
-            },
-            {
-                optional: true,
-                tokenName: 'changeDetector'
-            }
-        ],
-        exportAs: 'formControl'
-    };
-    return FormControlNameDirective;
-}();
+}
+FormControlNameDirective.ctors = {
+    selector: 'formControlName',
+    props: { formControlName: {} },
+    DI: [
+        {
+            optional: true,
+            value: 'formControl',
+            tokenName: 'ParentRef'
+        },
+        {
+            optional: true,
+            tokenName: 'changeDetector'
+        }
+    ],
+    exportAs: 'formControl'
+};
 class CurrentInstance {
     constructor(next, isDeep) {
         this.pending = null;
@@ -5475,7 +5996,7 @@ class CurrentInstance {
         asyncInstance.then(callback, callback);
     }
 }
-var emptyCheck = value => [
+const emptyCheck = value => [
     null,
     undefined,
     ''
@@ -5541,26 +6062,24 @@ class FormValidationStack {
         return true;
     }
 }
-function FormValidatorService(callback, validators, isDeep) {
-    var currentProcess = new CurrentInstance(callback, isDeep);
-    var validatorPaths = [];
-    function flatten(field, record, paths) {
-        if (isobject(record)) {
-            paths.push(field);
-            var _reqStacks = Object.keys(record);
-            if (!FormValidationStack[_reqStacks[0].toUpperCase()] && !isfunction(record[_reqStacks[0]])) {
-                _reqStacks.forEach(field => flatten(field, record[field], paths.slice()));
-            } else {
-                validatorPaths.push([
-                    paths,
-                    record
-                ]);
+class ValidatorHelper {
+    static flattenValdators(validatorPaths, vRecords, currentProcess) {
+        const flatten = (field, record, paths) => {
+            if (isobject(record)) {
+                paths.push(field);
+                const _reqStacks = Object.keys(record);
+                if (!FormValidationStack[_reqStacks[0].toUpperCase()] && !isfunction(record[_reqStacks[0]])) {
+                    _reqStacks.forEach(field => flatten(field, record[field], paths.slice()));
+                } else {
+                    validatorPaths.push([
+                        paths,
+                        record
+                    ]);
+                }
             }
-        }
-    }
-    function flattenValdators(vRecords) {
+        };
         if (vRecords) {
-            var keys = Object.keys(vRecords);
+            const keys = Object.keys(vRecords);
             if (keys.length) {
                 if (!!FormValidationStack[keys[0].toUpperCase()] || isfunction(vRecords[keys[0]]))
                     return;
@@ -5569,19 +6088,23 @@ function FormValidatorService(callback, validators, isDeep) {
             }
         }
     }
-    function _throwErrorIfNoValidators(validatorsObj) {
+    static throwErrorIfNoValidators(validatorsObj) {
         if (!isobject(validatorsObj)) {
             throw new Error('Validators are required in order to perform validations');
         }
     }
+}
+function FormValidatorService(callback, validators, isDeep) {
+    const currentProcess = new CurrentInstance(callback, isDeep);
+    const validatorPaths = [];
     function _formFieldValidator(value, criteria, fieldName) {
-        var criteriaKeys = Object.keys(criteria);
+        const criteriaKeys = Object.keys(criteria);
         currentProcess.add(criteriaKeys.length);
         for (var i = 0; i < criteriaKeys.length; i++) {
-            var validatorName = criteriaKeys[i];
-            var passed = false;
-            var validatorFn = FormValidationStack[validatorName.toUpperCase()];
-            var isAsync = isequal('async', validatorName);
+            const validatorName = criteriaKeys[i];
+            let passed = false;
+            const validatorFn = FormValidationStack[validatorName.toUpperCase()];
+            const isAsync = isequal('async', validatorName);
             if (validatorFn) {
                 passed = validatorFn(value, criteria[validatorName]);
             } else if (isfunction(criteria[validatorName])) {
@@ -5603,33 +6126,30 @@ function FormValidatorService(callback, validators, isDeep) {
         }
         return false;
     }
-    function _formControlValidator(formValues) {
-        for (var path of validatorPaths) {
-            if (_formFieldValidator(getValueByPath(formValues, path[0]), path[1], path[0].join('.'))) {
-                break;
+    function formValidator(formValue) {
+        if (!validators)
+            return callback(null);
+        ValidatorHelper.throwErrorIfNoValidators(validators);
+        if (!currentProcess.isDeep)
+            _formFieldValidator(formValue, validators);
+        else {
+            for (const path of validatorPaths) {
+                if (_formFieldValidator(getValueByPath(formValue, path[0]), path[1], path[0].join('.'))) {
+                    break;
+                }
             }
         }
     }
-    function formValidator(formValue) {
-        if (!validators) {
-            return callback(null);
-        }
-        _throwErrorIfNoValidators(validators);
-        if (!currentProcess.isDeep)
-            _formFieldValidator(formValue, validators);
-        else
-            _formControlValidator(formValue);
-    }
-    formValidator.addValidators = function (newValidators) {
-        _throwErrorIfNoValidators(newValidators);
+    formValidator.addValidators = newValidators => {
+        ValidatorHelper.throwErrorIfNoValidators(newValidators);
         if (!validators) {
             validators = newValidators;
         } else {
             validators = extend(true, validators, newValidators);
         }
-        flattenValdators(newValidators);
+        ValidatorHelper.flattenValdators(validatorPaths, newValidators, currentProcess);
     };
-    flattenValdators(validators);
+    ValidatorHelper.flattenValdators(validatorPaths, validators, currentProcess);
     return formValidator;
 }
 function customFormValidator(validatorName, validatorFn, override) {
@@ -5682,9 +6202,7 @@ class FormControlAbstract {
         this._parent = context;
     }
     _anyFieldHasStatus(status) {
-        return this._anyControl(function (control) {
-            return isequal(control.status, status);
-        });
+        return this._anyControl(control => isequal(control.status, status));
     }
     _anyControl() {
     }
@@ -5695,8 +6213,8 @@ class FormControlAbstract {
             return INVALID;
         return VALID;
     }
-    destroy() {
-        if (this.formFieldControls) {
+    destroy(softDestroy) {
+        if (!softDestroy && this.formFieldControls) {
             this.formFieldControls = null;
         }
         this._parent = null;
@@ -5706,7 +6224,7 @@ class FormControlAbstract {
     markAsTouched(options) {
         options = options || {};
         this.touched = true;
-        if (this._parent && !option.self) {
+        if (this._parent && !options.self) {
             this._parent.markAsTouched(options);
         }
     }
@@ -5739,17 +6257,15 @@ class FormControlAbstract {
             self: true,
             emitEvent: options.emitEvent
         });
-        this.forEachField(function (control) {
+        this.forEachField(control => {
             control.enable({ self: true });
         });
-        this._onDisableEvents.forEach(function (listener) {
-            listener(false);
-        });
+        this._onDisableEvents.forEach(listener => listener(false));
     }
     disable(options) {
         options = options || {};
         this.status = DISABLED;
-        this.forEachField(function (control) {
+        this.forEachField(control => {
             control.disable({ self: true });
         });
         this.updateValueAndStatus({
@@ -5785,9 +6301,7 @@ class FormControlAbstract {
     markAsUntouched(options) {
         options = options || {};
         this.touched = false;
-        this.forEachField(function (control) {
-            control.markAsUntouched({ self: true });
-        });
+        this.forEachField(control => control.markAsUntouched({ self: true }));
     }
     markAllAsUnTouched() {
         this.markAsUntouched({ self: true });
@@ -5831,230 +6345,229 @@ class FormControlAbstract {
             this.parent.markAsTouched(options);
         }
     }
+    isValueChanged(value) {
+        return this._pendingValue !== value;
+    }
+    _setupControl(control) {
+        control.setParent(this);
+        control._registerOnControlChangeListener(this._onControlChangeListener);
+    }
+    _collectErrors() {
+        this.error = this._getAllFieldErrors();
+    }
+    _getAllFieldErrors() {
+        var errors = this._getArryOrObjectType();
+        var invalid = false;
+        this.forEachField((control, field) => {
+            if (control.error) {
+                errors[field] = control.error;
+                invalid = true;
+            }
+        });
+        return invalid ? errors : null;
+    }
+    _collectValues(enabledOnly) {
+        var values = this._getArryOrObjectType();
+        this.forEachField((control, field) => {
+            if (enabledOnly && control.enabled || !enabledOnly) {
+                values[field] = control.value;
+            }
+        });
+        return values;
+    }
+    _getArryOrObjectType() {
+        return Array.isArray(this.formFieldControls) ? [] : {};
+    }
 }
-var FormFieldControlService = function () {
-    'use strict';
-    class FormFieldControlService extends FormControlAbstract {
-        constructor(fieldControl) {
-            super(fieldControl ? fieldControl.validators : null, false);
-            this.eventType = 'default';
-            this._onChangeEvents = [];
+class FormFieldControlService extends FormControlAbstract {
+    constructor(fieldControl, isManualInit = false) {
+        super(fieldControl ? fieldControl.validators : null, false);
+        this.eventType = 'default';
+        this.valueType = 'default';
+        this._onChangeEvents = [];
+        if (!isManualInit) {
             this._setInitialState(fieldControl);
         }
-        _setInitialState(state) {
-            if (isobject(state)) {
-                this.value = state.value;
-                state.disabled ? this.disable({ self: true }) : this.enable({ self: true });
-                this.eventType = state.eventType || this.eventType;
-            } else {
-                this.value = state !== undefined ? state : null;
-            }
-        }
-        setValue(value, options) {
-            options = options || {};
-            this.value = value;
-            if (this._onChangeEvents.length && !isequal(options.emitToView, false)) {
-                this._onChangeEvents.length && this._onChangeEvents.forEach(function (eventChange) {
-                    return eventChange(value, !isequal(options.emitToView, false));
-                });
-            }
-            this.updateValueAndStatus(options);
-        }
-        patchValue(val, options) {
-            if (!options) {
-                options = {};
-            }
-            this.setValue(val, options);
-        }
-        reset(config, options) {
-            this._setInitialState(config);
-            this.markAsUntouched(options);
-            this.setValue(this.value, options);
-        }
-        registerOnChangeListener(listener) {
-            this._onChangeEvents.push(listener);
-        }
-        registerOnDisabledListener(listener) {
-            this._onDisableEvents.push(listener);
-        }
-        clearListeners() {
-            this._onChangeEvents.length = 0;
-            this._onDisableEvents.length = 0;
+    }
+    _setInitialState(state) {
+        if (isobject(state)) {
+            this.value = ![
+                undefined,
+                null
+            ].includes(state.value) ? state.value : this.value;
+            state.disabled ? this.disable({ self: true }) : this.enable({ self: true });
+            this.eventType = state.eventType || this.eventType;
+            this.valueType = state.valueType || this.valueType;
+        } else {
+            this.value = state !== undefined ? state : null;
         }
     }
-    FormFieldControlService.ctors = {};
-    FormFieldControlService.ctors.instance = FormFieldControlService;
-    return FormFieldControlService;
-}();
-var FormControlService = function () {
-    'use strict';
-    class FormControlService extends FormControlAbstract {
-        constructor(formFields, validators) {
-            super(validators, true);
-            this.formFieldControls = {};
-            this.addFields(formFields);
+    setValue(value, options) {
+        options = options || {};
+        this.value = value;
+        const emitToView = !isequal(options.emitToView, false);
+        if (this._onChangeEvents.length && emitToView) {
+            this._onChangeEvents.forEach(eventChange => eventChange(value, emitToView));
         }
-        addField(name, fieldControl) {
-            if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
-                this.formFieldControls[name] = fieldControl;
-            } else {
-                this.formFieldControls[name] = new FormFieldControlService(fieldControl);
-            }
-            this._setupControl(this.formFieldControls[name]);
+        this.updateValueAndStatus(options);
+    }
+    patchValue(val, options) {
+        this.setValue(val, options || {});
+    }
+    reset(config, options) {
+        this._setInitialState(config);
+        this.markAsUntouched(options);
+        this.setValue(this.value, options);
+    }
+    registerOnChangeListener(listener) {
+        this._onChangeEvents.push(listener);
+    }
+    registerOnDisabledListener(listener) {
+        this._onDisableEvents.push(listener);
+    }
+    clearListeners() {
+        this._onChangeEvents.length = 0;
+        this._onDisableEvents.length = 0;
+    }
+}
+FormFieldControlService.ctors = {};
+FormFieldControlService.ctors.instance = FormFieldControlService;
+class FormControlService extends FormControlAbstract {
+    constructor(formFields, validators) {
+        super(validators, true);
+        this.formFieldControls = {};
+        this.addFields(formFields);
+    }
+    addField(name, fieldControl) {
+        if (fieldControl instanceof FormControlAbstract) {
+            this.formFieldControls[name] = fieldControl;
+        } else {
+            this.formFieldControls[name] = new FormFieldControlService(fieldControl);
         }
-        addFields(fieldControls) {
-            if (!isobject(fieldControls))
-                return;
-            for (var field in fieldControls) {
-                this.addField(field, fieldControls[field]);
-            }
-            this.updateValueAndStatus();
+        this._setupControl(this.formFieldControls[name]);
+    }
+    addFields(fieldControls) {
+        if (!isobject(fieldControls))
+            return;
+        for (const field in fieldControls) {
+            this.addField(field, fieldControls[field]);
         }
-        hasField(controlName) {
-            return this.formFieldControls.hasOwnProperty(controlName);
-        }
-        getField(controlName) {
-            var path = this.getPath(controlName);
-            if (isarray(path))
-                return this.getByPath(path);
-            return this.formFieldControls ? this.formFieldControls[controlName] : null;
-        }
-        getByPath(paths) {
-            return paths.reduce(function (accum, path) {
-                return accum.getField(path);
-            }, this);
-        }
-        _setupControl(control) {
-            control.setParent(this);
-            control._registerOnControlChangeListener(this._onControlChangeListener);
-        }
-        patchValue(values, options) {
-            options = options || {};
-            if (isobject(values) || isarray(values)) {
-                for (var field in values) {
-                    if (this.hasField(field) && !options.self) {
-                        this.getField(field).patchValue(values[field], {
-                            self: options.self,
-                            updateView: true
-                        });
-                    }
-                }
-            }
-        }
-        setValue(values, options) {
-            if (!values)
-                return;
-            this._allValuePresent(values);
+        this.updateValueAndStatus();
+    }
+    hasField(controlName) {
+        return this.formFieldControls.hasOwnProperty(controlName);
+    }
+    getField(controlName) {
+        const path = this.getPath(controlName);
+        if (isarray(path))
+            return this.getByPath(path);
+        return this.formFieldControls ? this.formFieldControls[controlName] : null;
+    }
+    getByPath(paths) {
+        return paths.reduce((accum, path) => accum && accum.getField(path), this);
+    }
+    patchValue(values, options) {
+        options = options || {};
+        if (values && typeof values == 'object') {
             for (var field in values) {
-                this._isControlPresent(field);
-                this.formFieldControls[field].setValue(values[field], { self: options && options.self });
-            }
-        }
-        forEachField(callback) {
-            Object.keys(this.formFieldControls).forEach(field => {
-                callback(this.formFieldControls[field], field);
-            });
-        }
-        reset(value, options) {
-            options = options || {};
-            value = value || {};
-            this.forEachField(function (control, name) {
-                control.reset(value[name] || null, {
-                    self: true,
-                    emitEvent: options.emitEvent
-                });
-            });
-        }
-        setFormFieldValidators(fieldValidators) {
-            for (var field in fieldValidators) {
-                this.setFieldValidator(field, fieldValidators[field]);
-            }
-        }
-        setFieldValidator(field, validator) {
-            this.getField(field).setValidators(validator);
-            return this;
-        }
-        allTouched() {
-            var alltouched = true;
-            this.forEachField(function (control, name) {
-                if (!control.touched) {
-                    alltouched = false;
-                }
-            });
-            return alltouched;
-        }
-        removeField(name) {
-            this.getField(name).destroy();
-            delete this.formFieldControls[name];
-            delete this.value[name];
-            this.valueChanges.emit(this.value);
-        }
-        getAllValues() {
-            return this._collectValues(false);
-        }
-        _allValuePresent(values) {
-            this.forEachField(function (control, field) {
-                if (isundefined(values[field])) {
-                    errorBuilder('value for formField(' + field + ') is missing');
-                }
-            });
-        }
-        _isControlPresent(field) {
-            if (!Object.keys(this.formFieldControls).length) {
-                errorBuilder('There are no field controls registered to this form');
-            }
-            if (!this.hasField(field)) {
-                errorBuilder('Cannot find field control for ' + field);
-            }
-        }
-        _anyControl(callback) {
-            for (var field in this.formFieldControls) {
-                var found = callback(this.formFieldControls[field]);
-                if (found) {
-                    return found;
+                if (this.hasField(field) && !options.self) {
+                    this.getField(field).patchValue(values[field], {
+                        self: options.self,
+                        updateView: true
+                    });
                 }
             }
-            return undefined;
-        }
-        _allFieldDisabled() {
-            for (var field in this.formFieldControls) {
-                if (this.formFieldControls[field].enabled) {
-                    return false;
-                }
-            }
-            return Object.keys(this.formFieldControls).length > 0 || this.disabled;
-        }
-        _updateValue() {
-            this.value = this._collectValues(true);
-        }
-        _collectValues(enabledOnly) {
-            var values = {};
-            this.forEachField(function (control, field) {
-                if (enabledOnly && control.enabled || !enabledOnly) {
-                    values[field] = control.value;
-                }
-            });
-            return values;
-        }
-        _getAllFieldErrors() {
-            var errors = {};
-            var invalid = false;
-            this.forEachField(function (control, field) {
-                if (control.error) {
-                    errors[field] = control.error;
-                    invalid = true;
-                }
-            });
-            return invalid ? errors : null;
-        }
-        _collectErrors() {
-            this.error = this._getAllFieldErrors();
         }
     }
-    FormControlService.ctors = {};
-    FormControlService.ctors.instance = FormControlService;
-    return FormControlService;
-}();
+    setValue(values, options) {
+        if (!values)
+            return;
+        this._allValuePresent(values);
+        for (var field in values) {
+            this._isControlPresent(field);
+            this.formFieldControls[field].setValue(values[field], { self: options && options.self });
+        }
+    }
+    forEachField(callback) {
+        Object.keys(this.formFieldControls).forEach(field => {
+            callback(this.formFieldControls[field], field);
+        });
+    }
+    reset(value, options) {
+        options = options || {};
+        value = value || {};
+        this.forEachField(function (control, name) {
+            control.reset(value[name] || null, {
+                self: true,
+                emitEvent: options.emitEvent
+            });
+        });
+    }
+    setFormFieldValidators(fieldValidators) {
+        for (var field in fieldValidators) {
+            this.setFieldValidator(field, fieldValidators[field]);
+        }
+    }
+    setFieldValidator(field, validator) {
+        this.getField(field).setValidators(validator);
+        return this;
+    }
+    allTouched() {
+        var alltouched = true;
+        this.forEachField(function (control, name) {
+            if (!control.touched) {
+                alltouched = false;
+            }
+        });
+        return alltouched;
+    }
+    removeField(name, softDestroy) {
+        this.getField(name).destroy(softDestroy);
+        delete this.formFieldControls[name];
+        delete this.value[name];
+        this.valueChanges.emit(this.value);
+    }
+    getAllValues() {
+        return this._collectValues(false);
+    }
+    _allValuePresent(values) {
+        this.forEachField(function (control, field) {
+            if (isundefined(values[field])) {
+                errorBuilder('value for formField(' + field + ') is missing');
+            }
+        });
+    }
+    _isControlPresent(field) {
+        if (!Object.keys(this.formFieldControls).length) {
+            errorBuilder('There are no field controls registered to this form');
+        }
+        if (!this.hasField(field)) {
+            errorBuilder('Cannot find field control for ' + field);
+        }
+    }
+    _anyControl(callback) {
+        for (var field in this.formFieldControls) {
+            var found = callback(this.formFieldControls[field]);
+            if (found) {
+                return found;
+            }
+        }
+        return undefined;
+    }
+    _allFieldDisabled() {
+        for (var field in this.formFieldControls) {
+            if (this.formFieldControls[field].enabled) {
+                return false;
+            }
+        }
+        return Object.keys(this.formFieldControls).length > 0 || this.disabled;
+    }
+    _updateValue() {
+        this.value = this._collectValues(true);
+    }
+}
+FormControlService.ctors = {};
+FormControlService.ctors.instance = FormControlService;
 var VALUE_ACCESSOR = new ProviderToken('ValueAccessor', true);
 class AbstractValueAccessor {
     constructor(elementRef) {
@@ -6085,306 +6598,287 @@ class AbstractValueAccessor {
         this.onDisable = null;
     }
 }
-var FormFieldControlDirective = function () {
-    'use strict';
-    class FormFieldControlDirective {
-        constructor(eventBinder, validators) {
-            this.eventBinder = getValueAccessor(eventBinder);
-            this.control = null;
-            this._validators = validators;
-            this._warning = false;
-        }
-        set disabled(value) {
-            if (!this._warning) {
-                this._warning = true;
-                console.warn('The use of disabled property with a form field control directive will not take effect');
-            }
-        }
-        didInit() {
-            if (!(this.control instanceof FormFieldControlService)) {
-                return errorBuilder('Expected instance of FormFieldControlService but got ' + typeof this.control);
-            }
-            setupControl(this.control, this);
-            if (this.control.disabled && this.eventBinder.setDisabledState) {
-                this.eventBinder.setDisabledState(true);
-            }
-            this.control.updateValueAndStatus({ emitEvent: false });
-        }
-        modelToViewUpdate() {
+class FormFieldControlDirective {
+    constructor(eventBinder, validators) {
+        this.eventBinder = getValueAccessor(eventBinder);
+        this.control = null;
+        this._validators = validators;
+        this._warning = false;
+    }
+    set disabled(value) {
+        if (!this._warning) {
+            this._warning = true;
+            console.warn('The use of disabled property with a form field control directive will not take effect');
         }
     }
-    FormFieldControlDirective.ctors = {
-        selector: 'fieldControl',
-        props: {
-            control: { value: 'fieldControl' },
-            disabled: {}
+    didInit() {
+        if (!(this.control instanceof FormFieldControlService)) {
+            return errorBuilder('Expected instance of FormFieldControlService but got ' + typeof this.control);
+        }
+        setupControl(this.control, this);
+        if (this.control.disabled && this.eventBinder.setDisabledState) {
+            this.eventBinder.setDisabledState(true);
+        }
+        this.control.updateValueAndStatus({ emitEvent: false });
+    }
+    modelToViewUpdate() {
+    }
+}
+FormFieldControlDirective.ctors = {
+    selector: 'fieldControl',
+    props: {
+        control: { value: 'fieldControl' },
+        disabled: {}
+    },
+    DI: [
+        VALUE_ACCESSOR,
+        {
+            optional: true,
+            tokenName: 'VALIDATORS'
+        }
+    ]
+};
+class FormFieldDirective {
+    constructor(parentContainer, eventBinder, validators) {
+        this.eventBinder = getValueAccessor(eventBinder);
+        this.control = null;
+        this._validators = validators;
+        this.parent = parentContainer;
+    }
+    didInit() {
+        if (!this.parent) {
+            return errorBuilder(`[formField=${ this.name }]: Expected an instance of FormControlDirective but got ${ typeof this.parent }`);
+        }
+        this.control = this.parent.addField(this);
+        if (this.control.disabled && this.eventBinder.setDisabledState) {
+            this.eventBinder.setDisabledState(true);
+        }
+    }
+    modelToViewUpdate() {
+    }
+    viewDidDestroy() {
+        if (this.parent) {
+            this.parent.removeField(this);
+            this.parent = null;
+        }
+        this.control = null;
+    }
+}
+FormFieldDirective.ctors = {
+    selector: 'formField',
+    props: { name: { value: 'formField' } },
+    DI: [
+        {
+            optional: true,
+            value: 'formControl',
+            tokenName: 'ParentRef'
         },
-        DI: [
-            VALUE_ACCESSOR,
-            {
-                optional: true,
-                tokenName: 'VALIDATORS'
-            }
-        ]
-    };
-    return FormFieldControlDirective;
-}();
-var FormFieldDirective = function () {
-    'use strict';
-    class FormFieldDirective {
-        constructor(parentContainer, eventBinder, validators) {
-            this.eventBinder = getValueAccessor(eventBinder);
-            this.control = null;
-            this._validators = validators;
-            this.parent = parentContainer;
+        VALUE_ACCESSOR,
+        {
+            optional: true,
+            tokenName: 'VALIDATORS'
         }
-        didInit() {
-            if (!this.parent) {
-                return errorBuilder('[formField=' + this.name + ']: Expected an instance of FormControlDirective but got ' + typeof this.parent);
-            }
-            this.control = this.parent.addField(this);
-            if (this.control.disabled && this.eventBinder.setDisabledState) {
-                this.eventBinder.setDisabledState(true);
-            }
-        }
-        modelToViewUpdate() {
-        }
-        viewDidDestroy() {
-            if (this.parent) {
-                this.parent.removeField(this);
-                this.parent = null;
-            }
-            this.control = null;
-        }
-    }
-    FormFieldDirective.ctors = {
-        selector: 'formField',
-        props: { name: { value: 'formField' } },
-        DI: [
-            {
-                optional: true,
-                value: 'formControl',
-                tokenName: 'ParentRef'
-            },
-            VALUE_ACCESSOR,
-            {
-                optional: true,
-                tokenName: 'VALIDATORS'
-            }
-        ]
-    };
-    return FormFieldDirective;
-}();
-var ResolveDefaultBinder = {
+    ]
+};
+const ResolveDefaultBinder = {
     name: VALUE_ACCESSOR,
     reference: closureRef(function () {
         return DefaultEventBinder;
     })
 };
-var DefaultEventBinder = function () {
-    'use strict';
-    class DefaultEventBinder extends AbstractValueAccessor {
-        writeValue(value) {
-            value = value === null || value === undefined ? '' : value;
-            AttributeAppender.setProp(this.element.nativeElement, 'value', value);
-        }
+class DefaultEventBinder extends AbstractValueAccessor {
+    writeValue(value) {
+        value = [
+            'null',
+            null,
+            'undefined',
+            undefined
+        ].includes(value) ? '' : value;
+        AttributeAppender.setProp(this.element.nativeElement, 'value', this.stringifyValue(value));
     }
-    DefaultEventBinder.ctors = {
-        selector: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl],input:list:[model|formField|fieldControl]',
-        events: {
-            'input': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: [[
-                                '$event',
-                                'target',
-                                'value'
-                            ]],
-                        fn: 'onChange'
-                    }],
-                node: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl],input:list:[model|formField|fieldControl]'
-            },
-            'blur': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: ['$event'],
-                        fn: 'onBlur'
-                    }],
-                node: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl],input:list:[model|formField|fieldControl]'
-            }
+    stringifyValue(value) {
+        if (value && typeof value == 'object') {
+            return JSON.stringify(value, null, 3);
+        }
+        return value;
+    }
+}
+DefaultEventBinder.ctors = {
+    selector: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl],input:list:[model|formField|fieldControl]',
+    events: {
+        'input': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: [[
+                            '$event',
+                            'target',
+                            'value'
+                        ]],
+                    fn: 'onChange'
+                }],
+            node: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl],input:list:[model|formField|fieldControl]'
         },
-        DI: [{
-                optional: true,
-                tokenName: 'ElementRef'
-            }],
-        resolve: [ResolveDefaultBinder]
-    };
-    return DefaultEventBinder;
-}();
-var ResolveCheckboxBinder = {
-    name: VALUE_ACCESSOR,
-    reference: closureRef(function () {
-        return CheckboxEventBinder;
-    })
+        'blur': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: ['$event'],
+                    fn: 'onBlur'
+                }],
+            node: 'input:type!=checkbox|radio|number|range:[model|formField|fieldControl],textarea:[model|formField|fieldControl],input:list:[model|formField|fieldControl]'
+        }
+    },
+    DI: [{
+            optional: true,
+            tokenName: 'ElementRef'
+        }],
+    resolve: [ResolveDefaultBinder]
 };
-var CheckboxEventBinder = function () {
-    'use strict';
-    class CheckboxEventBinder extends AbstractValueAccessor {
-        writeValue(checked) {
-            AttributeAppender.setProp(this.element.nativeElement, 'checked', checked, true);
-        }
+const ResolveCheckboxBinder = {
+    name: VALUE_ACCESSOR,
+    reference: closureRef(() => CheckboxEventBinder)
+};
+class CheckboxEventBinder extends AbstractValueAccessor {
+    writeValue(checked) {
+        AttributeAppender.setProp(this.element.nativeElement, 'checked', checked, true);
     }
-    ;
-    CheckboxEventBinder.ctors = {
-        selector: 'input:type=checkbox:[model|formField|fieldControl]',
-        events: {
-            'change': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: [[
-                                '$event',
-                                'target',
-                                'checked'
-                            ]],
-                        fn: 'onChange'
-                    }],
-                node: 'input:type=checkbox:[model|formField|fieldControl]'
-            },
-            'blur': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: ['$event'],
-                        fn: 'onBlur'
-                    }],
-                node: 'input:type=checkbox:[model|formField|fieldControl]'
-            }
+}
+;
+CheckboxEventBinder.ctors = {
+    selector: 'input:type=checkbox:[model|formField|fieldControl]',
+    events: {
+        'change': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: [[
+                            '$event',
+                            'target',
+                            'checked'
+                        ]],
+                    fn: 'onChange'
+                }],
+            node: 'input:type=checkbox:[model|formField|fieldControl]'
         },
-        DI: [{
-                optional: true,
-                tokenName: 'ElementRef'
-            }],
-        resolve: [ResolveCheckboxBinder]
-    };
-    return CheckboxEventBinder;
-}();
+        'blur': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: ['$event'],
+                    fn: 'onBlur'
+                }],
+            node: 'input:type=checkbox:[model|formField|fieldControl]'
+        }
+    },
+    DI: [{
+            optional: true,
+            tokenName: 'ElementRef'
+        }],
+    resolve: [ResolveCheckboxBinder]
+};
 function isSameGroup(a, b) {
     return a.name === b.name;
 }
-var ResolveRadioBinder = {
+const ResolveRadioBinder = {
     name: VALUE_ACCESSOR,
-    reference: closureRef(function () {
-        return RadioEventBinder;
-    })
+    reference: closureRef(() => RadioEventBinder)
 };
-var RadioEventContainer = function () {
-    'use strict';
-    class RadioEventContainer {
-        constructor() {
-            this._registry = [];
-        }
-        register(eventBinder) {
-            this._registry.push(eventBinder);
-        }
-        remove(eventBinder) {
-            this._registry.splice(this._registry.indexOf(eventBinder), 1);
-        }
-        selectValue(eventBinder) {
-            this._registry.forEach(function (registeredBinder) {
-                if (isSameGroup(registeredBinder, eventBinder) && registeredBinder !== eventBinder) {
-                    registeredBinder.writeValue(eventBinder.value);
-                }
-            });
-        }
+class RadioEventContainer {
+    constructor() {
+        this._registry = [];
     }
-    RadioEventContainer.ctors = {};
-    return RadioEventContainer;
-}();
-var RadioEventBinder = function () {
-    'use strict';
-    class RadioEventBinder extends AbstractValueAccessor {
-        constructor(elementRef, radioEventContainer) {
-            super(elementRef);
-            this.radioEventContainer = radioEventContainer;
-            this.state = false;
-        }
-        didInit() {
-            this._checkFieldName();
-            this.radioEventContainer.register(this);
-        }
-        didDestroy() {
-            this.radioEventContainer.remove(this);
-        }
-        _checkFieldName() {
-            if (this.name && this.formField && this.formField != this.name) {
-                errorBuilder('if you define a name and formField both values must match. <input type=radio name=' + this.name + ' :formField=' + this.formField);
-            }
-            if (!this.name && this.formField)
-                this.name = this.formField;
-        }
-        registerOnChange(onChangeFn) {
-            this._onChange = onChangeFn;
-            this.onChange = value => {
-                onChangeFn(this.value);
-                this.radioEventContainer.selectValue(this);
-            };
-        }
-        writeValue(value) {
-            this.state = value == this.value;
-            AttributeAppender.setProp(this.element.nativeElement, 'checked', this.state);
-        }
+    register(eventBinder) {
+        this._registry.push(eventBinder);
     }
-    ;
-    RadioEventBinder.ctors = {
-        selector: 'input:type=radio:[model|formField|fieldControl]',
-        events: {
-            'change': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: [[
-                                '$event',
-                                'target',
-                                'value'
-                            ]],
-                        fn: 'onChange'
-                    }],
-                node: 'input:type=radio:[model|formField|fieldControl]'
-            },
-            'blur': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: ['$event'],
-                        fn: 'onBlur'
-                    }],
-                node: 'input:type=radio:[model|formField|fieldControl]'
+    remove(eventBinder) {
+        this._registry.splice(this._registry.indexOf(eventBinder), 1);
+    }
+    selectValue(eventBinder) {
+        this._registry.forEach(function (registeredBinder) {
+            if (isSameGroup(registeredBinder, eventBinder) && registeredBinder !== eventBinder) {
+                registeredBinder.writeValue(eventBinder.value);
             }
+        });
+    }
+}
+RadioEventContainer.ctors = {};
+class RadioEventBinder extends AbstractValueAccessor {
+    constructor(elementRef, radioEventContainer) {
+        super(elementRef);
+        this.radioEventContainer = radioEventContainer;
+        this.state = false;
+    }
+    didInit() {
+        this._checkFieldName();
+        this.radioEventContainer.register(this);
+    }
+    didDestroy() {
+        this.radioEventContainer.remove(this);
+    }
+    _checkFieldName() {
+        if (this.name && this.formField && this.formField != this.name) {
+            errorBuilder('if you define a name and formField both values must match. <input type=radio name=' + this.name + ' :formField=' + this.formField);
+        }
+        if (!this.name && this.formField)
+            this.name = this.formField;
+    }
+    registerOnChange(onChangeFn) {
+        this._onChange = onChangeFn;
+        this.onChange = value => {
+            onChangeFn(this.value);
+            this.radioEventContainer.selectValue(this);
+        };
+    }
+    writeValue(value) {
+        this.state = value == this.value;
+        AttributeAppender.setProp(this.element.nativeElement, 'checked', this.state);
+    }
+}
+;
+RadioEventBinder.ctors = {
+    selector: 'input:type=radio:[model|formField|fieldControl]',
+    events: {
+        'change': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: [[
+                            '$event',
+                            'target',
+                            'value'
+                        ]],
+                    fn: 'onChange'
+                }],
+            node: 'input:type=radio:[model|formField|fieldControl]'
         },
-        props: {
-            name: {},
-            formField: {},
-            value: {}
+        'blur': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: ['$event'],
+                    fn: 'onBlur'
+                }],
+            node: 'input:type=radio:[model|formField|fieldControl]'
+        }
+    },
+    props: {
+        name: {},
+        formField: {},
+        value: {}
+    },
+    DI: [
+        {
+            optional: true,
+            tokenName: 'ElementRef'
         },
-        DI: [
-            {
-                optional: true,
-                tokenName: 'ElementRef'
-            },
-            RadioEventContainer
-        ],
-        resolve: [ResolveRadioBinder]
-    };
-    return RadioEventBinder;
-}();
-var ResolveSelectBinder = {
+        RadioEventContainer
+    ],
+    resolve: [ResolveRadioBinder]
+};
+const ResolveSelectBinder = {
     name: VALUE_ACCESSOR,
-    reference: closureRef(function () {
-        return SelectEventBinder;
-    })
+    reference: closureRef(() => SelectEventBinder)
 };
 function _buildValueToString(id, value) {
     if (id == null)
@@ -6393,295 +6887,281 @@ function _buildValueToString(id, value) {
         value = 'option:object';
     return id + '|' + value;
 }
-var SelectEventBinder = function () {
-    'use strict';
-    class SelectEventBinder extends AbstractValueAccessor {
-        constructor(elementRef) {
-            super(elementRef);
-            this.idIncrement = 0;
-            this.selectedValue;
-            this._optionValueMap = new Map();
-            this._compare = isequal;
-            Object.defineProperty(this, 'compareFn', {
-                set: function (fn) {
-                    if (typeof fn !== 'function') {
-                        throw new Error('expected function for comparisonFN but got ' + typeof fn + ' instead.');
-                    }
-                    this._compare = fn;
-                }
-            });
+class SelectEventBinder extends AbstractValueAccessor {
+    constructor(elementRef) {
+        super(elementRef);
+        this.idIncrement = 0;
+        this.selectedValue;
+        this._optionValueMap = new Map();
+        this._compare = isequal;
+    }
+    set compareFn(fn) {
+        if (typeof fn !== 'function') {
+            throw new Error('expected function for comparisonFN but got ' + typeof fn + ' instead.');
         }
-        _handleSelection(value) {
-            this.selectedValue = this._getValue(value);
-            this.onChange(this.selectedValue);
-        }
-        writeValue(value) {
-            if (!this.element.hasAttribute('multiple')) {
-                var currentSelectedValue = this._getOptionValue(this.element.nativeElement.value);
-                if (!this._compare(currentSelectedValue, value)) {
-                    var optionId = this.getOptionIdByValue(value);
-                    this.element.nativeElement.value = _buildValueToString(optionId, value);
-                }
-            } else {
-                var markAsSelected = function (opt) {
-                    AttributeAppender.setProp(opt, 'selected', false);
+        this._compare = fn;
+    }
+    _handleSelection(value) {
+        this.selectedValue = this._getValue(value);
+        this.onChange(this.selectedValue);
+    }
+    writeValue(value) {
+        if (!this.element.hasAttribute('multiple')) {
+            var currentSelectedValue = this._getOptionValue(this.element.nativeElement.value);
+            if (!this._compare(currentSelectedValue, value)) {
+                var optionId = this.getOptionIdByValue(value);
+                this.element.nativeElement.value = _buildValueToString(optionId, value);
+            }
+        } else {
+            var markAsSelected = function (opt) {
+                AttributeAppender.setProp(opt, 'selected', false);
+            };
+            if (Array.isArray(value)) {
+                var optionIds = value.map(v => this.getOptionIdByValue(v) || v);
+                markAsSelected = function (opt) {
+                    AttributeAppender.setProp(opt, 'selected', inarray(opt.value, optionIds));
                 };
-                if (Array.isArray(value)) {
-                    var optionIds = value.map(v => this.getOptionIdByValue(v) || v);
-                    markAsSelected = function (opt) {
-                        AttributeAppender.setProp(opt, 'selected', inarray(opt.value, optionIds));
-                    };
-                }
-                this._markAsSelectedMultiple(markAsSelected);
             }
-            this.selectedValue = value;
+            this._markAsSelectedMultiple(markAsSelected);
         }
-        isSelected(optionId) {
-            return Object.is(this._optionValueMap.get(optionId), this.selectedValue);
-        }
-        _getValue(valueString) {
-            if (this.element.hasAttribute('multiple')) {
-                var optionsValue = [];
-                for (var i = 0; i < this.element.nativeElement.selectedOptions.length; i++) {
-                    var value = this._getOptionValue(this.element.nativeElement.selectedOptions[i].value);
-                    optionsValue.push(value);
-                }
-                return optionsValue;
-            }
-            return this._getOptionValue(valueString);
-        }
-        _getOptionValue(valueString) {
-            var sptStr = valueString.split('|')[0];
-            return this._optionValueMap.has(sptStr) ? this._optionValueMap.get(sptStr) : valueString;
-        }
-        genOptionId() {
-            return (this.idIncrement++).toString();
-        }
-        getOptionIdByValue(value) {
-            var keys = this._optionValueMap.keys();
-            for (var key of keys) {
-                if (this._compare(this._optionValueMap.get(key), value))
-                    return key;
-            }
-            return null;
-        }
-        _markAsSelectedMultiple(callback) {
-            if (!this.element.nativeElement)
-                return;
-            Array.from(this.element.nativeElement.options).forEach(callback);
-        }
-        destroyOption(optionId) {
-            this._optionValueMap.delete(optionId);
-            this.writeValue(this.selectedValue);
-        }
+        this.selectedValue = value;
     }
-    ;
-    SelectEventBinder.ctors = {
-        selector: 'select:[model|formField|fieldControl]',
-        events: {
-            'input': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: [[
-                                '$event',
-                                'target',
-                                'value'
-                            ]],
-                        fn: '_handleSelection'
-                    }],
-                node: 'select:[model|formField|fieldControl]'
-            },
-            'blur': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: ['$event'],
-                        fn: 'onBlur'
-                    }],
-                node: 'select:[model|formField|fieldControl]'
-            }
-        },
-        props: { compareFn: {} },
-        DI: [{
-                optional: true,
-                tokenName: 'ElementRef'
-            }],
-        resolve: [ResolveSelectBinder]
-    };
-    return SelectEventBinder;
-}();
-var OptionDirective = function () {
-    'use strict';
-    class OptionDirective {
-        constructor(selectInstance, elementRef) {
-            this.selectInstance = selectInstance;
-            if (selectInstance)
-                this.id = selectInstance.genOptionId();
-            this._value = null;
-            var defineConnector = {
-                set: value => this.prepareValue(value),
-                get: () => this._value
-            };
-            Object.defineProperty(this, 'value', Object.assign({}, defineConnector));
-            Object.defineProperty(this, 'jValue', Object.assign({}, defineConnector));
-            this.setValue = function (value) {
-                AttributeAppender.setProp(elementRef.nativeElement, 'value', value), AttributeAppender.setProp(elementRef.nativeElement, 'selected', this.selectInstance.isSelected(this.id));
-            };
-        }
-        prepareValue(value) {
-            if (!this.selectInstance)
-                return;
-            this._value = value;
-            this.selectInstance._optionValueMap.set(this.id, value);
-            this.setValue(_buildValueToString(this.id, value));
-        }
-        viewDidDestroy() {
-            if (this.selectInstance) {
-                this.selectInstance.destroyOption(this.id);
-            }
-        }
+    isSelected(optionId) {
+        return Object.is(this._optionValueMap.get(optionId), this.selectedValue);
     }
-    OptionDirective.ctors = {
-        selector: 'option',
-        props: {
-            value: {},
-            jValue: {}
-        },
-        DI: [
-            {
-                optional: true,
-                type: '[model|formField|fieldControl]',
-                value: 'select',
-                tokenName: 'ParentRef'
-            },
-            {
-                optional: true,
-                tokenName: 'HostElement'
+    _getValue(valueString) {
+        if (this.element.hasAttribute('multiple')) {
+            var optionsValue = [];
+            for (var i = 0; i < this.element.nativeElement.selectedOptions.length; i++) {
+                var value = this._getOptionValue(this.element.nativeElement.selectedOptions[i].value);
+                optionsValue.push(value);
             }
-        ]
-    };
-    return OptionDirective;
-}();
-var ResolveNumberBinder = {
-    name: VALUE_ACCESSOR,
-    reference: closureRef(function () {
-        return NumberEventBinder;
-    })
+            return optionsValue;
+        }
+        return this._getOptionValue(valueString);
+    }
+    _getOptionValue(valueString) {
+        var sptStr = valueString.split('|')[0];
+        return this._optionValueMap.has(sptStr) ? this._optionValueMap.get(sptStr) : valueString;
+    }
+    genOptionId() {
+        return (this.idIncrement++).toString();
+    }
+    getOptionIdByValue(value) {
+        var keys = this._optionValueMap.keys();
+        for (var key of keys) {
+            if (this._compare(this._optionValueMap.get(key), value))
+                return key;
+        }
+        return null;
+    }
+    _markAsSelectedMultiple(callback) {
+        if (!this.element.nativeElement)
+            return;
+        Array.from(this.element.nativeElement.options).forEach(callback);
+    }
+    destroyOption(optionId) {
+        this._optionValueMap.delete(optionId);
+        this.writeValue(this.selectedValue);
+    }
+}
+;
+SelectEventBinder.ctors = {
+    selector: 'select:[model|formField|fieldControl]',
+    events: {
+        'input': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: [[
+                            '$event',
+                            'target',
+                            'value'
+                        ]],
+                    fn: '_handleSelection'
+                }],
+            node: 'select:[model|formField|fieldControl]'
+        },
+        'blur': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: ['$event'],
+                    fn: 'onBlur'
+                }],
+            node: 'select:[model|formField|fieldControl]'
+        }
+    },
+    props: { compareFn: {} },
+    DI: [{
+            optional: true,
+            tokenName: 'ElementRef'
+        }],
+    resolve: [ResolveSelectBinder]
 };
-var NumberEventBinder = function () {
-    'use strict';
-    class NumberEventBinder extends AbstractValueAccessor {
-        writeValue(value) {
-            value = value === null || value === undefined ? '' : value;
-            AttributeAppender.setProp(this.element.nativeElement, 'value', value);
-        }
-        registerOnChange(onChangeFn) {
-            this.onChange = function (value) {
-                onChangeFn(value == '' ? null : parseFloat(value));
-            };
+class OptionDirective {
+    constructor(selectInstance, elementRef) {
+        this.selectInstance = selectInstance;
+        if (selectInstance)
+            this.id = selectInstance.genOptionId();
+        this._value = null;
+        var defineConnector = {
+            set: value => this.prepareValue(value),
+            get: () => this._value
+        };
+        Object.defineProperty(this, 'value', Object.assign({}, defineConnector));
+        Object.defineProperty(this, 'jValue', Object.assign({}, defineConnector));
+        this.setValue = function (value) {
+            AttributeAppender.setProp(elementRef.nativeElement, 'value', value), AttributeAppender.setProp(elementRef.nativeElement, 'selected', this.selectInstance.isSelected(this.id));
+        };
+    }
+    prepareValue(value) {
+        if (!this.selectInstance)
+            return;
+        this._value = value;
+        this.selectInstance._optionValueMap.set(this.id, value);
+        this.setValue(_buildValueToString(this.id, value));
+    }
+    viewDidDestroy() {
+        if (this.selectInstance) {
+            this.selectInstance.destroyOption(this.id);
         }
     }
-    NumberEventBinder.ctors = {
-        selector: 'input:type=number:[model|formField|fieldControl]',
-        events: {
-            'input': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: [[
-                                '$event',
-                                'target',
-                                'value'
-                            ]],
-                        fn: 'onChange'
-                    }],
-                node: 'input:type=number:[model|formField|fieldControl]'
-            },
-            'blur': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: ['$event'],
-                        fn: 'onBlur'
-                    }],
-                node: 'input:type=number:[model|formField|fieldControl]'
-            }
+}
+OptionDirective.ctors = {
+    selector: 'option',
+    props: {
+        value: {},
+        jValue: {}
+    },
+    DI: [
+        {
+            optional: true,
+            type: '[model|formField|fieldControl]',
+            value: 'select',
+            tokenName: 'ParentRef'
         },
-        DI: [{
-                optional: true,
-                tokenName: 'ElementRef'
-            }],
-        resolve: [ResolveNumberBinder]
-    };
-    return NumberEventBinder;
-}();
+        {
+            optional: true,
+            tokenName: 'HostElement'
+        }
+    ]
+};
+const ResolveNumberBinder = {
+    name: VALUE_ACCESSOR,
+    reference: closureRef(() => NumberEventBinder)
+};
+class NumberEventBinder extends AbstractValueAccessor {
+    writeValue(value) {
+        value = value === null || value === undefined ? '' : value;
+        AttributeAppender.setProp(this.element.nativeElement, 'value', value);
+    }
+    registerOnChange(onChangeFn) {
+        this.onChange = function (value) {
+            onChangeFn(value == '' ? null : parseFloat(value));
+        };
+    }
+}
+NumberEventBinder.ctors = {
+    selector: 'input:type=number:[model|formField|fieldControl]',
+    events: {
+        'input': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: [[
+                            '$event',
+                            'target',
+                            'value'
+                        ]],
+                    fn: 'onChange'
+                }],
+            node: 'input:type=number:[model|formField|fieldControl]'
+        },
+        'blur': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: ['$event'],
+                    fn: 'onBlur'
+                }],
+            node: 'input:type=number:[model|formField|fieldControl]'
+        }
+    },
+    DI: [{
+            optional: true,
+            tokenName: 'ElementRef'
+        }],
+    resolve: [ResolveNumberBinder]
+};
 var ResolveRangeBinder = {
     name: VALUE_ACCESSOR,
-    reference: closureRef(function () {
-        return RangeEventBinder;
-    })
+    reference: closureRef(() => RangeEventBinder)
 };
-var RangeEventBinder = function () {
-    'use strict';
-    class RangeEventBinder extends AbstractValueAccessor {
-        writeValue(value) {
-            value = value === null || value === undefined ? '' : value;
-            AttributeAppender.setProp(this.element.nativeElement, 'value', parseFloat(value), true);
-        }
-        registerOnChange(onChangeFn) {
-            this.onChange = function (value) {
-                onChangeFn(value == '' ? null : parseFloat(value));
-            };
-        }
+class RangeEventBinder extends AbstractValueAccessor {
+    writeValue(value) {
+        value = value === null || value === undefined ? '' : value;
+        AttributeAppender.setProp(this.element.nativeElement, 'value', parseFloat(value), true);
     }
-    RangeEventBinder.ctors = {
-        selector: 'input:type=range:[model|formField|fieldControl]',
-        events: {
-            'input': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: [[
-                                '$event',
-                                'target',
-                                'value'
-                            ]],
-                        fn: 'onChange'
-                    }],
-                node: 'input:type=range:[model|formField|fieldControl]'
-            },
-            'change': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: [[
-                                '$event',
-                                'target',
-                                'value'
-                            ]],
-                        fn: 'onChange'
-                    }],
-                node: 'input:type=range:[model|formField|fieldControl]'
-            },
-            'blur': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: ['$event'],
-                        fn: 'onBlur'
-                    }],
-                node: 'input:type=range:[model|formField|fieldControl]'
-            }
+    registerOnChange(onChangeFn) {
+        this.onChange = function (value) {
+            onChangeFn(value == '' ? null : parseFloat(value));
+        };
+    }
+}
+RangeEventBinder.ctors = {
+    selector: 'input:type=range:[model|formField|fieldControl]',
+    events: {
+        'input': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: [[
+                            '$event',
+                            'target',
+                            'value'
+                        ]],
+                    fn: 'onChange'
+                }],
+            node: 'input:type=range:[model|formField|fieldControl]'
         },
-        DI: [{
-                optional: true,
-                tokenName: 'ElementRef'
-            }],
-        resolve: [ResolveRangeBinder]
-    };
-    return RangeEventBinder;
-}();
+        'change': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: [[
+                            '$event',
+                            'target',
+                            'value'
+                        ]],
+                    fn: 'onChange'
+                }],
+            node: 'input:type=range:[model|formField|fieldControl]'
+        },
+        'blur': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: ['$event'],
+                    fn: 'onBlur'
+                }],
+            node: 'input:type=range:[model|formField|fieldControl]'
+        }
+    },
+    DI: [{
+            optional: true,
+            tokenName: 'ElementRef'
+        }],
+    resolve: [ResolveRangeBinder]
+};
+var inbuiltAccessor = [
+    CheckboxEventBinder,
+    DefaultEventBinder,
+    RadioEventBinder,
+    SelectEventBinder,
+    NumberEventBinder,
+    RangeEventBinder
+];
 function setupControl(fieldControl, dir) {
     if (!fieldControl)
         return errorBuilder('No field control found for ' + dir.name);
@@ -6702,23 +7182,33 @@ function cleanupControl(fieldControl, dir) {
     fieldControl && fieldControl.clearListeners();
 }
 function setUpViewChangeEvent(fieldControl, dir) {
-    dir.eventBinder.registerOnChange(function (value) {
+    dir.eventBinder.registerOnChange(value => {
         fieldControl._pendingValue = value;
         fieldControl._pendingChange = true;
         if (!isequal(fieldControl.eventType, 'blur')) {
             updateControl(fieldControl, dir);
         }
     });
-    fieldControl.registerOnChangeListener(function (value, emitEvent) {
+    fieldControl.registerOnChangeListener((value, emitEvent) => {
         dir.eventBinder.writeValue(value);
         if (emitEvent) {
             dir.modelToViewUpdate(value);
         }
     });
 }
+function parseValue(fieldControl) {
+    let value = fieldControl._pendingValue;
+    if (fieldControl.valueType !== 'json')
+        return value;
+    try {
+        return JSON.parse(value);
+    } catch (e) {
+        return value;
+    }
+}
 function setupBlurEvent(fieldControl, dir) {
     if (dir.eventBinder.registerOnBlur) {
-        dir.eventBinder.registerOnBlur(function () {
+        dir.eventBinder.registerOnBlur(() => {
             if (isequal(fieldControl.eventType, 'blur') && fieldControl._pendingChange) {
                 updateControl(fieldControl, dir);
             }
@@ -6726,8 +7216,9 @@ function setupBlurEvent(fieldControl, dir) {
     }
 }
 function updateControl(fieldControl, dir) {
-    fieldControl.setValue(fieldControl._pendingValue, { emitToView: false });
-    dir.modelToViewUpdate(fieldControl._pendingValue);
+    const value = parseValue(fieldControl);
+    fieldControl.setValue(value, { emitToView: false });
+    dir.modelToViewUpdate(value);
     fieldControl._pendingChange = false;
     fieldControl.markAsTouched();
 }
@@ -6738,228 +7229,259 @@ function _validateAndBindStatus(dir) {
         return errorBuilder((dir.formName ? '[' + dir.formName + ']' : '') + 'Expected instance of FormControlService but got ' + typeof dir.form);
     }
     dir._registered = true;
-    dir.form.statusChanged.subscribe(function () {
+    dir.form.statusChanged.subscribe(() => {
         dir.changeDetector.detectChanges();
     });
 }
-var inbuiltAccessor = [
-    CheckboxEventBinder,
-    DefaultEventBinder,
-    RadioEventBinder,
-    SelectEventBinder,
-    NumberEventBinder,
-    RangeEventBinder
-];
 function getValueAccessor(valueAccessors) {
-    var inbuilt = null, custom = null;
-    valueAccessors.forEach(function (accessorInstance) {
+    let inbuilt = null;
+    let custom = null;
+    valueAccessors.forEach(accessorInstance => {
         if (inbuiltAccessor.includes(accessorInstance.constructor)) {
             if (inbuilt) {
                 errorBuilder('found multiple inbuilt valueAccessor instance.');
             }
             inbuilt = accessorInstance;
         } else {
-            if (custom) {
+            if (custom)
                 errorBuilder('found multiple custom valueAccessor instance.');
-            }
             custom = accessorInstance;
         }
     });
-    if (custom) {
+    if (custom)
         return custom;
-    }
     return inbuilt;
 }
 function getValueByPath(value, paths) {
-    return paths.reduce(function (accum, key) {
+    return paths.reduce((accum, key) => {
         if (typeof accum !== 'object')
             return null;
         accum = accum[key];
         return accum;
     }, value);
 }
-var ModelDirective = function () {
-    'use strict';
-    class ModelDirective {
-        constructor(eventBinder, parentControl, validators) {
-            this.eventBinder = getValueAccessor(eventBinder);
-            this._parentControl = parentControl;
-            this._validators = validators;
-            this.modelChange = new EventEmitter();
-            this._model = null;
+class ModelDirective {
+    constructor(eventBinder, parentControl, validators) {
+        this.eventBinder = getValueAccessor(eventBinder);
+        this._validators = validators;
+        this._parentControl = parentControl;
+        this.modelChange = new EventEmitter();
+        this.fieldControl = new FormFieldControlService(null);
+    }
+    set model(value) {
+        this.fieldControl?.setValue(value, { emitToView: true });
+        this._value = value;
+    }
+    get model() {
+        return this._value;
+    }
+    modelToViewUpdate(value) {
+        this._value = value;
+        this.modelChange.emit(value);
+    }
+    didInit() {
+        this.fieldControl._setInitialState(this.modelOptions || {});
+        setupControl(this.fieldControl, this);
+    }
+    viewDidDestroy() {
+        this.fieldControl = null;
+    }
+}
+ModelDirective.ctors = {
+    selector: 'model',
+    events: {
+        'modelChange': {
+            type: 'emitter',
+            node: 'jModel'
         }
-        didChange(changes) {
-            if (this._isViewModelChanged(changes)) {
-                this._model = changes.model;
-                if (!this.fieldControl)
-                    return;
-                this.fieldControl.setValue(this._model, { emitToView: true });
-            }
+    },
+    props: {
+        model: {},
+        modelOptions: {},
+        name: {}
+    },
+    DI: [
+        VALUE_ACCESSOR,
+        {
+            optional: true,
+            value: 'form',
+            tokenName: 'parentControl'
+        },
+        {
+            optional: true,
+            tokenName: 'VALIDATORS'
         }
-        modelToViewUpdate(value) {
-            this.modelChange.emit(value);
+    ],
+    exportAs: 'jModel'
+};
+class FormRepeaterService extends FormControlAbstract {
+    constructor(fields, validators, autoGenerate) {
+        super(validators);
+        this.value = [];
+        this.formFieldControls = [];
+        this._defaultfields = fields;
+        this._autoSetup(autoGenerate);
+    }
+    addField(fieldControl) {
+        if (this._defaultfields && typeof this._defaultfields === 'object') {
+            fieldControl = new FormControlService(this._defaultfields);
+        } else if (!(fieldControl instanceof FormControlAbstract)) {
+            fieldControl = new FormFieldControlService(fieldControl);
         }
-        didInit() {
-            this.fieldControl = new FormFieldControlService(Object.assign({ value: this._model }, this.modelOptions));
-            setupControl(this.fieldControl, this);
-        }
-        viewDidDestroy() {
-            this._control = null;
-        }
-        _isViewModelChanged(changes) {
-            return changes.hasOwnProperty('model') && changes.model !== this._model;
-        }
-        _setValueToModel(value) {
-            if (!this.fieldControl)
-                return;
-            this.fieldControl.setValue(value, { emitToView: true });
-            this._model = changes.model;
+        if (fieldControl) {
+            this.formFieldControls.push(fieldControl);
+            this._setupControl(fieldControl);
+            this.updateValueAndStatus();
         }
     }
-    ModelDirective.ctors = {
-        selector: 'model',
-        events: {
-            'modelChange': {
-                type: 'emitter',
-                node: 'jModel'
-            }
-        },
-        props: {
-            model: {},
-            modelOptions: {},
-            name: {}
-        },
-        DI: [
-            VALUE_ACCESSOR,
-            {
-                optional: true,
-                value: 'form',
-                tokenName: 'parentControl'
-            },
-            {
-                optional: true,
-                tokenName: 'VALIDATORS'
-            }
-        ],
-        exportAs: 'jModel'
-    };
-    return ModelDirective;
-}();
-var FormRepeaterService = function () {
-    'use strict';
-    class FormRepeaterService extends FormControlAbstract {
-        constructor(fields, autoGenerate, validators) {
-            super(validators);
-            this.formFieldControls = [];
-            this._defaultfields = fields;
-            this._autoSetup(autoGenerate);
-        }
-        addField(fieldControl) {
-            if (fieldControl instanceof FormControlService || fieldControl instanceof FormFieldControlService) {
-                this.formFieldControls.push(fieldControl);
-            } else if (this._defaultfields) {
-                this.formFieldControls.push(new FormControlService(this._defaultfields));
+    patchValue(values, options) {
+        if (Array.isArray(values)) {
+            if (values.length) {
+                options = options || {};
+                values.forEach((value, idx) => {
+                    if (!this.formFieldControls[idx]) {
+                        this.addField();
+                    }
+                    this.formFieldControls[idx].patchValue(value, options);
+                });
             } else {
-                this.formFieldControls.push(new FormFieldControlService(fieldControl));
-            }
-            this._setupControl(this.formFieldControls[this.formFieldControls.length - 1]);
-        }
-        getField(index) {
-            return this.formFieldControls[index] || null;
-        }
-        _collectValues(enabledOnly) {
-            var values = [];
-            this.forEachField(function (control) {
-                if (enabledOnly && control.enabled || !enabledOnly) {
-                    values.push(control.value);
-                }
-            });
-            return values;
-        }
-        removeField(index) {
-            var len = this.formFieldControls.length;
-            if (!len || len < index)
-                return;
-            this.formFieldControls[index].destroy();
-            this.value.splice(index, 1);
-            this.formFieldControls.splice(index, 1);
-            this.valueChanges.emit(this.value);
-        }
-        _autoSetup(autoGenerate) {
-            if (autoGenerate) {
-                while (autoGenerate--) {
-                    this.addField();
-                }
+                this.destroy();
             }
         }
     }
-    FormRepeaterService.ctors = {};
-    FormRepeaterService.ctors.instance = FormRepeaterService;
-    return FormRepeaterService;
-}();
-var FormModule = function () {
-    'use strict';
-    function FormModule() {
+    getField(index) {
+        return this.formFieldControls[index] || null;
     }
-    return FormModule;
-}();
+    removeField(index) {
+        var len = this.formFieldControls.length;
+        if (!len || len < index)
+            return;
+        this.formFieldControls[index].destroy();
+        this.formFieldControls.splice(index, 1);
+        this.updateValueAndStatus();
+        this.valueChanges.emit(this.value);
+    }
+    _autoSetup(autoGenerate) {
+        if (autoGenerate) {
+            while (autoGenerate--) {
+                this.addField();
+            }
+        }
+    }
+    _updateValue() {
+        this.value = this._collectValues(true);
+    }
+    forEachField(callback) {
+        this.formFieldControls.forEach(callback);
+    }
+    destroy() {
+        while (this.formFieldControls.length) {
+            const control = this.formFieldControls.shift();
+            control.destroy();
+        }
+        this.updateValueAndStatus();
+        this.valueChanges.emit(this.value);
+    }
+}
+FormRepeaterService.ctors = {};
+FormRepeaterService.ctors.instance = FormRepeaterService;
+function FormModule() {
+}__required.r(exports, 'FormModule', FormModule);
+__required.r(exports, 'FormControlDirective', FormControlDirective);
+__required.r(exports, 'FormControlNameDirective', FormControlNameDirective);
+__required.r(exports, 'AbstractFormControl', AbstractFormControl);
+__required.r(exports, 'FormControlService', FormControlService);
+__required.r(exports, 'FormControlAbstract', FormControlAbstract);
+__required.r(exports, 'FormValidatorService', FormValidatorService);
+__required.r(exports, 'customFormValidator', customFormValidator);
+__required.r(exports, 'FormValidationStack', FormValidationStack);
+__required.r(exports, 'FormFieldControlService', FormFieldControlService);
+__required.r(exports, 'FormFieldControlDirective', FormFieldControlDirective);
+__required.r(exports, 'VALUE_ACCESSOR', VALUE_ACCESSOR);
+__required.r(exports, 'AbstractValueAccessor', AbstractValueAccessor);
+__required.r(exports, 'FormFieldDirective', FormFieldDirective);
+__required.r(exports, 'ResolveDefaultBinder', ResolveDefaultBinder);
+__required.r(exports, 'DefaultEventBinder', DefaultEventBinder);
+__required.r(exports, 'ResolveCheckboxBinder', ResolveCheckboxBinder);
+__required.r(exports, 'CheckboxEventBinder', CheckboxEventBinder);
+__required.r(exports, 'ResolveRadioBinder', ResolveRadioBinder);
+__required.r(exports, 'RadioEventContainer', RadioEventContainer);
+__required.r(exports, 'RadioEventBinder', RadioEventBinder);
+__required.r(exports, 'ResolveSelectBinder', ResolveSelectBinder);
+__required.r(exports, 'SelectEventBinder', SelectEventBinder);
+__required.r(exports, 'OptionDirective', OptionDirective);
+__required.r(exports, 'ModelDirective', ModelDirective);
+__required.r(exports, 'setupControl', setupControl);
+__required.r(exports, 'cleanupControl', cleanupControl);
+__required.r(exports, '_validateAndBindStatus', _validateAndBindStatus);
+__required.r(exports, 'getValueAccessor', getValueAccessor);
+__required.r(exports, 'getValueByPath', getValueByPath);
+__required.r(exports, 'ResolveNumberBinder', ResolveNumberBinder);
+__required.r(exports, 'NumberEventBinder', NumberEventBinder);
+__required.r(exports, 'ResolveRangeBinder', ResolveRangeBinder);
+__required.r(exports, 'RangeEventBinder', RangeEventBinder);
+__required.r(exports, 'FormRepeaterService', FormRepeaterService);
+
 },
-1168 : (module, exports, __required, global) => {
+1170 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'CSRFCookieHeaderService', () => CSRFCookieHeaderService);
-__required.r(exports, 'csrfCookieConfig', () => csrfCookieConfig);
-__required.r(exports, 'HttpCookieManager', () => HttpCookieManager);
-__required.r(exports, 'HttpCSRFModule', () => HttpCSRFModule);
-__required.r(exports, 'HTTP_INTERCEPTORS', () => HTTP_INTERCEPTORS);
-__required.r(exports, 'HttpResponse', () => HttpResponse);
-__required.r(exports, 'HttpRequest', () => HttpRequest);
-__required.r(exports, 'HttpRequestError', () => HttpRequestError);
-__required.r(exports, 'HttpService', () => HttpService);
-__required.r(exports, 'HttpModule', () => HttpModule);
-var utils = __required(1166);
-var serialize = utils.serialize;
-var helpers = __required(1142);
-var isnull = helpers.isnull;
-var isstring = helpers.isstring;
-var isundefined = helpers.isundefined;
-var isobject = helpers.isobject;
-var inarray = helpers.inarray;
-var core = __required(1143);
-var ProviderToken = core.ProviderToken;
-var InterceptorResolver = core.InterceptorResolver;
-var Subject = core.Subject;
-var ChangeDetector = core.ChangeDetector;
-var __buildOptions = {
-    'buildTime': 1734326607300,
+const utils = __required(1168);
+const serialize = utils.serialize;
+const helpers = __required(1144);
+const isnull = helpers.isnull;
+const isstring = helpers.isstring;
+const isundefined = helpers.isundefined;
+const isobject = helpers.isobject;
+const inarray = helpers.inarray;
+const core = __required(1145);
+const ProviderToken = core.ProviderToken;
+const InterceptorResolver = core.InterceptorResolver;
+const Subject = core.Subject;
+const ChangeDetector = core.ChangeDetector;
+const __buildOptions = {
+    'buildTime': 1790832896881,
     'version': '1.0.0',
     'baseHref': '',
     'assetURL': '',
     'production': false
 };
-function HttpRequestError(message) {
-    this.errorType = null;
-    this.message = message;
-    this.status = 400;
+class HttpRequestError {
+    constructor(message) {
+        this.errorType = null;
+        this.message = message;
+        this.status = 400;
+    }
+    setMessage(message) {
+        this.message = message;
+    }
+    setErrorType(type) {
+        this.errorType = type;
+    }
 }
-HttpRequestError.prototype.setMessage = function (message) {
-    this.message = message;
+var xhrFactory = function () {
+    return new XMLHttpRequest();
 };
-HttpRequestError.prototype.setErrorType = function (type) {
-    this.errorType = type;
-};
+function setXhrFactory(factory) {
+    xhrFactory = factory;
+}
 var unsafeHeaders = {
     'Accept-Charset': true,
     'Accept-Encoding': true,
+    'Access-Control-Request-Headers': true,
+    'Access-Control-Request-Method': true,
     'Connection': true,
     'Content-Length': true,
     'Cookie': true,
     'Cookie2': true,
     'Content-Transfer-Encoding': true,
     'Date': true,
+    'DNT': true,
     'Expect': true,
     'Host': true,
     'Keep-Alive': true,
+    'Origin': true,
     'Referer': true,
+    'Set-Cookie': true,
     'TE': true,
     'Trailer': true,
     'Transfer-Encoding': true,
@@ -6967,71 +7489,84 @@ var unsafeHeaders = {
     'User-Agent': true,
     'Via': true
 };
-function HttpRequest(url, options) {
-    if (!options && isobject(url)) {
-        options = url;
-    }
-    this.url = options.url || url;
-    this.type = (options.type || 'GET').toLowerCase();
-    this.processData = !isundefined(option.processData) ? option.processData : true;
-    this.headers = Object.assign({
-        'Accept': 'application/json',
-        'CONTENT-TYPE': 'application/json'
-    }, options.headers || {});
-    this.asynchronous = !isundefined(option.asynchronous) ? option.asynchronous : true;
-    this.data = options.data || '';
-    this.xhrInstance = new XMLHttpRequest();
-    this.cache = !isundefined(options.cache) ? options.cache : true;
-}
-HttpRequest.prototype.progress = function (progressCallback) {
-    this.xhrInstance.addEventListener('progress', progressCallback, false);
-};
-HttpRequest.prototype.setHeaders = function (headers) {
-    Object.assign(this.headers, headers);
-};
-HttpRequest.prototype.processRequest = function () {
-    this.processData = false;
-    if (!isstring(this.data)) {
-        if (this.type === 'get') {
-            this.data = serialize(this.data);
-        } else {
-            this.data = JSON.stringify(this.data);
+class HttpRequest {
+    constructor(url, options) {
+        if (!options && isobject(url)) {
+            options = url;
         }
+        this.url = options.url || url;
+        this.type = (options.type || 'GET').toLowerCase();
+        this.processData = !isundefined(options.processData) ? options.processData : true;
+        this.headers = Object.assign({
+            'Accept': 'application/json',
+            'CONTENT-TYPE': 'application/json'
+        }, options.headers || {});
+        this.asynchronous = !isundefined(options.asynchronous) ? options.asynchronous : true;
+        this.data = options.data || '';
+        this.xhrInstance = xhrFactory();
+        this.cache = !isundefined(options.cache) ? options.cache : true;
+        this.withCredentials = !isundefined(options.withCredentials) ? options.withCredentials : false;
     }
-    if (this.type === 'get') {
-        if (this.data) {
-            this.url += (/\?/.test(this.url) ? '&' : '?') + this.data;
-        }
-        if (!this.cache) {
-            this.url += (/\?/.test(this.url) ? '&' : '?') + '_=' + Date.now();
-        }
+    progress(progressCallback) {
+        this.xhrInstance.addEventListener('progress', progressCallback, false);
     }
-};
-HttpRequest.prototype.processRequestHeaders = function () {
-    for (var name in this.headers) {
-        if (unsafeHeaders[name] || /^(Sec-|Proxy-)/.test(name)) {
-            throw new Error('Refused to set unsafe header "' + name + '"');
-        }
-        this.xhrInstance.setRequestHeader(name, this.headers[name]);
+    setHeaders(headers) {
+        Object.assign(this.headers, headers);
     }
-};
-function HttpResponse(httpRequest) {
-    this.status = httpRequest.xhrInstance.status;
-    this.readyState = httpRequest.xhrInstance.readyState;
-    this.url = httpRequest.url;
-    this.data = null;
-    this.success = httpRequest.xhrInstance.status >= 200 && httpRequest.xhrInstance.status < 300 || httpRequest.xhrInstance.status == 304 || httpRequest.xhrInstance.status == 0 && httpRequest.xhrInstance.responseText;
-    this.headers = Object({
-        getResponseHeader: function (name) {
-            if (!isobject(name)) {
-                return httpRequest.xhrInstance.getResponseHeader(name);
+    setWithCredentials(flag) {
+        this.withCredentials = !!flag;
+    }
+    processRequest() {
+        this.processData = false;
+        if (!isstring(this.data)) {
+            if (this.type === 'get') {
+                this.data = serialize(this.data);
             } else {
-                return name.map(httpRequest.xhrInstance.getResponseHeader);
+                this.data = JSON.stringify(this.data);
             }
         }
-    });
+        if (this.type === 'get') {
+            if (this.data) {
+                this.url += (/\?/.test(this.url) ? '&' : '?') + this.data;
+            }
+            if (!this.cache) {
+                this.url += (/\?/.test(this.url) ? '&' : '?') + '_=' + Date.now();
+            }
+        }
+    }
+    processRequestHeaders() {
+        for (var name in this.headers) {
+            if (unsafeHeaders[name] || /^(Sec-|Proxy-)/.test(name)) {
+                throw new Error('Refused to set unsafe header "' + name + '"');
+            }
+            this.xhrInstance.setRequestHeader(name, this.headers[name]);
+        }
+    }
+}
+class HttpResponse {
+    constructor(httpRequest) {
+        this.status = httpRequest.xhrInstance.status;
+        this.readyState = httpRequest.xhrInstance.readyState;
+        this.url = httpRequest.url;
+        this.data = null;
+        this.success = httpRequest.xhrInstance.status >= 200 && httpRequest.xhrInstance.status < 300 || httpRequest.xhrInstance.status == 304 || httpRequest.xhrInstance.status == 0 && httpRequest.xhrInstance.responseText;
+        this.headers = {
+            getResponseHeader: function (name) {
+                if (!isobject(name)) {
+                    return httpRequest.xhrInstance.getResponseHeader(name);
+                } else {
+                    return name.map(headerName => httpRequest.xhrInstance.getResponseHeader(headerName));
+                }
+            }
+        };
+    }
 }
 var HTTP_INTERCEPTORS = new ProviderToken('interceptors', true);
+var JSON_CONTENT_TYPE = /json/i;
+function isJSONResponse(xhrInstance) {
+    var contentType = xhrInstance.getResponseHeader('Content-Type');
+    return !contentType || JSON_CONTENT_TYPE.test(contentType);
+}
 function parseJSON(response) {
     var content;
     var tError = !!response;
@@ -7046,66 +7581,76 @@ function parseJSON(response) {
     }
     return content;
 }
-function CoreHttp(url, options, changeDetection) {
-    var xhrPromise = new Subject();
-    var httpRequest = new HttpRequest(url, options);
-    var httpError = new HttpRequestError('');
-    InterceptorResolver(HTTP_INTERCEPTORS, httpRequest).then(function (request) {
+class HttpTransport {
+    constructor(url, options, changeDetection) {
+        this.xhrPromise = new Subject();
+        this.httpRequest = new HttpRequest(url, options);
+        this.httpError = new HttpRequestError('');
+        this.changeDetection = changeDetection;
+        InterceptorResolver(HTTP_INTERCEPTORS, this.httpRequest).then(request => this.onInterceptorsResolved(request));
+    }
+    onInterceptorsResolved(request) {
         if (!request) {
-            httpError.setMessage('HTTP: Interceptor should return a value');
-            return xhrPromise.error(httpError);
+            this.httpError.setMessage('HTTP: Interceptor should return a value');
+            return this.xhrPromise.error(this.httpError);
         }
-        if (changeDetection) {
-            changeDetection();
+        if (this.changeDetection) {
+            this.changeDetection();
         }
         if (request.processData) {
             request.processRequest();
         }
-        sendRequest();
-    });
-    function respondToReadyState() {
-        var response = new HttpResponse(httpRequest);
-        if (httpRequest.xhrInstance.readyState == 4) {
+        this.sendRequest();
+    }
+    respondToReadyState() {
+        var response = new HttpResponse(this.httpRequest);
+        if (this.httpRequest.xhrInstance.readyState == 4) {
             try {
-                var data = parseJSON(httpRequest.xhrInstance.responseText);
-                xhrPromise.next(data, response);
+                var responseText = this.httpRequest.xhrInstance.responseText;
+                var data = isJSONResponse(this.httpRequest.xhrInstance) ? parseJSON(responseText) : responseText;
+                this.xhrPromise.next(data, response);
             } catch (e) {
-                xhrPromise.error(httpError);
+                this.xhrPromise.error(this.httpError);
             }
-            xhrPromise.completed();
-            changeDetection();
+            this.xhrPromise.completed();
+            this.changeDetection();
         }
     }
-    function attachListener() {
-        httpRequest.xhrInstance.addEventListener('load', respondToReadyState);
-        httpRequest.xhrInstanceaddEventListener('timeout', handleError);
-        httpRequest.xhrInstance.addEventListener('error', handleError);
-        httpRequest.xhrInstance.addEventListener('abort', handleError);
-        function handleError(e) {
-            httpError.setErrorType(e.type);
-            xhrPromise.error(httpError);
-        }
+    handleError(e) {
+        this.httpError.setErrorType(e.type);
+        this.xhrPromise.error(this.httpError);
     }
-    function sendRequest() {
-        attachListener();
-        httpRequest.xhrInstance.open(httpRequest.type, httpRequest.url, httpRequest.asynchronous);
-        httpRequest.processRequestHeaders();
+    attachListener() {
+        var xhrInstance = this.httpRequest.xhrInstance;
+        xhrInstance.addEventListener('load', () => this.respondToReadyState());
+        xhrInstance.addEventListener('timeout', e => this.handleError(e));
+        xhrInstance.addEventListener('error', e => this.handleError(e));
+        xhrInstance.addEventListener('abort', e => this.handleError(e));
+    }
+    sendRequest() {
+        this.attachListener();
+        var xhrInstance = this.httpRequest.xhrInstance;
+        xhrInstance.open(this.httpRequest.type, this.httpRequest.url, this.httpRequest.asynchronous);
+        xhrInstance.withCredentials = this.httpRequest.withCredentials;
+        this.httpRequest.processRequestHeaders();
         var body = null;
-        if (inarray(httpRequest.type, [
+        if (inarray(this.httpRequest.type, [
                 'post',
                 'put',
                 'delete'
             ])) {
-            body = httpRequest.data;
+            body = this.httpRequest.data;
         }
         try {
-            httpRequest.xhrInstance.send(body);
+            xhrInstance.send(body);
         } catch (e) {
-            httpError.setMessage(e);
-            xhrPromise.error(httpError);
+            this.httpError.setMessage(e);
+            this.xhrPromise.error(this.httpError);
         }
     }
-    return xhrPromise;
+}
+function CoreHttp(url, options, changeDetection) {
+    return new HttpTransport(url, options, changeDetection).xhrPromise;
 }
 var staticMethods = [
     'put',
@@ -7115,44 +7660,34 @@ var staticMethods = [
     'patch',
     'delete'
 ];
-var HttpService = function () {
-    'use strict';
-    function HttpService(changeDetector) {
-        function http(url, options) {
-            return CoreHttp(url, options, changeDetector);
-        }
-        function generateOptionalHTTP(type) {
-            http[type] = function (url, data, headers) {
-                var options = {};
-                options.type = type;
-                options.data = data;
-                options.headers = headers || {};
-                return http(url, options);
-            };
-        }
-        staticMethods.forEach(generateOptionalHTTP);
-        return http;
+function HttpService(changeDetector) {
+    function http(url, options) {
+        return CoreHttp(url, options, changeDetector);
     }
-    HttpService.ctors = { DI: [ChangeDetector] };
-    return HttpService;
-}();
-var HttpModule = function () {
-    'use strict';
-    function HttpModule() {
+    function generateOptionalHTTP(type) {
+        http[type] = function (url, data, headers) {
+            var options = {};
+            options.type = type;
+            options.data = data;
+            options.headers = headers || {};
+            return http(url, options);
+        };
     }
-    return HttpModule;
-}();
-var HttpCookieManager = function () {
-    'use strict';
-    function HttpCookieManager() {
+    staticMethods.forEach(generateOptionalHTTP);
+    return http;
+}
+HttpService.ctors = { DI: [ChangeDetector] };
+function HttpModule() {
+}
+class HttpCookieManager {
+    constructor() {
         Object.defineProperty(this, 'cookies', {
             get: function () {
                 return this._getAll();
             }
         });
     }
-    ;
-    HttpCookieManager.prototype.set = function (name, value, options) {
+    set(name, value, options) {
         if (!isnull(value) && !isundefined(value)) {
             if (value === null) {
                 value = '';
@@ -7183,11 +7718,11 @@ var HttpCookieManager = function () {
                 secure
             ].join('');
         }
-    };
-    HttpCookieManager.prototype.get = function (name) {
+    }
+    get(name) {
         return this.cookies[name];
-    };
-    HttpCookieManager.prototype._getAll = function () {
+    }
+    _getAll() {
         var cookieValues = {};
         var cookies = (document.cookie || '').split(';');
         if (cookies.length) {
@@ -7197,88 +7732,167 @@ var HttpCookieManager = function () {
             }
         }
         return cookieValues;
-    };
-    HttpCookieManager.ctors = {};
-    return HttpCookieManager;
-}();
+    }
+}
+HttpCookieManager.ctors = {};
 var csrfCookieConfig = {
     cookieName: 'X-CSRF-TOKEN',
     headerName: 'X-CSRF-TOKEN'
 };
-var CSRFCookieHeaderService = function () {
-    'use strict';
-    function CSRFCookieHeaderService(cookieManager) {
-        this.resolve = function (httpRequest, next) {
-            var cookie = cookieManager.get(csrfCookieConfig.cookieName);
-            if (cookie) {
-                var tokenHeader = {};
-                tokenHeader[csrfCookieConfig.headerName] = cookie;
-                httpRequest.setHeaders(tokenHeader);
+class CSRFCookieHeaderService {
+    constructor(cookieManager) {
+        this.cookieManager = cookieManager;
+    }
+    resolve(httpRequest, next) {
+        var cookie = this.cookieManager.get(csrfCookieConfig.cookieName);
+        if (cookie) {
+            var tokenHeader = {};
+            tokenHeader[csrfCookieConfig.headerName] = cookie;
+            httpRequest.setHeaders(tokenHeader);
+        }
+        next();
+    }
+}
+CSRFCookieHeaderService.ctors = { DI: [HttpCookieManager] };
+function HttpCSRFModule() {
+}
+HttpCSRFModule.setCookieValue = function (config) {
+    Object.assign(csrfCookieConfig, config);
+};
+HTTP_INTERCEPTORS.register({ useClass: CSRFCookieHeaderService }, true);
+class FetchXHRAdapter {
+    constructor() {
+        this.readyState = 0;
+        this.status = 0;
+        this.responseText = '';
+        this.withCredentials = false;
+        this._method = 'GET';
+        this._url = '';
+        this._headers = {};
+        this._listeners = {};
+        this._responseHeaders = null;
+        this._abortController = new AbortController();
+    }
+    addEventListener(type, listener) {
+        (this._listeners[type] = this._listeners[type] || []).push(listener);
+    }
+    _emit(type, event) {
+        (this._listeners[type] || []).forEach(function (fn) {
+            fn(event);
+        });
+    }
+    open(method, url) {
+        this._method = method;
+        this._url = url;
+        this.readyState = 1;
+    }
+    setRequestHeader(name, value) {
+        this._headers[name] = value;
+    }
+    getResponseHeader(name) {
+        return this._responseHeaders ? this._responseHeaders.get(name) : null;
+    }
+    send(body) {
+        fetch(this._url, {
+            method: this._method,
+            headers: this._headers,
+            body: body || undefined,
+            credentials: this.withCredentials ? 'include' : 'same-origin',
+            signal: this._abortController.signal
+        }).then(response => this._handleResponse(response)).catch(err => this._handleError(err));
+    }
+    async _handleResponse(response) {
+        this.status = response.status;
+        this._responseHeaders = response.headers;
+        var total = Number(response.headers.get('Content-Length')) || 0;
+        if (total && response.body && response.body.getReader) {
+            var reader = response.body.getReader();
+            var loaded = 0;
+            var chunks = [];
+            var read;
+            while (!(read = await reader.read()).done) {
+                chunks.push(read.value);
+                loaded += read.value.length;
+                this._emit('progress', {
+                    loaded: loaded,
+                    total: total,
+                    lengthComputable: true
+                });
             }
-            next();
-        };
+            this.responseText = new TextDecoder().decode(concatChunks(chunks, loaded));
+        } else {
+            this.responseText = await response.text();
+        }
+        this.readyState = 4;
+        this._emit('load', {});
     }
-    CSRFCookieHeaderService.ctors = { DI: [HttpCookieManager] };
-    return CSRFCookieHeaderService;
-}();
-var HttpCSRFModule = function () {
-    'use strict';
-    function HttpCSRFModule() {
+    _handleError(err) {
+        if (err && err.name === 'AbortError') {
+            this._emit('abort', err);
+        } else {
+            this._emit('error', err);
+        }
     }
-    HttpCSRFModule.setCookieValue = function (config) {
-        Object.assign(csrfCookieConfig, config);
-    };
-    HTTP_INTERCEPTORS.register({ useClass: CSRFCookieHeaderService }, true);
-    return HttpCSRFModule;
-}();
+    abort() {
+        this._abortController.abort();
+    }
+}
+function concatChunks(chunks, totalLength) {
+    var out = new Uint8Array(totalLength);
+    var offset = 0;
+    for (var i = 0; i < chunks.length; i++) {
+        out.set(chunks[i], offset);
+        offset += chunks[i].length;
+    }
+    return out;
+}
+function useFetchTransport() {
+    setXhrFactory(function () {
+        return new FetchXHRAdapter();
+    });
+}
+function useXhrTransport() {
+    setXhrFactory(function () {
+        return new XMLHttpRequest();
+    });
+}__required.r(exports, 'HttpModule', HttpModule);
+__required.r(exports, 'HttpService', HttpService);
+__required.r(exports, 'CoreHttp', CoreHttp);
+__required.r(exports, 'HttpRequestError', HttpRequestError);
+__required.r(exports, 'setXhrFactory', setXhrFactory);
+__required.r(exports, 'HttpRequest', HttpRequest);
+__required.r(exports, 'HttpResponse', HttpResponse);
+__required.r(exports, 'HTTP_INTERCEPTORS', HTTP_INTERCEPTORS);
+__required.r(exports, 'isJSONResponse', isJSONResponse);
+__required.r(exports, 'parseJSON', parseJSON);
+__required.r(exports, 'HttpCSRFModule', HttpCSRFModule);
+__required.r(exports, 'HttpCookieManager', HttpCookieManager);
+__required.r(exports, 'csrfCookieConfig', csrfCookieConfig);
+__required.r(exports, 'CSRFCookieHeaderService', CSRFCookieHeaderService);
+__required.r(exports, 'useFetchTransport', useFetchTransport);
+__required.r(exports, 'useXhrTransport', useXhrTransport);
+__required.r(exports, 'FetchXHRAdapter', FetchXHRAdapter);
+
 },
-1169 : (module, exports, __required, global) => {
+1171 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'PathStrategyService', () => PathStrategyService);
-__required.r(exports, 'AbstractStrategy', () => AbstractStrategy);
-__required.r(exports, 'HashStrategyService', () => HashStrategyService);
-__required.r(exports, 'RouterInitService', () => RouterInitService);
-__required.r(exports, 'JIntentContainer', () => JIntentContainer);
-__required.r(exports, 'ViewIntentService', () => ViewIntentService);
-__required.r(exports, 'OpenIntent', () => OpenIntent);
-__required.r(exports, 'jViewFn', () => jViewFn);
-__required.r(exports, 'RouteEvent', () => RouteEvent);
-__required.r(exports, 'RouteErrorEvent', () => RouteErrorEvent);
-__required.r(exports, 'RouteInterceptorInstance', () => RouteInterceptorInstance);
-__required.r(exports, 'getHref', () => getHref);
-__required.r(exports, 'parseUrl', () => parseUrl);
-__required.r(exports, 'getRequiredRoute', () => getRequiredRoute);
-__required.r(exports, 'getRoute', () => getRoute);
-__required.r(exports, 'parseDelimeter', () => parseDelimeter);
-__required.r(exports, 'getParentRoute', () => getParentRoute);
-__required.r(exports, 'INTENT_EVENT_ENUMS', () => INTENT_EVENT_ENUMS);
-__required.r(exports, 'ROUTE_EVENT_ENUMS', () => ROUTE_EVENT_ENUMS);
-__required.r(exports, 'routeConfig', () => routeConfig);
-__required.r(exports, 'staticRoutePrefix', () => staticRoutePrefix);
-__required.r(exports, 'ROUTE_LOCATION_STRATEGY', () => ROUTE_LOCATION_STRATEGY);
-__required.r(exports, 'ROUTE_INTERCEPTOR', () => ROUTE_INTERCEPTOR);
-__required.r(exports, 'ViewHandler', () => ViewHandler);
-__required.r(exports, 'LocationService', () => LocationService);
-__required.r(exports, 'WebStateService', () => WebStateService);
-__required.r(exports, 'GoFn', () => GoFn);
-__required.r(exports, 'RouterModule', () => RouterModule);
-var utils = __required(1166);
-var unserialize = utils.unserialize;
-var extend = utils.extend;
-var core = __required(1143);
-var APP_BOOTSTRAP = core.APP_BOOTSTRAP;
-var AttributeAppender = core.AttributeAppender;
-var EventEmitter = core.EventEmitter;
-var InterceptorResolver = core.InterceptorResolver;
-var EventManager = core.EventManager;
-var ProviderToken = core.ProviderToken;
-var rxLoop = core.rxLoop;
-var errorBuilder = core.errorBuilder;
-var compileModule = core.compileModule;
-var DOMHelper = core.DOMHelper;
-var ComponentFactoryResolver = core.ComponentFactoryResolver;
-var __buildOptions = {
-    'buildTime': 1734326607385,
+const utils = __required(1168);
+const unserialize = utils.unserialize;
+const extend = utils.extend;
+const core = __required(1145);
+const APP_BOOTSTRAP = core.APP_BOOTSTRAP;
+const AttributeAppender = core.AttributeAppender;
+const EventEmitter = core.EventEmitter;
+const InterceptorResolver = core.InterceptorResolver;
+const EventManager = core.EventManager;
+const ProviderToken = core.ProviderToken;
+const rxLoop = core.rxLoop;
+const errorBuilder = core.errorBuilder;
+const compileModule = core.compileModule;
+const DOMHelper = core.DOMHelper;
+const ComponentFactoryResolver = core.ComponentFactoryResolver;
+const __buildOptions = {
+    'buildTime': 1790832897037,
     'version': '1.0.0',
     'baseHref': '',
     'assetURL': '',
@@ -7286,6 +7900,7 @@ var __buildOptions = {
 };
 var ROUTE_INTERCEPTOR = new ProviderToken('RouteInterceptor', true);
 var ROUTE_LOCATION_STRATEGY = new ProviderToken('RouteLocationStrategy', false);
+var ROUTE_LOCATION_CONTEXT = new ProviderToken('RouteLocationContext', false);
 var staticRoutePrefix = '^';
 var routeConfig = Object({
     isLoaded: false,
@@ -7478,32 +8093,45 @@ function patchParams(route, params, queryParam) {
 function getParentRoute(name) {
     return routeCollections[name];
 }
-function getRouteObj(urlPath) {
+function getFallback(urlPath, deep) {
+    if (deep && urlPath.lastIndexOf('/') > 0) {
+        const cPath = [];
+        for (const path of urlPath.split('/').filter(a => !!a)) {
+            cPath.push(path);
+            const found = routeCollections[cPath.join('.')];
+            if (found) {
+                return found;
+            }
+        }
+    }
+    return routeCollections[routeConfig.fallback.name] || null;
+}
+function getRouteObj(urlPath, deep) {
     for (var prop in routeCollections) {
         if (!routeCollections[prop].abstract && routeCollections[prop].route.regexp.test(urlPath)) {
             return routeCollections[prop];
         }
     }
-    return routeCollections[routeConfig.fallback.name] || null;
+    return getFallback(urlPath, deep);
 }
 function parseDelimeter() {
     return routeConfig.delimiter.map(a => (a = a.split(''), a.unshift(''), a.join('\\'))).join('(.*)');
 }
 function getRoute(routeName, params) {
-    var route = routeCollections[routeName];
-    if (!route) {
-        route = routeCollections[routeConfig.fallback.name] || null;
+    var route = routeCollections[routeName] || routeCollections[routeConfig.fallback.name] || null;
+    if (route) {
+        patchParams(route, params || route.params);
+        var url = parseUrl(route.url, route.route.params);
+        return {
+            route,
+            url
+        };
     }
-    patchParams(route, params || route.params);
-    var url = parseUrl(route.url, route.route.params);
-    return {
-        route,
-        url
-    };
+    return {};
 }
-function getRequiredRoute(url, params) {
+function getRequiredRoute(url, params, deep = false) {
     var queryParam = url.split('?');
-    var foundRoute = getRouteObj(queryParam[0]);
+    var foundRoute = getRouteObj(queryParam[0], deep);
     if (foundRoute) {
         patchParams(foundRoute, params, queryParam[0]);
         if (queryParam[1]) {
@@ -7529,122 +8157,118 @@ function getHref(routeName, params) {
     }
     return routeConfig.fallback.url;
 }
-var ViewHandler = function () {
-    'use strict';
-    class ViewHandler {
-        constructor() {
-            this.viewsHolder = new Map();
-            this._pendingViewStack = new Map();
-            this.currentView = staticRoutePrefix;
-            this._resolvedRoute = {};
-        }
-        isResolved(parentName, setValue) {
-            var isResolved = this._resolvedRoute[parentName];
-            this._resolvedRoute[parentName] = setValue || false;
-            return isResolved;
-        }
-        setViewReference(elementRef, ref) {
-            this.viewsHolder.set(ref, {
-                element: elementRef,
-                compiledWith: null
+class ViewHandler {
+    constructor() {
+        this.viewsHolder = new Map();
+        this._pendingViewStack = new Map();
+        this.currentView = staticRoutePrefix;
+        this._resolvedRoute = {};
+    }
+    isResolved(parentName, setValue) {
+        var isResolved = this._resolvedRoute[parentName];
+        this._resolvedRoute[parentName] = setValue || false;
+        return isResolved;
+    }
+    setViewReference(elementRef, ref) {
+        this.viewsHolder.set(ref, {
+            element: elementRef,
+            compiledWith: null
+        });
+        this.handlePendingView(ref);
+    }
+    getView(view, name) {
+        var _viewHolder = this.viewsHolder.get(view);
+        return name ? _viewHolder[name] : _viewHolder;
+    }
+    compileViewTemplate(viewComponent, viewObjectInstance, callback) {
+        this.cleanUp(viewObjectInstance);
+        var isLazyLoaded = !!viewComponent.loadModule;
+        this._loadModule(viewComponent.loadModule).then(componentFactory => {
+            ComponentFactoryResolver(isLazyLoaded ? componentFactory : viewComponent, viewObjectInstance.element).then(componentRef => {
+                viewObjectInstance.compiledWith = componentRef;
+                callback();
+            }, errMessage => {
+                errorBuilder(errMessage);
+                callback();
             });
-            this.handlePendingView(ref);
-        }
-        getView(view, name) {
-            var _viewHolder = this.viewsHolder.get(view);
-            return name ? _viewHolder[name] : _viewHolder;
-        }
-        compileViewTemplate(viewComponent, viewObjectInstance, callback) {
-            this.cleanUp(viewObjectInstance);
-            var isLazyLoaded = !!viewComponent.loadModule;
-            this._loadModule(viewComponent.loadModule).then(componentFactory => {
-                ComponentFactoryResolver(isLazyLoaded ? componentFactory : viewComponent, viewObjectInstance.element).then(componentRef => {
-                    viewObjectInstance.compiledWith = componentRef;
-                    callback();
-                }, errMessage => {
-                    errorBuilder(errMessage);
-                    callback();
-                });
-            });
-        }
-        removeViews(views) {
-            this.viewsHolder.forEach((view, key) => {
-                if (!views.includes(key)) {
-                    this.cleanUp(view);
-                    this.viewsHolder.delete(key);
-                }
-            });
-        }
-        getCurrentView(route) {
-            var views = [];
-            var mView = Object.keys(route.views).concat();
-            this.isResolved(route.name, true);
-            if (route.parent && !this.isResolved(route.parent, true)) {
-                return mView;
+        });
+    }
+    removeViews(views) {
+        this.viewsHolder.forEach((view, key) => {
+            if (!views.includes(key)) {
+                this.cleanUp(view);
+                this.viewsHolder.delete(key);
             }
-            if (route.targetView) {
-                if (this.viewsHolder.has(route.targetView))
-                    return views.concat(route.targetView);
-                else if (!mView.includes(route.targetView))
-                    mView.push(route.targetView);
-                return mView;
+        });
+    }
+    getCurrentView(route) {
+        var views = [];
+        var mView = Object.keys(route.views).concat();
+        this.isResolved(route.name, true);
+        if (route.parent && !this.isResolved(route.parent, true)) {
+            return mView;
+        }
+        if (route.targetView) {
+            if (this.viewsHolder.has(route.targetView))
+                return views.concat(route.targetView);
+            else if (!mView.includes(route.targetView))
+                mView.push(route.targetView);
+            return mView;
+        }
+        views = views.concat(route.route._views);
+        this.removeViews(views);
+        mView = null;
+        return views;
+    }
+    resolveViews(route) {
+        return rxLoop(this.getCurrentView(route), (view, next) => {
+            view = view || staticRoutePrefix;
+            var viewObj = route.views[view] || route;
+            var viewObjectInstance = this.getView(view);
+            if (!viewObj) {
+                errorBuilder('[Router] No view definition for ' + route.name);
+                return next();
             }
-            views = views.concat(route.route._views);
-            this.removeViews(views);
-            mView = null;
-            return views;
-        }
-        resolveViews(route) {
-            return rxLoop(this.getCurrentView(route), (view, next) => {
-                view = view || staticRoutePrefix;
-                var viewObj = route.views[view] || route;
-                var viewObjectInstance = this.getView(view);
-                if (!viewObj) {
-                    errorBuilder('[Router] No view definition for ' + route.name);
-                    return next();
-                }
-                if (viewObjectInstance) {
-                    this.compileViewTemplate(viewObj, viewObjectInstance, next);
-                } else {
-                    this._pendingViewStack.set(view, viewObj);
-                    next();
-                }
-            });
-        }
-        destroy(ref) {
-            var viewInstance = this.viewsHolder.get(ref);
-            if (!viewInstance)
-                return;
-            this.cleanUp(viewInstance);
-            this.viewsHolder.delete(ref);
-            viewInstance = null;
-        }
-        handlePendingView(viewName) {
-            if (this._pendingViewStack.has(viewName)) {
-                this.compileViewTemplate(this._pendingViewStack.get(viewName), this.viewsHolder.get(viewName), () => {
-                    this._pendingViewStack.delete(viewName);
-                });
-            }
-        }
-        cleanUp(viewInstance) {
-            if (viewInstance.compiledWith) {
-                DOMHelper.remove(viewInstance.compiledWith);
+            if (viewObjectInstance) {
+                this.compileViewTemplate(viewObj, viewObjectInstance, next);
             } else {
-                viewInstance.element.children.forEach(DOMHelper.remove);
+                this._pendingViewStack.set(view, viewObj);
+                next();
             }
-        }
-        _loadModule(mLoader) {
-            if (!mLoader)
-                return Promise.resolve(null);
-            return mLoader().then(module => {
-                compileModule(module);
-                return module.rootElement;
+        });
+    }
+    destroy(ref) {
+        var viewInstance = this.viewsHolder.get(ref);
+        if (!viewInstance)
+            return;
+        this.cleanUp(viewInstance);
+        this.viewsHolder.delete(ref);
+        viewInstance = null;
+    }
+    handlePendingView(viewName) {
+        if (this._pendingViewStack.has(viewName)) {
+            this.compileViewTemplate(this._pendingViewStack.get(viewName), this.viewsHolder.get(viewName), () => {
+                this._pendingViewStack.delete(viewName);
             });
         }
     }
-    ViewHandler.ctors = { name: 'ViewHandler' };
-    return ViewHandler;
-}();
+    cleanUp(viewInstance) {
+        if (viewInstance.compiledWith) {
+            DOMHelper.remove(viewInstance.compiledWith);
+        } else {
+            viewInstance.element.children.forEach(DOMHelper.remove);
+        }
+    }
+    _loadModule(mLoader) {
+        if (!mLoader)
+            return Promise.resolve(null);
+        return mLoader().then(module => {
+            compileModule(module);
+            return module.rootElement;
+        });
+    }
+}
+ViewHandler.ctors = {};
 function RouteInterceptorInstance(route, path, currentRoute, redirectMethod) {
     this.name = route.name;
     this.path = path;
@@ -7672,485 +8296,496 @@ function RouteEvent(path, route, previousRoute, previousPath) {
         };
     }
 }
-var LocationService = function () {
-    'use strict';
-    class LocationService {
-        constructor(viewHandler, locationStrategy) {
-            this.viewHandler = viewHandler;
-            this.strategy = new (locationStrategy || HashStrategyService)(this);
-            this.lastVisited = '';
-            this.previousState = null;
-            this.locationState = null;
-            this.transitionState = {
-                currentState: '',
-                previousState: '',
-                inProgress: false,
-                stateQueue: [],
-                transitioned: false,
-                stopped: false
-            };
-            this.previous = null;
-            this.currentRoute = Object({ route: { params: {} } });
-            this.events = new EventManager((e, route, path) => {
-                if (ROUTE_EVENT_ENUMS.RENDER === e.type) {
-                    var parentRoute = null;
-                    if (route.parent && !this.viewHandler.isResolved(route.parent, true)) {
-                        parentRoute = getParentRoute(route.parent);
-                    }
-                    this.viewHandler._loadModule(parentRoute ? parentRoute.loadModule : route.loadModule).then(rootElement => {
-                        this._processState(route, path, rootElement);
-                    }).catch(err => this.events.dispatch(ROUTE_EVENT_ENUMS.LME, err));
+class LocationService {
+    constructor(viewHandler, locationStrategy, locationContext) {
+        this.viewHandler = viewHandler;
+        this.locationContext = locationContext || null;
+        if (this.locationContext) {
+            routeConfig.isLoaded = false;
+        }
+        this.strategy = new (locationStrategy || HashStrategyService)(this);
+        this.lastVisited = '';
+        this.previousState = null;
+        this.locationState = null;
+        this.transitionState = {
+            currentState: '',
+            previousState: '',
+            inProgress: false,
+            stateQueue: [],
+            transitioned: false,
+            stopped: false
+        };
+        this.previous = null;
+        this.currentRoute = Object({ route: { params: {} } });
+        this.events = new EventManager((e, route, path, initial) => {
+            if (ROUTE_EVENT_ENUMS.RENDER === e.type) {
+                var parentRoute = null;
+                if (route.parent && !this.viewHandler.isResolved(route.parent, true)) {
+                    parentRoute = getParentRoute(route.parent);
                 }
+                this.viewHandler._loadModule(parentRoute ? parentRoute.loadModule : route.loadModule).then(rootElement => {
+                    if (initial && initial !== path) {
+                        const reroute = getRequiredRoute(initial, null, true);
+                        if (reroute.name !== route.name) {
+                            return this.go({
+                                route: reroute,
+                                url: initial,
+                                initial
+                            });
+                        }
+                    }
+                    this._processState(route, path, rootElement);
+                }).catch(err => this.events.dispatch(ROUTE_EVENT_ENUMS.LME, err));
+            }
+        });
+    }
+    changed(path) {
+        return this.lastVisited !== path;
+    }
+    replace(path) {
+        if (!this.locationState && !path)
+            return;
+        this.locationState = {
+            state: 'replaceState',
+            path: path || this.locationState.previous,
+            previous: this.previousState,
+            current: this.lastVisited
+        };
+        this.previous = this.locationState.path;
+    }
+    getState(state) {
+        if (state) {
+            this.locationState = state;
+            return;
+        }
+        return this.locationState;
+    }
+    go(routeObj) {
+        if (!routeObj || !routeObj.url || !routeObj.route) {
+            this.events.dispatch(ROUTE_EVENT_ENUMS.NOTFOUND, { message: 'unable to resolve route' });
+            return false;
+        }
+        var path = routeObj.url;
+        var redirect = (routeName, params) => this.redirect(routeName, params);
+        var transitioned = () => this.transitionState.currentState !== path;
+        var checkTransition = () => {
+            if (path === this.transitionState.currentState)
+                return;
+            this.transitionState.stateQueue.push([
+                path,
+                routeObj.route.route.params
+            ]);
+            this.transitionState.transitioned = true;
+        };
+        this.transitionState.previousState = this.transitionState.currentState;
+        if (this.transitionState.inProgress) {
+            checkTransition(routeObj);
+        }
+        if (this.changed(path) && transitioned()) {
+            this.transitionState.currentState = path;
+            this.transitionState.inProgress = true;
+            this.events.dispatch(ROUTE_EVENT_ENUMS.START, {
+                current: this.lastVisited,
+                path,
+                redirected: this.transitionState.transitioned
+            });
+            this.events.dispatch(ROUTE_EVENT_ENUMS.GUARDCHECK, routeObj.route);
+            var routeInstance = new RouteInterceptorInstance(routeObj.route, path, this.currentRoute, redirect);
+            InterceptorResolver(ROUTE_INTERCEPTOR, routeInstance).then(() => {
+                if (!this.transitionState.stopped && !transitioned()) {
+                    this.events.dispatch(ROUTE_EVENT_ENUMS.RENDER, routeObj.route, path, routeObj.initial);
+                } else if (!this.transitionState.transitioned) {
+                    Object.assign(this.transitionState, {
+                        inProgress: false,
+                        currentState: this.transitionState.previousState,
+                        stopped: false
+                    });
+                }
+                routeObj = null;
+            }).catch(() => {
+                if (!this.transitionState.transitioned) {
+                    Object.assign(this.transitionState, {
+                        inProgress: false,
+                        currentState: this.transitionState.previousState,
+                        stopped: false
+                    });
+                }
+                routeObj = null;
             });
         }
-        changed(path) {
-            return this.lastVisited !== path;
+    }
+    getRootUrl() {
+        var loc = this.locationContext || document.location;
+        var rootUrl = loc.protocol + '//' + (loc.hostname || loc.host);
+        if (loc.port) {
+            rootUrl += ':' + loc.port;
         }
-        replace(path) {
-            if (!this.locationState && !path)
-                return;
-            this.locationState = {
-                state: 'replaceState',
-                path: path || this.locationState.previous,
-                previous: this.previousState,
-                current: this.lastVisited
-            };
-            this.previous = this.locationState.path;
+        return rootUrl;
+    }
+    getFullPath(path) {
+        return this.getRootUrl() + this.strategy.path(path);
+    }
+    _processState(route, path, rootElement) {
+        var navigatedPath = route.name === routeConfig.fallback.name ? route.url : path;
+        var lastTransitionQueue = this.transitionState.stateQueue.pop();
+        if (lastTransitionQueue) {
+            navigatedPath = lastTransitionQueue[0];
+            route = getRequiredRoute.apply(null, lastTransitionQueue);
+            this.transitionState.stateQueue.length = 0;
         }
-        getState(state) {
-            if (state) {
-                this.locationState = state;
-                return;
-            }
-            return this.locationState;
-        }
-        go(routeObj) {
-            if (!routeObj || !routeObj.url || !routeObj.route) {
-                this.events.dispatch(ROUTE_EVENT_ENUMS.NOTFOUND, { message: 'unable to resolve route' });
-                return false;
-            }
-            var path = routeObj.url;
-            var redirect = (routeName, params) => this.redirect(routeName, params);
-            var transitioned = () => this.transitionState.currentState !== path;
-            var checkTransition = () => {
-                if (path === this.transitionState.currentState)
-                    return;
-                this.transitionState.stateQueue.push([
-                    path,
-                    routeObj.route.route.params
-                ]);
-                this.transitionState.transitioned = true;
-            };
-            this.transitionState.previousState = this.transitionState.currentState;
-            if (this.transitionState.inProgress) {
-                checkTransition(routeObj);
-            }
-            if (this.changed(path) && transitioned()) {
-                this.transitionState.currentState = path;
-                this.transitionState.inProgress = true;
-                this.events.dispatch(ROUTE_EVENT_ENUMS.START, {
-                    current: this.lastVisited,
-                    path,
-                    redirected: this.transitionState.transitioned
-                });
-                this.events.dispatch(ROUTE_EVENT_ENUMS.GUARDCHECK, routeObj.route);
-                var routeInstance = new RouteInterceptorInstance(routeObj.route, path, this.currentRoute, redirect);
-                InterceptorResolver(ROUTE_INTERCEPTOR, routeInstance).then(() => {
-                    if (!this.transitionState.stopped && !transitioned()) {
-                        this.events.dispatch(ROUTE_EVENT_ENUMS.RENDER, routeObj.route, path);
-                    } else if (!this.transitionState.transitioned) {
-                        Object.assign(this.transitionState, {
-                            inProgress: false,
-                            currentState: this.transitionState.previousState,
-                            stopped: false
-                        });
-                    }
-                    routeObj = null;
-                });
-            }
-        }
-        getRootUrl() {
-            var rootUrl = document.location.protocol + '//' + (document.location.hostname || document.location.host);
-            if (document.location.port) {
-                rootUrl += ':' + document.location.port;
-            }
-            return rootUrl;
-        }
-        getFullPath(path) {
-            return this.getRootUrl() + this.strategy.path(path);
-        }
-        _processState(route, path, rootElement) {
-            var navigatedPath = route.name === routeConfig.fallback.name ? route.url : path;
-            var lastTransitionQueue = this.transitionState.stateQueue.pop();
-            if (lastTransitionQueue) {
-                navigatedPath = lastTransitionQueue[0];
-                route = getRequiredRoute.apply(null, lastTransitionQueue);
-                this.transitionState.stateQueue.length = 0;
-            }
-            if (this.changed(navigatedPath)) {
-                var routeEvent = new RouteEvent(navigatedPath, route, this.currentRoute, this.lastVisited);
-                this.events.dispatch(ROUTE_EVENT_ENUMS.SUCCESS, routeEvent);
-                this.currentRoute = route;
-                this.viewHandler.resolveViews(route, rootElement).then(() => {
-                    this.strategy.pushState({
-                        name: route.name,
-                        params: route.route.params
-                    }, navigatedPath);
-                    if (routeConfig.scrollTop)
-                        window.scrollTo(0, 0);
-                    this.events.dispatch(ROUTE_EVENT_ENUMS.COMPLETE, routeEvent);
-                    routeEvent = null;
-                });
-            } else {
-                this.events.dispatch(ROUTE_EVENT_ENUMS.ERROR, new RouteErrorEvent(navigatedPath));
-            }
-            this.transitionState.inProgress = false;
-            this.transitionState.stopped = false;
-            this.lastVisited = navigatedPath;
-        }
-        initializeRoute(restoreOnRefresh) {
-            if (routeConfig.isLoaded)
-                return;
-            var path = '';
-            if (restoreOnRefresh) {
-                path = this.strategy.path();
-            }
-            this.byUrl(path);
-            routeConfig.isLoaded = true;
-        }
-        search(query) {
-            return window.location.search = query;
-        }
-        getSearchParams() {
-            return unserialize(window.location.search.substring(1));
-        }
-        href(stateName, params) {
-            return getHref(stateName, params);
-        }
-        subscribe(eventName, callback) {
-            var eventList = Object.values(ROUTE_EVENT_ENUMS);
-            if (eventList.includes(eventName)) {
-                return this.events.add(eventName, callback);
-            } else {
-                console.error(eventName + ' does not exist, please use ' + eventList.join('|'));
-                return null;
-            }
-        }
-        redirect(routeName, params) {
-            var config = getRoute(routeName, params);
-            if (this.changed(config.url)) {
-                this.events.dispatch(ROUTE_EVENT_ENUMS.REDIRECT, {
-                    current: this.transitionState.currentState,
-                    path: config.url
-                });
-                this.go(config);
-            } else {
-                this.transitionState.stopped = true;
-            }
-        }
-        byUrl(url, params) {
-            url = url || routeConfig.fallback.url;
-            var route = getRequiredRoute(url, params);
-            this.go({
-                route,
-                url
+        if (this.changed(navigatedPath)) {
+            var routeEvent = new RouteEvent(navigatedPath, route, this.currentRoute, this.lastVisited);
+            this.events.dispatch(ROUTE_EVENT_ENUMS.SUCCESS, routeEvent);
+            this.currentRoute = route;
+            this.viewHandler.resolveViews(route, rootElement).then(() => {
+                this.strategy.pushState({
+                    name: route.name,
+                    params: route.route.params
+                }, navigatedPath);
+                if (routeConfig.scrollTop)
+                    window.scrollTo(0, 0);
+                this.events.dispatch(ROUTE_EVENT_ENUMS.COMPLETE, routeEvent);
+                routeEvent = null;
             });
+        } else {
+            this.events.dispatch(ROUTE_EVENT_ENUMS.ERROR, new RouteErrorEvent(navigatedPath));
         }
-        byName(name, params) {
-            this.go(getRoute(name, params));
+        this.transitionState.inProgress = false;
+        this.transitionState.stopped = false;
+        this.lastVisited = navigatedPath;
+    }
+    initializeRoute(restoreOnRefresh) {
+        if (routeConfig.isLoaded)
+            return;
+        var path = '';
+        if (restoreOnRefresh) {
+            path = this.strategy.path();
+        }
+        this.byUrl(path);
+        routeConfig.isLoaded = true;
+    }
+    search(query) {
+        if (this.locationContext) {
+            return this.locationContext.search = query;
+        }
+        return window.location.search = query;
+    }
+    getSearchParams() {
+        var search = (this.locationContext || window.location).search || '';
+        return unserialize(search.substring(1));
+    }
+    href(stateName, params) {
+        return getHref(stateName, params);
+    }
+    subscribe(eventName, callback) {
+        var eventList = Object.values(ROUTE_EVENT_ENUMS);
+        if (eventList.includes(eventName)) {
+            var events = this.events;
+            var index = events.add(eventName, callback);
+            return function unsubscribe() {
+                events.unlink(eventName, index);
+            };
+        } else {
+            console.error(eventName + ' does not exist, please use ' + eventList.join('|'));
+            return null;
         }
     }
-    LocationService.ctors = {
-        DI: [
-            ViewHandler,
-            ROUTE_LOCATION_STRATEGY
-        ]
-    };
-    return LocationService;
-}();
-var WebStateService = function () {
-    'use strict';
-    class WebStateService {
-        constructor(locationService) {
-            this.onParamsChanged = new EventEmitter();
-            this.locationService = locationService;
-        }
-        get state() {
-            return this.locationService.currentRoute;
-        }
-        go(routeName, params, targetWindow) {
-            var isHrefRequest = routeName.includes('/');
-            if (routeName.includes('//')) {
-                return targetWindow ? window.open(routeName, targetWindow) : location.href = routeName;
-            }
-            if (!targetWindow) {
-                if (isHrefRequest) {
-                    this.locationService.byUrl(routeName, params);
-                } else {
-                    this.locationService.byName(routeName, params);
-                }
-            } else {
-                var url = isHrefRequest ? routeName : getHref(routeName, params);
-                window.open(this.locationService.getFullPath(url), targetWindow);
-            }
-        }
-        getParam(name) {
-            return this.locationService.currentRoute.route.params[name];
-        }
-        setParam(name, value) {
-            var params = this.locationService.currentRoute.route.params;
-            var newParam = {};
-            if (typeof name !== 'object') {
-                newParam[name] = value;
-            } else {
-                newParam = name;
-            }
-            Object.assign(params, newParam);
-            this.onParamsChanged.emit(newParam);
-            newParam = null;
-        }
-        getUrlParams() {
-            return Object.assign({}, this.locationService.currentRoute.route.params);
+    redirect(routeName, params) {
+        var config = getRoute(routeName, params);
+        if (this.changed(config.url)) {
+            this.events.dispatch(ROUTE_EVENT_ENUMS.REDIRECT, {
+                current: this.transitionState.currentState,
+                path: config.url
+            });
+            this.go(config);
+        } else {
+            this.transitionState.stopped = true;
         }
     }
-    WebStateService.ctors = { DI: [LocationService] };
-    return WebStateService;
-}();
-var GoFn = function () {
-    'use strict';
-    function GoFn(webStateService) {
+    byUrl(url, params) {
+        url = url || routeConfig.fallback.url;
+        var route = getRequiredRoute(url, params);
+        this.go({
+            route,
+            url: route && route.fallback ? route.url : url,
+            initial: routeConfig.isLoaded ? null : url
+        });
+    }
+    byName(name, params) {
+        this.go(getRoute(name, params));
+    }
+}
+LocationService.ctors = {
+    DI: [
+        ViewHandler,
+        ROUTE_LOCATION_STRATEGY,
+        ROUTE_LOCATION_CONTEXT
+    ]
+};
+class WebStateService {
+    constructor(locationService) {
+        this.onParamsChanged = new EventEmitter();
+        this.locationService = locationService;
+    }
+    get state() {
+        return this.locationService.currentRoute;
+    }
+    go(routeName, params, targetWindow) {
+        var isHrefRequest = routeName.includes('/');
+        if (routeName.includes('//')) {
+            return targetWindow ? window.open(routeName, targetWindow) : location.href = routeName;
+        }
+        if (!targetWindow) {
+            if (isHrefRequest) {
+                this.locationService.byUrl(routeName, params);
+            } else {
+                this.locationService.byName(routeName, params);
+            }
+        } else {
+            var url = isHrefRequest ? routeName : getHref(routeName, params);
+            window.open(this.locationService.getFullPath(url), targetWindow);
+        }
+    }
+    getParam(name) {
+        return this.locationService.currentRoute.route.params[name];
+    }
+    setParam(name, value) {
+        var params = this.locationService.currentRoute.route.params;
+        var newParam = {};
+        if (typeof name !== 'object') {
+            newParam[name] = value;
+        } else {
+            newParam = name;
+        }
+        Object.assign(params, newParam);
+        this.onParamsChanged.emit(newParam);
+        newParam = null;
+    }
+    getUrlParams() {
+        return Object.assign({}, this.locationService.currentRoute.route.params);
+    }
+}
+WebStateService.ctors = { DI: [LocationService] };
+class GoFn {
+    constructor(webStateService) {
         this.params = {};
         this.clickHandler = function (event) {
             event.preventDefault();
             webStateService.go(this.pathName, this.params, this.target);
         };
     }
-    GoFn.ctors = {
-        selector: 'go',
-        events: {
-            'click': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: ['$event'],
-                        fn: 'clickHandler'
-                    }],
-                node: 'go'
-            }
-        },
-        props: {
-            pathName: { value: 'go' },
-            params: {},
-            target: {}
-        },
-        DI: [WebStateService]
-    };
-    return GoFn;
-}();
-var jViewFn = function () {
-    'use strict';
-    function jViewFn(viewHandler, elementRef) {
-        this.ref = staticRoutePrefix;
-        this.didInit = function () {
-            viewHandler.setViewReference(elementRef, this.ref);
-        };
-        this.viewDidDestroy = function () {
-            viewHandler.destroy(this.ref);
-        };
-    }
-    jViewFn.ctors = {
-        selector: 'router-view',
-        props: { ref: {} },
-        DI: [
-            ViewHandler,
-            {
-                optional: true,
-                tokenName: 'ElementRef'
-            }
-        ]
-    };
-    return jViewFn;
-}();
-var ViewIntentService = function () {
-    'use strict';
-    class ViewIntentService {
-        constructor() {
-            this._currentOpenIntent = new Map();
-            this.intentContainer = null;
-            this._currentIntent = '';
-            this.onCloseEvent = new EventEmitter();
-            this.events = new EventManager((e, intentConfig, params) => {
-                if (INTENT_EVENT_ENUMS.RENDER === e.type) {
-                    var name = intentConfig.name;
-                    this._previousIntent = this._currentIntent;
-                    this._currentIntent = name;
-                    this._currentOpenIntent.set(name, {
-                        element: null,
-                        transitionTimer: intentConfig.transition || 0,
-                        route: {
-                            name,
-                            params,
-                            data: intentConfig.data || null
-                        }
-                    });
-                    ComponentFactoryResolver(intentConfig.component, this.intentContainer, componentRef => {
-                        var config = this._currentOpenIntent.get(name);
-                        config.element = componentRef;
-                        componentRef.nativeElement.classList.add('view-intent');
-                        this.intentContainer.nativeElement.appendChild(componentRef.nativeElement);
-                        if (intentConfig.data && intentConfig.data.attrs)
-                            AttributeAppender(componentRef.nativeElement, intentConfig.data.attrs);
-                        this.intentContainer.children.add(componentRef);
-                        this.transitIntent(name);
-                        this.events.dispatch(INTENT_EVENT_ENUMS.SUCCESS, {
-                            name,
-                            params
-                        });
-                    }, true);
-                }
-            });
+}
+GoFn.ctors = {
+    selector: 'go',
+    events: {
+        'click': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: ['$event'],
+                    fn: 'clickHandler'
+                }],
+            node: 'go'
         }
-        openIntent(intentName, params) {
-            if (this._currentIntent === intentName)
-                return;
-            var intentConfig = $intentCollection[intentName];
-            if (intentConfig) {
-                if (!this._currentOpenIntent.has(intentName))
-                    this.events.dispatch(INTENT_EVENT_ENUMS.RENDER, intentConfig, params);
-                else
-                    this.transitIntent(intentName);
-            } else
-                this.events.dispatch(INTENT_EVENT_ENUMS.NOTFOUND, {
-                    name: intentName,
-                    current: this._currentIntent
+    },
+    props: {
+        pathName: { value: 'go' },
+        params: {},
+        target: {}
+    },
+    DI: [WebStateService]
+};
+function jViewFn(viewHandler, elementRef) {
+    this.ref = staticRoutePrefix;
+    this.didInit = function () {
+        viewHandler.setViewReference(elementRef, this.ref);
+    };
+    this.viewDidDestroy = function () {
+        viewHandler.destroy(this.ref);
+    };
+}
+jViewFn.ctors = {
+    selector: 'router-view',
+    props: { ref: {} },
+    DI: [
+        ViewHandler,
+        {
+            optional: true,
+            tokenName: 'ElementRef'
+        }
+    ]
+};
+class ViewIntentService {
+    constructor() {
+        this._currentOpenIntent = new Map();
+        this.intentContainer = null;
+        this._currentIntent = '';
+        this.onCloseEvent = new EventEmitter();
+        this.events = new EventManager((e, intentConfig, params) => {
+            if (INTENT_EVENT_ENUMS.RENDER === e.type) {
+                var name = intentConfig.name;
+                this._previousIntent = this._currentIntent;
+                this._currentIntent = name;
+                this._currentOpenIntent.set(name, {
+                    element: null,
+                    transitionTimer: intentConfig.transition || 0,
+                    route: {
+                        name,
+                        params,
+                        data: intentConfig.data || null
+                    }
                 });
-        }
-        closeIntent(data) {
-            var allIntents = [];
-            this._currentOpenIntent.forEach((intent, key) => {
-                intent.element && intent.element.nativeElement.removeAttribute('style');
-                if (this._currentIntent === key)
-                    DOMHelper.remove(intent.element, true);
-                else
-                    allIntents.push(key);
-            });
-            var previous = this._currentIntent;
-            this._currentOpenIntent.delete(this._currentIntent);
-            this._currentIntent = allIntents.pop();
-            if (this._currentIntent)
-                this.transitIntent(this._currentIntent);
-            this.onCloseEvent.emit({
-                intent: previous,
-                current: this._currentIntent,
-                data
-            });
-        }
-        destroyAllIntent() {
-            this._currentOpenIntent.forEach(function (intentView) {
-                DOMHelper.remove(intentView.element);
-            });
-            this._currentIntent = undefined;
-            this._currentOpenIntent.clear();
-        }
-        animate(element, style, timer) {
-            var start = null;
-            function step(timestamp) {
-                if (!start)
-                    start = timestamp;
-                var progress = timestamp - start;
-                if (progress < timer) {
-                    window.requestAnimationFrame(step);
-                } else {
-                    AttributeAppender(element, { style });
-                }
+                ComponentFactoryResolver(intentConfig.component, this.intentContainer, componentRef => {
+                    var config = this._currentOpenIntent.get(name);
+                    config.element = componentRef;
+                    componentRef.nativeElement.classList.add('view-intent');
+                    this.intentContainer.nativeElement.appendChild(componentRef.nativeElement);
+                    if (intentConfig.data && intentConfig.data.attrs) {
+                        AttributeAppender.set(componentRef.nativeElement, intentConfig.data.attrs);
+                    }
+                    this.intentContainer.children.add(componentRef);
+                    this.transitIntent(name);
+                    this.events.dispatch(INTENT_EVENT_ENUMS.SUCCESS, {
+                        name,
+                        params
+                    });
+                }, true);
             }
-            if (!element) {
-                return;
-            }
-            window.requestAnimationFrame(step);
-        }
-        removeIntent(intentName) {
-            this._currentOpenIntent.remove(intentName);
-        }
-        transitIntent(intentName) {
-            var intentView = this._currentOpenIntent.get(intentName);
-            if (intentView) {
-                this._currentIntent = intentName;
-                this.hideAllIntent();
-                this.animate(intentView.element.nativeElement, { transform: 'translateX(0%)' }, intentView.transitionTimer || 1);
-            }
-        }
-        getIntentView(intentName) {
-            return this._currentOpenIntent.get(intentName);
-        }
-        hideAllIntent() {
-            this._currentOpenIntent.forEach(function (intentView) {
-                intentView.element && intentView.element.nativeElement.removeAttribute('style');
+        });
+    }
+    openIntent(intentName, params) {
+        if (this._currentIntent === intentName)
+            return;
+        var intentConfig = $intentCollection[intentName];
+        if (intentConfig) {
+            if (!this._currentOpenIntent.has(intentName))
+                this.events.dispatch(INTENT_EVENT_ENUMS.RENDER, intentConfig, params);
+            else
+                this.transitIntent(intentName);
+        } else
+            this.events.dispatch(INTENT_EVENT_ENUMS.NOTFOUND, {
+                name: intentName,
+                current: this._currentIntent
             });
+    }
+    closeIntent(data) {
+        var allIntents = [];
+        this._currentOpenIntent.forEach((intent, key) => {
+            intent.element && intent.element.nativeElement.removeAttribute('style');
+            if (this._currentIntent === key)
+                DOMHelper.remove(intent.element, true);
+            else
+                allIntents.push(key);
+        });
+        var previous = this._currentIntent;
+        this._currentOpenIntent.delete(this._currentIntent);
+        this._currentIntent = allIntents.pop();
+        if (this._currentIntent)
+            this.transitIntent(this._currentIntent);
+        this.onCloseEvent.emit({
+            intent: previous,
+            current: this._currentIntent,
+            data
+        });
+    }
+    destroyAllIntent() {
+        this._currentOpenIntent.forEach(function (intentView) {
+            DOMHelper.remove(intentView.element);
+        });
+        this._currentIntent = undefined;
+        this._currentOpenIntent.clear();
+    }
+    animate(element, style, timer) {
+        var start = null;
+        function step(timestamp) {
+            if (!start)
+                start = timestamp;
+            var progress = timestamp - start;
+            if (progress < timer) {
+                window.requestAnimationFrame(step);
+            } else {
+                AttributeAppender.set(element, { style });
+            }
         }
-        getCurrentIntent() {
-            return (this.getIntentView(this._currentIntent) || {}).route;
+        if (!element) {
+            return;
         }
-        getParams() {
-            var currentIntentRoute = this.getCurrentIntent();
-            return currentIntentRoute && currentIntentRoute.params;
+        window.requestAnimationFrame(step);
+    }
+    removeIntent(intentName) {
+        this._currentOpenIntent.remove(intentName);
+    }
+    transitIntent(intentName) {
+        var intentView = this._currentOpenIntent.get(intentName);
+        if (intentView) {
+            this._currentIntent = intentName;
+            this.hideAllIntent();
+            this.animate(intentView.element.nativeElement, { transform: 'translateX(0%)' }, intentView.transitionTimer || 1);
         }
     }
-    ViewIntentService.ctors = { name: 'viewIntent' };
-    return ViewIntentService;
-}();
-var OpenIntent = function () {
-    'use strict';
-    function OpenIntent(viewIntent) {
-        this.params = {};
-        this.open = null;
-        this.clickHandler = function () {
-            viewIntent.openIntent(this.open, this.params);
+    getIntentView(intentName) {
+        return this._currentOpenIntent.get(intentName);
+    }
+    hideAllIntent() {
+        this._currentOpenIntent.forEach(intentView => {
+            if (intentView.element) {
+                intentView.element.nativeElement.removeAttribute('style');
+            }
+        });
+    }
+    getCurrentIntent() {
+        return (this.getIntentView(this._currentIntent) || {}).route;
+    }
+    getParams() {
+        var currentIntentRoute = this.getCurrentIntent();
+        return currentIntentRoute && currentIntentRoute.params;
+    }
+}
+ViewIntentService.ctors = {};
+function OpenIntent(viewIntent) {
+    this.params = {};
+    this.open = null;
+    this.clickHandler = function () {
+        viewIntent.openIntent(this.open, this.params);
+    };
+}
+OpenIntent.ctors = {
+    selector: 'openIntent',
+    events: {
+        'click': {
+            type: 'event',
+            value: [{
+                    type: 'call',
+                    args: [],
+                    fn: 'clickHandler'
+                }],
+            node: 'openIntent'
+        }
+    },
+    props: {
+        open: { value: 'openIntent' },
+        params: {}
+    },
+    DI: [ViewIntentService]
+};
+class JIntentContainer {
+    constructor(viewIntent, ElementRef) {
+        viewIntent.intentContainer = ElementRef;
+        this.viewDidDestroy = function () {
+            viewIntent.destroyAllIntent();
         };
     }
-    OpenIntent.ctors = {
-        selector: 'openIntent',
-        events: {
-            'click': {
-                type: 'event',
-                value: [{
-                        type: 'call',
-                        args: [],
-                        fn: 'clickHandler'
-                    }],
-                node: 'openIntent'
-            }
-        },
-        props: {
-            open: { value: 'openIntent' },
-            params: {}
-        },
-        DI: [ViewIntentService]
-    };
-    return OpenIntent;
-}();
-var JIntentContainer = function () {
-    'use strict';
-    class JIntentContainer {
-        constructor(viewIntent, ElementRef) {
-            viewIntent.intentContainer = ElementRef;
-            this.viewDidDestroy = function () {
-                viewIntent.destroyAllIntent();
-            };
+}
+JIntentContainer.ctors = {
+    selector: 'router-intent-container',
+    DI: [
+        ViewIntentService,
+        {
+            optional: true,
+            tokenName: 'ElementRef'
         }
-    }
-    JIntentContainer.ctors = {
-        selector: 'router-intent-container',
-        DI: [
-            ViewIntentService,
-            {
-                optional: true,
-                tokenName: 'ElementRef'
-            }
-        ]
-    };
-    return JIntentContainer;
-}();
+    ]
+};
 function RouterInitService(locationService) {
     if (routeConfig.autoInitialize) {
         locationService.initializeRoute(routeConfig.restoreOnRefresh);
@@ -8162,13 +8797,17 @@ class AbstractStrategy {
         this.locationService = locationService;
         this.isReplaceState = false;
         this.stateChanged = false;
-        this.listenEvent();
+        if (!this.locationService.locationContext) {
+            this.listenEvent();
+        }
     }
     getBaseHref() {
     }
     path() {
     }
     pushState(data, path) {
+        if (this.locationService.locationContext)
+            return;
         if (history) {
             history.pushState(data, null, this.locationService.getFullPath(path));
         }
@@ -8185,14 +8824,17 @@ class HashStrategyService extends AbstractStrategy {
         var state = this.locationService.getState();
         this.isReplaceState = true;
         if (state.hash !== state.previousHash || stateChanged) {
-            location.replace(state.hash);
+            if (!this.locationService.locationContext) {
+                location.replace(state.hash);
+            }
             this.originalState = state.currentLocation;
         }
     }
     path(path) {
         if (path)
             return routeConfig.delimiter.join(path);
-        var execPath = this.hashRegEx.exec(location.hash);
+        var hash = this.locationService.locationContext ? this.locationService.locationContext.hash || '' : location.hash;
+        var execPath = this.hashRegEx.exec(hash);
         return execPath ? execPath[1] : '';
     }
     listenEvent() {
@@ -8214,7 +8856,9 @@ class PathStrategyService extends AbstractStrategy {
         super(locationService);
     }
     path(path) {
-        return path || location.pathname;
+        if (path)
+            return path;
+        return this.locationService.locationContext ? this.locationService.locationContext.pathname || '/' : location.pathname;
     }
     listenEvent() {
         window.addEventListener('popstate', e => {
@@ -8226,38 +8870,61 @@ class PathStrategyService extends AbstractStrategy {
         }, false);
     }
 }
-var RouterModule = function () {
-    'use strict';
-    function RouterModule() {
-    }
-    RouterModule.setRoutes = function (routes) {
+class RouterModule {
+    static setRoutes(routes) {
         if (Array.isArray(routes)) {
             routes.forEach(route => setupRoute(route));
         } else {
             setupRoute(routes);
         }
-    };
-    RouterModule.lazyLoad = function (routes) {
+    }
+    static lazyLoad(routes) {
         if (Array.isArray(routes)) {
             routes.forEach(lazyLoadRoute);
         } else {
             lazyLoadRoute(routes);
         }
-    };
-    APP_BOOTSTRAP.register({
-        DI: [LocationService],
-        factory: RouterInitService
-    }, true);
-    return RouterModule;
-}();
+    }
+}
+APP_BOOTSTRAP.register({
+    DI: [LocationService],
+    factory: RouterInitService
+}, true);__required.r(exports, 'RouterModule', RouterModule);
+__required.r(exports, 'GoFn', GoFn);
+__required.r(exports, 'WebStateService', WebStateService);
+__required.r(exports, 'LocationService', LocationService);
+__required.r(exports, 'ViewHandler', ViewHandler);
+__required.r(exports, 'ROUTE_INTERCEPTOR', ROUTE_INTERCEPTOR);
+__required.r(exports, 'ROUTE_LOCATION_STRATEGY', ROUTE_LOCATION_STRATEGY);
+__required.r(exports, 'ROUTE_LOCATION_CONTEXT', ROUTE_LOCATION_CONTEXT);
+__required.r(exports, 'staticRoutePrefix', staticRoutePrefix);
+__required.r(exports, 'routeConfig', routeConfig);
+__required.r(exports, 'ROUTE_EVENT_ENUMS', ROUTE_EVENT_ENUMS);
+__required.r(exports, 'INTENT_EVENT_ENUMS', INTENT_EVENT_ENUMS);
+__required.r(exports, 'getParentRoute', getParentRoute);
+__required.r(exports, 'getFallback', getFallback);
+__required.r(exports, 'parseDelimeter', parseDelimeter);
+__required.r(exports, 'getRoute', getRoute);
+__required.r(exports, 'getRequiredRoute', getRequiredRoute);
+__required.r(exports, 'parseUrl', parseUrl);
+__required.r(exports, 'getHref', getHref);
+__required.r(exports, 'RouteInterceptorInstance', RouteInterceptorInstance);
+__required.r(exports, 'RouteErrorEvent', RouteErrorEvent);
+__required.r(exports, 'RouteEvent', RouteEvent);
+__required.r(exports, 'jViewFn', jViewFn);
+__required.r(exports, 'OpenIntent', OpenIntent);
+__required.r(exports, 'ViewIntentService', ViewIntentService);
+__required.r(exports, 'JIntentContainer', JIntentContainer);
+__required.r(exports, 'RouterInitService', RouterInitService);
+__required.r(exports, 'HashStrategyService', HashStrategyService);
+__required.r(exports, 'AbstractStrategy', AbstractStrategy);
+__required.r(exports, 'PathStrategyService', PathStrategyService);
+
 },
-1170 : (module, exports, __required, global) => {
+1172 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'CalculatorComponent', () => CalculatorComponent);
-var core = __required(1143);
+const core = __required(1145);
 /** compiled CalculatorComponent **/
-var CalculatorComponent = function(){
-"use strict";
 
 function CalculatorComponent() {
     this.clear();
@@ -8313,22 +8980,18 @@ CalculatorComponent.ctors = {
     exposeView: true
 };
 
-CalculatorComponent.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.compiler.$({}[id], mtl); return core.ViewParser.compiler.jit(viewRef, [{"type":1,"name":"div","index":0,"isc":false,"attr":{"class":"calculator"},"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"text","class":"calculator-screen","disabled":""},"attr$":{"value":{"prop":"currentNumber","once":false}}},{"type":1,"name":"div","index":3,"isc":false,"attr":{"class":"calculator-keys"},"children":[{"type":1,"name":"button","index":1,"isc":false,"attr":{"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"+"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["+"]}]},{"type":1,"name":"button","index":3,"isc":false,"attr":{"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"-"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["-"]}]},{"type":1,"name":"button","index":5,"isc":false,"attr":{"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"*"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["×"]}]},{"type":1,"name":"button","index":7,"isc":false,"attr":{"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"/"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["÷"]}]},{"type":1,"name":"button","index":9,"isc":false,"attr":{"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"7"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["7"]}]},{"type":1,"name":"button","index":11,"isc":false,"attr":{"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"8"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["8"]}]},{"type":1,"name":"button","index":13,"isc":false,"attr":{"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"9"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["9"]}]},{"type":1,"name":"button","index":15,"isc":false,"attr":{"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"4"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["4"]}]},{"type":1,"name":"button","index":17,"isc":false,"attr":{"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"5"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["5"]}]},{"type":1,"name":"button","index":19,"isc":false,"attr":{"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"6"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["6"]}]},{"type":1,"name":"button","index":21,"isc":false,"attr":{"type":"button","value":1},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"1"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["1"]}]},{"type":1,"name":"button","index":23,"isc":false,"attr":{"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"2"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["2"]}]},{"type":1,"name":"button","index":25,"isc":false,"attr":{"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"3"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["3"]}]},{"type":1,"name":"button","index":27,"isc":false,"attr":{"type":"button","value":0},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"0"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["0"]}]},{"type":1,"name":"button","index":29,"isc":false,"attr":{"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":3,"ast":["."]}]},{"type":1,"name":"button","index":31,"isc":false,"attr":{"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":3,"ast":["AC"]}]},{"type":1,"name":"button","index":33,"isc":false,"attr":{"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"="}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["="]}]}]}]}], {}); };/** template loader **/
-return CalculatorComponent;
-}();
+CalculatorComponent.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.$({}[id], mtl); return core.ViewParser.jit(viewRef, [{"type":1,"name":"div","index":0,"isc":false,"attr":{"_jeli-11ctj79":true,"class":"calculator"},"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"text","class":"calculator-screen","disabled":""},"attr$":{"value":{"prop":"currentNumber","once":false}}},{"type":1,"name":"div","index":3,"isc":false,"attr":{"_jeli-11ctj79":true,"class":"calculator-keys"},"children":[{"type":1,"name":"button","index":1,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","class":"operator","value":"+"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"+"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["+"]}]},{"type":1,"name":"button","index":3,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","class":"operator","value":"-"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"-"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["-"]}]},{"type":1,"name":"button","index":5,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","class":"operator","value":"*"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"*"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["×"]}]},{"type":1,"name":"button","index":7,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","class":"operator","value":"/"},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"/"}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["÷"]}]},{"type":1,"name":"button","index":9,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","value":7},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"7"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["7"]}]},{"type":1,"name":"button","index":11,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","value":8},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"8"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["8"]}]},{"type":1,"name":"button","index":13,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","value":9},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"9"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["9"]}]},{"type":1,"name":"button","index":15,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","value":4},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"4"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["4"]}]},{"type":1,"name":"button","index":17,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","value":5},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"5"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["5"]}]},{"type":1,"name":"button","index":19,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","value":6},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"6"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["6"]}]},{"type":1,"name":"button","index":21,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","value":1},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"1"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["1"]}]},{"type":1,"name":"button","index":23,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","value":2},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"2"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["2"]}]},{"type":1,"name":"button","index":25,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","value":3},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"3"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["3"]}]},{"type":1,"name":"button","index":27,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","value":0},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"0"}],"fn":"getNumber"}]}],"children":[{"type":3,"ast":["0"]}]},{"type":1,"name":"button","index":29,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","class":"decimal","value":"."},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"getDecimal"}]}],"children":[{"type":3,"ast":["."]}]},{"type":1,"name":"button","index":31,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","class":"all-clear","value":"all-clear"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clear"}]}],"children":[{"type":3,"ast":["AC"]}]},{"type":1,"name":"button","index":33,"isc":false,"attr":{"_jeli-11ctj79":true,"type":"button","class":"equal-sign","value":"="},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"="}],"fn":"getOperation"}]}],"children":[{"type":3,"ast":["="]}]}]}]}], {}); };/** template loader **/
+__required.r(exports, 'CalculatorComponent', CalculatorComponent);
 
 },
-1171 : (module, exports, __required, global) => {
+1173 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'RouterPageElement', () => RouterPageElement);
-var common = __required(1144);
-var ItemList = __required(1174, 'ItemList');
-var core = __required(1143);
-var form = __required(1167);
-var FormControlService = form.FormControlService;
+const common = __required(1146);
+const ItemList = __required(1176, 'ItemList');
+const core = __required(1145);
+const form = __required(1169);
+const FormControlService = form.FormControlService;
 /** compiled RouterPageElement **/
-var RouterPageElement = function(){
-"use strict";
 
 function RouterPageElement() {
     this.testForm = new FormControlService({
@@ -8399,29 +9062,23 @@ RouterPageElement.ctors = {
     ]
 };
 
-RouterPageElement.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.compiler.$({}[id], mtl); return core.ViewParser.compiler.jit(viewRef, [{"type":1,"name":"div","index":0,"isc":false,"props":{"formControl":{"prop":"testForm"}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":1},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" Yes"]},{"type":1,"name":"br","index":3,"isc":false},{"type":1,"name":"input","index":5,"isc":false,"attr":{"type":"radio"},"props":{"formField":"radio","value":0},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" No"]},{"type":1,"name":"br","index":7,"isc":false},{"type":1,"name":"input","index":9,"isc":false,"attr":{"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[form.CheckboxEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false}]},{"type":1,"name":"textarea","index":3,"isc":false,"props":{"formField":"textarea"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":4,"isc":false},{"type":1,"name":"input","index":6,"isc":false,"attr":{"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":7,"isc":false},{"type":1,"name":"input","index":9,"isc":false,"attr":{"type":"file"},"props":{"formField":"file"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false},{"type":1,"name":"input","index":12,"isc":false,"attr":{"type":"range","id":"a"},"props":{"formField":"range"},"providers":[form.RangeEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":13,"isc":false},{"type":1,"name":"input","index":15,"isc":false,"attr":{"type":"number","id":"b"},"props":{"formField":"number"},"providers":[form.NumberEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":16,"isc":false},{"type":1,"name":"select","index":18,"isc":false,"props":{"formField":"select"},"providers":[form.SelectEventBinder,form.FormFieldDirective],"attr":{"multiple":""},"children":[{"type":1,"name":"option","index":1,"isc":false,"attr":{"value":"select_1"},"children":[{"type":3,"ast":["Select 1"]}]},{"type":1,"name":"option","index":3,"isc":false,"attr":{"value":"select_2"},"children":[{"type":3,"ast":["Select 2"]}]},{"type":1,"name":"option","index":5,"isc":false,"attr":{"value":"select_3"},"children":[{"type":3,"ast":["Select 3"]}]}]},{"type":1,"name":"div","index":20,"isc":false,"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"input","index":3,"isc":false,"attr":{"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"input","index":5,"isc":false,"attr":{"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[form.NumberEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"div","index":22,"isc":false,"children":[{"type":1,"name":"button","index":0,"isc":false,"attr$":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"attr":{"class":"btn btn-primary"},"children":[{"type":3,"ast":["Submit"]}]}]},{"type":1,"name":"item-list","index":24,"isc":true,"attr":{"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[ItemList],"children":[],"templates":{"place":{"@":[{"type":1,"name":"pre","index":1,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"value","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}}},{"type":1,"name":"pre","index":26,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":["testForm","value"],"args":[[3]],"fns":[common.jsonFilterFn]}]],false]}]}]}], {}); };/** template loader **/
-return RouterPageElement;
-}();
+RouterPageElement.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.$({}[id], mtl); return core.ViewParser.jit(viewRef, [{"type":1,"name":"div","index":0,"isc":false,"attr":{"_jeli-1044nuz":true},"props":{"formControl":{"prop":"testForm"}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"_jeli-1044nuz":true},"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"_jeli-1044nuz":true,"type":"radio"},"props":{"formField":"radio","value":1},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" Yes"]},{"type":1,"name":"br","index":3,"isc":false,"attr":{"_jeli-1044nuz":true}},{"type":1,"name":"input","index":5,"isc":false,"attr":{"_jeli-1044nuz":true,"type":"radio"},"props":{"formField":"radio","value":0},"providers":[form.RadioEventBinder,form.FormFieldDirective]},{"type":3,"ast":[" No"]},{"type":1,"name":"br","index":7,"isc":false,"attr":{"_jeli-1044nuz":true}},{"type":1,"name":"input","index":9,"isc":false,"attr":{"_jeli-1044nuz":true,"type":"checkbox"},"props":{"formField":"checkbox"},"providers":[form.CheckboxEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false,"attr":{"_jeli-1044nuz":true}}]},{"type":1,"name":"textarea","index":3,"isc":false,"attr":{"_jeli-1044nuz":true},"props":{"formField":"textarea"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":4,"isc":false,"attr":{"_jeli-1044nuz":true}},{"type":1,"name":"input","index":6,"isc":false,"attr":{"_jeli-1044nuz":true,"type":"text","minlength":5,"maxlength":10,"required":true},"props":{"formField":"input"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":7,"isc":false,"attr":{"_jeli-1044nuz":true}},{"type":1,"name":"input","index":9,"isc":false,"attr":{"_jeli-1044nuz":true,"type":"file"},"props":{"formField":"file"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":10,"isc":false,"attr":{"_jeli-1044nuz":true}},{"type":1,"name":"input","index":12,"isc":false,"attr":{"_jeli-1044nuz":true,"type":"range","id":"a"},"props":{"formField":"range"},"providers":[form.RangeEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":13,"isc":false,"attr":{"_jeli-1044nuz":true}},{"type":1,"name":"input","index":15,"isc":false,"attr":{"_jeli-1044nuz":true,"type":"number","id":"b"},"props":{"formField":"number"},"providers":[form.NumberEventBinder,form.FormFieldDirective]},{"type":1,"name":"br","index":16,"isc":false,"attr":{"_jeli-1044nuz":true}},{"type":1,"name":"select","index":18,"isc":false,"attr":{"_jeli-1044nuz":true,"multiple":""},"props":{"formField":"select"},"providers":[form.SelectEventBinder,form.FormFieldDirective],"children":[{"type":1,"name":"option","index":1,"isc":false,"attr":{"_jeli-1044nuz":true,"value":"select_1"},"children":[{"type":3,"ast":["Select 1"]}]},{"type":1,"name":"option","index":3,"isc":false,"attr":{"_jeli-1044nuz":true,"value":"select_2"},"children":[{"type":3,"ast":["Select 2"]}]},{"type":1,"name":"option","index":5,"isc":false,"attr":{"_jeli-1044nuz":true,"value":"select_3"},"children":[{"type":3,"ast":["Select 3"]}]}]},{"type":1,"name":"div","index":20,"isc":false,"attr":{"_jeli-1044nuz":true},"props":{"formControl":{"prop":{"type":"call","args":[{"type":"raw","value":"personalInfo"}],"fn":"getField","namespaces":["testForm"]}}},"providers":[form.FormControlDirective],"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"_jeli-1044nuz":true},"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"_jeli-1044nuz":true,"type":"text","class":"form-control"},"props":{"formField":"firstName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"input","index":3,"isc":false,"attr":{"_jeli-1044nuz":true,"type":"text","class":"form-control"},"props":{"formField":"lastName"},"providers":[form.DefaultEventBinder,form.FormFieldDirective]},{"type":1,"name":"input","index":5,"isc":false,"attr":{"_jeli-1044nuz":true,"type":"number","class":"form-control"},"props":{"formField":"age"},"providers":[form.NumberEventBinder,form.FormFieldDirective]}]},{"type":1,"name":"div","index":22,"isc":false,"attr":{"_jeli-1044nuz":true},"children":[{"type":1,"name":"button","index":0,"isc":false,"attr":{"_jeli-1044nuz":true,"class":"btn btn-primary"},"attr$":{"disabled":{"prop":{"type":"bin","left":{"type":"una","ops":"!","args":["testForm","valid"]},"ops":"&&","right":{"type":"raw","value":true}},"once":false}},"children":[{"type":3,"ast":["Submit"]}]}]},{"type":1,"name":"item-list","index":24,"isc":true,"attr":{"_jeli-1044nuz":true,"value":[1,2,3]},"props":{"formValue":{"prop":["testForm","value"]}},"providers":[ItemList],"children":[],"templates":{"place":{"@":[{"type":1,"name":"pre","index":1,"isc":false,"attr":{"_jeli-1044nuz":true},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"value","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}}},{"type":1,"name":"pre","index":26,"isc":false,"attr":{"_jeli-1044nuz":true},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":["testForm","value"],"args":[[3]],"fns":[common.jsonFilterFn]}]],false]}]}]}], {}); };/** template loader **/
+__required.r(exports, 'RouterPageElement', RouterPageElement);
 
 },
-1172 : (module, exports, __required, global) => {
+1174 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'AppRouteModule', () => AppRouteModule);
-__required.r(exports, 'validatorService', () => validatorService);
-__required.r(exports, 'InitializeApp', () => InitializeApp);
-var RouterPageElement = __required(1171, 'RouterPageElement');
-var CalculatorComponent = __required(1170, 'CalculatorComponent');
-var core = __required(1143);
-var INITIALIZERS = core.INITIALIZERS;
-var router = __required(1169);
-var WebStateService = router.WebStateService;
-var ROUTE_INTERCEPTOR = router.ROUTE_INTERCEPTOR;
-var RouterModule = router.RouterModule;
+const RouterPageElement = __required(1173, 'RouterPageElement');
+const CalculatorComponent = __required(1172, 'CalculatorComponent');
+const core = __required(1145);
+const INITIALIZERS = core.INITIALIZERS;
+const router = __required(1171);
+const WebStateService = router.WebStateService;
+const ROUTE_INTERCEPTOR = router.ROUTE_INTERCEPTOR;
+const RouterModule = router.RouterModule;
 function InitializeApp(webStateService) {
     webStateService.events.listener('$webRouteStart', console.log);
 }/** compiled validatorService **/
-var validatorService = function(){
-"use strict";
 
 function validatorService() {
     this.resolve = function (route, locals, next) {
@@ -8430,11 +9087,7 @@ function validatorService() {
 }
 
 validatorService.ctors = {};
-return validatorService;
-}();
 /** compiled AppRouteModule **/
-var AppRouteModule = function(){
-"use strict";
 
 function AppRouteModule() {
     RouterModule.setRoutes([
@@ -8452,26 +9105,24 @@ function AppRouteModule() {
     ]);
 }
 
-INITIALIZERS.register({factory: InitializeApp, DI: [WebStateService]}, true);
-
 ROUTE_INTERCEPTOR.register({useClass: validatorService}, true);
+
+INITIALIZERS.register({factory: InitializeApp, DI: [WebStateService]}, true);
 
 AppRouteModule.fac = () =>/** bootstrap module**/[
     RouterModule
 ].forEach(m => { if(!m.k && typeof m == 'function') return (m.fac && m.fac(), new m(), m.k = 1); });
-;
-return AppRouteModule;
-}();
+
+__required.r(exports, 'InitializeApp', InitializeApp);
+__required.r(exports, 'validatorService', validatorService);
+__required.r(exports, 'AppRouteModule', AppRouteModule);
 
 },
-1173 : (module, exports, __required, global) => {
+1175 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'TestPlaceElement', () => TestPlaceElement);
-var common = __required(1144);
-var core = __required(1143);
+const common = __required(1146);
+const core = __required(1145);
 /** compiled TestPlaceElement **/
-var TestPlaceElement = function(){
-"use strict";
 
 function TestPlaceElement() {
     this.test = false;
@@ -8485,19 +9136,15 @@ TestPlaceElement.ctors = {
     }
 };
 
-TestPlaceElement.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.compiler.$({}[id], mtl); return core.ViewParser.compiler.jit(viewRef, [{"type":1,"name":"div","index":0,"isc":false,"children":[{"type":11,"name":"#","index":0,"isc":false,"refId":"modal-body"}]},{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":1,"isc":false,"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[common.ClassDirective],"children":[{"type":1,"name":"p","index":0,"isc":false,"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"opt","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[common.ForDirective]}], {}); };/** template loader **/
-return TestPlaceElement;
-}();
+TestPlaceElement.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.$({}[id], mtl); return core.ViewParser.jit(viewRef, [{"type":1,"name":"div","index":0,"isc":false,"attr":{"_jeli-11u5cyt":true},"children":[{"type":11,"name":"#","index":0,"isc":false,"refId":"modal-body"}]},{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":1,"isc":false,"attr":{"_jeli-11u5cyt":true},"context":{"opt":"$context"},"props":{"jClass":{"prop":["opt","class"]}},"providers":[common.ClassDirective],"children":[{"type":1,"name":"p","index":0,"isc":false,"attr":{"_jeli-11u5cyt":true},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"opt","args":[],"fns":[common.jsonFilterFn]}]],false]}]}]}},"props":{"forIn":{"prop":"options"}},"providers":[common.ForDirective]}], {}); };/** template loader **/
+__required.r(exports, 'TestPlaceElement', TestPlaceElement);
 
 },
-1174 : (module, exports, __required, global) => {
+1176 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'ItemList', () => ItemList);
-var common = __required(1144);
-var core = __required(1143);
+const common = __required(1146);
+const core = __required(1145);
 /** compiled ItemList **/
-var ItemList = function(){
-"use strict";
 
 function ItemList() {
 }
@@ -8510,130 +9157,183 @@ ItemList.ctors = {
     }
 };
 
-ItemList.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.compiler.$({}[id], mtl); return core.ViewParser.compiler.jit(viewRef, [{"type":11,"name":"#","index":0,"isc":false,"refId":"@"},{"type":1,"name":"#","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[common.SwitchDirective],"children":[{"type":8,"name":"##","text":"switchDefault","templates":{"switchDefault":{"type":1,"name":"h5","index":1,"isc":false,"children":[{"type":3,"ast":["Invalid form"]}]}},"providers":[common.SwitchDefaultDirective]},{"type":8,"name":"##","text":"switchCase","templates":{"switchCase":{"type":1,"name":"h5","index":3,"isc":false,"children":[{"type":3,"ast":["Valid form"]}]}},"props":{"switchCase":{"prop":{"type":"raw","value":"test"}}},"providers":[common.SwitchCaseDirective]}]}], {}); };/** template loader **/
-return ItemList;
-}();
+ItemList.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.$({}[id], mtl); return core.ViewParser.jit(viewRef, [{"type":11,"name":"#","index":0,"isc":false,"refId":"@"},{"type":1,"name":"#","index":1,"isc":false,"props":{"switch":{"prop":["formValue","personalInfo","firstName"]}},"providers":[common.SwitchDirective],"children":[{"type":8,"name":"##","text":"switchDefault","templates":{"switchDefault":{"type":1,"name":"h5","index":1,"isc":false,"attr":{"_jeli-qw3nj3":true},"children":[{"type":3,"ast":["Invalid form"]}]}},"providers":[common.SwitchDefaultDirective]},{"type":8,"name":"##","text":"switchCase","templates":{"switchCase":{"type":1,"name":"h5","index":3,"isc":false,"attr":{"_jeli-qw3nj3":true},"children":[{"type":3,"ast":["Valid form"]}]}},"props":{"switchCase":{"prop":{"type":"raw","value":"test"}}},"providers":[common.SwitchCaseDirective]}]}], {}); };/** template loader **/
+__required.r(exports, 'ItemList', ItemList);
 
 },
-1175 : (module, exports, __required, global) => {
+1177 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'AppRootElement', () => AppRootElement);
-var datetime = __required(1145);
-var TestPlaceElement = __required(1173, 'TestPlaceElement');
-var common = __required(1144);
-var form = __required(1167);
-var core = __required(1143);
-var http = __required(1168);
-var HttpService = http.HttpService;
-/** compiled AppRootElement **/
-var AppRootElement = function(){
-"use strict";
-
-function AppRootElement(http) {
-    this.valueBinding = 3;
-    this.test = true;
-    this.error = false;
-    this.keys = [2];
-    this.removeKey = function (key) {
-        this.keys.splice(key, 1);
-    };
-    this.selectItemTest = [];
-    for (var i = 0; i < 100; i++) {
-        this.selectItemTest.push({
-            label: 'test_' + i,
-            value: i
-        });
+const RecordListElement = __required(1178, 'RecordListElement');
+const common = __required(1146);
+const core = __required(1145);
+const STORAGE_KEY = 'jeli-todo-example';
+function loadTodos() {
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : defaultTodos();
+    } catch (e) {
+        return defaultTodos();
     }
-    this.selectedItem = this.selectItemTest[30];
-    this.pageHeading = 'My First Todo App';
-    this.todos = [];
-    this.removeItemCount = 0;
-    this.counter = 0;
-    this.todoDescription = '';
-    this.range = function (start, end) {
-        var value = [];
-        while (end > start) {
-            value.push(start);
-            start++;
-        }
-        return value;
-    };
-    this.didInit = function () {
-        console.log(this);
-    };
-    this.print = function (list) {
-        console.log(list);
-    };
 }
-AppRootElement.prototype.addTodo = function () {
-    if (this.todoDescription) {
+function defaultTodos() {
+    return [
+        {
+            description: 'Learn jeli',
+            done: true
+        },
+        {
+            description: 'Build something with @if / @for blocks',
+            done: false
+        },
+        {
+            description: 'Ship it',
+            done: false
+        }
+    ];
+}/** compiled AppRootElement **/
+
+class AppRootElement {
+    constructor() {
+        this.pageHeading = 'jeli Todos';
+        this.todos = loadTodos();
+        this.description = '';
+        this.filter = 'all';
+        this.editingIndex = -1;
+        this.editingText = '';
+    }
+    addTodo() {
+        const description = this.description.trim();
+        if (!description)
+            return;
         this.todos.push({
-            description: this.todoDescription,
-            details: '',
+            description,
             done: false
         });
-        this.todoDescription = '';
+        this.description = '';
+        this.persist();
     }
-};
-AppRootElement.prototype.removeTodo = function (index) {
-    console.log('removing Todo:', index);
-    if (this.todos[index]) {
+    removeTodo(index) {
         this.todos.splice(index, 1);
+        this.persist();
     }
-};
-AppRootElement.prototype.markAsRemoved = function (done, todo) {
-    todo.done = done;
-    if (done) {
-        this.removeItemCount++;
-    } else if (this.removeItemCount > 0) {
-        this.removeItemCount--;
+    toggleDone(index) {
+        this.todos[index].done = !this.todos[index].done;
+        this.persist();
     }
-};
-AppRootElement.prototype.generateMock = function (total) {
-    var data = [];
-    for (var i = 0; i < total; i++) {
-        data.push({
-            description: 'Test_From_' + this.counter++,
-            done: false,
-            details: ''
-        });
+    startEdit(index) {
+        this.editingIndex = index;
+        this.editingText = this.todos[index].description;
     }
-    this.todos = data;
-    data = null;
-};
+    saveEdit(index) {
+        const text = this.editingText.trim();
+        if (text)
+            this.todos[index].description = text;
+        this.editingIndex = -1;
+        this.persist();
+    }
+    cancelEdit() {
+        this.editingIndex = -1;
+    }
+    onEditKeyUp(event, index) {
+        if (event.key === 'Enter')
+            this.saveEdit(index);
+        if (event.key === 'Escape')
+            this.cancelEdit();
+    }
+    setFilter(filter) {
+        this.filter = filter;
+    }
+    clearCompleted() {
+        this.todos = this.todos.filter(todo => !todo.done);
+        this.persist();
+    }
+    get visibleTodos() {
+        if (this.filter === 'active')
+            return this.todos.filter(todo => !todo.done);
+        if (this.filter === 'completed')
+            return this.todos.filter(todo => todo.done);
+        return this.todos;
+    }
+    get remaining() {
+        return this.todos.filter(todo => !todo.done).length;
+    }
+    persist() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.todos));
+        } catch (e) {
+        }
+    }
+}
 
 AppRootElement.ctors = {
-    selector: 'app-root',
-    DI: [
-        HttpService
-    ]
+    selector: 'app-root'
 };
 
-AppRootElement.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.compiler.$({"fallback":{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":1,"isc":false,"context":{"i":"$context"},"children":[{"type":3,"ast":["Testing_${0}",[["${0}",{"prop":"i"}]],false]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[0,1,2,3]}}},"providers":[common.ForDirective],"refId":"fallback"}}[id], mtl); return core.ViewParser.compiler.jit(viewRef, [{"type":1,"name":"nav","index":0,"isc":false,"attr":{"class":"navbar navbar-inverse navbar-static-top"},"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"class":"container-fluid"},"children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"class":"navbar-header"},"children":[{"type":1,"name":"a","index":1,"isc":false,"attr":{"class":"navbar-brand","href":"#"},"children":[{"type":3,"ast":["                Todo Application              "]}]}]}]}]},{"type":1,"name":"input","index":3,"isc":false,"attr":{"type":"checkbox"},"props":{"model":{"prop":"test"}},"providers":[form.CheckboxEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"test","right":"$event"}],"custom":true}],"attr$":{"checked":{"prop":true,"once":true}},"vc":[{"name":"model","type":"jModel","value":"input"},"app-root"]},{"type":8,"name":"##","text":"if","templates":{"if":{"type":1,"name":"div","index":4,"isc":false,"children":[{"type":3,"ast":["I am Test Condition"]}]},"ifElse":_GT('fallback', null)},"props":{"if":{"prop":"test"},"ifElse":"fallback"},"providers":[common.IfDirective]},{"type":1,"name":"div","index":5,"isc":false,"props":{"jClass":{"prop":{"type":"ite","test":"test","cons":{"type":"raw","value":"visible"},"alt":{"type":"raw","value":"hidden"}}}},"providers":[common.ClassDirective],"children":[{"type":3,"ast":["Class test"]}]},{"type":1,"name":"div","index":7,"isc":false,"props":{"switch":{"prop":{"type":"una","ops":"!","args":"test"}}},"providers":[common.SwitchDirective],"children":[{"type":8,"name":"##","text":"switchCase","templates":{"switchCase":{"type":1,"name":"h5","index":1,"isc":false,"children":[{"type":3,"ast":["I am ${0} case",[["${0}",{"prop":"test"}]],false]}]}},"props":{"switchCase":{"prop":true}},"providers":[common.SwitchCaseDirective]},{"type":8,"name":"##","text":"switchDefault","templates":{"switchDefault":{"type":1,"name":"test-place","index":3,"isc":true,"providers":[TestPlaceElement],"children":[]}},"providers":[common.SwitchDefaultDirective]}]},{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"div","index":8,"isc":false,"context":{"item":"$context"},"attr":{"class":"another"},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"item","args":[],"fns":[common.jsonFilterFn]}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[{"test":2}]},"args":[[{"type":"obj","expr":{"test":2}}]],"fns":[common.FilterPipe]},"forTrackBy":"trackByFn"},"providers":[common.ForDirective]},{"type":3,"ast":["Selected: ${0}",[["${0}",{"prop":"valueBinding"}]],false]},{"type":1,"name":"select","index":10,"isc":false,"props":{"model":{"prop":"valueBinding"}},"providers":[form.SelectEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding","right":"$event"}],"custom":true}],"children":[{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"option","index":1,"isc":false,"props":{"option":"","value":{"prop":"opt","once":false}},"providers":[form.OptionDirective],"context":{"opt":"$context"},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"opt"}]],true]}]}},"props":{"forIn":{"prop":{"type":"raw","value":[1,2,3,4,5,6]}}},"providers":[common.ForDirective]}]},{"type":1,"name":"br","index":12,"isc":false},{"type":3,"ast":[" Selected: ${0}",[["${0}",{"prop":"valueBinding2","args":[],"fns":[common.jsonFilterFn]}]],false]},{"type":1,"name":"select","index":14,"isc":false,"props":{"model":{"prop":"valueBinding2"}},"providers":[form.SelectEventBinder,form.ModelDirective],"events":[{"name":"modelChange","value":[{"type":"asg","left":"valueBinding2","right":"$event"}],"custom":true}],"attr":{"multiple":""},"children":[{"type":1,"name":"option","index":1,"isc":false,"attr":{"value":"select_1"},"children":[{"type":3,"ast":["Select 1"]}]},{"type":1,"name":"option","index":3,"isc":false,"attr":{"value":"select_2"},"children":[{"type":3,"ast":["Select 2"]}]},{"type":1,"name":"option","index":5,"isc":false,"attr":{"value":"select_3"},"children":[{"type":3,"ast":["Select 3"]}]}]},{"type":1,"name":"p","index":16,"isc":false,"children":[{"type":3,"ast":["© ${0} FrontendOnly. All Rights Reserved ",[["${0}",{"prop":{"type":"raw","value":""},"args":[[{"type":"raw","value":"YYYY"}]],"fns":[datetime.dateTimeFilterFN]}]],false]}]}], {}); };/** template loader **/
-return AppRootElement;
-}();
+AppRootElement.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.$({"__jeliElse0":{"type":1,"name":"#","index":2,"isc":false,"refId":"__jeliElse0","children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"_jeli-v4upfz":true,"type":"checkbox"},"attr$":{"checked":{"prop":["todo","done"],"once":false}},"events":[{"name":"click","value":[{"type":"call","args":["idx"],"fn":"toggleDone"}]}]},{"type":1,"name":"span","index":3,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"todo-text"},"events":[{"name":"dblclick","value":[{"type":"call","args":["idx"],"fn":"startEdit"}]}],"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":["todo","description"]}]],false]}]},{"type":1,"name":"button","index":5,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"icon-btn","title":"Edit"},"events":[{"name":"click","value":[{"type":"call","args":["idx"],"fn":"startEdit"}]}],"children":[{"type":3,"ast":["✎"]}]}]},"__jeliElse1":{"type":1,"name":"ul","index":1,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"todo-list"},"children":[{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"li","index":1,"isc":false,"attr":{"_jeli-v4upfz":true},"context":{"todo":"$context","idx":"index"},"attr$":{"class":{"prop":{"type":"obj","expr":{"done":["todo","done"],"editing":{"type":"bin","left":"editingIndex","ops":"===","right":"idx"}}},"once":false}},"children":[{"type":8,"name":"##","text":"if","templates":{"if":{"type":1,"name":"#","index":1,"isc":false,"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"edit-input","autofocus":""},"attr$":{"value":{"prop":"editingText","once":false}},"events":[{"name":"input","value":[{"type":"asg","left":"editingText","right":["$event","target","value"]}]},{"name":"keyup","value":[{"type":"call","args":["$event","idx"],"fn":"onEditKeyUp"}]},{"name":"blur","value":[{"type":"call","args":["idx"],"fn":"saveEdit"}]}]}]},"ifElse":() => _GT('__jeliElse0', null)},"props":{"if":{"prop":{"type":"bin","left":"editingIndex","ops":"===","right":"idx"}},"ifElse":"__jeliElse0"},"providers":[common.IfDirective]},{"type":1,"name":"button","index":4,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"icon-btn","title":"Remove"},"events":[{"name":"click","value":[{"type":"call","args":["idx"],"fn":"removeTodo"}]}],"children":[{"type":3,"ast":["✕"]}]}]}},"props":{"forOf":{"prop":"visibleTodos"}},"providers":[common.ForDirective]}],"refId":"__jeliElse1"},"__jeliElse2":{"type":1,"name":"#","index":6,"isc":false,"refId":"__jeliElse2","children":[{"type":1,"name":"div","index":1,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"todo-filters"},"children":[{"type":1,"name":"button","index":1,"isc":false,"attr":{"_jeli-v4upfz":true},"attr$":{"class":{"prop":{"type":"obj","expr":{"active":{"type":"bin","left":"filter","ops":"===","right":{"type":"raw","value":"all"}}}},"once":false}},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"all"}],"fn":"setFilter"}]}],"children":[{"type":3,"ast":["All"]}]},{"type":1,"name":"button","index":3,"isc":false,"attr":{"_jeli-v4upfz":true},"attr$":{"class":{"prop":{"type":"obj","expr":{"active":{"type":"bin","left":"filter","ops":"===","right":{"type":"raw","value":"active"}}}},"once":false}},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"active"}],"fn":"setFilter"}]}],"children":[{"type":3,"ast":["Active"]}]},{"type":1,"name":"button","index":5,"isc":false,"attr":{"_jeli-v4upfz":true},"attr$":{"class":{"prop":{"type":"obj","expr":{"active":{"type":"bin","left":"filter","ops":"===","right":{"type":"raw","value":"completed"}}}},"once":false}},"events":[{"name":"click","value":[{"type":"call","args":[{"type":"raw","value":"completed"}],"fn":"setFilter"}]}],"children":[{"type":3,"ast":["Completed"]}]}]},{"type":8,"name":"##","text":"if","templates":{"if":{"type":1,"name":"#","index":3,"isc":false,"children":[{"type":1,"name":"p","index":1,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"empty-state"},"children":[{"type":3,"ast":["No ${0} todos.",[["${0}",{"prop":"filter"}]],false]}]}]},"ifElse":() => _GT('__jeliElse1', null)},"props":{"if":{"prop":{"type":"una","ops":"!","args":["visibleTodos","length"]}},"ifElse":"__jeliElse1"},"providers":[common.IfDirective]},{"type":1,"name":"footer","index":6,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"todo-footer"},"children":[{"type":1,"name":"span","index":1,"isc":false,"attr":{"_jeli-v4upfz":true},"children":[{"type":3,"ast":["${0} item(s) left",[["${0}",{"prop":"remaining"}]],false]}]},{"type":8,"name":"##","text":"if","templates":{"if":{"type":1,"name":"#","index":3,"isc":false,"children":[{"type":1,"name":"button","index":1,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"link-btn"},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clearCompleted"}]}],"children":[{"type":3,"ast":["Clear completed"]}]}]}},"props":{"if":{"prop":{"type":"bin","left":"remaining","ops":"!==","right":["todos","length"]}}},"providers":[common.IfDirective]}]}]}}[id], mtl); return core.ViewParser.jit(viewRef, [{"type":1,"name":"div","index":0,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"todo-app"},"children":[{"type":1,"name":"header","index":1,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"todo-header"},"children":[{"type":1,"name":"h1","index":1,"isc":false,"attr":{"_jeli-v4upfz":true},"children":[{"type":3,"ast":["${0}",[["${0}",{"prop":"pageHeading"}]],false]}]},{"type":1,"name":"p","index":3,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"subtitle"},"children":[{"type":3,"ast":["            A small example app built with "]},{"type":1,"name":"a","index":1,"isc":false,"attr":{"_jeli-v4upfz":true,"href":"https://github.com/gojecks/jeli-js","target":"_blank","rel":"noopener"},"children":[{"type":3,"ast":["jeli"]}]},{"type":3,"ast":[" -            see the "]},{"type":1,"name":"a","index":3,"isc":false,"attr":{"_jeli-v4upfz":true,"href":"../../guide/"},"children":[{"type":3,"ast":["guide"]}]},{"type":3,"ast":[" for how it's put together.        "]}]}]},{"type":1,"name":"form","index":3,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"todo-form"},"events":[{"name":"submit","value":[{"type":"call","args":[],"fn":"addTodo"}]}],"children":[{"type":1,"name":"input","index":1,"isc":false,"attr":{"_jeli-v4upfz":true,"placeholder":"What needs doing?","autofocus":""},"attr$":{"value":{"prop":"description","once":false}},"events":[{"name":"input","value":[{"type":"asg","left":"description","right":["$event","target","value"]}]}]},{"type":1,"name":"button","index":3,"isc":false,"attr":{"_jeli-v4upfz":true,"type":"submit"},"children":[{"type":3,"ast":["Add"]}]}]},{"type":8,"name":"##","text":"if","templates":{"if":{"type":1,"name":"#","index":5,"isc":false,"children":[{"type":1,"name":"p","index":1,"isc":false,"attr":{"_jeli-v4upfz":true,"class":"empty-state"},"children":[{"type":3,"ast":["Nothing to do yet - add your first todo above."]}]}]},"ifElse":_GT('__jeliElse2', null)},"props":{"if":{"prop":{"type":"una","ops":"!","args":["todos","length"]}},"ifElse":"__jeliElse2"},"providers":[common.IfDirective]},{"type":1,"name":"record-list","index":8,"isc":true,"attr":{"_jeli-v4upfz":true},"providers":[RecordListElement]}]}], {}); };/** template loader **/
+__required.r(exports, 'AppRootElement', AppRootElement);
 
 },
-1176 : (module, exports, __required, global) => {
+1178 : (module, exports, __required, global) => {
 "use strict";
-__required.r(exports, 'AppModule', () => AppModule);
-var RouterPageElement = __required(1171, 'RouterPageElement');
-var CalculatorComponent = __required(1170, 'CalculatorComponent');
-var AppRootElement = __required(1175, 'AppRootElement');
-var ItemList = __required(1174, 'ItemList');
-var TestPlaceElement = __required(1173, 'TestPlaceElement');
-var AppRouteModule = __required(1172, 'AppRouteModule');
-var http = __required(1168);
-var HttpModule = http.HttpModule;
-var form = __required(1167);
-var FormModule = form.FormModule;
-var datetime = __required(1145);
-var DateTimeModule = datetime.DateTimeModule;
-var common = __required(1144);
-var CommonModule = common.CommonModule;
+const common = __required(1146);
+const core = __required(1145);
+/** compiled RecordListElement **/
+
+class RecordListElement {
+    constructor() {
+        this.records = [
+            {
+                id: 1,
+                name: 'Alpha'
+            },
+            {
+                id: 2,
+                name: 'Bravo'
+            },
+            {
+                id: 3,
+                name: 'Charlie'
+            }
+        ];
+    }
+    addRecord() {
+        const id = this.records.length ? this.records[this.records.length - 1].id + 1 : 1;
+        this.records.push({
+            id,
+            name: 'Record ' + id
+        });
+    }
+    clearRecords() {
+        this.records = [];
+    }
+}
+
+RecordListElement.ctors = {
+    selector: 'record-list'
+};
+
+RecordListElement.view = /** jeli template **/ (viewRef) => { 'use strict'; var _GT = (id, mtl) => core.ViewParser.$({}[id], mtl); return core.ViewParser.jit(viewRef, [{"type":1,"name":"div","index":0,"isc":false,"attr":{"_jeli-658yzr":true,"class":"record-list"},"children":[{"type":1,"name":"h2","index":1,"isc":false,"attr":{"_jeli-658yzr":true},"children":[{"type":3,"ast":["*for / *if directive check"]}]},{"type":1,"name":"div","index":3,"isc":false,"attr":{"_jeli-658yzr":true,"class":"record-actions"},"children":[{"type":1,"name":"button","index":1,"isc":false,"attr":{"_jeli-658yzr":true},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"addRecord"}]}],"children":[{"type":3,"ast":["Add record"]}]},{"type":1,"name":"button","index":3,"isc":false,"attr":{"_jeli-658yzr":true},"events":[{"name":"click","value":[{"type":"call","args":[],"fn":"clearRecords"}]}],"children":[{"type":3,"ast":["Clear records"]}]}]},{"type":8,"name":"##","text":"if","templates":{"if":{"type":1,"name":"p","index":5,"isc":false,"attr":{"_jeli-658yzr":true,"class":"empty-state"},"children":[{"type":3,"ast":["No records yet."]}]}},"props":{"if":{"prop":{"type":"una","ops":"!","args":["records","length"]}}},"providers":[common.IfDirective]},{"type":8,"name":"##","text":"if","templates":{"if":{"type":1,"name":"ul","index":7,"isc":false,"attr":{"_jeli-658yzr":true},"children":[{"type":8,"name":"##","text":"for","templates":{"for":{"type":1,"name":"li","index":1,"isc":false,"attr":{"_jeli-658yzr":true},"context":{"record":"$context","key":"index"},"children":[{"type":3,"ast":["            ${0}: ${1}        ",[["${0}",{"prop":"key"}],["${1}",{"prop":["record","name"]}]],false]}]}},"props":{"forOf":{"prop":"records"}},"providers":[common.ForDirective]}]}},"props":{"if":{"prop":["records","length"]}},"providers":[common.IfDirective]}]}], {}); };/** template loader **/
+__required.r(exports, 'RecordListElement', RecordListElement);
+
+},
+1179 : (module, exports, __required, global) => {
+"use strict";
+const RecordListElement = __required(1178, 'RecordListElement');
+const RouterPageElement = __required(1173, 'RouterPageElement');
+const CalculatorComponent = __required(1172, 'CalculatorComponent');
+const AppRootElement = __required(1177, 'AppRootElement');
+const ItemList = __required(1176, 'ItemList');
+const TestPlaceElement = __required(1175, 'TestPlaceElement');
+const AppRouteModule = __required(1174, 'AppRouteModule');
+const http = __required(1170);
+const HttpModule = http.HttpModule;
+const form = __required(1169);
+const FormModule = form.FormModule;
+const datetime = __required(1147);
+const DateTimeModule = datetime.DateTimeModule;
+const common = __required(1146);
+const CommonModule = common.CommonModule;
 /** compiled AppModule **/
-var AppModule = function(){
-"use strict";
 
 function AppModule() {
 }
@@ -8647,8 +9347,7 @@ AppModule.fac = () =>/** bootstrap module**/[
     HttpModule,
     AppRouteModule
 ].forEach(m => { if(!m.k && typeof m == 'function') return (m.fac && m.fac(), new m(), m.k = 1); });
-;
-return AppModule;
-}();
+
+__required.r(exports, 'AppModule', AppModule);
 
 }}, this));

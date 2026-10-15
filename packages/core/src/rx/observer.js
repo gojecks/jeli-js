@@ -14,7 +14,8 @@ export class Observer {
      */
     subscribe(callback) {
         var self = this, bindingIdx = this.bindingIdx++;
-        this.retry = true;
+        // only matters mid-notify; unconditional was leaving retry stuck true, forcing a redundant pass on every later notifyAllObservers() call
+        if (this.$notifyInProgress) this.retry = true;
         this._entries.set(bindingIdx, {
             handler: callback,
             state: false

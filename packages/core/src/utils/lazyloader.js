@@ -148,7 +148,11 @@ export class LazyLoader {
             element.onload = function () {
                 resolved++;
                 triggerCallack(filePath);
-                element.parentNode.removeChild(element);
+                // removing a <link> after load un-applies its stylesheet immediately - only <script>
+                // is safe to remove here, its effects already ran and persist without the element
+                if (element.tagName === 'SCRIPT') {
+                    element.parentNode.removeChild(element);
+                }
             };
 
             element.onerror = element.onabort = function () {
@@ -176,6 +180,83 @@ export class LazyLoader {
 
         // trigger already resolved
         _triggerImmediately.forEach(triggerCallack);
+    }
+
+    /**
+     * Resolves ES module(s) via dynamic `import()`, as an alternative to
+     * `_resolve()`'s `<script>`-tag injection - lets a real ES-module build
+     * chunk load through the platform's own module loader instead of a
+     * runtime-injected `<script>` tag. Shares `_resolve()`'s
+     * `lazyLoaderCachedPaths` cache and per-path callback-queue semantics
+     * (a repeat call for an already-resolved path replays the cached
+     * result instead of re-importing; the callback only fires once every
+     * path in this call has settled), so existing callback-style
+     * `LazyLoader` consumers can adopt this without changing how they read
+     * the result - `callback({ failed, resolved, allResolved, modules })`,
+     * `modules` being `{ [url]: <the imported module namespace> }`.
+     * @param {*} filePaths - a module specifier, or an array of them
+     * @param {*} callback
+     */
+    static resolveModule(filePaths, callback) {
+        if (typeof callback !== 'function') {
+            callback = function () { };
+        }
+
+        var paths = Array.isArray(filePaths) ? filePaths : [filePaths];
+        var totalFiles = paths.length, resolved = 0, failed = 0;
+        var modules = {};
+        var _triggerImmediately = [];
+
+        function triggerCallback(url) {
+            var allResolved = (totalFiles == (resolved + failed));
+            if (allResolved) {
+                paths.forEach(function (path) {
+                    var cached = lazyLoaderCachedPaths.get(path);
+                    if (!cached) return;
+                    cached.resolved = true;
+                    while (cached.callbacks.length) {
+                        var _callback = cached.callbacks.shift();
+                        _callback({ failed, resolved, allResolved, modules });
+                    }
+                });
+            }
+        }
+
+        paths.forEach(function (url) {
+            if (!url || lazyLoaderCachedPaths.has(url)) {
+                var cached = lazyLoaderCachedPaths.get(url);
+                if (cached) {
+                    cached.callbacks.push(callback);
+                    if (cached.resolved) {
+                        resolved++;
+                        if (cached.module) modules[url] = cached.module;
+                        if (!_triggerImmediately.includes(url)) _triggerImmediately.push(url);
+                    }
+                }
+                return;
+            }
+
+            lazyLoaderCachedPaths.set(url, { callbacks: [callback], resolved: false, module: null });
+            import(/* @vite-ignore */ url).then(function (mod) {
+                resolved++;
+                modules[url] = mod;
+                var cached = lazyLoaderCachedPaths.get(url);
+                if (cached) cached.module = mod;
+                triggerCallback(url);
+            }).catch(function () {
+                // flush this path's callback queue (triggerCallback) *before*
+                // deleting its cache entry - deleting first would wipe the
+                // queued callbacks (including this call's own `callback`)
+                // before they ever got a chance to fire, exactly the bug
+                // that shipped here first: matches the order _resolve()'s
+                // onerror handler already uses for the same reason.
+                failed++;
+                triggerCallback(url);
+                lazyLoaderCachedPaths.delete(url);
+            });
+        });
+
+        _triggerImmediately.forEach(triggerCallback);
     }
 
     static mimeType(type) {

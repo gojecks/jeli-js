@@ -9,7 +9,7 @@ export function InterceptorResolver(interceptorToken, locals) {
     var interceptors = Inject(interceptorToken);
     return new Promise(function(resolve, reject) {
         if (!interceptors || !interceptors.length) {
-            return resolve();
+            return resolve(locals);
         }
 
         var len = 0;
@@ -23,7 +23,7 @@ export function InterceptorResolver(interceptorToken, locals) {
             if (interceptor) {
                 interceptor.resolve(locals, next, reject);
             } else {
-                resolve();
+                resolve(locals);
             }
         }
 

@@ -49,8 +49,8 @@ class staticInjectionTokenHandlers{
     }
 
     static ContentHostRef(context){
-        const componentRef = ComponentRef.get(context.injectors.ElementRef.contentHostRefId);
-       return componentRef.componentInstance;
+        const componentRef = context.injectors.ElementRef.contentHostRef;
+        return componentRef && componentRef.componentInstance;
     }
     /**
      * Used  to retrieve host dom nativeElement, for Element and Directives

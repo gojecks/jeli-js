@@ -30,7 +30,7 @@ export class AttributeAppender {
      * @returns 
      */
     static setValue(nativeElement, prop, value, canRemoveAttr) {
-        var elementValue = nativeElement.getAttribute(prop);
+        const elementValue = nativeElement.getAttribute(prop);
         if (elementValue === value) return;
         if (canRemoveAttr && !value) {
             nativeElement.removeAttribute(prop);
@@ -40,7 +40,7 @@ export class AttributeAppender {
     }
 
     static byType(type, nativeElement, value, template) {
-        var types = {
+        const types = {
             style: () => {
                 if (isobject(value)) {
                     ElementStyle(nativeElement, value);

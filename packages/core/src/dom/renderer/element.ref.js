@@ -22,17 +22,23 @@ class AbstractElementRef {
         this.children = new QueryList();
         // element ParentRef
         this.parent = parentRef;
-        // holds id to parentRefContext
-        // holds the referenceId to a parentRef
-        this.hostRefId = (parentRef ? (parentRef.isc ? parentRef.refId : (parentRef.hostRefId || this.refId)) : this.refId);
-        // hold the refId for actuall element where this content will be injected
-        // this is only set by content injection using <j-place/>
-        this.contentHostRefId = parentRef ? parentRef.contentHostRefId : null;
+        // nearest ancestor (or self) that is a real component - checks THIS element's own
+        // isc first (definition.isc, since this.isc isn't assigned until below), matching
+        // the original getter's `if (this.isc) return this;` before falling back to the parent
+        this.hostRef = definition.isc ? this : (parentRef ? parentRef.hostRef : this);
+        // the component this element's projected content actually originated from (<j-place/>)
+        this.contentHostRef = parentRef ? parentRef.contentHostRef : null;
+        // set below by ElementRef's constructor when definition.isc
+        this.componentRef = null;
         this.tagName = (!definition.fromDOM ? definition.name : this.nativeElement.localName).toLowerCase();
         this.hasContext = (!!definition.context || (!definition.isc && parentRef && parentRef.hasContext));
         this.type = definition.type;
         this.attr = definition.attr;
         this.isc = definition.isc;
+        // SSR hydration (Phase 3) - see custom.dom.js's CompileNativeElement
+        // and dom/renderer/index.js's createOrAdoptElement, the two places
+        // that set this on a definition
+        if (definition.hydrate) this._hydrate = true;
 
         if (definition.providers) {
             this.providers = definition.providers;
@@ -52,8 +58,8 @@ class AbstractElementRef {
                     // template context
                     if (localVariables) return localVariables;
                     // component context or custom context
-                    if (ComponentRef.has(this.refId))
-                        return ComponentRef.get(this.refId).context;
+                    if (this.componentRef)
+                        return this.componentRef.context;
                     // parent context
                     return this.parent && this.parent.context;
                 },
@@ -73,20 +79,13 @@ class AbstractElementRef {
     }
 
     get componentInstance() {
-        const hostElement = ComponentRef.get(this.refId, this.hostRefId);
-        return hostElement.componentInstance;
+        const componentRef = this.componentRef || (this.hostRef && this.hostRef.componentRef);
+        return componentRef && componentRef.componentInstance;
     }
 
     get changeDetector() {
-        const hostElement = ComponentRef.get(this.refId, this.hostRefId);
-        return hostElement.changeDetector;
-    }
-
-    get hostRef() {
-        if (this.isc)
-            return this;
-
-        return this.parent && this.parent.hostRef;
+        const componentRef = this.componentRef || (this.hostRef && this.hostRef.componentRef);
+        return componentRef && componentRef.changeDetector;
     }
 
     get nativeNode() {
@@ -120,8 +119,12 @@ export class ElementRef extends AbstractElementRef{
         this._lcmp = lcmp;
         // check if element is custom element
         if (definition.isc) {
-            // create the element Observer
-            ComponentRef.create(this.refId, definition.fromDOM ? 1 : parent && parent.hostRef.refId);
+            this.componentRef = new ComponentRef();
+            // nearest ancestor component, if any, for the change-detection cascade
+            const parentComponentRef = parent && parent.hostRef && parent.hostRef.componentRef;
+            if (parentComponentRef) {
+                this.componentRef.linkParent(parentComponentRef);
+            }
         }
 
         // definition.attrObservers

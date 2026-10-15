@@ -46,19 +46,19 @@ export class AbstractObserver {
             return subscriptions.length > 0;
         };
     }
-    next(value) {
+    next(...values) {
         this._forEach(function (subscription) {
-            subscription.notify(SubscriptionStates.onCompleted, value);
+            subscription.notify(SubscriptionStates.onSuccess, values);
         });
     }
     error(errorObject) {
         this._forEach(function (subscription) {
-            subscription.notify(SubscriptionStates.onError, errorObject);
+            subscription.notify(SubscriptionStates.onError, [errorObject]);
         });
     }
     completed() {
         this._forEach(function (subscription) {
-            subscription.notify(SubscriptionStates.onCompleted);
+            subscription.notify(SubscriptionStates.onCompleted, []);
         });
     }
     destroy() {

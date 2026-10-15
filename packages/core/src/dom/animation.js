@@ -66,23 +66,29 @@ function getAttrFx(element, show){
 }
 
 /**
- * 
- * @param {*} element 
- * @param {*} styles 
- * @param {*} speed 
- * @param {*} callback 
+ *
+ * @param {*} element
+ * @param {*} styles
+ * @param {*} speed
+ * @param {*} callback
+ * @param {*} [easing] name of an FX.easing entry (linear/quadratic/swing/
+ *  circ/back/bounce/elastic) - defaults to 'swing' (the only easing this
+ *  function ever actually applied before this parameter existed; FX.easing's
+ *  other 6 entries were fully implemented but unreachable from any public
+ *  call site). An unrecognized name also falls back to 'swing', same as
+ *  omitting it.
  */
-export function animate(element, styles, speed, callback) {
+export function animate(element, styles, speed, callback, easing) {
     animationInterval({
         duration: speed,
         delta: function (progress) {
-            return FX.easing.swing(progress);
+            return (FX.easing[easing] || FX.easing.swing)(progress);
         },
         complete: callback || function () { },
         step: function (delta) {
             if (typeof styles == 'function')
                 styles(delta);
-            else 
+            else
                 for (var prop in styles) {
                     element.style[prop] = Math.floor(styles[prop] * delta);
                 };

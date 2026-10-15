@@ -1,114 +1,62 @@
-<nav class="navbar navbar-inverse navbar-static-top">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <a class="navbar-brand" href="#">
-                Todo Application
-              </a>
-    </div>
-  </div>
-</nav>
+<div class="todo-app">
+    <header class="todo-header">
+        <h1>${pageHeading}</h1>
+        <p class="subtitle">
+            A small example app built with <a href="https://github.com/gojecks/jeli-js" target="_blank" rel="noopener">jeli</a> -
+            see the <a href="../../guide/">guide</a> for how it's put together.
+        </p>
+    </header>
 
-<!-- <div class="container">
-  <div class="row">
-    <div class="col-sm-6 col-sm-offset-3">
-      <div class="btn btn-group">
-        <button @click="generateMock(1)" class="btn btn-primary btn-small">Dynamic Add</button>
-        <button @click="todos = [];removeItemCount=0" class="btn btn-danger btn-small">Empty</button>
-        <button @click="todos = []; generateMock(10)" class="btn btn-primary btn-small">AddMore</button>
-      </div>
-      <div class="panel panel-primary">
-        <div class="panel-heading">
-          <form @submit="addTodo()">
-            <input type="text" @{:model}="todoDescription" class="form-control">
-          </form>
+    <form class="todo-form" @submit="addTodo()">
+        <input
+            {value}="description"
+            @input="description = $event.target.value"
+            placeholder="What needs doing?"
+            autofocus>
+        <button type="submit">Add</button>
+    </form>
+
+    @if (!todos.length) {
+        <p class="empty-state">Nothing to do yet - add your first todo above.</p>
+    } @else {
+        <div class="todo-filters">
+            <button {class}="{active: filter === 'all'}" @click="setFilter('all')">All</button>
+            <button {class}="{active: filter === 'active'}" @click="setFilter('active')">Active</button>
+            <button {class}="{active: filter === 'completed'}" @click="setFilter('completed')">Completed</button>
         </div>
-        <ul class="list-group">
-          <li class="list-group-item"><strong>Todo Items: ${todos.length -  removeItemCount}</strong>
-            <div class="pull-right"><strong>Marked as done: ${removeItemCount}</strong></div>
-          </li>
-          <li *for="todo in todos; idx=index" class="list-group-item">
-            <div class="row">
-              <div class="col-sm-1">
-                <input type="checkbox" {:model}="todo.done" @modelChange="markAsRemoved($event, todo)">
-              </div>
-              <div class="col-sm-8">
-                <span {style}="{'text-decoration': todo.done ? 'line-through' : 'none'}">
-                                        ${todo.description}
-                                    </span>
-              </div>
-              <div class="col-sm-3">
-                <button class="btn btn-primary btn-sm pull-right" @click="todo.addDescription = !todo.addDescription">
-                                      ${(todo.addDescription?'Done':'Edit')}
-                                    </button>
-                <button @click="removeTodo(idx)">Remove</button>
-              </div>
 
-            </div>
-            <h5 *if="!todo.addDescription; else as textArea">
-              <p class="alert alert-info"> ${todo.details} </p>
-            </h5>
-            <j-template #textArea>
-              <div class="form-group">
-                <textarea @{:model}="todo.details" class="form-control"></textarea>
-              </div>
-            </j-template>
-          </li>
-          <li *if="!todos.length" class="list-group-item">No todos.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div> -->
+        @if (!visibleTodos.length) {
+            <p class="empty-state">No ${filter} todos.</p>
+        } @else {
+            <ul class="todo-list">
+                @for (todo of visibleTodos; idx = index) {
+                    <li {class}="{done: todo.done, editing: editingIndex === idx}">
+                        @if (editingIndex === idx) {
+                            <input
+                                class="edit-input"
+                                {value}="editingText"
+                                @input="editingText = $event.target.value"
+                                @keyup="onEditKeyUp($event, idx)"
+                                @blur="saveEdit(idx)"
+                                autofocus>
+                        } @else {
+                            <input type="checkbox" {checked}="todo.done" @click="toggleDone(idx)">
+                            <span class="todo-text" @dblclick="startEdit(idx)">${todo.description}</span>
+                            <button class="icon-btn" @click="startEdit(idx)" title="Edit">✎</button>
+                        }
+                        <button class="icon-btn" @click="removeTodo(idx)" title="Remove">✕</button>
+                    </li>
+                }
+            </ul>
+        }
 
-<!-- <div>
-  <h5>Attr-Selected</h5>
-  <select>
-    <option *for="i in [0,1,2,4]" attr-selected="i==1">${i}</option>
-  </select>
+        <footer class="todo-footer">
+            <span>${remaining} item(s) left</span>
+            @if (remaining !== todos.length) {
+                <button class="link-btn" @click="clearCompleted()">Clear completed</button>
+            }
+        </footer>
+    }
+
+    <record-list></record-list>
 </div>
-<test-place #testPlace {options}="[{class:'visible'}]">
-  <j-fragment modal-body>
-    <input type="checkbox" @{:model}="test">
-    <div>
-      <h5>Attr-Value</h5>
-      <input type="text" {attr-value}="test" attr-readonly="true">
-    </div>
-    <h5>Attr-Style (background)</h5>
-    <div {attr-style}="{background:test?'#fff':'#000'}">I am a test</div>
-    <div>
-      <h5>Attr-innerHTML</h5>
-      <textarea @{:model}="html"></textarea>
-      <div {innerHTML}="html"></div>
-    </div>
-    <div {:switch}="test">
-      <h5 *switchCase="true">I am ${test} case</h5>
-      <h4 *switchDefault>I am default switch element</h4>
-    </div>
-  </j-fragment>
-</test-place> -->
-<input type="checkbox" @{:model}="test" attr-checked="true">
-<div *if="test; else as fallback">I am Test Condition</div>
-<div {:jClass}="test?'visible':'hidden'">Class test</div>
-<j-template #fallback>
-  <div *for="i in [0,1,2,3]">Testing_${i}</div>
-</j-template>
-<div {:switch}="!test">
-  <h5 *switchCase="true">I am ${test} case</h5>
-  <test-place *switchDefault>I am default switch element</test-place>
-</div>
-<div *for="item in [{test:2}] | filter:{test:2}; trackBy as trackByFn" class="another">${:item | json}</div>
-
-Selected: ${valueBinding}
-<select @{:model}="valueBinding">
-  <option :option *for="opt in [1,2,3,4,5,6]" {value}="opt">${:opt}</option>
-</select> <br/> Selected: ${valueBinding2 | json}
-<select @{:model}="valueBinding2" multiple>
-  <option value="select_1">Select 1</option>
-  <option value="select_2">Select 2</option>
-  <option value="select_3">Select 3</option>
-</select>
-
-
-<!-- <a :go="welcome">Welcome Page</a> | <a :go="calculator">Calculator</a>
-<j-view ref="content"></j-view> -->
-<p>&copy; ${'' | dateTime:'YYYY'} FrontendOnly. All Rights Reserved </p>

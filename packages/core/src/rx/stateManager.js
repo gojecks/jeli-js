@@ -5,25 +5,10 @@
  * @returns 
  */
 export class StateManager {
-    constructor(current, callback, states) {
+    constructor(current, validator, states) {
         this.current = (current || '');
         this.states = states || [];
-        this.set = function (name) {
-            if (!validateAction(this.current, name) && this.states.length) {
-                this.current = name;
-                this.lastStateIndex = this.states.indexOf(name);
-            }
-        };
-
-        /**
-         *
-         * @param {*} current
-         * @param {*} next
-         * @returns
-         */
-        function validateAction(current, next) {
-            return (callback || function () { return false; })(current, next);
-        }
+        this.validator = validator || (() => false);
 
         /**
          * trigger the set method
@@ -38,6 +23,14 @@ export class StateManager {
     get isFirst() {
         return this.lastStateIndex < 1;
     }
+
+    set(state) {
+        const stateIndex = this.states.indexOf(state);
+        if (this.states.length && !this.validator(this.current, state, stateIndex > -1)) {
+            this.current = state;
+            this.lastStateIndex = stateIndex;
+        }
+    }
     
     pushStates(states) {
         this.states.push.apply(this.states, states);
@@ -46,7 +39,7 @@ export class StateManager {
         }
     }
     next() {
-        var next = this.lastStateIndex + 1;
+        const next = this.lastStateIndex + 1;
         if (this.states.length - 1 >= next) {
             this.set(this.states[next]);
         }
@@ -63,8 +56,3 @@ export class StateManager {
         return this.isState(state) ? 'active' : '';
     }
 }
-
-
-
-
-

@@ -2,7 +2,6 @@
 node_modules
 dist
 bundles
-test
 npm-debug.log
 .npmrc
 *.tgz

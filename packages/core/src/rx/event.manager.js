@@ -77,7 +77,7 @@ export class EventManager {
     unlink(eventName, index) {
         var eventListeners = this.get(eventName);
         if (eventListeners) {
-            eventListeners.splice(1, index);
+            eventListeners.splice(index, 1);
         }
     }
     /**

@@ -58,7 +58,7 @@ export class Subscription {
         for (var subscription of this.subscriptions) {
             var callback = subscription[stateId];
             if (callback && isfunction(callback)) {
-                callback(args);
+                callback.apply(null, args);
             }
         }
 

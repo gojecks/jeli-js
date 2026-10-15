@@ -8,6 +8,7 @@ import { ItemList } from './components/item-list/item-list';
 import { AppRootElement } from './app.component';
 import { CalculatorComponent } from './components/calculator/calculator';
 import { RouterPageElement } from './components/route-form-page/route-form-page.element';
+import { RecordListElement } from './components/record-list/record-list';
 
 
 jModule({
@@ -24,7 +25,8 @@ jModule({
         CalculatorComponent,
         TestPlaceElement,
         ItemList,
-        RouterPageElement
+        RouterPageElement,
+        RecordListElement
     ]
 })
 export function AppModule() {}

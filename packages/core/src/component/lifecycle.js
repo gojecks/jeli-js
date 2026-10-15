@@ -2,6 +2,49 @@ import { isobject, isequal, isfunction } from '@jeli/helpers';
 import { TemplateRef } from '../dom/renderer/templateref';
 import { staticInjectionToken } from './injectors';
 
+function hasPropertySetter(instance, property) {
+    for (let proto = instance; proto && proto !== Object.prototype; proto = Object.getPrototypeOf(proto)) {
+        const descriptor = Object.getOwnPropertyDescriptor(proto, property);
+        if (descriptor) return typeof descriptor.set === 'function';
+    }
+    return false;
+}
+
+/**
+ * SSR Phase 2 (data-fetching readiness signal) - see
+ * .claude/plans/greedy-singing-mist.md. `LifeCycle.trigger()` normally
+ * discards a lifecycle hook's return value entirely (fire-and-forget) -
+ * that stays true here by default (`_collectPromises === null`). A server
+ * render explicitly opts in via `enableLifecyclePromiseTracking()` before
+ * bootstrapping, so `didInit()`/etc. hooks that kick off async data
+ * fetching (returning a promise/thenable) get tracked, letting the render
+ * driver await them before serializing instead of shipping an empty/
+ * loading-state shell. Zero behavior change for the client path - nothing
+ * calls these unless explicitly opted in.
+ */
+var _collectPromises = null;
+
+export function enableLifecyclePromiseTracking() {
+    _collectPromises = [];
+}
+
+export function disableLifecyclePromiseTracking() {
+    _collectPromises = null;
+}
+
+/**
+ * Returns and clears the currently-pending thenables. Deliberately a
+ * drain (not a peek) - callers are expected to loop (drain, await, run
+ * change detection, drain again) since resolving one batch of data can
+ * itself trigger new lifecycle hooks (e.g. a *for/*if creating child
+ * components once data arrives) that register more.
+ */
+export function drainLifecyclePromises() {
+    var pending = _collectPromises || [];
+    if (_collectPromises) _collectPromises = [];
+    return pending;
+}
+
 /**
  * Jeli Component lifeCycle
  * didInit()
@@ -140,9 +183,12 @@ export class LifeCycle {
                 try {
                     const propValue = elementProps[name];
                     if (isobject(propValue)) {
-                        if (propValue.prop){
+                        // .compiledFn alone (no .prop) still means a filterModel binding - see catalogue [[jeli-js]] "Compiled event bindings"
+                        if (propValue.prop || propValue.compiledFn){
                             this.always = true;
-                            value = getFilteredTemplateValue(propValue, context, elementRef.parent.componentInstance);
+                            value = typeof propValue.compiledFn === 'function' ?
+                                propValue.compiledFn(context, elementRef.parent.componentInstance) :
+                                getFilteredTemplateValue(propValue, context, elementRef.parent.componentInstance);
                         } else if (propValue.type == 'raw'){
                             // ignore checking when value is raw
                             value = propValue.value;
@@ -173,8 +219,16 @@ export class LifeCycle {
      */
     setValue(property, value) {
         const hasProp = this.registeredProperty.hasOwnProperty(property);
-        const sameValue = isequal(this.componentInstance[property], value);
-        if (hasProp && sameValue) return;
+        const current = this.componentInstance[property];
+        if (hasProp && current === value) return;
+        if (hasProp && isequal(current, value)) {
+            // equal content but a different object: hand the component the live reference so its mutations reach the
+            // parent's object, without didChange or re-running a setter (those still fire only on real changes)
+            if (!hasPropertySetter(this.componentInstance, property)) {
+                this.componentInstance[property] = value;
+            }
+            return;
+        }
 
         if (this.propChanges === null) {
             this.propChanges = {};
@@ -204,7 +258,10 @@ export class LifeCycle {
     trigger(cycle, args) {
         const cycleId = LifeCycle.lifeCycleKeys[cycle];
         if (this.has(cycleId)) {
-            this.componentInstance[cycleId](args);
+            const result = this.componentInstance[cycleId](args);
+            if (_collectPromises && result && typeof result.then === 'function') {
+                _collectPromises.push(result);
+            }
         }
     }
 

@@ -5,7 +5,10 @@ export class PathStrategyService extends AbstractStrategy {
     }
     
     path(path) {
-        return path || location.pathname;
+        if (path) return path;
+        return this.locationService.locationContext
+            ? (this.locationService.locationContext.pathname || '/')
+            : location.pathname;
     }
 
     listenEvent(){

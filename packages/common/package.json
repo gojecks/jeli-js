@@ -3,10 +3,12 @@
   "version": "1.0.4-0",
   "description": "jeli-js common",
   "main": "public.api.js",
+  "types": "./index.d.ts",
   "files": [
     "bundles",
     "datetime",
-    "metadata.json"
+    "metadata.json",
+    "index.d.ts"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

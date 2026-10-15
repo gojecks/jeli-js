@@ -12,7 +12,7 @@ export function leapYear(year) {
  * @param {*} year 
  */
 export function getDays(month, year) {
-    var ar = [31, ((leapYear(year)) ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    const ar = [31, ((leapYear(year)) ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     // return number of days in the specified month (parameter)
     return ar[month];
 }

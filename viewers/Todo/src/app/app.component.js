@@ -1,92 +1,98 @@
-import { HttpService } from '@jeli/http';
+const STORAGE_KEY = 'jeli-todo-example';
+
 Element({
     selector: 'app-root',
     templateUrl: './app-root.html',
-    styleUrl: './app-root.css',
-    viewChild: ["testPlace=#testPlace", "model:jModel=#input"],
-    DI: [HttpService]
+    styleUrl: './app-root.css'
 })
-export function AppRootElement(http) {
-    this.valueBinding = 3;
-    this.test = true;
-    this.error = false;
-    this.keys = [2];
-    this.removeKey = function(key) {
-        this.keys.splice(key, 1);
-    };
-
-    this.selectItemTest = [];
-    for (var i = 0; i < 100; i++) {
-        this.selectItemTest.push({
-            label: "test_" + i,
-            value: i
-        });
+export class AppRootElement {
+    constructor() {
+        this.pageHeading = 'jeli Todos';
+        this.todos = loadTodos();
+        this.description = '';
+        this.filter = 'all'; // 'all' | 'active' | 'completed'
+        this.editingIndex = -1;
+        this.editingText = '';
     }
 
-    this.selectedItem = this.selectItemTest[30];
-
-    this.pageHeading = "My First Todo App";
-    this.todos = [];
-    this.removeItemCount = 0;
-    this.counter = 0;
-    this.todoDescription = "";
-
-    this.range = function(start, end) {
-        var value = [];
-        while (end > start) {
-            value.push(start);
-            start++;
-        }
-
-        return value;
-    };
-
-    this.didInit = function() {
-        console.log(this);
+    addTodo() {
+        const description = this.description.trim();
+        if (!description) return;
+        this.todos.push({ description, done: false });
+        this.description = '';
+        this.persist();
     }
 
-    this.print = function(list) {
-        console.log(list);
-    };
+    removeTodo(index) {
+        this.todos.splice(index, 1);
+        this.persist();
+    }
+
+    toggleDone(index) {
+        this.todos[index].done = !this.todos[index].done;
+        this.persist();
+    }
+
+    startEdit(index) {
+        this.editingIndex = index;
+        this.editingText = this.todos[index].description;
+    }
+
+    saveEdit(index) {
+        const text = this.editingText.trim();
+        if (text) this.todos[index].description = text;
+        this.editingIndex = -1;
+        this.persist();
+    }
+
+    cancelEdit() {
+        this.editingIndex = -1;
+    }
+
+    onEditKeyUp(event, index) {
+        if (event.key === 'Enter') this.saveEdit(index);
+        if (event.key === 'Escape') this.cancelEdit();
+    }
+
+    setFilter(filter) {
+        this.filter = filter;
+    }
+
+    clearCompleted() {
+        this.todos = this.todos.filter((todo) => !todo.done);
+        this.persist();
+    }
+
+    get visibleTodos() {
+        if (this.filter === 'active') return this.todos.filter((todo) => !todo.done);
+        if (this.filter === 'completed') return this.todos.filter((todo) => todo.done);
+        return this.todos;
+    }
+
+    get remaining() {
+        return this.todos.filter((todo) => !todo.done).length;
+    }
+
+    persist() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.todos));
+        } catch (e) { /* localStorage unavailable (e.g. private browsing) - not fatal */ }
+    }
 }
 
-AppRootElement.prototype.addTodo = function() {
-    if (this.todoDescription) {
-        this.todos.push({
-            description: this.todoDescription,
-            details: "",
-            done: false
-        });
-        this.todoDescription = "";
+function loadTodos() {
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : defaultTodos();
+    } catch (e) {
+        return defaultTodos();
     }
-};
+}
 
-AppRootElement.prototype.removeTodo = function(index) {
-    console.log('removing Todo:', index);
-    if (this.todos[index]) {
-        this.todos.splice(index, 1);
-    }
-};
-
-AppRootElement.prototype.markAsRemoved = function(done, todo) {
-    todo.done = done;
-    if (done) {
-        this.removeItemCount++;
-    } else if (this.removeItemCount > 0) {
-        this.removeItemCount--;
-    }
-};
-
-AppRootElement.prototype.generateMock = function(total) {
-    var data = [];
-    for (var i = 0; i < total; i++) {
-        data.push({
-            description: "Test_From_" + this.counter++,
-            done: false,
-            details: ""
-        });
-    }
-
-    this.todos = data;
-    data = null;
-};
+function defaultTodos() {
+    return [
+        { description: 'Learn jeli', done: true },
+        { description: 'Build something with @if / @for blocks', done: false },
+        { description: 'Ship it', done: false }
+    ];
+}

@@ -27,10 +27,8 @@ export class DatetimeService {
         //Returned Function accepts parameter date format
         //returns formated date
         this.format = function (date, format) {
-            var toFormat = this.timeConverter(date).flags;
-            return String(format).replace(dateFormatRegExp, function ($0) {
-                return $0 in toFormat ? toFormat[$0] : $0.slice(1, $0.length - 1);
-            });
+            const toFormat = this.timeConverter(date);
+            return toFormat && String(format).replace(dateFormatRegExp, ($0) => ($0 in toFormat.flags ? toFormat.flags[$0] : $0.slice(1, $0.length - 1)));
         };
     }
     /**
@@ -73,8 +71,8 @@ export class DatetimeService {
      */
     static staticDateTime(datetime) {
         datetime = (isNaN(Number(datetime)) ? datetime : Number(datetime));
-        var outputDate = (typeof datetime == 'number') ? new Date(datetime) : DateStringConverter(datetime);
-        var g = j => ((typeof j == 'number' && (j < 10)) ? '0' : '') + j;
+        const outputDate = (typeof datetime == 'number') ? new Date(datetime) : DateStringConverter(datetime);
+        const g = j => ((typeof j == 'number' && (j < 10)) ? '0' : '') + j;
         outputDate.current_time = [
             outputDate.getFullYear(),
             "-",
@@ -94,8 +92,7 @@ export class DatetimeService {
 
     static staticTimeConverter(dateToParse, context) {
         //dataToParse (Time) is undefined
-        if (!dateToParse)
-            dateToParse = DatetimeService.staticDateTime();
+        if (!dateToParse) dateToParse = DatetimeService.staticDateTime();
 
         var currentDateTime = DatetimeService.staticDateTime();
         var date2ParseObject = (dateToParse.current_time) ? dateToParse : DatetimeService.staticDateTime(dateToParse);
@@ -106,9 +103,16 @@ export class DatetimeService {
         var p = m => ((typeof m == 'number' && (m < 10)) ? '0' : '') + m;
 
         if (isNaN(date2ParseObject.getTime())) {
-            var f = n.replace(' ', 'T');
-            var r = n.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/), D = r[1] + '-' + p((r[2] - 1)) + '-' + r[3] + ' ' + r[4] + ':' + r[5] + ':' + r[6], date2ParseObject = new Date(Date.fromISO(f)), j = q.getTime();
-            x = new Date();
+            const f = dateToParse.replace(' ', 'T');
+            const r = dateToParse.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/);
+            if (r){
+                const D = r[1] + '-' + p((r[2] - 1)) + '-' + r[3] + ' ' + r[4] + ':' + r[5] + ':' + r[6];
+                date2ParseObject = new Date(Date.fromISO(f));
+                j = date2ParseObject.getTime();
+            } else {
+                console.warn('[Datetime] Invalid Date received', dateToParse);
+                return null;
+            }
         }
 
         const future = (j > l);
@@ -123,7 +127,7 @@ export class DatetimeService {
             minutes: Math.floor(futureDiff / 60000 ),
             hours: Math.floor(futureDiff / 3600000),
             weeks: Math.floor(days / 7),
-            days: days,
+            days,
             months: Math.floor(days / 30)
         };
 

@@ -1,2 +1,8 @@
-// @import "./styles/test-import.scss";
-// @import '../../../../common/bootstrap.css';
+// Base page styling only - the rest of the CSS custom properties (colors,
+// fonts, spacing) come from docs/css/docs.css, linked directly in
+// index.html so this demo matches the rest of the docs site.
+body {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}

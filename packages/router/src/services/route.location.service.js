@@ -7,6 +7,7 @@ import {
     ROUTE_EVENT_ENUMS,
     ROUTE_INTERCEPTOR,
     ROUTE_LOCATION_STRATEGY,
+    ROUTE_LOCATION_CONTEXT,
     getParentRoute,
     getRoute
 } from './utils';
@@ -16,11 +17,20 @@ import { RouteErrorEvent } from "../events/route-error.event";
 import { RouteEvent } from "../events/route.event";
 
 Service({
-    DI: [ViewHandler, ROUTE_LOCATION_STRATEGY]
+    DI: [ViewHandler, ROUTE_LOCATION_STRATEGY, ROUTE_LOCATION_CONTEXT]
 })
 export class LocationService {
-    constructor(viewHandler, locationStrategy) {
+    constructor(viewHandler, locationStrategy, locationContext) {
         this.viewHandler = viewHandler;
+        // server-render-only override, see ROUTE_LOCATION_CONTEXT's own doc
+        // comment (utils.js) - null on every client-side/real-browser path
+        this.locationContext = locationContext || null;
+        if (this.locationContext) {
+            // a fresh server render - routeConfig.isLoaded is a module-level
+            // flag that would otherwise make initializeRoute() a no-op on
+            // every render after the very first one in this process
+            routeConfig.isLoaded = false;
+        }
         this.strategy = new (locationStrategy || HashStrategyService)(this);
         this.lastVisited = '';
         this.previousState = null;
@@ -162,14 +172,29 @@ export class LocationService {
                         });
                     }
                     routeObj = null;
+                })
+                .catch(() => {
+                    // an interceptor called reject() (e.g. a guard redirecting
+                    // elsewhere via locals.redirect()) - reset transition state
+                    // instead of leaving it stuck on the blocked path, and avoid
+                    // an unhandled promise rejection on every blocked navigation
+                    if (!this.transitionState.transitioned) {
+                        Object.assign(this.transitionState, {
+                            inProgress: false,
+                            currentState: this.transitionState.previousState,
+                            stopped: false
+                        });
+                    }
+                    routeObj = null;
                 });
         }
     }
 
     getRootUrl() {
-        var rootUrl = document.location.protocol + '//' + (document.location.hostname || document.location.host);
-        if (document.location.port) {
-            rootUrl += ':' + document.location.port;
+        var loc = this.locationContext || document.location;
+        var rootUrl = loc.protocol + '//' + (loc.hostname || loc.host);
+        if (loc.port) {
+            rootUrl += ':' + loc.port;
         }
 
         // Return
@@ -239,10 +264,14 @@ export class LocationService {
         routeConfig.isLoaded = true;
     }
     search(query) {
+        if (this.locationContext) {
+            return this.locationContext.search = query;
+        }
         return window.location.search = query;
     }
     getSearchParams() {
-        return unserialize(window.location.search.substring(1));
+        var search = (this.locationContext || window.location).search || '';
+        return unserialize(search.substring(1));
     }
     /**
      * Method Name : $href
@@ -261,7 +290,11 @@ export class LocationService {
     subscribe(eventName, callback) {
         var eventList = Object.values(ROUTE_EVENT_ENUMS);
         if (eventList.includes(eventName)) {
-            return this.events.add(eventName, callback);
+            var events = this.events;
+            var index = events.add(eventName, callback);
+            return function unsubscribe() {
+                events.unlink(eventName, index);
+            };
         } else {
             console.error(eventName + ' does not exist, please use ' + eventList.join('|'));
             return null;

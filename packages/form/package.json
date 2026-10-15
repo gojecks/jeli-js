@@ -3,9 +3,11 @@
   "version": "1.0.3",
   "description": "jeli-js form",
   "main": "public.api.js",
+  "types": "./index.d.ts",
   "files": [
     "bundles",
-    "metadata.json"
+    "metadata.json",
+    "index.d.ts"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

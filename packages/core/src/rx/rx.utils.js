@@ -86,11 +86,31 @@ export function rxEvents(targetInstance, eventNames) {
 }
 
 /**
- * 
- * @param {*} operations 
- * @param {*} value 
- * @param {*} callback 
- * @returns 
+ * Subscribes to a Subject/Observer-style `source` and, on every emission,
+ * calls `changeDetector.manualCheck()` (bypasses the automatic-cascade
+ * gate, works even for a component in manual mode - see
+ * InternalChangeDetector.markAsManual()). Lets a component that's opted
+ * out of the default sweep still refresh correctly when the specific
+ * shared state it actually depends on changes, instead of relying on an
+ * unrelated trigger's cascade to reach it.
+ * @param {*} source - anything exposing .subscribe(fn) returning an unsubscribe fn (e.g. Subject)
+ * @param {*} changeDetector - the scoped changeDetector instance (DI: ['changeDetector'])
+ * @param {*} onNext - optional, called with the emitted value before the check runs
+ * @returns unsubscribe function
+ */
+export function rxWatch(source, changeDetector, onNext) {
+    return source.subscribe(function(value) {
+        if (onNext) onNext(value);
+        changeDetector && changeDetector.manualCheck();
+    });
+}
+
+/**
+ *
+ * @param {*} operations
+ * @param {*} value
+ * @param {*} callback
+ * @returns
  */
 export function rxLoop(operations, callback){
     return new Promise((resolve) => {

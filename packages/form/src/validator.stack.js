@@ -1,6 +1,6 @@
 import { isempty, isboolean, isequal } from '@jeli/helpers';
 
-var emptyCheck = value => [null, undefined, ""].includes(value);
+const emptyCheck = value => [null, undefined, ''].includes(value);
 /**
  * Core FormValidationStack
  */
@@ -21,7 +21,8 @@ export class FormValidationStack {
 
     static EMAILVALIDATION(value) {
         if(emptyCheck(value)) return true;
-        var regExp = "^(([\\w]+(\\.[\\w]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
+        // local part: RFC 5322 atext characters (e.g. first-last, name+tag) in dot-separated runs
+        var regExp = "^(([A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
         return FormValidationStack.PATTERN(value, regExp);
     }
 

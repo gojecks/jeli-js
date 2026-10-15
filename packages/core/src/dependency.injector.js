@@ -8,6 +8,27 @@ import { resolveClosureRef } from './utils/closure';
 var existingInstance = new Map();
 
 /**
+ * @internal
+ * devtools-only, opt-in singleton instantiation log (see utils/debugger.js's
+ * global.jeli.devtools). Off (null) by default - zero overhead/behavior
+ * change on the normal path when never enabled, same shape as
+ * component/lifecycle.js's enableLifecyclePromiseTracking().
+ */
+var singletonRegistry = null;
+
+export function enableSingletonTracking() {
+    singletonRegistry = new Map();
+}
+
+export function disableSingletonTracking() {
+    singletonRegistry = null;
+}
+
+export function getSingletonRegistry() {
+    return singletonRegistry;
+}
+
+/**
  *
  * @param {*} tokenName
  * @param {*} multiple
@@ -115,6 +136,7 @@ export function Inject(dep, localInjector) {
             instance = AutoWire(resolveClosureRef(dep), localInjector);
             if (!dep.ctors.noSingleton) {
                 dep.ctors.instance = instance;
+                if (singletonRegistry) singletonRegistry.set(dep, instance);
             }
         }
 

@@ -16,8 +16,8 @@ export class Subject {
     hasObservers() {
         return this._observer.hasObservers();
     }
-    next(value) {
-        this._observer.next(value);
+    next(...values) {
+        this._observer.next(...values);
     }
     error(error) {
         this._observer.error(error);

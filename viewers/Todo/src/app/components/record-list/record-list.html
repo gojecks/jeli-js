@@ -1,0 +1,15 @@
+<div class="record-list">
+    <h2>*for / *if directive check</h2>
+    <div class="record-actions">
+        <button @click="addRecord()">Add record</button>
+        <button @click="clearRecords()">Clear records</button>
+    </div>
+
+    <p class="empty-state" *if="!records.length">No records yet.</p>
+
+    <ul *if="records.length">
+        <li *for="record of records; key=index">
+            ${key}: ${record.name}
+        </li>
+    </ul>
+</div>

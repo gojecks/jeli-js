@@ -14,7 +14,7 @@ export class TimeAgoFilterFn {
     }
 
     compile(dateTime, fallback) {
-            if (!dateTime && fallback) return fallback;
-            return this.dateTimeFactory.timeConverter(dateTime).timeago;
+        if (!dateTime && fallback) return fallback;
+        return this.dateTimeFactory.timeConverter(dateTime)?.timeago || fallback;
     }
 }

@@ -36,6 +36,7 @@
     "figlet": "^1.2.0",
     "fs-extra": "~2.0.0",
     "inquirer": "^4.0.2",
+    "jsdom": "^24.0.0",
     "lodash": "^4.17.4",
     "minimist": "^1.2.0",
     "mocha": "^10.2.0",
@@ -43,7 +44,7 @@
     "touch": "^3.1.0"
   },
   "scripts": {
-    "test": "mocha './test/**/*.spec.js'",
+    "test": "mocha --node-option=import=./test/support/register-loader.mjs --node-option=experimental-vm-modules --ignore './test/router/**/*.spec.js' './test/**/*.spec.js' && mocha --node-option=import=./test/support/register-loader.mjs --node-option=experimental-vm-modules './test/router/**/*.spec.js'",
     "build:all": "node ./node_modules/@jeli/compiler-cli/bin/compiler.js --all",
     "release": "node scripts/release.js"
   },

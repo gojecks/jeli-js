@@ -7,6 +7,22 @@ export var ROUTE_INTERCEPTOR = new ProviderToken('RouteInterceptor', true);
  */
 export var ROUTE_LOCATION_STRATEGY = new ProviderToken('RouteLocationStrategy', false);
 
+/**
+ * Optional, server-render-only override for LocationService/strategy
+ * services' `document.location`/`window.location` reads - see
+ * route.location.service.js's `locationContext` usage. Register a plain
+ * `{ pathname, search, hash, protocol, hostname, host, port }`-shaped
+ * object via `ROUTE_LOCATION_CONTEXT.register({ value: ctx }, false)`
+ * (the `{value: ...}` wrapper and `persist: false` are required - see
+ * ProviderToken.resolve()/resolveTokenBase() in dependency.injector.js -
+ * `false` so a fresh context can be registered before every render instead
+ * of the first one winning forever) before `bootStrapApplication()`. Client
+ * apps never register this token, so `locationContext` is always `null`
+ * there and every read falls back to the real global exactly as before -
+ * zero behavior change for the browser path.
+ */
+export var ROUTE_LOCATION_CONTEXT = new ProviderToken('RouteLocationContext', false);
+
 export var staticRoutePrefix = '^';
 
 // default routeConfig
@@ -355,14 +371,15 @@ export function parseDelimeter() {
  * @param {*} params 
  */
 export function getRoute(routeName, params) {
-    var route = routeCollections[routeName];
-    if (!route) {
-        route = routeCollections[routeConfig.fallback.name] || null;
+    var route = routeCollections[routeName] || routeCollections[routeConfig.fallback.name] || null;
+    if (route) {
+        // patch params
+        patchParams(route, params || route.params);
+        var url = parseUrl(route.url, route.route.params);
+        return { route, url };
     }
-    // patch params
-    patchParams(route, params || route.params);
-    var url = parseUrl(route.url, route.route.params);
-    return { route, url };
+    
+    return {};
 }
 
 /**

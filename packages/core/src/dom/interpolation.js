@@ -1,6 +1,7 @@
 import { isobject, isequal, isboolean, isundefined, isnull, isstring, isarray, isnumber, isfunction } from '@jeli/helpers';
 import { errorBuilder } from '../utils/errorLogger';
 import { Inject } from '../dependency.injector';
+import { SCOPE_PARENT, LOCAL_SCOPE_TAG } from './renderer/utils';
 /**
  * 
  * @param {*} type 
@@ -97,7 +98,8 @@ function generateArguments(args, context, componentInstance, event) {
         } else if (isobject(node) && node.arg)
             return generateArguments(node.arg, context, componentInstance, event);
         else if (isstring(node))
-            return isequal(node, '$event') ? event : (context.hasOwnProperty(node) ? context[node] : componentInstance.hasOwnProperty(node) ? componentInstance[node] : node);
+            // `in` doesn't walk SCOPE_PARENT, so use resolveIdentifier instead
+            return isequal(node, '$event') ? event : resolveIdentifier(node, context, componentInstance, node);
 
         return resolveValueFromContext(node, context, componentInstance, event);
     }
@@ -120,24 +122,94 @@ function resolveValueFromContext(expression, context, componentInstance) {
     else if (expression === '$this')
         return componentInstance;
 
-    else if (isobject(context) && (expression in context))
-        return context[expression];
-    else if (isobject(componentInstance) && (expression in componentInstance))
-        return componentInstance[expression];
-
-    /**
-     * string type matcher
-     * example are .length
-     */
-    return context && context.hasOwnProperty(expression) ? context[expression] : null;
+    return resolveIdentifier(expression, context, componentInstance);
 }
 
 /**
- * 
- * @param {*} expression 
- * @param {*} context 
- * @param {*} componentInstance 
- * @param {*} event 
+ * Resolves a bare identifier: walks context's own props, then SCOPE_PARENT chain, then componentInstance. See catalogue [[jeli-js]] "*for row click-assignment".
+ * @param {string} name
+ * @param {*} context
+ * @param {*} componentInstance
+ */
+export function resolveIdentifier(name, context, componentInstance, notFoundValue = null) {
+    var scope = context;
+    // walk only genuine *for/*if row scopes (own-properties-only by design) via their explicit parent
+    while (scope !== null && typeof scope === 'object' && scope[LOCAL_SCOPE_TAG]) {
+        if (Object.prototype.hasOwnProperty.call(scope, name)) {
+            return scope[name];
+        }
+        scope = scope[SCOPE_PARENT];
+    }
+
+    // chain exhausted, or scope was never a local scope (componentInstance itself, or a
+    // resolved namespace segment) - normal `in` semantics, so a prototype getter is found too
+    if (scope !== null && typeof scope === 'object' && (name in scope)) {
+        return scope[name];
+    }
+
+    return (isobject(componentInstance) && (name in componentInstance)) ? componentInstance[name] : notFoundValue;
+}
+
+/**
+ * Resolves and invokes a no-namespace call by name. See .claude/notes catalogue [[jeli-js]] "Compiled event bindings".
+ * @param {string} name
+ * @param {Array} args
+ * @param {*} context
+ * @param {*} componentInstance
+ */
+export function resolveCall(name, args, context, componentInstance) {
+    var dcontext = (context && (name in context)) ? context : componentInstance;
+    var hasContext = !isnull(dcontext) && !isundefined(dcontext);
+    if (hasContext && isfunction(dcontext[name])) {
+        return dcontext[name].apply(dcontext, args);
+    }
+
+    return null;
+}
+
+/**
+ * Resolves and invokes a namespaced call (`a.b.fn(args)`). See catalogue [[jeli-js]] "Compiled event bindings".
+ * @param {Array<string>} namespaces
+ * @param {string} name
+ * @param {Array} args
+ * @param {*} context
+ * @param {*} componentInstance
+ */
+export function resolveNamespacedCall(namespaces, name, args, context, componentInstance) {
+    var dcontext = resolveContext(namespaces, context, componentInstance);
+    var hasContext = !isnull(dcontext) && !isundefined(dcontext);
+    if (hasContext && isfunction(dcontext[name])) {
+        return dcontext[name].apply(dcontext, args);
+    }
+
+    return null;
+}
+
+/**
+ * Resolves a call whose namespace root is `$event` (`$event.stopPropagation()`). See catalogue [[jeli-js]] "$event in compiled event bodies".
+ * @param {Array<string>} remainingNamespaces
+ * @param {string} name
+ * @param {Array} args
+ * @param {*} event
+ */
+export function resolveEventNamespacedCall(remainingNamespaces, name, args, event) {
+    var dcontext = remainingNamespaces.reduce(function (accum, property) {
+        return isnull(accum) || isundefined(accum) ? accum : accum[property];
+    }, event);
+    var hasContext = !isnull(dcontext) && !isundefined(dcontext);
+    if (hasContext && isfunction(dcontext[name])) {
+        return dcontext[name].apply(dcontext, args);
+    }
+
+    return null;
+}
+
+/**
+ *
+ * @param {*} expression
+ * @param {*} context
+ * @param {*} componentInstance
+ * @param {*} event
  */
 function parseObjectExpression(expression, context, componentInstance, event) {
     var internalParser = {
@@ -155,14 +227,15 @@ function parseObjectExpression(expression, context, componentInstance, event) {
          * a.b.c(args) || a(1)
          */
         call: function () {
-            var dcontext = context;
             if (expression.namespaces) {
-                dcontext = resolveContext(expression.namespaces, context, componentInstance);
-            } else {
-                dcontext = (dcontext && (expression.fn in dcontext) ? context : componentInstance);
+                var namespacedArgs = generateArguments(expression.args, context, componentInstance, event);
+                return resolveNamespacedCall(expression.namespaces, expression.fn, namespacedArgs, context, componentInstance);
             }
 
-            if (dcontext && isfunction(dcontext[expression.fn])) {
+            var dcontext = (context && (expression.fn in context) ? context : componentInstance);
+            // dcontext can be a valid falsy primitive (0/''/false), so only null/undefined excludes it
+            var hasContext = !isnull(dcontext) && !isundefined(dcontext);
+            if (hasContext && isfunction(dcontext[expression.fn])) {
                 var args = generateArguments(expression.args, context, componentInstance, event);
                 return dcontext[expression.fn].apply(dcontext, args);
             }
@@ -249,24 +322,29 @@ function parseObjectExpression(expression, context, componentInstance, event) {
  * @param {*} value 
  */
 function setModelValue(key, context, componentInstance, value) {
-    var modelContext = {};
-    if (isarray(key)) {
-        modelContext = resolveContext(key.slice(0, key.length - 1), context, componentInstance);
-        key = key[key.length - 1];
-    } else {
-        modelContext = (key in context) ? context : componentInstance;
+    const entries = !isarray(key) ? key.split('.') : key.concat();
+    let modelContext = (Object.is(context, componentInstance) ? componentInstance : (entries[0] in context ? context : componentInstance));
+    let property = entries.pop();
+    // array mapped key e.g test.key[idx]
+    if (isarray(property)){
+        property = resolveContext(property, context, componentInstance);
     }
 
-    if (modelContext) {
-        if (Array.isArray(key)) {
-            key = resolveContext(key, context, componentInstance);
-        }
-        modelContext[key] = value;
+    if(key.length){
+        modelContext = entries.reduce((accum, k) => {
+            if(!accum.hasOwnProperty(k)){
+                accum[k] = {};
+            }
+
+            return accum[k];
+        }, modelContext);
     }
 
-    // free memory
-    modelContext = null;
-
+    // set the value
+    if (modelContext){
+         modelContext[property] = value;
+    }
+    
     return value;
 }
 
@@ -285,7 +363,7 @@ function resolveContext(key, context, componentInstance, isEventType) {
 
         var componentEntry = idx ? null : componentInstance;
         if (Array.isArray(property)) {
-            var value = resolveValueFromContext(property, context, componentEntry);
+            const value = resolveValueFromContext(property, context, componentEntry);
             return accum && accum[value];
         }
         return resolveValueFromContext(property, accum, componentEntry);

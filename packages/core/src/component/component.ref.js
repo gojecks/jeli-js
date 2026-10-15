@@ -13,6 +13,16 @@ class InternalChangeDetector {
                 tick.apply(null, arguments);
             }
         };
+        /**
+         * bypasses the _changeDetectorState gate entirely (unlike
+         * detectChanges()/onlySelf(), which only run when state == 3) -
+         * for a manual-mode component's own explicit, deliberate
+         * self-trigger, e.g. from an rxWatch subscription callback.
+         * ignoreChild:false, ignoreParent:true - same scope as onlySelf().
+         */
+        this.manualCheck = function () {
+            tick.call(null, false, true);
+        };
 
         /**
          * @method tick
@@ -25,10 +35,10 @@ class InternalChangeDetector {
                 return;
             }
 
-            // trigger parent
-            var hasParent = (!context.parent || componentDebugContext.has(context.parent));
-            if (context.parent && !ignoreParent && hasParent) {
-                var parent = componentDebugContext.get(context.parent);
+            // trigger parent - null changeDetector means a stale/destroyed reference
+            var parent = context.parent;
+            var hasParent = (!parent || !!parent.changeDetector);
+            if (parent && !ignoreParent && hasParent) {
                 parent.changeDetector.detectChanges(true);
                 triggerChild(parent.child, []);
             }
@@ -45,9 +55,8 @@ class InternalChangeDetector {
              * @param {*} parentRef
              */
             function triggerChild(children, ignore) {
-                for (var refId of children) {
-                    if (!ignore.includes(refId) && componentDebugContext.has(refId) &&  hasParent) {
-                        var child = componentDebugContext.get(refId);
+                for (var child of children) {
+                    if (!ignore.includes(child) && child.changeDetector && hasParent) {
                         child.changeDetector.onlySelf();
                     }
                 }
@@ -71,24 +80,26 @@ class InternalChangeDetector {
     markAsOnce() {
         this._changeDetectorState = 2;
     }
+    /**
+     * opts this component out of the automatic cascade permanently -
+     * every existing trigger site's detectChanges()/onlySelf() becomes a
+     * no-op for this component, same as markAsChecked(), but (unlike
+     * markAsChecked()) manualCheck() still works, so the component can
+     * still refresh itself deliberately (e.g. via rxWatch) instead of
+     * being frozen entirely
+     */
+    markAsManual() {
+        this._changeDetectorState = 4;
+    }
 }
 
 
 
 
 
-/**
- * Variable for holding Component Context
- */
-var componentDebugContext = new Map();
-/**
- * 
- * @param {*} refId 
- * @param {*} context 
- */
+// held directly on its owning ElementRef (elementRef.componentRef), not a side registry keyed by id
 export class ComponentRef {
-    constructor(refId, context) {
-        this.componentRefId = refId;
+    constructor(context) {
         this.observables = new Observer();
         this.child = [];
         this.parent = null;
@@ -105,53 +116,29 @@ export class ComponentRef {
         return this.componentInstance;
     }
     get componentInstance() {
-        if (!this._componentInstance && this.parent && componentDebugContext.has(this.parent)) {
-            return componentDebugContext.get(this.parent).componentInstance;
+        if (!this._componentInstance && this.parent) {
+            return this.parent.componentInstance;
         }
 
         return this._componentInstance;
     }
-    
+
     set componentInstance(value) {
         this._componentInstance = value;
     }
     /**
-     *
-     * @param {*} refId
-     * @param {*} parentId
-     * @param {*} context
+     * links this componentRef under its parent's child list for the change-detection cascade
+     * @param {*} parentComponentRef
      */
-    static create(refId, parentId, context) {
-        var componentRef = componentDebugContext.get(refId);
-        if (!componentRef) {
-            componentRef = new ComponentRef(refId, context);
-            componentDebugContext.set(refId, componentRef);
-        } else {
-            // only update context if componentRef already exists
-            componentRef._context = context || null;
+    linkParent(parentComponentRef) {
+        if (parentComponentRef && parentComponentRef !== this) {
+            this.parent = parentComponentRef;
+            parentComponentRef.child.push(this);
         }
-
-        if (componentDebugContext.has(parentId) && (parentId != refId)) {
-            componentRef.parent = parentId;
-            // add child to parent
-            componentDebugContext.get(parentId).child.push(refId);
-        }
-        componentRef = null;
     }
-    /**
-     *
-     * @param {*} refId
-     * @returns
-     */
-    static get(refId, hostRefId) {
-        return componentDebugContext.get(refId) || componentDebugContext.get(hostRefId) || {};
-    }
-    static has(refId) {
-        return componentDebugContext.has(refId);
-    }
-    removeChild(refId) {
-        this.child.splice(this.child.indexOf(refId), 1);
-        componentDebugContext.delete(refId);
+    removeChild(componentRef) {
+        var idx = this.child.indexOf(componentRef);
+        if (idx > -1) this.child.splice(idx, 1);
     }
     updateModel(propName, value) {
         if (isobject(propName)) {
@@ -166,12 +153,10 @@ export class ComponentRef {
         return this;
     }
     destroy() {
-        if (!componentDebugContext.has(this.componentRefId)) return;
+        if (!this.changeDetector) return;
         this.changeDetector.markAsChecked();
-        // destroy observables
-        componentDebugContext.delete(this.componentRefId);
-        if (this.parent && componentDebugContext.has(this.parent)) {
-            componentDebugContext.get(this.parent).removeChild(this.componentRefId);
+        if (this.parent) {
+            this.parent.removeChild(this);
         }
         this._componentInstance = null;
         this._context = null;

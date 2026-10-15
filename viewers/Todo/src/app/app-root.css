@@ -1,0 +1,173 @@
+/* Reuses the CSS custom properties (--bg, --text, --brand, ...) defined in
+   docs/css/docs.css, linked from index.html - keeps this demo visually
+   consistent with the rest of the docs site, light/dark included. */
+
+.todo-app {
+    width: 100%;
+    max-width: 560px;
+    margin: 48px 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text, #1a1d23);
+}
+
+.todo-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.todo-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
+}
+.todo-header .subtitle {
+    color: var(--text-muted, #5b6270);
+    font-size: 0.92rem;
+    margin: 0;
+}
+.todo-header .subtitle a {
+    color: var(--brand, #7c3aed);
+    text-decoration: none;
+}
+.todo-header .subtitle a:hover {
+    text-decoration: underline;
+}
+
+.todo-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.todo-form input {
+    flex: 1;
+    padding: 11px 14px;
+    border-radius: var(--radius, 10px);
+    border: 1px solid var(--border, #e3e5e9);
+    background: var(--bg, #fff);
+    color: var(--text, #1a1d23);
+    font-size: 0.96rem;
+}
+.todo-form input:focus {
+    outline: none;
+    border-color: var(--brand, #7c3aed);
+}
+.todo-form button {
+    padding: 0 20px;
+    border-radius: var(--radius, 10px);
+    border: none;
+    background: var(--brand, #7c3aed);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+.todo-form button:hover {
+    background: var(--brand-dark, #6d28d9);
+}
+
+.todo-filters {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+.todo-filters button {
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border, #e3e5e9);
+    background: var(--bg, #fff);
+    color: var(--text-muted, #5b6270);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.todo-filters button.active {
+    color: var(--brand-dark, #6d28d9);
+    background: var(--brand-tint, #f3ecfd);
+    border-color: var(--brand, #7c3aed);
+}
+
+.todo-list {
+    list-style: none;
+    margin: 0 0 14px;
+    padding: 0;
+    border: 1px solid var(--border, #e3e5e9);
+    border-radius: var(--radius, 10px);
+    overflow: hidden;
+    box-shadow: var(--shadow, 0 1px 2px rgba(20, 20, 30, 0.04));
+}
+.todo-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg, #fff);
+    border-bottom: 1px solid var(--border, #e3e5e9);
+}
+.todo-list li:last-child {
+    border-bottom: none;
+}
+.todo-list li.done .todo-text {
+    text-decoration: line-through;
+    color: var(--text-muted, #5b6270);
+}
+.todo-list input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.todo-text {
+    flex: 1;
+    cursor: text;
+}
+.edit-input {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--brand, #7c3aed);
+    background: var(--bg, #fff);
+    color: var(--text, #1a1d23);
+    font-size: 0.95rem;
+}
+.edit-input:focus {
+    outline: none;
+}
+.icon-btn {
+    border: none;
+    background: none;
+    color: var(--text-muted, #5b6270);
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 4px 6px;
+    border-radius: 6px;
+    line-height: 1;
+}
+.icon-btn:hover {
+    color: var(--text, #1a1d23);
+    background: var(--bg-inset, #f1f2f5);
+}
+
+.todo-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-muted, #5b6270);
+    font-size: 0.88rem;
+}
+.link-btn {
+    border: none;
+    background: none;
+    color: var(--brand, #7c3aed);
+    cursor: pointer;
+    font-size: 0.88rem;
+    padding: 0;
+}
+.link-btn:hover {
+    text-decoration: underline;
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--text-muted, #5b6270);
+    padding: 32px 0;
+    font-size: 0.95rem;
+}

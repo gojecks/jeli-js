@@ -47,7 +47,7 @@ export function createCustomElement(elementConstructor, attributes) {
                 return this.nativeStrategyCompiler.getPropValue(props[1])
             },
             set: function (value) {
-                this.nativeStrategyCompiler.setPropValue(props[1], value);
+                this.nativeStrategyCompiler.setPropValue(props, value);
             },
             configurable: true,
             enumerable: true,

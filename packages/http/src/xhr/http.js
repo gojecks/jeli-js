@@ -3,96 +3,109 @@ import { inarray } from '@jeli/helpers';
 import { HttpRequestError } from '../http.error';
 import { HttpRequest } from '../http.request';
 import { HttpResponse } from '../http.response';
-import './utils';
-import { HTTP_INTERCEPTORS } from './utils';
+import { HTTP_INTERCEPTORS, parseJSON, isJSONResponse } from './utils';
 
-/**
- * 
- * @param {*} url 
- * @param {*} options 
- * @param {*} changeDetection 
- */
-function CoreHttp(url, options, changeDetection) {
-    var xhrPromise = new Subject();
-    var httpRequest = new HttpRequest(url, options);
-    var httpError = new HttpRequestError('');
-
+class HttpTransport {
     /**
-     * $httpProvider Interceptor
-     * Request Interceptor
-     **/
-    InterceptorResolver(HTTP_INTERCEPTORS, httpRequest)
-        .then(function(request) {
-            if (!request) {
-                httpError.setMessage('HTTP: Interceptor should return a value');
-                return xhrPromise.error(httpError);
-            }
-
-            /**
-             * trigger change detection 
-             */
-            if (changeDetection) {
-                changeDetection();
-            }
-
-            if (request.processData) {
-                request.processRequest();
-            }
-
-            sendRequest();
-        });
-
-    /**
-     * 
-     * @param {*} readyState 
+     * @param {*} url
+     * @param {*} options
+     * @param {*} changeDetection
      */
-    function respondToReadyState() {
-        var response = new HttpResponse(httpRequest);
-        if (httpRequest.xhrInstance.readyState == 4) {
+    constructor(url, options, changeDetection) {
+        this.xhrPromise = new Subject();
+        this.httpRequest = new HttpRequest(url, options);
+        this.httpError = new HttpRequestError('');
+        this.changeDetection = changeDetection;
+
+        /**
+         * $httpProvider Interceptor
+         * Request Interceptor
+         **/
+        InterceptorResolver(HTTP_INTERCEPTORS, this.httpRequest)
+            .then((request) => this.onInterceptorsResolved(request));
+    }
+
+    onInterceptorsResolved(request) {
+        if (!request) {
+            this.httpError.setMessage('HTTP: Interceptor should return a value');
+            return this.xhrPromise.error(this.httpError);
+        }
+
+        /**
+         * trigger change detection
+         */
+        if (this.changeDetection) {
+            this.changeDetection();
+        }
+
+        if (request.processData) {
+            request.processRequest();
+        }
+
+        this.sendRequest();
+    }
+
+    respondToReadyState() {
+        var response = new HttpResponse(this.httpRequest);
+        if (this.httpRequest.xhrInstance.readyState == 4) {
             try {
-                var data = parseJSON(httpRequest.xhrInstance.responseText);
-                xhrPromise.next(data, response);
+                var responseText = this.httpRequest.xhrInstance.responseText;
+                var data = isJSONResponse(this.httpRequest.xhrInstance) ? parseJSON(responseText) : responseText;
+                this.xhrPromise.next(data, response);
             } catch (e) {
-                xhrPromise.error(httpError);
+                this.xhrPromise.error(this.httpError);
             }
 
-            xhrPromise.completed();
-            changeDetection();
+            this.xhrPromise.completed();
+            this.changeDetection();
         }
     }
 
-    function attachListener() {
-        httpRequest.xhrInstance.addEventListener('load', respondToReadyState);
-        httpRequest.xhrInstanceaddEventListener('timeout', handleError);
-        httpRequest.xhrInstance.addEventListener('error', handleError);
-        httpRequest.xhrInstance.addEventListener('abort', handleError);
+    handleError(e) {
+        this.httpError.setErrorType(e.type);
+        this.xhrPromise.error(this.httpError);
+    }
 
-        function handleError(e) {
-            httpError.setErrorType(e.type);
-            xhrPromise.error(httpError);
-        }
+    attachListener() {
+        var xhrInstance = this.httpRequest.xhrInstance;
+        xhrInstance.addEventListener('load', () => this.respondToReadyState());
+        xhrInstance.addEventListener('timeout', (e) => this.handleError(e));
+        xhrInstance.addEventListener('error', (e) => this.handleError(e));
+        xhrInstance.addEventListener('abort', (e) => this.handleError(e));
     }
 
     /**
      * set Request Headers
      */
-    function sendRequest() {
-        attachListener();
-        httpRequest.xhrInstance.open(httpRequest.type, httpRequest.url, httpRequest.asynchronous);
-        httpRequest.processRequestHeaders();
+    sendRequest() {
+        this.attachListener();
+        var xhrInstance = this.httpRequest.xhrInstance;
+        xhrInstance.open(this.httpRequest.type, this.httpRequest.url, this.httpRequest.asynchronous);
+        // must be set after open() and before send() - throws InvalidStateError otherwise
+        xhrInstance.withCredentials = this.httpRequest.withCredentials;
+        this.httpRequest.processRequestHeaders();
+
         var body = null;
-        if (inarray(httpRequest.type, ['post', 'put', 'delete'])) {
-            body = httpRequest.data;
+        if (inarray(this.httpRequest.type, ['post', 'put', 'delete'])) {
+            body = this.httpRequest.data;
         }
 
         //send the request
         try {
-            httpRequest.xhrInstance.send(body);
+            xhrInstance.send(body);
         } catch (e) {
-            httpError.setMessage(e);
-            xhrPromise.error(httpError);
+            this.httpError.setMessage(e);
+            this.xhrPromise.error(this.httpError);
         }
     }
+}
 
-    return xhrPromise;
+/**
+ *
+ * @param {*} url
+ * @param {*} options
+ * @param {*} changeDetection
+ */
+export function CoreHttp(url, options, changeDetection) {
+    return new HttpTransport(url, options, changeDetection).xhrPromise;
 }

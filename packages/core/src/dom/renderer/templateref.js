@@ -40,7 +40,9 @@ export class TemplateRef {
 
     static factory(node, templateId, silent) {
         const templates = node.internal_getDefinition('templates');
-        if (!templates || !templates.hasOwnProperty(templateId)) {
+        // asNative components' templates is a function (see templatesCompiler below),
+        // not a plain object - hasOwnProperty doesn't apply to it
+        if (!templates || (typeof templates !== 'function' && !templates.hasOwnProperty(templateId))) {
             if (!silent) errorBuilder('No templates Defined #' + templateId);
             return null;
         }
@@ -58,20 +60,20 @@ export class TemplateRef {
     }
 
     static templatesCompiler(templates, asNative) {
-        const childrenNodesLen = asNative ? templates.length : 0;
+        let childrenNodesLen = asNative ? templates.length : 0;
         const templateTypes = {
             /**
              * custom place handler for native compiler
              * @returns
              */
             place: (placeSelector, callback) => {
-                const children = Array.from(selector.children).splice(0, childrenNodesLen);
+                let children = Array.from(templates).splice(0, childrenNodesLen);
                 if (placeSelector != '@') {
                     children = children.filter(ele => (
-                        !ele.classList.has(placeSelector) ||
-                        ele.id != placeSelector ||
-                        ele.nodeName != placeSelector ||
-                        !ele.hasAttribute(placeSelector)));
+                        ele.classList.contains(placeSelector) ||
+                        ele.id == placeSelector ||
+                        ele.nodeName == placeSelector ||
+                        ele.hasAttribute(placeSelector)));
                 }
 
                 // trigger callback

@@ -10,7 +10,11 @@
                 "folder": "dist/core",
                 "files": {
                     "@jeli/core": "./public.api.js"
-                }
+                },
+                "copy": [
+                    { "src": "packages/core/index.d.ts", "dest": "/index.d.ts" },
+                    { "src": "packages/core/README.md", "dest": "/README.md" }
+                ]
             }
         },
         "common": {
@@ -23,7 +27,11 @@
                 "files": {
                     "@jeli/common": "./public.api.js",
                     "@jeli/common/*": "./*/public.api.js"
-                }
+                },
+                "copy": [
+                    { "src": "packages/common/index.d.ts", "dest": "/index.d.ts" },
+                    { "src": "packages/common/README.md", "dest": "/README.md" }
+                ]
             },
             "resolve": {
                 "alias": {
@@ -40,7 +48,11 @@
                 "folder": "dist/form",
                 "files": {
                     "@jeli/form": "./public.api.js"
-                }
+                },
+                "copy": [
+                    { "src": "packages/form/index.d.ts", "dest": "/index.d.ts" },
+                    { "src": "packages/form/README.md", "dest": "/README.md" }
+                ]
             },
             "resolve": {
                 "alias": {
@@ -57,7 +69,11 @@
                 "folder": "dist/http",
                 "files": {
                     "@jeli/http": "./public.api.js"
-                }
+                },
+                "copy": [
+                    { "src": "packages/http/index.d.ts", "dest": "/index.d.ts" },
+                    { "src": "packages/http/README.md", "dest": "/README.md" }
+                ]
             },
             "resolve": {
                 "alias": {
@@ -74,7 +90,11 @@
                 "folder": "dist/router",
                 "files": {
                     "@jeli/router": "./public.api.js"
-                }
+                },
+                "copy": [
+                    { "src": "packages/router/index.d.ts", "dest": "/index.d.ts" },
+                    { "src": "packages/router/README.md", "dest": "/README.md" }
+                ]
             },
             "resolve": {
                 "alias": {

@@ -1,4 +1,4 @@
-var domEnums = {
+const domEnums = {
     ElementRef: "ElementRef",
     ViewRef: "ViewRef",
     TemplateRef: "TemplateRef",
