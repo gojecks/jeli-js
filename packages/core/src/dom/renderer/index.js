@@ -233,7 +233,7 @@ class jitBuilder {
             haveLocalVairables = (definition.$ctx && ('object' == typeof definition.$ctx));
             // create the context if jPlace have context object
             if (haveLocalVairables)
-                context = createLocalVariables(definition.$ctx, parent.context, context);
+                context = createLocalVariables(definition.$ctx, parent.viewContext, context);
         }
 
         let placedCount = 0;
@@ -333,7 +333,7 @@ class jitBuilder {
         });
 
         function checkAndCompileTemplate(fromObserver) {
-            var ctxArg = context || parent.context;
+            var ctxArg = context || parent.viewContext;
             var templateId = typeof def.$templateId.compiledFn === 'function' ?
                 def.$templateId.compiledFn(ctxArg, parent.componentInstance) :
                 getFilteredTemplateValue(def.$templateId, ctxArg, parent.componentInstance);

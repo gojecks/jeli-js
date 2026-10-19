@@ -31,7 +31,7 @@ class AbstractElementRef {
         // set below by ElementRef's constructor when definition.isc
         this.componentRef = null;
         this.tagName = (!definition.fromDOM ? definition.name : this.nativeElement.localName).toLowerCase();
-        this.hasContext = (!!definition.context || (!definition.isc && parentRef && parentRef.hasContext));
+        this.hasContext = (!!definition.context || (!definition.isc && parentRef && !parentRef.isc && parentRef.hasContext));
         this.type = definition.type;
         this.attr = definition.attr;
         this.isc = definition.isc;
@@ -61,7 +61,7 @@ class AbstractElementRef {
                     if (this.componentRef)
                         return this.componentRef.context;
                     // parent context
-                    return this.parent && this.parent.context;
+                    return this.parent && this.parent.viewContext;
                 },
                 set: context => {
                     if (!definition.ctx$) localVariables = context;
@@ -76,6 +76,11 @@ class AbstractElementRef {
         }
 
         this.internal_getDefinition = prop => definition[prop];
+    }
+
+    // scope for this element's children: a component's own view starts at the component, not at its host's *if/*for scope
+    get viewContext() {
+        return (this.isc && this.componentRef) ? this.componentRef.context : this.context;
     }
 
     get componentInstance() {

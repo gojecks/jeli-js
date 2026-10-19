@@ -260,8 +260,8 @@ function textNodeCompiler(textNodeRef) {
          * version marker needed).
          */
         var value = typeof textNodeRef.ast[1] === 'function' ?
-            textNodeRef.ast[1](textNodeRef.parent.context, textNodeRef.parent.componentInstance) :
-            compileTemplate(textNodeRef.ast, textNodeRef.parent.context, textNodeRef.parent.componentInstance);
+            textNodeRef.ast[1](textNodeRef.parent.viewContext, textNodeRef.parent.componentInstance) :
+            compileTemplate(textNodeRef.ast, textNodeRef.parent.viewContext, textNodeRef.parent.componentInstance);
         if (textNodeRef.nativeNode.nodeValue === value) return;
         textNodeRef.nativeNode.nodeValue = value;
     }
@@ -306,6 +306,8 @@ function cleanupElementRef(elementRef) {
  */
 export function setupAttributeObservers(element, attrObservers) {
     var observerStarted = false;
+    // last value written per property; a re-evaluation that yields the same value is not re-applied
+    var lastAppliedValues = {};
     var observerKeys = Object.keys(attrObservers);
     var unsubscribe = SubscribeObservables(element.hostRef.componentRef, observe);
     attachElementObserver(element, unsubscribe);
@@ -362,6 +364,11 @@ export function setupAttributeObservers(element, attrObservers) {
             var value = typeof compiledFn === 'function' ?
                 compiledFn(element.context, element.componentInstance) :
                 compileTemplate(template, element.context, element.componentInstance);
+            // skip unchanged primitives: re-writing e.g. option.selected would undo a choice the user just made.
+            // objects are always written - the same reference can be mutated in place
+            var isPrimitive = value === null || typeof value !== 'object';
+            if (isPrimitive && lastAppliedValues.hasOwnProperty(propName) && lastAppliedValues[propName] === value) return;
+            lastAppliedValues[propName] = isPrimitive ? value : undefined;
             AttributeAppender.setProp(element.nativeElement, propName, value, template);
         }
 
