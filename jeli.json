@@ -102,6 +102,27 @@
                 }
             }
         },
+        "i18n": {
+            "sourceRoot": "packages/i18n",
+            "type": "library",
+            "output": {
+                "generateMeta": true,
+                "patterns": ["UMD", "MODULE"],
+                "folder": "dist/i18n",
+                "files": {
+                    "@jeli/i18n": "./public.api.js"
+                },
+                "copy": [
+                    { "src": "packages/i18n/index.d.ts", "dest": "/index.d.ts" },
+                    { "src": "packages/i18n/README.md", "dest": "/README.md" }
+                ]
+            },
+            "resolve": {
+                "alias": {
+                    "@jeli/core": "./dist/core"
+                }
+            }
+        },
         "examples": {
             "type": "application",
             "sourceRoot": "viewers/Todo/src",

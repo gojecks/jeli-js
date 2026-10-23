@@ -1,0 +1,29 @@
+{
+  "name": "@jeli/i18n",
+  "version": "1.0.4-0",
+  "description": "jeli-js text translation: keyed messages, plurals and the t pipe",
+  "main": "public.api.js",
+  "types": "./index.d.ts",
+  "files": [
+    "bundles",
+    "metadata.json",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gojecks/jeli-js.git"
+  },
+  "keywords": [
+    "jeli",
+    "i18n"
+  ],
+  "author": "jeli",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gojecks/jeli-js/issues"
+  },
+  "homepage": "https://github.com/gojecks/jeli-js#readme"
+}

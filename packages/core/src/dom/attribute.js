@@ -85,9 +85,20 @@ export class AttributeAppender {
      * @param {*} template 
      * @returns 
      */
+    // string class bindings replace the classes they added last time, keeping static ones
+    static setClass(nativeElement, value) {
+        if (isobject(value)) return ElementClassList.add(nativeElement, value);
+        const next = ElementClassList.toClass(value);
+        const prev = nativeElement.$$boundClass || [];
+        ElementClassList.remove(nativeElement, prev.filter(c => !next.includes(c)).join(' '));
+        nativeElement.$$boundClass = next.filter(c => prev.includes(c) || !nativeElement.classList.contains(c));
+        ElementClassList.add(nativeElement, value);
+    }
+
     static setProp(nativeElement, propName, propValue, template) {
         try {
             if (propValue !== undefined && nativeElement && nativeElement.nodeType === 1){
+                if (propName === 'class') return this.setClass(nativeElement, propValue);
                 this.byType(propName, nativeElement, propValue, template);
             }   
         } catch (e) {

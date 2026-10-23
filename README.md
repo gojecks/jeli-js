@@ -30,6 +30,7 @@ This is a monorepo (npm/yarn workspaces, `packages/*`). Each package is publishe
 | [`@jeli/form`](packages/form) | Reactive form controls, validators, value accessors |
 | [`@jeli/http`](packages/http) | `HttpService` (XHR by default, opt-in `fetch()` transport), interceptors, CSRF handling |
 | [`@jeli/router`](packages/router) | Client-side routing: location strategies, guards, lazy loading |
+| [`@jeli/i18n`](packages/i18n) | Keyed text: `I18n` lookups (translations, plurals, placeholders) and the `t` / `tOverride` pipes |
 
 Compiled by [`@jeli/compiler-cli`](https://github.com/gojecks/jeli-cli) (part of the sibling `jeli-cli` toolchain), which also provides the `jeli` CLI (`create`/`build`/`serve`/`new`).
 
